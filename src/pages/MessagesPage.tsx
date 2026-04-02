@@ -77,131 +77,138 @@ export default function MessagesPage() {
         </Select>
       </div>
 
-      <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger value="all">All ({filteredMessages.length})</TabsTrigger>
-          <TabsTrigger value="draft">Drafts ({filteredMessages.filter(m => m.status === 'draft').length})</TabsTrigger>
-          <TabsTrigger value="sent">Sent ({filteredMessages.filter(m => m.status === 'sent').length})</TabsTrigger>
-          <TabsTrigger value="retracted">Retracted ({filteredMessages.filter(m => m.status === 'retracted').length})</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-3 gap-4">
+        {/* Messages panel — 2/3 width */}
+        <div className="col-span-2">
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">All ({filteredMessages.length})</TabsTrigger>
+              <TabsTrigger value="draft">Drafts ({filteredMessages.filter(m => m.status === 'draft').length})</TabsTrigger>
+              <TabsTrigger value="sent">Sent ({filteredMessages.filter(m => m.status === 'sent').length})</TabsTrigger>
+              <TabsTrigger value="retracted">Retracted ({filteredMessages.filter(m => m.status === 'retracted').length})</TabsTrigger>
+            </TabsList>
 
-        {['all', 'draft', 'sent', 'retracted'].map(tab => (
-          <TabsContent key={tab} value={tab}>
-            <div className="grid grid-cols-5 gap-4">
-              {/* Message List */}
-              <div className="col-span-2 space-y-2 max-h-[600px] overflow-auto">
-                {filteredMessages.filter(m => tab === 'all' || m.status === tab).map(msg => (
-                  <Card key={msg.id} className={`cursor-pointer hover:shadow-sm transition-shadow ${selectedMsg?.id === msg.id ? 'ring-2 ring-primary' : ''}`} onClick={() => { setSelectedMsg(msg); setIsEditing(false); }}>
-                    <CardContent className="p-3">
-                      <div className="flex items-start justify-between mb-1">
-                        <div className="font-medium text-sm truncate flex-1">{msg.subject}</div>
-                        <Badge variant={statusBadge[msg.status].variant} className="ml-2 shrink-0 text-xs">{statusBadge[msg.status].label}</Badge>
-                      </div>
-                      <div className="text-xs text-muted-foreground truncate">{msg.body}</div>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-muted-foreground">{getUserName(msg.senderId)}</span>
-                        <span className="text-xs text-muted-foreground">{format(msg.createdAt, 'MMM d, HH:mm')}</span>
-                      </div>
-                      {msg.attachments.length > 0 && (
-                        <div className="flex items-center gap-1 mt-1"><Paperclip className="h-3 w-3 text-muted-foreground" /><span className="text-xs text-muted-foreground">{msg.attachments.length} file(s)</span></div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-                {filteredMessages.filter(m => tab === 'all' || m.status === tab).length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-8">No messages</p>
-                )}
-              </div>
-
-              {/* Message Detail */}
-              <div className="col-span-3">
-                {selectedMsg ? (
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-base">{selectedMsg.subject}</CardTitle>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            Deal: {getDealName(selectedMsg.dealId)}
+            {['all', 'draft', 'sent', 'retracted'].map(tab => (
+              <TabsContent key={tab} value={tab}>
+                <div className="grid grid-cols-5 gap-4">
+                  {/* Message List */}
+                  <div className="col-span-2 space-y-2 max-h-[600px] overflow-auto">
+                    {filteredMessages.filter(m => tab === 'all' || m.status === tab).map(msg => (
+                      <Card key={msg.id} className={`cursor-pointer hover:shadow-sm transition-shadow ${selectedMsg?.id === msg.id ? 'ring-2 ring-primary' : ''}`} onClick={() => { setSelectedMsg(msg); setIsEditing(false); }}>
+                        <CardContent className="p-3">
+                          <div className="flex items-start justify-between mb-1">
+                            <div className="font-medium text-sm truncate flex-1">{msg.subject}</div>
+                            <Badge variant={statusBadge[msg.status].variant} className="ml-2 shrink-0 text-xs">{statusBadge[msg.status].label}</Badge>
                           </div>
-                        </div>
-                        <Badge variant={statusBadge[selectedMsg.status].variant}>{statusBadge[selectedMsg.status].label}</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <div>From: {getUserName(selectedMsg.senderId)}</div>
-                        <div>To: {selectedMsg.recipients.map(getUserName).join(', ')}</div>
-                        <div>Created: {format(selectedMsg.createdAt, 'MMM d, yyyy HH:mm')}</div>
-                        {selectedMsg.sentAt && <div>Sent: {format(selectedMsg.sentAt, 'MMM d, yyyy HH:mm')}</div>}
-                      </div>
-
-                      {isEditing ? (
-                        <div className="space-y-2">
-                          <Textarea value={editBody} onChange={e => setEditBody(e.target.value)} rows={6} />
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={handleSaveEdit}>Save</Button>
-                            <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                          <div className="text-xs text-muted-foreground truncate">{msg.body}</div>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-xs text-muted-foreground">{getUserName(msg.senderId)}</span>
+                            <span className="text-xs text-muted-foreground">{format(msg.createdAt, 'MMM d, HH:mm')}</span>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="bg-muted p-3 rounded-md text-sm whitespace-pre-wrap">{selectedMsg.body}</div>
-                      )}
+                          {msg.attachments.length > 0 && (
+                            <div className="flex items-center gap-1 mt-1"><Paperclip className="h-3 w-3 text-muted-foreground" /><span className="text-xs text-muted-foreground">{msg.attachments.length} file(s)</span></div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {filteredMessages.filter(m => tab === 'all' || m.status === tab).length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-8">No messages</p>
+                    )}
+                  </div>
 
-                      {/* Attachments */}
-                      {selectedMsg.attachments.length > 0 && (
-                        <div>
-                          <h4 className="text-sm font-medium mb-2">Attachments</h4>
-                          <div className="space-y-1">
-                            {selectedMsg.attachments.map(a => (
-                              <div key={a.id} className="flex items-center gap-2 text-sm p-2 bg-muted rounded">
-                                <FileText className="h-4 w-4 text-muted-foreground" />
-                                <span>{a.name}</span>
-                                <span className="text-xs text-muted-foreground">({(a.size / 1024).toFixed(0)} KB)</span>
+                  {/* Message Detail */}
+                  <div className="col-span-3">
+                    {selectedMsg ? (
+                      <Card>
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-base">{selectedMsg.subject}</CardTitle>
+                              <div className="text-sm text-muted-foreground mt-1">
+                                Deal: {getDealName(selectedMsg.dealId)}
                               </div>
-                            ))}
+                            </div>
+                            <Badge variant={statusBadge[selectedMsg.status].variant}>{statusBadge[selectedMsg.status].label}</Badge>
                           </div>
-                        </div>
-                      )}
-
-                      {/* AI Suggestions */}
-                      {selectedMsg.aiSuggestions && (
-                        <div className="border rounded-md p-3">
-                          <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                            AI Suggestions
-                            <Badge variant="outline" className="text-xs">{(selectedMsg.aiSuggestions.confidence * 100).toFixed(0)}% confidence</Badge>
-                          </h4>
-                          <div className="text-sm space-y-1">
-                            <div><span className="text-muted-foreground">Headline:</span> {selectedMsg.aiSuggestions.headline}</div>
-                            <div><span className="text-muted-foreground">Summary:</span> {selectedMsg.aiSuggestions.dealSummary}</div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <div>From: {getUserName(selectedMsg.senderId)}</div>
+                            <div>To: {selectedMsg.recipients.map(getUserName).join(', ')}</div>
+                            <div>Created: {format(selectedMsg.createdAt, 'MMM d, yyyy HH:mm')}</div>
+                            {selectedMsg.sentAt && <div>Sent: {format(selectedMsg.sentAt, 'MMM d, yyyy HH:mm')}</div>}
                           </div>
-                        </div>
-                      )}
 
-                      {/* Actions */}
-                      {canManageMessages && (
-                        <div className="flex gap-2 pt-2 border-t">
-                          {selectedMsg.status === 'draft' && (
-                            <>
-                              <Button size="sm" onClick={() => { setEditBody(selectedMsg.body); setIsEditing(true); }}><Eye className="h-4 w-4 mr-1" />Edit</Button>
-                              <Button size="sm" onClick={() => handleSend(selectedMsg)}><Send className="h-4 w-4 mr-1" />Send</Button>
-                            </>
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <Textarea value={editBody} onChange={e => setEditBody(e.target.value)} rows={6} />
+                              <div className="flex gap-2">
+                                <Button size="sm" onClick={handleSaveEdit}>Save</Button>
+                                <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-muted p-3 rounded-md text-sm whitespace-pre-wrap">{selectedMsg.body}</div>
                           )}
-                          {selectedMsg.status === 'sent' && (
-                            <Button size="sm" variant="destructive" onClick={() => handleRetract(selectedMsg)}><RotateCcw className="h-4 w-4 mr-1" />Retract</Button>
+
+                          {selectedMsg.attachments.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-medium mb-2">Attachments</h4>
+                              <div className="space-y-1">
+                                {selectedMsg.attachments.map(a => (
+                                  <div key={a.id} className="flex items-center gap-2 text-sm p-2 bg-muted rounded">
+                                    <FileText className="h-4 w-4 text-muted-foreground" />
+                                    <span>{a.name}</span>
+                                    <span className="text-xs text-muted-foreground">({(a.size / 1024).toFixed(0)} KB)</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           )}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Select a message to view details</div>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+
+                          {selectedMsg.aiSuggestions && (
+                            <div className="border rounded-md p-3">
+                              <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                AI Suggestions
+                                <Badge variant="outline" className="text-xs">{(selectedMsg.aiSuggestions.confidence * 100).toFixed(0)}% confidence</Badge>
+                              </h4>
+                              <div className="text-sm space-y-1">
+                                <div><span className="text-muted-foreground">Headline:</span> {selectedMsg.aiSuggestions.headline}</div>
+                                <div><span className="text-muted-foreground">Summary:</span> {selectedMsg.aiSuggestions.dealSummary}</div>
+                              </div>
+                            </div>
+                          )}
+
+                          {canManageMessages && (
+                            <div className="flex gap-2 pt-2 border-t">
+                              {selectedMsg.status === 'draft' && (
+                                <>
+                                  <Button size="sm" onClick={() => { setEditBody(selectedMsg.body); setIsEditing(true); }}><Eye className="h-4 w-4 mr-1" />Edit</Button>
+                                  <Button size="sm" onClick={() => handleSend(selectedMsg)}><Send className="h-4 w-4 mr-1" />Send</Button>
+                                </>
+                              )}
+                              {selectedMsg.status === 'sent' && (
+                                <Button size="sm" variant="destructive" onClick={() => handleRetract(selectedMsg)}><RotateCcw className="h-4 w-4 mr-1" />Retract</Button>
+                              )}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Select a message to view details</div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
+
+        {/* Secure Chat — 1/3 width */}
+        <div className="col-span-1">
+          <SecureChat />
+        </div>
+      </div>
     </div>
   );
 }
