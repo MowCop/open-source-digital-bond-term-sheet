@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Deal, Message, User, AuditLogEntry, Notification, DealStage, MessageStatus, DistributionList } from '@/types/bond';
-import { mockUsers, mockDeals, mockMessages, mockAuditLog, mockNotifications, mockDistributionLists } from '@/data/mockData';
+import { Deal, Message, User, AuditLogEntry, Notification, DealStage, MessageStatus, DistributionList, ChatChannel, ChatMessage } from '@/types/bond';
+import { mockUsers, mockDeals, mockMessages, mockAuditLog, mockNotifications, mockDistributionLists, mockChatChannels, mockChatMessages } from '@/data/mockData';
 
 interface AppContextType {
   currentUser: User;
@@ -11,6 +11,8 @@ interface AppContextType {
   auditLog: AuditLogEntry[];
   notifications: Notification[];
   distributionLists: DistributionList[];
+  chatChannels: ChatChannel[];
+  chatMessages: ChatMessage[];
   // Deal actions
   createDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>) => Deal;
   updateDealStage: (dealId: string, newStage: DealStage, note?: string) => void;
@@ -23,18 +25,22 @@ interface AppContextType {
   markNotificationRead: (id: string) => void;
   // Audit
   addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => void;
+  // Chat actions
+  sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User>(mockUsers[1]); // syndicate_admin by default
+  const [currentUser, setCurrentUser] = useState<User>(mockUsers[1]);
   const [users] = useState<User[]>(mockUsers);
   const [deals, setDeals] = useState<Deal[]>(mockDeals);
   const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>(mockAuditLog);
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
   const [distributionLists] = useState<DistributionList[]>(mockDistributionLists);
+  const [chatChannels] = useState<ChatChannel[]>(mockChatChannels);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(mockChatMessages);
 
   const addAuditEntry = useCallback((entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => {
     setAuditLog(prev => [{ ...entry, id: `al${Date.now()}`, timestamp: new Date() }, ...prev]);
@@ -67,7 +73,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setMessages(prev => prev.map(m => m.id === id ? { ...m, ...updates, updatedAt: new Date() } : m));
   }, []);
 
-  const sendMessage = useCallback((id: string) => {
+  const sendMessageAction = useCallback((id: string) => {
     const now = new Date();
     setMessages(prev => prev.map(m => m.id === id ? { ...m, status: 'sent' as MessageStatus, sentAt: now, updatedAt: now } : m));
     addAuditEntry({ action: 'MESSAGE_SENT', entityType: 'message', entityId: id, userId: currentUser.id, details: `Message sent` });
@@ -83,10 +89,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   }, []);
 
+  const sendChatMessage = useCallback((channelId: string, body: string, attachments: ChatMessage['attachments'] = [], linkedMessageId?: string) => {
+    const newMsg: ChatMessage = {
+      id: `cm${Date.now()}`,
+      channelId,
+      senderId: currentUser.id,
+      body,
+      attachments,
+      linkedMessageId,
+      timestamp: new Date(),
+    };
+    setChatMessages(prev => [...prev, newMsg]);
+    addAuditEntry({ action: 'CHAT_MESSAGE_SENT', entityType: 'message', entityId: newMsg.id, userId: currentUser.id, details: `Secure chat message in channel ${channelId}` });
+  }, [currentUser.id, addAuditEntry]);
+
   return (
     <AppContext.Provider value={{
       currentUser, setCurrentUser, users, deals, messages, auditLog, notifications, distributionLists,
-      createDeal, updateDealStage, createMessage, updateMessage, sendMessage, retractMessage, markNotificationRead, addAuditEntry,
+      chatChannels, chatMessages,
+      createDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addAuditEntry, sendChatMessage,
     }}>
       {children}
     </AppContext.Provider>
