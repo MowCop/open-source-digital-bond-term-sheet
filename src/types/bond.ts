@@ -103,3 +103,21 @@ export interface DistributionList {
   vendorIds: string[];
   createdBy: string;
 }
+
+export interface ChatMessage {
+  id: string;
+  channelId: string;
+  senderId: string;
+  body: string;
+  attachments: Attachment[];
+  linkedMessageId?: string;
+  timestamp: Date;
+}
+
+export interface ChatChannel {
+  id: string;
+  participantIds: string[];
+  dealId?: string;
+  label: string;
+  createdAt: Date;
+}

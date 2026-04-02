@@ -1,4 +1,4 @@
-import { Deal, Message, User, AuditLogEntry, Notification, DistributionList } from '@/types/bond';
+import { Deal, Message, User, AuditLogEntry, Notification, DistributionList, ChatChannel, ChatMessage } from '@/types/bond';
 
 export const mockUsers: User[] = [
   { id: 'u1', name: 'Sarah Chen', email: 'sarah@globalbank.com', role: 'master_admin', organization: 'GlobalBank', organizationType: 'bank' },
