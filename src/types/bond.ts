@@ -107,7 +107,10 @@ export interface DistributionList {
 export interface ChatMessage {
   id: string;
   channelId: string;
+  dealId?: string;
   senderId: string;
+  senderName: string;
+  senderType: 'bank' | 'vendor';
   body: string;
   attachments: Attachment[];
   linkedMessageId?: string;
