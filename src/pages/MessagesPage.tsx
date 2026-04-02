@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Message, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
 import { Send, RotateCcw, Paperclip, FileText, Eye } from 'lucide-react';
+import SecureChat from '@/components/SecureChat';
 import { useToast } from '@/hooks/use-toast';
 
 const statusBadge: Record<MessageStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
