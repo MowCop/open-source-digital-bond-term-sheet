@@ -94,6 +94,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       id: `cm${Date.now()}`,
       channelId,
       senderId: currentUser.id,
+      senderName: currentUser.name,
+      senderType: currentUser.organizationType,
       body,
       attachments,
       linkedMessageId,

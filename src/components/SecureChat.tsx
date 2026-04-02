@@ -105,11 +105,16 @@ export default function SecureChat() {
                   return (
                     <div key={cm.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
                       <Avatar className="h-7 w-7 shrink-0">
-                        <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{getUserInitials(cm.senderId)}</AvatarFallback>
+                        <AvatarFallback className={`text-[10px] ${cm.senderType === 'bank' ? 'bg-primary/10 text-primary' : 'bg-accent text-accent-foreground'}`}>{cm.senderName.split(' ').map(n => n[0]).join('').slice(0, 2)}</AvatarFallback>
                       </Avatar>
                       <div className={`max-w-[75%] space-y-1`}>
                         <div className={`rounded-lg px-3 py-2 text-xs ${isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                          {!isMe && <div className="font-semibold mb-0.5 text-[10px] opacity-70">{getUserName(cm.senderId)}</div>}
+                          {!isMe && (
+                            <div className="font-semibold mb-0.5 text-[10px] opacity-70 flex items-center gap-1">
+                              {cm.senderName}
+                              <Badge variant="outline" className="text-[8px] px-1 py-0 h-3">{cm.senderType}</Badge>
+                            </div>
+                          )}
                           <p>{cm.body}</p>
                         </div>
                         {linked && (
