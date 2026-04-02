@@ -1,4 +1,4 @@
-import { Deal, Message, User, AuditLogEntry, Notification, DistributionList } from '@/types/bond';
+import { Deal, Message, User, AuditLogEntry, Notification, DistributionList, ChatChannel, ChatMessage } from '@/types/bond';
 
 export const mockUsers: User[] = [
   { id: 'u1', name: 'Sarah Chen', email: 'sarah@globalbank.com', role: 'master_admin', organization: 'GlobalBank', organizationType: 'bank' },
@@ -119,4 +119,20 @@ export const mockNotifications: Notification[] = [
 export const mockDistributionLists: DistributionList[] = [
   { id: 'dl1', name: 'All Vendors', vendorIds: ['u4', 'u5', 'u6'], createdBy: 'u2' },
   { id: 'dl2', name: 'Tier 1 Vendors', vendorIds: ['u4', 'u5'], createdBy: 'u2' },
+];
+
+export const mockChatChannels: ChatChannel[] = [
+  { id: 'ch1', participantIds: ['u2', 'u4'], dealId: 'd1', label: 'GlobalBank ↔ Bloomberg — Italy 10Y', createdAt: new Date('2024-03-18T08:30:00') },
+  { id: 'ch2', participantIds: ['u2', 'u5'], dealId: 'd2', label: 'GlobalBank ↔ Reuters — VW 5Y', createdAt: new Date('2024-03-14T11:00:00') },
+  { id: 'ch3', participantIds: ['u3', 'u4'], label: 'EuroBank ↔ Bloomberg — General', createdAt: new Date('2024-03-16T09:00:00') },
+];
+
+export const mockChatMessages: ChatMessage[] = [
+  { id: 'cm1', channelId: 'ch1', senderId: 'u4', body: 'Can you confirm the minimum denomination for the Italy 10Y?', attachments: [], timestamp: new Date('2024-03-18T08:35:00'), linkedMessageId: 'm1' },
+  { id: 'cm2', channelId: 'ch1', senderId: 'u2', body: 'Minimum denomination is EUR 100,000 with increments of EUR 1,000.', attachments: [], timestamp: new Date('2024-03-18T08:40:00') },
+  { id: 'cm3', channelId: 'ch1', senderId: 'u4', body: 'Understood, thanks. Attaching our dissemination confirmation.', attachments: [{ id: 'ca1', name: 'Bloomberg_Dissemination_Confirm.pdf', type: 'pdf', size: 52000, url: '#' }], timestamp: new Date('2024-03-18T08:50:00') },
+  { id: 'cm4', channelId: 'ch2', senderId: 'u5', body: 'We have published the VW pricing alert. Any updates on allocation?', attachments: [], timestamp: new Date('2024-03-14T11:15:00') },
+  { id: 'cm5', channelId: 'ch2', senderId: 'u2', body: 'Allocation details will follow shortly. Here is the final term sheet.', attachments: [{ id: 'ca2', name: 'VW_5Y_Allocation.pdf', type: 'pdf', size: 128000, url: '#' }], timestamp: new Date('2024-03-14T11:30:00') },
+  { id: 'cm6', channelId: 'ch3', senderId: 'u4', body: 'Hi Anna, do you have any upcoming mandates we should be aware of?', attachments: [], timestamp: new Date('2024-03-16T09:10:00') },
+  { id: 'cm7', channelId: 'ch3', senderId: 'u3', body: 'Nothing confirmed yet but we may have a covered bond next week.', attachments: [], timestamp: new Date('2024-03-16T09:25:00') },
 ];
