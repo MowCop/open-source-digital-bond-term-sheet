@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 
 const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/deals', label: 'Deals', icon: FileText },
+  { path: '/deals', label: 'Deal Data', icon: FileText },
   { path: '/messages', label: 'Messages', icon: MessageSquare },
   { path: '/ai-draft', label: 'AI Draft', icon: Bot },
   { path: '/admin', label: 'Admin', icon: Shield },
