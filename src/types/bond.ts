@@ -4,6 +4,23 @@ export type UserRole = 'master_admin' | 'syndicate_admin' | 'vendor_user';
 
 export type MessageStatus = 'draft' | 'pending_review' | 'confirmed' | 'sent' | 'retracted';
 
+// ICMA Taxonomy Enums
+export type IssuanceType = 'STANDALONE' | 'PROGRAMME';
+export type FormOfNote = 'BEARER_GLOBAL' | 'REGISTERED' | 'DEMATERIALISED';
+export type StatusOfNote = 'SENIOR_UNSECURED' | 'SENIOR_SECURED' | 'SUBORDINATED' | 'JUNIOR_SUBORDINATED' | 'COVERED';
+export type InterestType = 'FIXED' | 'FLOATING' | 'ZERO_COUPON';
+export type InterestPaymentFrequency = 'ANNUAL' | 'SEMI_ANNUAL' | 'QUARTERLY' | 'MONTHLY';
+export type DayCountFraction = 'ACT_ACT' | 'ACT_360' | 'ACT_365' | '30_360' | '30E_360';
+export type BusinessDayConvention = 'MODIFIED_FOLLOWING' | 'FOLLOWING' | 'PRECEDING';
+export type GoverningLaw = 'ENGLISH_LAW' | 'FRENCH_LAW' | 'GERMAN_LAW' | 'NEW_YORK_LAW' | 'SWISS_LAW';
+export type BookrunnerRole = 'active' | 'passive';
+
+export interface Bookrunner {
+  name: string;
+  role: BookrunnerRole;
+  isGlobalCoordinator: boolean;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -15,20 +32,51 @@ export interface User {
 
 export interface Deal {
   id: string;
-  borrower: string;
-  currency: string;
-  size: string;
-  tenor: string;
-  coupon: string;
-  spread: string;
   stage: DealStage;
-  leadManagers: string[];
   createdAt: Date;
   updatedAt: Date;
   stageHistory: StageTransition[];
+
+  // Party / Issuer (5 fields)
+  issuerName: string;        // borrower / PartyName ISSUER
+  issuerLEI?: string;
+  issuerRating?: string;     // e.g. "BBB/Baa3/BBB Fitch"
+  ratingOutlook?: string;    // STABLE / POSITIVE / NEGATIVE
+  bookrunners: Bookrunner[];
+
+  // Issuance (16 fields)
+  issuanceType?: IssuanceType;
+  currency: string;
+  size: string;              // AggregateNominalAmount
+  specifiedDenomination?: string;
+  pricingDate?: string;
+  issueDate?: string;
+  settlementDate?: string;
+  issuePrice?: string;
+  reofferPrice?: string;
+  reofferYield?: string;
+  reofferSpread?: string;
+  midSwapRate?: string;
+  coupon: string;
+  governingLaw?: GoverningLaw;
+  sellingRestrictions?: string;
+  listingVenue?: string;
+
+  // Product (14 fields)
   isin?: string;
+  cusip?: string;
+  commonCode?: string;
+  formOfNote?: FormOfNote;
+  statusOfNote?: StatusOfNote;
+  tenor: string;
   maturityDate?: string;
-  rating?: string;
+  interestType?: InterestType;
+  interestRate?: string;
+  interestPaymentFrequency?: InterestPaymentFrequency;
+  dayCountFraction?: DayCountFraction;
+  businessDayConvention?: BusinessDayConvention;
+  optionality?: string;      // CALL / PUT / NONE
+  taxonomy?: string;         // ESG/Green/Social label
 }
 
 export interface StageTransition {
@@ -41,7 +89,7 @@ export interface StageTransition {
 
 export interface Message {
   id: string;
-  dealId: string;
+  dealIds: string[];
   subject: string;
   body: string;
   status: MessageStatus;
