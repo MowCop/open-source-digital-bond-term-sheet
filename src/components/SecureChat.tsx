@@ -7,34 +7,55 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Send, Paperclip, Link2, ShieldCheck, FileText, X } from 'lucide-react';
+import { Send, Paperclip, Link2, ShieldCheck, FileText, X, Bot } from 'lucide-react';
 import { format } from 'date-fns';
-import { ChatChannel } from '@/types/bond';
+import { ChatChannel, DealStage } from '@/types/bond';
 
-export default function SecureChat() {
-  const { currentUser, users, chatChannels, chatMessages, messages, sendChatMessage } = useApp();
+const stageColor: Record<DealStage, string> = {
+  Mandate: 'bg-blue-100 text-blue-800',
+  Announced: 'bg-blue-100 text-blue-800',
+  Launched: 'bg-green-100 text-green-800',
+  'Books Open': 'bg-green-100 text-green-800',
+  'Books Closed': 'bg-green-100 text-green-800',
+  Priced: 'bg-amber-100 text-amber-800',
+  Settled: 'bg-amber-100 text-amber-800',
+};
+
+interface SecureChatProps {
+  activeDealId?: string | null;
+}
+
+export default function SecureChat({ activeDealId }: SecureChatProps) {
+  const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage } = useApp();
   const [activeChannel, setActiveChannel] = useState<ChatChannel | null>(null);
   const [inputText, setInputText] = useState('');
   const [linkingMessageId, setLinkingMessageId] = useState<string | undefined>();
   const [showLinkPicker, setShowLinkPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Filter channels the current user participates in
   const myChannels = chatChannels.filter(ch => ch.participantIds.includes(currentUser.id));
+
+  // When activeDealId changes externally, auto-select matching channel
+  useEffect(() => {
+    if (activeDealId) {
+      const dealChannel = myChannels.find(ch => ch.dealId === activeDealId);
+      if (dealChannel) {
+        setActiveChannel(dealChannel);
+      }
+    }
+  }, [activeDealId]);
 
   const channelMessages = activeChannel
     ? chatMessages.filter(cm => cm.channelId === activeChannel.id).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
     : [];
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
-  const getUserInitials = (id: string) => {
-    const name = getUserName(id);
-    return name.split(' ').map(n => n[0]).join('').slice(0, 2);
-  };
   const getLinkedMessage = (id: string) => messages.find(m => m.id === id);
 
-  // Sent deal messages for linking
   const sentMessages = messages.filter(m => m.status === 'sent');
+
+  // Get deal stage for header badge
+  const activeDeal = activeChannel?.dealId ? deals.find(d => d.id === activeChannel.dealId) : null;
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -42,12 +63,11 @@ export default function SecureChat() {
     }
   }, [channelMessages.length, activeChannel]);
 
-  // Auto-select first channel
   useEffect(() => {
-    if (!activeChannel && myChannels.length > 0) {
+    if (!activeChannel && myChannels.length > 0 && !activeDealId) {
       setActiveChannel(myChannels[0]);
     }
-  }, [myChannels, activeChannel]);
+  }, [myChannels, activeChannel, activeDealId]);
 
   const handleSend = () => {
     if (!activeChannel || !inputText.trim()) return;
@@ -77,6 +97,12 @@ export default function SecureChat() {
           <CardTitle className="text-sm">Secure Communications</CardTitle>
           <Badge variant="outline" className="text-[10px] ml-auto">End-to-End Encrypted</Badge>
         </div>
+        {activeDeal && (
+          <div className="flex items-center gap-2 mt-1">
+            <Badge className={`text-[10px] ${stageColor[activeDeal.stage]}`}>{activeDeal.stage}</Badge>
+            <span className="text-[10px] text-muted-foreground">{activeDeal.borrower} {activeDeal.currency} {activeDeal.tenor}</span>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-2 overflow-hidden p-3 pt-0">
         {/* Channel selector */}
@@ -88,9 +114,15 @@ export default function SecureChat() {
             <SelectValue placeholder="Select a conversation" />
           </SelectTrigger>
           <SelectContent>
-            {myChannels.map(ch => (
-              <SelectItem key={ch.id} value={ch.id} className="text-xs">{ch.label}</SelectItem>
-            ))}
+            {myChannels.map(ch => {
+              const deal = ch.dealId ? deals.find(d => d.id === ch.dealId) : null;
+              return (
+                <SelectItem key={ch.id} value={ch.id} className="text-xs">
+                  {deal && <span className={`inline-block mr-1 px-1 rounded text-[9px] ${stageColor[deal.stage]}`}>{deal.stage}</span>}
+                  {ch.label}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
 
@@ -101,7 +133,20 @@ export default function SecureChat() {
               <div className="space-y-3 py-2">
                 {channelMessages.map(cm => {
                   const isMe = cm.senderId === currentUser.id;
+                  const isSystem = cm.senderType === 'system';
                   const linked = cm.linkedMessageId ? getLinkedMessage(cm.linkedMessageId) : null;
+
+                  if (isSystem) {
+                    return (
+                      <div key={cm.id} className="flex justify-center">
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/60 border border-border text-[11px] text-muted-foreground max-w-[90%]">
+                          <Bot className="h-3 w-3 shrink-0" />
+                          <span>{cm.body}</span>
+                        </div>
+                      </div>
+                    );
+                  }
+
                   return (
                     <div key={cm.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
                       <Avatar className="h-7 w-7 shrink-0">

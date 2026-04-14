@@ -110,7 +110,7 @@ export interface ChatMessage {
   dealId?: string;
   senderId: string;
   senderName: string;
-  senderType: 'bank' | 'vendor';
+  senderType: 'bank' | 'vendor' | 'system';
   body: string;
   attachments: Attachment[];
   linkedMessageId?: string;

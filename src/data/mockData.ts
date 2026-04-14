@@ -125,6 +125,7 @@ export const mockChatChannels: ChatChannel[] = [
   { id: 'ch1', participantIds: ['u2', 'u4'], dealId: 'd1', label: 'GlobalBank ↔ Bloomberg — Italy 10Y', createdAt: new Date('2024-03-18T08:30:00') },
   { id: 'ch2', participantIds: ['u2', 'u5'], dealId: 'd2', label: 'GlobalBank ↔ Reuters — VW 5Y', createdAt: new Date('2024-03-14T11:00:00') },
   { id: 'ch3', participantIds: ['u3', 'u4'], label: 'EuroBank ↔ Bloomberg — General', createdAt: new Date('2024-03-16T09:00:00') },
+  { id: 'ch4', participantIds: ['u2', 'u3', 'u4', 'u5', 'u6'], dealId: 'd3', label: 'Apple Inc. USD 30Y — Deal Thread', createdAt: new Date('2024-03-20T06:00:00') },
 ];
 
 export const mockChatMessages: ChatMessage[] = [
@@ -137,4 +138,7 @@ export const mockChatMessages: ChatMessage[] = [
   { id: 'cm7', channelId: 'ch2', dealId: 'd2', senderId: 'u2', senderName: 'James Miller', senderType: 'bank', body: 'Allocation details will follow by end of day. Books closed at EUR 4.2bn — 2.8x oversubscribed.', attachments: [], timestamp: new Date('2024-03-14T12:00:00') },
   { id: 'cm8', channelId: 'ch3', senderId: 'u4', senderName: 'Mike Johnson', senderType: 'vendor', body: 'Hi Anna, do you have any upcoming mandates we should be aware of?', attachments: [], timestamp: new Date('2024-03-16T09:10:00') },
   { id: 'cm9', channelId: 'ch3', senderId: 'u3', senderName: 'Anna Schmidt', senderType: 'bank', body: 'Nothing confirmed yet but we may have a covered bond next week. Will share details via the data room once mandated.', attachments: [], timestamp: new Date('2024-03-16T09:25:00') },
+  // Bot bridge messages
+  { id: 'cm10', channelId: 'ch1', dealId: 'd1', senderId: 'system', senderName: 'BondVDR Bot', senderType: 'system', body: '📢 [BOOKS OPEN] Republic of Italy EUR 10Y — Books Open. IPT MS+90 area. Discuss Now →', attachments: [], timestamp: new Date('2024-03-18T08:21:00'), linkedMessageId: 'm1' },
+  { id: 'cm11', channelId: 'ch2', dealId: 'd2', senderId: 'system', senderName: 'BondVDR Bot', senderType: 'system', body: '📢 [PRICED] Volkswagen AG EUR 5Y — Priced at MS+120bps, coupon 3.875%. Books closed at EUR 4.2bn. Discuss Now →', attachments: [], timestamp: new Date('2024-03-14T10:36:00'), linkedMessageId: 'm3' },
 ];

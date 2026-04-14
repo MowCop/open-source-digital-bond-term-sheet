@@ -39,7 +39,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>(mockAuditLog);
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
   const [distributionLists] = useState<DistributionList[]>(mockDistributionLists);
-  const [chatChannels] = useState<ChatChannel[]>(mockChatChannels);
+  const [chatChannels, setChatChannels] = useState<ChatChannel[]>(mockChatChannels);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(mockChatMessages);
 
   const addAuditEntry = useCallback((entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => {
@@ -49,9 +49,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>) => {
     const newDeal: Deal = { ...deal, id: `d${Date.now()}`, createdAt: new Date(), updatedAt: new Date(), stageHistory: [] };
     setDeals(prev => [newDeal, ...prev]);
+    // Auto-create a master chat channel for the deal
+    const newChannel: ChatChannel = {
+      id: `ch${Date.now()}`,
+      participantIds: [...users.filter(u => u.organizationType === 'bank' || u.organizationType === 'vendor').map(u => u.id)],
+      dealId: newDeal.id,
+      label: `${deal.borrower} ${deal.currency} ${deal.tenor} — Deal Thread`,
+      createdAt: new Date(),
+    };
+    setChatChannels(prev => [...prev, newChannel]);
     addAuditEntry({ action: 'DEAL_CREATED', entityType: 'deal', entityId: newDeal.id, userId: currentUser.id, details: `Created deal: ${deal.borrower} ${deal.currency} ${deal.tenor}` });
     return newDeal;
-  }, [currentUser.id, addAuditEntry]);
+  }, [currentUser.id, addAuditEntry, users]);
 
   const updateDealStage = useCallback((dealId: string, newStage: DealStage, note?: string) => {
     setDeals(prev => prev.map(d => {
@@ -75,9 +84,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const sendMessageAction = useCallback((id: string) => {
     const now = new Date();
+    const msg = messages.find(m => m.id === id);
     setMessages(prev => prev.map(m => m.id === id ? { ...m, status: 'sent' as MessageStatus, sentAt: now, updatedAt: now } : m));
     addAuditEntry({ action: 'MESSAGE_SENT', entityType: 'message', entityId: id, userId: currentUser.id, details: `Message sent` });
-  }, [currentUser.id, addAuditEntry]);
+    // Auto-post bot bridge message into deal chat
+    if (msg) {
+      const deal = deals.find(d => d.id === msg.dealId);
+      const channel = chatChannels.find(ch => ch.dealId === msg.dealId);
+      if (channel && deal) {
+        const stageTag = deal.stage.toUpperCase();
+        const botMsg: ChatMessage = {
+          id: `cm${Date.now()}`,
+          channelId: channel.id,
+          dealId: msg.dealId,
+          senderId: 'system',
+          senderName: 'BondVDR Bot',
+          senderType: 'system',
+          body: `📢 [${stageTag}] ${deal.borrower} ${deal.currency} ${deal.tenor} — ${msg.subject}. Discuss Now →`,
+          attachments: [],
+          linkedMessageId: msg.id,
+          timestamp: new Date(),
+        };
+        setChatMessages(prev => [...prev, botMsg]);
+      }
+    }
+  }, [currentUser.id, addAuditEntry, messages, deals, chatChannels]);
 
   const retractMessage = useCallback((id: string) => {
     const now = new Date();
