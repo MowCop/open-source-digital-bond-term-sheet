@@ -100,7 +100,7 @@ export default function SecureChat({ activeDealId }: SecureChatProps) {
         {activeDeal && (
           <div className="flex items-center gap-2 mt-1">
             <Badge className={`text-[10px] ${stageColor[activeDeal.stage]}`}>{activeDeal.stage}</Badge>
-            <span className="text-[10px] text-muted-foreground">{activeDeal.borrower} {activeDeal.currency} {activeDeal.tenor}</span>
+            <span className="text-[10px] text-muted-foreground">{activeDeal.issuerName} {activeDeal.currency} {activeDeal.tenor}</span>
           </div>
         )}
       </CardHeader>

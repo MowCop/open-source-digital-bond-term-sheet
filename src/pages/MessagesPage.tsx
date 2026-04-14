@@ -41,7 +41,7 @@ export default function MessagesPage() {
 
   const canManageMessages = currentUser.role === 'syndicate_admin' || currentUser.role === 'master_admin';
   const filteredMessages = messages
-    .filter(m => filterDeal === 'all' || m.dealId === filterDeal)
+    .filter(m => filterDeal === 'all' || m.dealIds.includes(filterDeal))
     .filter(m => {
       if (currentUser.role === 'vendor_user') return m.recipients.includes(currentUser.id) || m.senderId === currentUser.id;
       return true;
@@ -50,16 +50,17 @@ export default function MessagesPage() {
 
   const getDeal = (dealId: string) => deals.find(d => d.id === dealId);
 
-  const getStagePrefix = (dealId: string) => {
-    const deal = getDeal(dealId);
-    if (!deal) return '';
-    return `[${deal.stage.toUpperCase()}] `;
+  const getStagePrefix = (dealIds: string[]) => {
+    const stages = dealIds.map(id => getDeal(id)?.stage).filter(Boolean);
+    if (stages.length === 0) return '';
+    const uniqueStages = [...new Set(stages)];
+    return `[${uniqueStages.map(s => s!.toUpperCase()).join(' | ')}] `;
   };
 
   const handleSelectMsg = (msg: Message) => {
     setSelectedMsg(msg);
     setIsEditing(false);
-    setActiveDealId(msg.dealId);
+    if (msg.dealIds.length > 0) setActiveDealId(msg.dealIds[0]);
   };
 
   const handleSend = (msg: Message) => {
@@ -89,7 +90,7 @@ export default function MessagesPage() {
   };
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
-  const getDealName = (id: string) => { const d = deals.find(d => d.id === id); return d ? `${d.borrower} ${d.currency} ${d.tenor}` : id; };
+  const getDealName = (id: string) => { const d = deals.find(d => d.id === id); return d ? `${d.issuerName} ${d.currency} ${d.tenor}` : id; };
 
   return (
     <div className="space-y-6">
@@ -102,13 +103,12 @@ export default function MessagesPage() {
           <SelectTrigger className="w-64"><SelectValue placeholder="Filter by deal" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Deals</SelectItem>
-            {deals.map(d => <SelectItem key={d.id} value={d.id}>{d.borrower} {d.currency} {d.tenor}</SelectItem>)}
+            {deals.map(d => <SelectItem key={d.id} value={d.id}>{d.issuerName} {d.currency} {d.tenor}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        {/* Messages panel — 2/3 width */}
         <div className="col-span-2">
           <Tabs defaultValue="all">
             <TabsList>
@@ -121,43 +121,43 @@ export default function MessagesPage() {
             {['all', 'draft', 'sent', 'retracted'].map(tab => (
               <TabsContent key={tab} value={tab}>
                 <div className="grid grid-cols-5 gap-4">
-                  {/* Message List */}
                   <div className="col-span-2 space-y-2 max-h-[600px] overflow-auto">
-                    {filteredMessages.filter(m => tab === 'all' || m.status === tab).map(msg => {
-                      const deal = getDeal(msg.dealId);
-                      return (
-                        <Card key={msg.id} className={`cursor-pointer hover:shadow-sm transition-shadow ${selectedMsg?.id === msg.id ? 'ring-2 ring-primary' : ''}`} onClick={() => handleSelectMsg(msg)}>
-                          <CardContent className="p-3">
-                            <div className="flex items-start justify-between mb-1">
-                              <div className="font-medium text-sm truncate flex-1">
-                                <span className="font-bold text-xs">{getStagePrefix(msg.dealId)}</span>
-                                {msg.subject}
-                              </div>
-                              <Badge variant={statusBadge[msg.status].variant} className="ml-2 shrink-0 text-xs">{statusBadge[msg.status].label}</Badge>
+                    {filteredMessages.filter(m => tab === 'all' || m.status === tab).map(msg => (
+                      <Card key={msg.id} className={`cursor-pointer hover:shadow-sm transition-shadow ${selectedMsg?.id === msg.id ? 'ring-2 ring-primary' : ''}`} onClick={() => handleSelectMsg(msg)}>
+                        <CardContent className="p-3">
+                          <div className="flex items-start justify-between mb-1">
+                            <div className="font-medium text-sm truncate flex-1">
+                              <span className="font-bold text-xs">{getStagePrefix(msg.dealIds)}</span>
+                              {msg.subject}
                             </div>
-                            {deal && (
-                              <div className="mb-1">
-                                <Badge className={`text-[10px] px-1.5 py-0 ${stageColor[deal.stage]}`}>{deal.stage}</Badge>
-                              </div>
-                            )}
-                            <div className="text-xs text-muted-foreground truncate">{msg.body}</div>
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="text-xs text-muted-foreground">{getUserName(msg.senderId)}</span>
-                              <span className="text-xs text-muted-foreground">{format(msg.createdAt, 'MMM d, HH:mm')}</span>
-                            </div>
-                            {msg.attachments.length > 0 && (
-                              <div className="flex items-center gap-1 mt-1"><Paperclip className="h-3 w-3 text-muted-foreground" /><span className="text-xs text-muted-foreground">{msg.attachments.length} file(s)</span></div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                            <Badge variant={statusBadge[msg.status].variant} className="ml-2 shrink-0 text-xs">{statusBadge[msg.status].label}</Badge>
+                          </div>
+                          <div className="mb-1 flex flex-wrap gap-1">
+                            {msg.dealIds.map(did => {
+                              const deal = getDeal(did);
+                              return deal ? (
+                                <Badge key={did} className={`text-[10px] px-1.5 py-0 ${stageColor[deal.stage]}`}>
+                                  {deal.issuerName} {deal.currency} {deal.tenor} · {deal.stage}
+                                </Badge>
+                              ) : null;
+                            })}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">{msg.body}</div>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-xs text-muted-foreground">{getUserName(msg.senderId)}</span>
+                            <span className="text-xs text-muted-foreground">{format(msg.createdAt, 'MMM d, HH:mm')}</span>
+                          </div>
+                          {msg.attachments.length > 0 && (
+                            <div className="flex items-center gap-1 mt-1"><Paperclip className="h-3 w-3 text-muted-foreground" /><span className="text-xs text-muted-foreground">{msg.attachments.length} file(s)</span></div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
                     {filteredMessages.filter(m => tab === 'all' || m.status === tab).length === 0 && (
                       <p className="text-sm text-muted-foreground text-center py-8">No messages</p>
                     )}
                   </div>
 
-                  {/* Message Detail */}
                   <div className="col-span-3">
                     {selectedMsg ? (
                       <Card>
@@ -165,23 +165,38 @@ export default function MessagesPage() {
                           <div className="flex items-start justify-between">
                             <div>
                               <CardTitle className="text-base">
-                                <span className="font-bold">{getStagePrefix(selectedMsg.dealId)}</span>
+                                <span className="font-bold">{getStagePrefix(selectedMsg.dealIds)}</span>
                                 {selectedMsg.subject}
                               </CardTitle>
-                              <div className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
-                                <span>Deal: {getDealName(selectedMsg.dealId)}</span>
-                                {getDeal(selectedMsg.dealId) && (
-                                  <Badge className={`text-[10px] ${stageColor[getDeal(selectedMsg.dealId)!.stage]}`}>
-                                    {getDeal(selectedMsg.dealId)!.stage}
-                                  </Badge>
-                                )}
+                              <div className="text-sm text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
+                                {selectedMsg.dealIds.map(did => {
+                                  const deal = getDeal(did);
+                                  return deal ? (
+                                    <span key={did} className="flex items-center gap-1">
+                                      <span>{deal.issuerName} {deal.currency} {deal.tenor}</span>
+                                      <Badge className={`text-[10px] ${stageColor[deal.stage]}`}>{deal.stage}</Badge>
+                                    </span>
+                                  ) : null;
+                                })}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button size="sm" variant="outline" className="text-xs" onClick={() => handleJoinChat(selectedMsg.dealId)}>
-                                <MessageSquare className="h-3 w-3 mr-1" />
-                                Join Chat
-                              </Button>
+                              {selectedMsg.dealIds.length === 1 ? (
+                                <Button size="sm" variant="outline" className="text-xs" onClick={() => handleJoinChat(selectedMsg.dealIds[0])}>
+                                  <MessageSquare className="h-3 w-3 mr-1" />Join Chat
+                                </Button>
+                              ) : (
+                                <Select onValueChange={handleJoinChat}>
+                                  <SelectTrigger className="h-8 w-auto text-xs">
+                                    <MessageSquare className="h-3 w-3 mr-1" /><SelectValue placeholder="Join Chat..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {selectedMsg.dealIds.map(did => (
+                                      <SelectItem key={did} value={did} className="text-xs">{getDealName(did)}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
                               <Badge variant={statusBadge[selectedMsg.status].variant}>{statusBadge[selectedMsg.status].label}</Badge>
                             </div>
                           </div>
@@ -259,7 +274,6 @@ export default function MessagesPage() {
           </Tabs>
         </div>
 
-        {/* Secure Chat — 1/3 width */}
         <div className="col-span-1">
           <SecureChat activeDealId={activeDealId} />
         </div>

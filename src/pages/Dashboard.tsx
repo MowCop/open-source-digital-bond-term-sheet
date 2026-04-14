@@ -60,7 +60,7 @@ export default function Dashboard() {
             {activeDeals.map(deal => (
               <div key={deal.id} className="flex items-center justify-between p-3 rounded-md border">
                 <div>
-                  <div className="font-medium text-sm">{deal.borrower}</div>
+                  <div className="font-medium text-sm">{deal.issuerName}</div>
                   <div className="text-xs text-muted-foreground">{deal.currency} {deal.size} — {deal.tenor}</div>
                 </div>
                 <Badge className={stageColors[deal.stage]}>{deal.stage}</Badge>
