@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { Deal, Message, User, AuditLogEntry, Notification, DealStage, MessageStatus, DistributionList, ChatChannel, ChatMessage } from '@/types/bond';
+import { Deal, Message, User, AuditLogEntry, Notification, DealStage, MessageStatus, DistributionList, ChatChannel, ChatMessage, UserRole, UserCategory } from '@/types/bond';
 import { mockUsers, mockDeals, mockMessages, mockAuditLog, mockNotifications, mockDistributionLists, mockChatChannels, mockChatMessages } from '@/data/mockData';
 
 interface AppContextType {
@@ -22,18 +22,24 @@ interface AppContextType {
   markNotificationRead: (id: string) => void;
   addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => void;
   sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string) => void;
+  addUser: (user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => User;
+  deleteUser: (id: string) => void;
+  updateUser: (id: string, updates: Partial<User>) => void;
+  addDistributionList: (list: Omit<DistributionList, 'id'>) => DistributionList;
+  updateDistributionList: (id: string, updates: Partial<DistributionList>) => void;
+  deleteDistributionList: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User>(mockUsers[1]);
-  const [users] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>(mockUsers);
   const [deals, setDeals] = useState<Deal[]>(mockDeals);
   const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>(mockAuditLog);
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
-  const [distributionLists] = useState<DistributionList[]>(mockDistributionLists);
+  const [distributionLists, setDistributionLists] = useState<DistributionList[]>(mockDistributionLists);
   const [chatChannels, setChatChannels] = useState<ChatChannel[]>(mockChatChannels);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(mockChatMessages);
 
