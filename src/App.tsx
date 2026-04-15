@@ -9,7 +9,7 @@ import Dashboard from "@/pages/Dashboard";
 import DealsPage from "@/pages/DealsPage";
 import MessagesPage from "@/pages/MessagesPage";
 import AIDraftPage from "@/pages/AIDraftPage";
-import AdminPage from "@/pages/AdminPage";
+import UserManagementPage from "@/pages/UserManagementPage";
 import AuditLogPage from "@/pages/AuditLogPage";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -28,7 +28,7 @@ const App = () => (
               <Route path="/deals" element={<DealsPage />} />
               <Route path="/messages" element={<MessagesPage />} />
               <Route path="/ai-draft" element={<AIDraftPage />} />
-              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin" element={<UserManagementPage />} />
               <Route path="/audit-log" element={<AuditLogPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

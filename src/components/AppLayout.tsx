@@ -1,17 +1,17 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, MessageSquare, Bot, Shield, ClipboardList, Bell, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, FileText, Bell as BellIcon, Bot, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Settings } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/deals', label: 'Deal Data', icon: FileText },
-  { path: '/messages', label: 'Master Deal Alerts', icon: MessageSquare },
-  { path: '/ai-draft', label: 'AI Draft', icon: Bot },
-  { path: '/admin', label: 'Admin', icon: Shield },
+  { path: '/messages', label: 'Master Deal Alerts', icon: BellIcon },
+  { path: '/ai-draft', label: 'Create New Alert', icon: PenSquare },
+  { path: '/admin', label: 'User Management', icon: Users, adminOnly: true },
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
+  { path: '/deals', label: 'Deal Data', icon: FileText },
+  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -31,7 +31,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {navItems.map(item => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
-            const visible = item.path === '/admin' ? currentUser.role === 'master_admin' : true;
+            const visible = item.adminOnly ? currentUser.role === 'master_admin' : true;
             if (!visible) return null;
             return (
               <Link key={item.path} to={item.path}
