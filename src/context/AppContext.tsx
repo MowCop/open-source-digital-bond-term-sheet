@@ -138,11 +138,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addAuditEntry({ action: 'CHAT_MESSAGE_SENT', entityType: 'message', entityId: newMsg.id, userId: currentUser.id, details: `Secure chat message in channel ${channelId}` });
   }, [currentUser.id, addAuditEntry]);
 
+  const addUser = useCallback((user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => {
+    const newUser: User = { ...user, id: `u${Date.now()}`, createdAt: new Date(), createdBy: currentUser.id };
+    setUsers(prev => [...prev, newUser]);
+    addAuditEntry({ action: 'USER_CREATED', entityType: 'user', entityId: newUser.id, userId: currentUser.id, details: `Created user: ${user.name}` });
+    return newUser;
+  }, [currentUser.id, addAuditEntry]);
+
+  const deleteUser = useCallback((id: string) => {
+    const user = users.find(u => u.id === id);
+    setUsers(prev => prev.filter(u => u.id !== id));
+    addAuditEntry({ action: 'USER_DELETED', entityType: 'user', entityId: id, userId: currentUser.id, details: `Deleted user: ${user?.name}` });
+  }, [currentUser.id, addAuditEntry, users]);
+
+  const updateUser = useCallback((id: string, updates: Partial<User>) => {
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
+    addAuditEntry({ action: 'USER_UPDATED', entityType: 'user', entityId: id, userId: currentUser.id, details: `Updated user ${id}` });
+  }, [currentUser.id, addAuditEntry]);
+
+  const addDistributionList = useCallback((list: Omit<DistributionList, 'id'>) => {
+    const newList: DistributionList = { ...list, id: `dl${Date.now()}` };
+    setDistributionLists(prev => [...prev, newList]);
+    addAuditEntry({ action: 'DIST_LIST_CREATED', entityType: 'permission', entityId: newList.id, userId: currentUser.id, details: `Created distribution list: ${list.name}` });
+    return newList;
+  }, [currentUser.id, addAuditEntry]);
+
+  const updateDistributionList = useCallback((id: string, updates: Partial<DistributionList>) => {
+    setDistributionLists(prev => prev.map(dl => dl.id === id ? { ...dl, ...updates } : dl));
+    addAuditEntry({ action: 'DIST_LIST_UPDATED', entityType: 'permission', entityId: id, userId: currentUser.id, details: `Updated distribution list ${id}` });
+  }, [currentUser.id, addAuditEntry]);
+
+  const deleteDistributionList = useCallback((id: string) => {
+    const list = distributionLists.find(dl => dl.id === id);
+    setDistributionLists(prev => prev.filter(dl => dl.id !== id));
+    addAuditEntry({ action: 'DIST_LIST_DELETED', entityType: 'permission', entityId: id, userId: currentUser.id, details: `Deleted distribution list: ${list?.name}` });
+  }, [currentUser.id, addAuditEntry, distributionLists]);
+
   return (
     <AppContext.Provider value={{
       currentUser, setCurrentUser, users, deals, messages, auditLog, notifications, distributionLists,
       chatChannels, chatMessages,
       createDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addAuditEntry, sendChatMessage,
+      addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList,
     }}>
       {children}
     </AppContext.Provider>
