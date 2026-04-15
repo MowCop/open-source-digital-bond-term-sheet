@@ -79,17 +79,25 @@ export default function AIDraftPage() {
     return () => clearTimeout(timer);
   }, [headline, body]);
 
+  const toAttachment = (file: File): Attachment => ({
+    id: `att-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    name: file.name,
+    type: file.name.endsWith('.pdf') ? 'pdf' : file.name.endsWith('.docx') ? 'docx' : 'pptx',
+    size: file.size,
+    url: '',
+  });
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
     const files = Array.from(e.dataTransfer.files);
-    setAttachments(prev => [...prev, ...files.map(f => f.name)]);
+    setAttachments(prev => [...prev, ...files.map(toAttachment)]);
     toast({ title: 'Files attached', description: `${files.length} file(s) added` });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setAttachments(prev => [...prev, ...files.map(f => f.name)]);
+    setAttachments(prev => [...prev, ...files.map(toAttachment)]);
   };
 
   const toggleRecipient = (id: string) => {
@@ -185,7 +193,7 @@ export default function AIDraftPage() {
                   {attachments.map((f, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs text-foreground">
                       <Paperclip className="h-3 w-3" />
-                      <span>{f}</span>
+                      <span>{f.name}</span>
                       <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} className="text-destructive ml-auto text-[10px]">✕</button>
                     </div>
                   ))}
