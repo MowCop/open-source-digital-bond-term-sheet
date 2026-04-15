@@ -93,6 +93,7 @@ export default function MessagesPage() {
   const navigate = useNavigate();
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
+  const getRecipientNames = (ids: string[]) => ids.map(id => getUserName(id)).join(', ');
 
   return (
     <div className="space-y-4">
