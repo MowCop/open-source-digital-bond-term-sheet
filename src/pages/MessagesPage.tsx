@@ -32,7 +32,7 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, currentUser, createMessage } = useApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage } = useApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
