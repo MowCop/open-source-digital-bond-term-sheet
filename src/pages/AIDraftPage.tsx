@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Attachment } from '@/types/bond';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AISuggestion } from '@/types/bond';
 import { Sparkles, Paperclip, Send, Save, ChevronDown } from 'lucide-react';
@@ -49,7 +50,7 @@ export default function AIDraftPage() {
 
   const [headline, setHeadline] = useState('');
   const [body, setBody] = useState('');
-  const [attachments, setAttachments] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [aiFields, setAiFields] = useState<Record<string, string> | null>(null);
   const [aiConfidence, setAiConfidence] = useState<number>(0);
