@@ -45,7 +45,7 @@ function simulateAIExtraction(rawText: string): AISuggestion {
 }
 
 export default function AIDraftPage() {
-  const { distributionLists, createMessage, currentUser, users } = useApp();
+  const { distributionLists, createMessage, createDeal, currentUser, users } = useApp();
   const { toast } = useToast();
 
   const [headline, setHeadline] = useState('');
@@ -114,13 +114,26 @@ export default function AIDraftPage() {
     setSelectedRecipients([]);
   };
 
+  const createDealFromFields = () => {
+    return createDeal({
+      issuerName: aiFields?.['Issuer Name'] || headline.split(/\s+/).slice(0, 3).join(' ') || 'New Deal',
+      currency: aiFields?.['Currency'] || '',
+      size: aiFields?.['Size'] || '',
+      tenor: aiFields?.['Tenor'] || '',
+      coupon: '',
+      stage: 'Mandate',
+      bookrunners: [],
+    });
+  };
+
   const handleSave = () => {
     if (!headline.trim()) {
       toast({ title: 'Missing headline', description: 'Please enter a deal headline', variant: 'destructive' });
       return;
     }
+    const deal = createDealFromFields();
     createMessage({
-      dealIds: [],
+      dealIds: [deal.id],
       subject: headline,
       body,
       status: 'draft',
@@ -141,8 +154,9 @@ export default function AIDraftPage() {
       toast({ title: 'No recipients', description: 'Select at least one distribution recipient', variant: 'destructive' });
       return;
     }
-    const msg = createMessage({
-      dealIds: [],
+    const deal = createDealFromFields();
+    createMessage({
+      dealIds: [deal.id],
       subject: headline,
       body,
       status: 'sent',
@@ -152,7 +166,6 @@ export default function AIDraftPage() {
       aiSuggestions: aiFields ? { headline, borrowerDetails: '', dealSummary: '', keyTerms: aiFields, confidence: aiConfidence } : undefined,
     });
     toast({ title: 'Alert Sent', description: `Sent to ${selectedRecipients.length} recipient(s)` });
-    // Reset
     setHeadline(''); setBody(''); setAttachments([]); setSelectedRecipients([]); setAiFields(null);
   };
 
