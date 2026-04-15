@@ -8,6 +8,7 @@ import { Message, DealStage } from '@/types/bond';
 import { format } from 'date-fns';
 import { ChevronRight, ChevronDown, Plus, MessageSquare, Send } from 'lucide-react';
 import SecureChat from '@/components/SecureChat';
+import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
 
 const stageBadge: Record<DealStage, { label: string; className: string }> = {
@@ -31,7 +32,7 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, currentUser, createMessage } = useApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage } = useApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
@@ -92,6 +93,7 @@ export default function MessagesPage() {
   const navigate = useNavigate();
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
+  const getRecipientNames = (ids: string[]) => ids.map(id => getUserName(id)).join(', ');
 
   return (
     <div className="space-y-4">
@@ -180,9 +182,12 @@ export default function MessagesPage() {
 
                   {/* Expanded content */}
                   {isExpanded && (
-                    <div className="bg-card/40 border-t border-border px-8 py-3 space-y-3">
-                      {/* Action buttons */}
-                      <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                    <div className="bg-card/40 border-t border-border px-8 py-4 space-y-4">
+                      {/* Top action bar */}
+                      <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Alerts History ({group.messages.length} update{group.messages.length !== 1 ? 's' : ''})
+                        </div>
                         <Button
                           size="sm"
                           variant="outline"
@@ -192,48 +197,27 @@ export default function MessagesPage() {
                           <MessageSquare className="h-3 w-3 mr-1" />
                           Open Chat
                         </Button>
-                        {canManageMessages && group.latestMessage.status === 'draft' && (
-                          <Button
-                            size="sm"
-                            className="text-xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              sendMessage(group.latestMessage.id);
-                              toast({ title: 'Alert Sent', description: `Sent to ${group.latestMessage.recipients.length} recipients` });
-                            }}
-                          >
-                            <Send className="h-3 w-3 mr-1" />
-                            Send Latest Draft
-                          </Button>
-                        )}
                       </div>
 
-                      {/* Message history */}
-                      <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                        Alert History ({group.messages.length} update{group.messages.length !== 1 ? 's' : ''})
-                      </div>
+                      {/* Editable alert cards */}
                       {group.messages.map(msg => (
-                        <div key={msg.id} className="flex items-start gap-3 py-2 border-b border-border/30 last:border-0">
-                          <div className="text-timestamp text-xs whitespace-nowrap min-w-[120px]">
-                            {format(msg.updatedAt, 'MMM d, hh:mm a')}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium mb-0.5">{msg.subject}</div>
-                            <div className="text-xs text-muted-foreground line-clamp-2">{msg.body}</div>
-                            {msg.attachments.length > 0 && (
-                              <div className="text-xs text-muted-foreground mt-1">📎 {msg.attachments.length} attachment(s)</div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Badge
-                              variant={msg.status === 'sent' ? 'default' : msg.status === 'draft' ? 'secondary' : 'destructive'}
-                              className="text-[10px]"
-                            >
-                              {msg.status}
-                            </Badge>
-                            <span className="text-[10px] text-muted-foreground">{getUserName(msg.senderId)}</span>
-                          </div>
-                        </div>
+                        <AlertHistoryCard
+                          key={msg.id}
+                          message={msg}
+                          senderName={getUserName(msg.senderId)}
+                          recipientNames={getRecipientNames(msg.recipients)}
+                          canManage={canManageMessages}
+                          onUpdate={updateMessage}
+                          onRetract={(id) => {
+                            retractMessage(id);
+                            toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+                          }}
+                          onSend={(id) => {
+                            sendMessage(id);
+                            const m = messages.find(x => x.id === id);
+                            toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
+                          }}
+                        />
                       ))}
                     </div>
                   )}
