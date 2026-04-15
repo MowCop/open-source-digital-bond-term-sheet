@@ -71,7 +71,6 @@ export default {
         },
         timestamp: "hsl(var(--timestamp))",
       },
-      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
