@@ -8,6 +8,7 @@ import { Message, DealStage } from '@/types/bond';
 import { format } from 'date-fns';
 import { ChevronRight, ChevronDown, Plus, MessageSquare, Send } from 'lucide-react';
 import SecureChat from '@/components/SecureChat';
+import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
 
 const stageBadge: Record<DealStage, { label: string; className: string }> = {
