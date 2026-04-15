@@ -4,42 +4,44 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 25% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
-    --primary: 220 70% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 92%;
-    --secondary-foreground: 220 25% 15%;
-    --muted: 220 15% 94%;
-    --muted-foreground: 220 10% 45%;
+    --background: 0 0% 5%;
+    --foreground: 45 90% 55%;
+    --card: 0 0% 8%;
+    --card-foreground: 45 90% 55%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 45 90% 55%;
+    --primary: 45 90% 50%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 45 80% 60%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 45 30% 50%;
     --accent: 160 50% 40%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 15% 88%;
-    --input: 220 15% 88%;
-    --ring: 220 70% 45%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 45 90% 50%;
     --radius: 0.5rem;
 
     --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --warning-foreground: 0 0% 5%;
     --success: 160 50% 40%;
     --success-foreground: 0 0% 100%;
     --info: 210 80% 55%;
     --info-foreground: 0 0% 100%;
 
-    --sidebar-background: 220 25% 12%;
-    --sidebar-foreground: 220 10% 85%;
-    --sidebar-primary: 220 70% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 20% 20%;
-    --sidebar-accent-foreground: 220 10% 90%;
-    --sidebar-border: 220 20% 22%;
-    --sidebar-ring: 220 70% 55%;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 45 80% 55%;
+    --sidebar-primary: 45 90% 50%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 45 90% 60%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 45 90% 50%;
+
+    --timestamp: 0 0% 100%;
   }
 }
 
@@ -53,8 +55,9 @@
 }
 
 @layer utilities {
-  .stage-mandate { @apply bg-blue-100 text-blue-800; }
-  .stage-launched { @apply bg-amber-100 text-amber-800; }
-  .stage-priced { @apply bg-green-100 text-green-800; }
-  .stage-closed { @apply bg-gray-100 text-gray-800; }
+  .stage-mandate { @apply bg-blue-900/40 text-blue-400; }
+  .stage-launched { @apply bg-green-900/40 text-green-400; }
+  .stage-priced { @apply bg-amber-900/40 text-amber-400; }
+  .stage-closed { @apply bg-gray-800/40 text-gray-400; }
+  .text-timestamp { color: hsl(var(--timestamp)); }
 }
