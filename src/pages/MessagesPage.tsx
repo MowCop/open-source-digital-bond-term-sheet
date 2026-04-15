@@ -57,21 +57,21 @@ export default function MessagesPage() {
   });
 
   dealGroupMap.forEach((msgs, key) => {
-    const dealIds = key.split(',');
+    const dealIds = key.split(',').filter(Boolean);
     const sorted = [...msgs].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-    const primaryDeal = deals.find(d => d.id === dealIds[0]);
-    if (!primaryDeal) return;
+    const primaryDeal = dealIds.length > 0 ? deals.find(d => d.id === dealIds[0]) : undefined;
 
-    const bookrunnerNames = primaryDeal.bookrunners?.map(b => b.name).join(', ') || '';
+    const borrower = primaryDeal?.issuerName || sorted[0].subject.split(/\s+/).slice(0, 3).join(' ') || 'Unlinked';
+    const bookrunnerNames = primaryDeal?.bookrunners?.map(b => b.name).join(', ') || '';
 
     alertGroups.push({
-      borrower: primaryDeal.issuerName,
+      borrower,
       dealIds,
       messages: sorted,
       latestMessage: sorted[0],
       headline: sorted[0].subject,
       bookrunners: bookrunnerNames.length > 30 ? bookrunnerNames.slice(0, 28) + '...' : bookrunnerNames,
-      stage: primaryDeal.stage,
+      stage: primaryDeal?.stage || 'Mandate',
     });
   });
 
