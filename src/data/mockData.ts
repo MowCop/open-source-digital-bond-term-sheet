@@ -1,12 +1,14 @@
 import { Deal, Message, User, AuditLogEntry, Notification, DistributionList, ChatChannel, ChatMessage } from '@/types/bond';
 
 export const mockUsers: User[] = [
-  { id: 'u1', name: 'Sarah Chen', email: 'sarah@globalbank.com', role: 'master_admin', organization: 'GlobalBank', organizationType: 'bank' },
-  { id: 'u2', name: 'James Miller', email: 'james@globalbank.com', role: 'syndicate_admin', organization: 'GlobalBank', organizationType: 'bank' },
-  { id: 'u3', name: 'Anna Schmidt', email: 'anna@eurobank.com', role: 'syndicate_admin', organization: 'EuroBank', organizationType: 'bank' },
-  { id: 'u4', name: 'Mike Johnson', email: 'mike@bloomberg.com', role: 'vendor_user', organization: 'Bloomberg', organizationType: 'vendor' },
-  { id: 'u5', name: 'Lisa Park', email: 'lisa@reuters.com', role: 'vendor_user', organization: 'Reuters', organizationType: 'vendor' },
-  { id: 'u6', name: 'Tom Brown', email: 'tom@refinitiv.com', role: 'vendor_user', organization: 'Refinitiv', organizationType: 'vendor' },
+  { id: 'u1', name: 'Sarah Chen', email: 'sarah@globalbank.com', phone: '+1 212 555 0101', role: 'master_admin', organization: 'GlobalBank', organizationType: 'bank', category: 'Syndicate', createdAt: new Date('2023-01-15T10:00:00'), createdBy: 'System' },
+  { id: 'u2', name: 'James Miller', email: 'james@globalbank.com', phone: '+1 212 555 0102', role: 'syndicate_admin', organization: 'GlobalBank', organizationType: 'bank', category: 'Syndicate', createdAt: new Date('2023-01-15T10:00:00'), createdBy: 'u1' },
+  { id: 'u3', name: 'Anna Schmidt', email: 'anna@eurobank.com', phone: '+49 69 555 0103', role: 'syndicate_admin', organization: 'EuroBank', organizationType: 'bank', category: 'Syndicate', createdAt: new Date('2023-02-20T14:30:00'), createdBy: 'u1' },
+  { id: 'u4', name: 'Mike Johnson', email: 'mike@bloomberg.com', phone: '+1 617 555 0199', role: 'vendor_user', organization: 'Bloomberg', organizationType: 'vendor', category: 'Vendor', createdAt: new Date('2023-06-01T12:45:00'), createdBy: 'u1' },
+  { id: 'u5', name: 'Lisa Park', email: 'lisa@reuters.com', phone: '+44 20 7946 0958', role: 'vendor_user', organization: 'Reuters', organizationType: 'vendor', category: 'Vendor', createdAt: new Date('2023-06-01T12:45:00'), createdBy: 'u1' },
+  { id: 'u6', name: 'Tom Brown', email: 'tom@refinitiv.com', phone: '+44 20 7946 0200', role: 'vendor_user', organization: 'Refinitiv', organizationType: 'vendor', category: 'Vendor', createdAt: new Date('2023-06-01T12:45:00'), createdBy: 'u1' },
+  { id: 'u7', name: 'Elena Rodriguez', email: 'elena.r@citi.com', phone: '+44 20 7946 0958', role: 'syndicate_admin', organization: 'Citi', organizationType: 'bank', category: 'Sales', createdAt: new Date('2023-05-10T10:15:00'), createdBy: 'u1' },
+  { id: 'u8', name: 'David Kim', email: 'david.k@ihsmarkit.com', phone: '+1 646 555 0300', role: 'vendor_user', organization: 'IHS Markit', organizationType: 'vendor', category: 'Vendor', createdAt: new Date('2023-07-15T09:00:00'), createdBy: 'u1' },
 ];
 
 export const mockDeals: Deal[] = [
@@ -212,8 +214,9 @@ export const mockNotifications: Notification[] = [
 ];
 
 export const mockDistributionLists: DistributionList[] = [
-  { id: 'dl1', name: 'All Vendors', vendorIds: ['u4', 'u5', 'u6'], createdBy: 'u2' },
-  { id: 'dl2', name: 'Tier 1 Vendors', vendorIds: ['u4', 'u5'], createdBy: 'u2' },
+  { id: 'dl1', name: 'All Tier 1 Vendors', memberIds: ['u4', 'u5', 'u6', 'u8'], vendorIds: ['u4', 'u5', 'u6', 'u8'], createdBy: 'u2', lastUsed: new Date('2023-10-26T09:45:00') },
+  { id: 'dl2', name: 'Internal Syndicate Desk', memberIds: ['u2', 'u3'], vendorIds: [], createdBy: 'u2', lastUsed: new Date('2023-10-25T13:00:00') },
+  { id: 'dl3', name: 'Global Sales Team', memberIds: ['u7'], vendorIds: [], createdBy: 'u1', lastUsed: new Date('2023-10-20T17:45:00') },
 ];
 
 export const mockChatChannels: ChatChannel[] = [
