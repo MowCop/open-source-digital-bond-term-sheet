@@ -2,6 +2,8 @@ export type DealStage = 'Mandate' | 'Announced' | 'Launched' | 'Books Open' | 'B
 
 export type UserRole = 'master_admin' | 'syndicate_admin' | 'vendor_user';
 
+export type UserCategory = 'Vendor' | 'Syndicate' | 'Buy Side' | 'Legal' | 'Guest' | 'DCM' | 'Sales';
+
 export type MessageStatus = 'draft' | 'pending_review' | 'confirmed' | 'sent' | 'retracted';
 
 // ICMA Taxonomy Enums
@@ -25,9 +27,13 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   role: UserRole;
   organization: string;
   organizationType: 'bank' | 'vendor';
+  category?: UserCategory;
+  createdAt?: Date;
+  createdBy?: string;
 }
 
 export interface Deal {
@@ -148,8 +154,10 @@ export interface Notification {
 export interface DistributionList {
   id: string;
   name: string;
+  memberIds: string[];
   vendorIds: string[];
   createdBy: string;
+  lastUsed?: Date;
 }
 
 export interface ChatMessage {
