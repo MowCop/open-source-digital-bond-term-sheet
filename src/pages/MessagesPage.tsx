@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -88,7 +89,7 @@ export default function MessagesPage() {
     setShowChat(true);
   };
 
-  const navigate = (await import('react-router-dom')).useNavigate;
+  const navigate = useNavigate();
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
 
@@ -120,7 +121,7 @@ export default function MessagesPage() {
           {/* Create New Alert button */}
           {canManageMessages && (
             <div className="flex justify-center mb-4">
-              <Button onClick={handleCreateAlert} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              <Button onClick={() => navigate('/ai-draft')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Alert
               </Button>
