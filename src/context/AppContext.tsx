@@ -33,7 +33,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User>(mockUsers[1]);
+  const [currentUser, setCurrentUser] = useState<User>(mockUsers[0]);
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [deals, setDeals] = useState<Deal[]>(mockDeals);
   const [messages, setMessages] = useState<Message[]>(mockMessages);
