@@ -1,22 +1,32 @@
 
 
-## Why User Management Isn't Showing
+## Why Your New Alert Is Invisible
 
-The User Management page exists and is correctly routed, but it's **hidden from the sidebar** because the default logged-in user is James Miller (Syndicate Admin). The sidebar link has `adminOnly: true`, which requires `master_admin` role.
-
-**Current behavior:** `useState<User>(mockUsers[1])` sets the default user to index 1 (James Miller, `syndicate_admin`). The nav item `{ path: '/admin', label: 'User Management', icon: Users, adminOnly: true }` is only rendered when `currentUser.role === 'master_admin'`.
+The alert was saved successfully, but **it doesn't appear** because of how Master Deal Alerts groups messages. The `createMessage` call in `AIDraftPage.tsx` sets `dealIds: []` (empty array). In `MessagesPage.tsx`, the grouping logic looks up the first deal ID to find the associated deal object — when `dealIds` is empty, `deals.find(d => d.id === undefined)` returns nothing, and the group is silently skipped.
 
 ### Fix
 
-**`src/context/AppContext.tsx`** — Change the default user from `mockUsers[1]` to `mockUsers[0]` (Sarah Chen, `master_admin`) so the User Management link appears by default:
+Two changes:
+
+1. **`src/pages/AIDraftPage.tsx`** — When saving/sending, auto-create a deal from AI-extracted fields (issuer name, currency, tenor) using `createDeal`, then attach the new deal's ID to the message's `dealIds`. If AI extraction didn't find enough data, create a placeholder deal using the headline as the issuer name.
+
+2. **`src/pages/MessagesPage.tsx`** — Add a fallback section for "unlinked" alerts (messages with empty `dealIds`) so they still appear in the list, with borrower shown as "Unlinked" or derived from the subject line. This ensures no alert is ever invisible.
+
+### Technical detail
+
+In `AIDraftPage.tsx`, the `handleSave` and `handleSend` functions will be updated to:
 
 ```
-const [currentUser, setCurrentUser] = useState<User>(mockUsers[0]);
+const deal = createDeal({
+  issuerName: aiFields?.['Issuer Name'] || headline.split(' ')[0] || 'New Deal',
+  currency: aiFields?.['Currency'] || '',
+  tenor: aiFields?.['Tenor'] || '',
+  size: aiFields?.['Size'] || '',
+  stage: 'Mandate',
+  // ... minimal required fields
+});
+createMessage({ dealIds: [deal.id], ... });
 ```
 
-This single-line change makes the app default to a master admin user, making User Management visible in the sidebar immediately. Users can still switch roles via the user switcher at the bottom of the sidebar.
-
-### Alternative (if non-admin users should also see it)
-
-Remove `adminOnly: true` from the nav item in `AppLayout.tsx` and instead show a restricted-access message on the page itself (which already exists in `UserManagementPage.tsx`). This would let all users see the link but only master admins can use the page.
+In `MessagesPage.tsx`, messages with empty `dealIds` will be shown as a separate group with a synthetic borrower label extracted from the subject.
 
