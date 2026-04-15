@@ -88,9 +88,7 @@ export default function MessagesPage() {
     setShowChat(true);
   };
 
-  const handleCreateAlert = () => {
-    toast({ title: 'Create New Alert', description: 'Use the AI Draft page to compose a new deal alert.' });
-  };
+  const navigate = (await import('react-router-dom')).useNavigate;
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
 

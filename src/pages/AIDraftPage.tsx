@@ -1,16 +1,19 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AISuggestion } from '@/types/bond';
-import { Bot, Sparkles, Check, Edit2, Send } from 'lucide-react';
+import { Sparkles, Paperclip, Send, Save, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 function simulateAIExtraction(rawText: string): AISuggestion {
   const hasBorrower = /([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:\s(?:AG|Inc|PLC|SA|Ltd))?)/g.exec(rawText);
@@ -24,187 +27,279 @@ function simulateAIExtraction(rawText: string): AISuggestion {
 
   return {
     headline: `${hasBorrower?.[1] || 'Issuer'} ${hasCurrency?.[1] || ''} ${hasTenor?.[1] || ''} — New Issue Alert`,
-    borrowerDetails: hasBorrower?.[1] || 'Unknown Borrower',
-    dealSummary: `${hasCurrency?.[1] || 'EUR'} ${hasAmount?.[1] || 'TBD'} ${hasTenor?.[1] || ''} at ${hasSpread?.[1] || 'TBD'}`,
+    borrowerDetails: hasBorrower?.[1] || '',
+    dealSummary: `${hasCurrency?.[1] || ''} ${hasAmount?.[1] || ''} ${hasTenor?.[1] || ''} at ${hasSpread?.[1] || ''}`.trim(),
     keyTerms: {
-      'Issuer Name': hasBorrower?.[1] || 'TBD',
-      Currency: hasCurrency?.[1] || 'TBD',
-      Size: hasAmount?.[1] || 'TBD',
-      Tenor: hasTenor?.[1] || 'TBD',
-      'Reoffer Spread': hasSpread?.[1] || 'TBD',
-      'Issuer Rating': hasRating?.[1] || 'TBD',
-      ISIN: hasISIN?.[1] || 'TBD',
-      LEI: hasLEI?.[1] || 'TBD',
+      'Issuer Name': hasBorrower?.[1] || '',
+      Currency: hasCurrency?.[1] || '',
+      Size: hasAmount?.[1] || '',
+      Tenor: hasTenor?.[1] || '',
+      'Reoffer Spread': hasSpread?.[1] || '',
+      'Issuer Rating': hasRating?.[1] || '',
+      ISIN: hasISIN?.[1] || '',
+      LEI: hasLEI?.[1] || '',
     },
     confidence: 0.75 + Math.random() * 0.2,
   };
 }
 
 export default function AIDraftPage() {
-  const { deals, users, distributionLists, createMessage, currentUser } = useApp();
+  const { distributionLists, createMessage, currentUser, users } = useApp();
   const { toast } = useToast();
-
-  const [rawInput, setRawInput] = useState('');
-  const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
-  const [suggestions, setSuggestions] = useState<AISuggestion | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const [headline, setHeadline] = useState('');
   const [body, setBody] = useState('');
-  const [keyTerms, setKeyTerms] = useState<Record<string, string>>({});
+  const [attachments, setAttachments] = useState<string[]>([]);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
-  const [selectedDistList, setSelectedDistList] = useState('');
+  const [aiFields, setAiFields] = useState<Record<string, string> | null>(null);
+  const [aiConfidence, setAiConfidence] = useState<number>(0);
+  const [sendTarget, setSendTarget] = useState<'all' | 'selected'>('all');
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Vendor/distribution recipients
   const vendorUsers = users.filter(u => u.organizationType === 'vendor');
 
-  const handleAIExtract = () => {
-    if (!rawInput.trim()) return;
-    setIsProcessing(true);
-    setTimeout(() => {
-      const result = simulateAIExtraction(rawInput);
-      setSuggestions(result);
-      setHeadline(result.headline);
-      setBody(`${result.dealSummary}\n\n${rawInput}`);
-      setKeyTerms(result.keyTerms);
-      setIsProcessing(false);
-    }, 1500);
+  // Auto-extract AI fields when headline or body changes
+  useEffect(() => {
+    const combined = `${headline} ${body}`.trim();
+    if (combined.length < 10) {
+      setAiFields(null);
+      return;
+    }
+    const timer = setTimeout(() => {
+      const result = simulateAIExtraction(combined);
+      const nonEmpty = Object.entries(result.keyTerms).filter(([, v]) => v);
+      if (nonEmpty.length > 0) {
+        setAiFields(result.keyTerms);
+        setAiConfidence(result.confidence);
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [headline, body]);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    setAttachments(prev => [...prev, ...files.map(f => f.name)]);
+    toast({ title: 'Files attached', description: `${files.length} file(s) added` });
   };
 
-  const handleDistListChange = (listId: string) => {
-    setSelectedDistList(listId);
-    const list = distributionLists.find(l => l.id === listId);
-    if (list) setSelectedRecipients(list.vendorIds);
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachments(prev => [...prev, ...files.map(f => f.name)]);
   };
 
-  const toggleDeal = (dealId: string) => {
-    setSelectedDeals(prev => prev.includes(dealId) ? prev.filter(id => id !== dealId) : [...prev, dealId]);
+  const toggleRecipient = (id: string) => {
+    setSelectedRecipients(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
   };
 
-  const handleCreateDraft = () => {
-    if (!headline || !body || selectedDeals.length === 0 || selectedRecipients.length === 0) {
-      toast({ title: 'Missing Fields', description: 'Please fill in all required fields', variant: 'destructive' });
+  const selectAll = () => {
+    setSelectedRecipients(vendorUsers.map(u => u.id));
+  };
+
+  const deselectAll = () => {
+    setSelectedRecipients([]);
+  };
+
+  const handleSave = () => {
+    if (!headline.trim()) {
+      toast({ title: 'Missing headline', description: 'Please enter a deal headline', variant: 'destructive' });
       return;
     }
     createMessage({
-      dealIds: selectedDeals,
+      dealIds: [],
       subject: headline,
       body,
       status: 'draft',
       senderId: currentUser.id,
       recipients: selectedRecipients,
-      attachments: [],
-      aiSuggestions: suggestions || undefined,
+      attachments,
+      aiSuggestions: aiFields ? { headline, borrowerDetails: '', dealSummary: '', keyTerms: aiFields, confidence: aiConfidence } : undefined,
     });
-    toast({ title: 'Draft Created', description: 'AI-assisted draft saved. Review in Messages.' });
-    setRawInput(''); setSuggestions(null); setHeadline(''); setBody(''); setKeyTerms({}); setSelectedRecipients([]); setSelectedDeals([]);
+    toast({ title: 'Draft Saved', description: 'Alert saved as draft in Master Deal Alerts.' });
+  };
+
+  const handleSend = () => {
+    if (!headline.trim()) {
+      toast({ title: 'Missing headline', description: 'Please enter a deal headline', variant: 'destructive' });
+      return;
+    }
+    if (selectedRecipients.length === 0) {
+      toast({ title: 'No recipients', description: 'Select at least one distribution recipient', variant: 'destructive' });
+      return;
+    }
+    const msg = createMessage({
+      dealIds: [],
+      subject: headline,
+      body,
+      status: 'sent',
+      senderId: currentUser.id,
+      recipients: selectedRecipients,
+      attachments,
+      aiSuggestions: aiFields ? { headline, borrowerDetails: '', dealSummary: '', keyTerms: aiFields, confidence: aiConfidence } : undefined,
+    });
+    toast({ title: 'Alert Sent', description: `Sent to ${selectedRecipients.length} recipient(s)` });
+    // Reset
+    setHeadline(''); setBody(''); setAttachments([]); setSelectedRecipients([]); setAiFields(null);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Bot className="h-6 w-6" />AI Draft Assistant</h1>
-        <p className="text-muted-foreground text-sm">Paste deal info and let AI extract ICMA taxonomy fields and draft your alert</p>
+        <h1 className="text-2xl font-bold">Create New Alert</h1>
+        <p className="text-muted-foreground text-sm">Draft a new message to automatically generate deal records.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <Card>
-            <CardHeader><CardTitle className="text-sm">1. Paste Raw Deal Information</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <Textarea value={rawInput} onChange={e => setRawInput(e.target.value)} rows={8}
-                placeholder="Paste deal details here, e.g.:&#10;Republic of Italy is mandating GlobalBank and EuroBank for a new EUR 5bn 10Y benchmark. Expected pricing MS+90 area. Rating BBB/Baa3. ISIN IT0005580003." />
-              <Button onClick={handleAIExtract} disabled={!rawInput.trim() || isProcessing} className="w-full">
-                <Sparkles className="h-4 w-4 mr-2" />{isProcessing ? 'Processing...' : 'Extract with AI'}
-              </Button>
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-3 gap-4">
+        {/* Left: Main compose area */}
+        <div className="col-span-2 flex flex-col">
+          <div className="bg-card border border-border rounded-lg flex-1 flex flex-col">
+            {/* Headline */}
+            <Input
+              value={headline}
+              onChange={e => setHeadline(e.target.value)}
+              placeholder="Enter deal headline (e.g. Republic of Italy EUR 1.5bn 10Y BTP Syndication)"
+              className="border-0 border-b border-border rounded-none text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
+            />
+            {/* Body */}
+            <Textarea
+              value={body}
+              onChange={e => setBody(e.target.value)}
+              placeholder="Enter message body..."
+              className="border-0 rounded-none flex-1 min-h-[200px] px-4 py-3 bg-transparent focus-visible:ring-0 resize-none placeholder:text-muted-foreground/50"
+            />
+            {/* Drop zone */}
+            <div
+              onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={handleDrop}
+              className={`px-4 py-4 border-t border-border text-sm text-muted-foreground/50 transition-colors ${isDragOver ? 'bg-accent/10' : ''}`}
+            >
+              {attachments.length > 0 ? (
+                <div className="space-y-1">
+                  {attachments.map((f, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-foreground">
+                      <Paperclip className="h-3 w-3" />
+                      <span>{f}</span>
+                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} className="text-destructive ml-auto text-[10px]">✕</button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                'Drag and drop PDF, Word, or PPT files here to attach them.'
+              )}
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader><CardTitle className="text-sm">2. Select Deal(s) & Recipients</CardTitle></CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <Label>Associated Deal(s) <span className="text-xs text-muted-foreground">(select one or more)</span></Label>
-                <div className="space-y-1 mt-1 max-h-32 overflow-auto border rounded p-2">
-                  {deals.map(d => (
-                    <div key={d.id} className="flex items-center gap-2">
-                      <Checkbox checked={selectedDeals.includes(d.id)} onCheckedChange={() => toggleDeal(d.id)} />
-                      <span className="text-sm">{d.issuerName} {d.currency} {d.tenor}</span>
-                      <Badge className="text-[9px] ml-auto">{d.stage}</Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label>Distribution List</Label>
-                <Select value={selectedDistList} onValueChange={handleDistListChange}>
-                  <SelectTrigger><SelectValue placeholder="Select list..." /></SelectTrigger>
-                  <SelectContent>
-                    {distributionLists.map(dl => <SelectItem key={dl.id} value={dl.id}>{dl.name} ({dl.vendorIds.length} vendors)</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">Or select individually:</Label>
-                <div className="space-y-2 mt-1">
-                  {vendorUsers.map(v => (
-                    <div key={v.id} className="flex items-center gap-2">
-                      <Checkbox checked={selectedRecipients.includes(v.id)}
-                        onCheckedChange={checked => setSelectedRecipients(prev => checked ? [...prev, v.id] : prev.filter(id => id !== v.id))} />
-                      <span className="text-sm">{v.name} ({v.organization})</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Bottom action bar */}
+          <div className="flex items-center gap-3 mt-3 px-1">
+            <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+              <Paperclip className="h-4 w-4 mr-1" /> Attach
+            </Button>
+            <div className="flex-1" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Send to <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {distributionLists.map(dl => (
+                  <DropdownMenuItem key={dl.id} onClick={() => setSelectedRecipients(dl.memberIds || [])}>
+                    {dl.name} ({(dl.memberIds || []).length})
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button variant="outline" size="sm" onClick={handleSave}>
+              <Save className="h-4 w-4 mr-1" /> Save
+            </Button>
+            <Button size="sm" onClick={handleSend} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Send className="h-4 w-4 mr-1" /> Send
+            </Button>
+          </div>
         </div>
 
+        {/* Right: AI extraction + Distribution */}
         <div className="space-y-4">
-          {suggestions ? (
-            <>
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm">AI Extracted Fields (ICMA Taxonomy)</CardTitle>
-                    <Badge variant="outline">{(suggestions.confidence * 100).toFixed(0)}% confidence</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {Object.entries(keyTerms).map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-2">
-                      <Label className="w-28 text-xs shrink-0">{key}</Label>
-                      <Input value={value} onChange={e => setKeyTerms(prev => ({ ...prev, [key]: e.target.value }))} className="text-sm" />
-                      <Check className="h-4 w-4 text-green-600 shrink-0" />
-                    </div>
+          {/* AI Field Extraction */}
+          <div className="bg-card border border-border rounded-lg">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+              <Sparkles className="h-4 w-4 text-accent" />
+              <span className="font-semibold text-sm">AI Field Extraction</span>
+              {aiFields && (
+                <Badge variant="outline" className="ml-auto text-[10px]">
+                  {(aiConfidence * 100).toFixed(0)}%
+                </Badge>
+              )}
+            </div>
+            <div className="p-4">
+              {aiFields ? (
+                <div className="space-y-2">
+                  {Object.entries(aiFields).map(([key, value]) => (
+                    value ? (
+                      <div key={key} className="flex items-center gap-2 text-xs">
+                        <span className="text-muted-foreground w-24 shrink-0">{key}</span>
+                        <span className="text-foreground font-medium">{value}</span>
+                      </div>
+                    ) : null
                   ))}
-                </CardContent>
-              </Card>
+                  {Object.values(aiFields).every(v => !v) && (
+                    <p className="text-xs text-muted-foreground text-center py-4">No fields detected yet.</p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                  <Sparkles className="h-10 w-10 mb-3 opacity-20" />
+                  <p className="text-xs text-center">Start typing a headline or message body to auto-extract deal fields.</p>
+                </div>
+              )}
+            </div>
+          </div>
 
-              <Card>
-                <CardHeader><CardTitle className="text-sm flex items-center gap-2"><Edit2 className="h-4 w-4" />3. Review & Edit Draft</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <Label>Headline</Label>
-                    <Input value={headline} onChange={e => setHeadline(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label>Message Body</Label>
-                    <Textarea value={body} onChange={e => setBody(e.target.value)} rows={6} />
-                  </div>
-                  <Button onClick={handleCreateDraft} className="w-full">
-                    <Send className="h-4 w-4 mr-2" />Save as Draft
-                  </Button>
-                </CardContent>
-              </Card>
-            </>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                <Bot className="h-12 w-12 mb-3 opacity-30" />
-                <p className="text-sm">Paste deal information and click "Extract with AI" to get started</p>
-              </CardContent>
-            </Card>
-          )}
+          {/* Distribution */}
+          <div className="bg-card border border-border rounded-lg">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <span className="font-semibold text-sm uppercase tracking-wider">Distribution</span>
+              <button
+                onClick={selectedRecipients.length === vendorUsers.length ? deselectAll : selectAll}
+                className="text-xs text-accent hover:underline"
+              >
+                {selectedRecipients.length === vendorUsers.length ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+            <div className="divide-y divide-border">
+              {vendorUsers.map(v => (
+                <label key={v.id} className="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-card/60 transition-colors">
+                  <span className="text-sm">{v.organization}</span>
+                  <Checkbox
+                    checked={selectedRecipients.includes(v.id)}
+                    onCheckedChange={() => toggleRecipient(v.id)}
+                  />
+                </label>
+              ))}
+              {distributionLists.map(dl => (
+                <label key={dl.id} className="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-card/60 transition-colors">
+                  <span className="text-sm">{dl.name} <span className="text-muted-foreground text-xs">({(dl.memberIds || []).length})</span></span>
+                  <Checkbox
+                    checked={(dl.memberIds || []).every(id => selectedRecipients.includes(id))}
+                    onCheckedChange={checked => {
+                      if (checked) {
+                        setSelectedRecipients(prev => [...new Set([...prev, ...(dl.memberIds || [])])]);
+                      } else {
+                        setSelectedRecipients(prev => prev.filter(id => !(dl.memberIds || []).includes(id)));
+                      }
+                    }}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
