@@ -80,6 +80,7 @@ interface AppContextType {
   chatChannels: ChatChannel[];
   chatMessages: ChatMessage[];
   createDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>) => Deal;
+  updateDeal: (dealId: string, updates: Partial<Deal>) => void;
   updateDealStage: (dealId: string, newStage: DealStage, note?: string) => void;
   createMessage: (msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => Message;
   updateMessage: (id: string, updates: Partial<Message>) => void;
@@ -127,6 +128,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addAuditEntry({ action: 'DEAL_CREATED', entityType: 'deal', entityId: newDeal.id, userId: currentUser.id, details: `Created deal: ${deal.issuerName} ${deal.currency} ${deal.tenor}` });
     return newDeal;
   }, [currentUser.id, addAuditEntry, users, setDeals, setChatChannels]);
+
+  const updateDeal = useCallback((dealId: string, updates: Partial<Deal>) => {
+    setDeals(prev => prev.map(d => d.id === dealId ? { ...d, ...updates, updatedAt: new Date() } : d));
+    addAuditEntry({ action: 'DEAL_UPDATED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Deal updated (${Object.keys(updates).join(', ')})` });
+  }, [currentUser.id, addAuditEntry, setDeals]);
 
   const updateDealStage = useCallback((dealId: string, newStage: DealStage, note?: string) => {
     setDeals(prev => prev.map(d => {
@@ -243,7 +249,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={{
       currentUser, setCurrentUser, users, deals, messages, auditLog, notifications, distributionLists,
       chatChannels, chatMessages,
-      createDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addAuditEntry, sendChatMessage,
+      createDeal, updateDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addAuditEntry, sendChatMessage,
       addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList,
     }}>
       {children}
