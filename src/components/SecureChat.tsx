@@ -95,7 +95,7 @@ export default function SecureChat({ activeDealId }: SecureChatProps) {
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-primary" />
           <CardTitle className="text-sm">Secure Communications</CardTitle>
-          <Badge variant="outline" className="text-[10px] ml-auto">End-to-End Encrypted</Badge>
+          <Badge variant="outline" className="text-[10px] ml-auto">Secure Channel</Badge>
         </div>
         {activeDeal && (
           <div className="flex items-center gap-2 mt-1">

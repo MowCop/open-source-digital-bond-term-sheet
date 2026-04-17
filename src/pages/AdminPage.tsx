@@ -15,7 +15,7 @@ const roleBadge: Record<UserRole, { label: string; variant: 'default' | 'seconda
 };
 
 export default function AdminPage() {
-  const { users, currentUser, addAuditEntry } = useApp();
+  const { users, currentUser, addAuditEntry, updateUser } = useApp();
   const { toast } = useToast();
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [newRole, setNewRole] = useState<UserRole>('vendor_user');
@@ -31,6 +31,7 @@ export default function AdminPage() {
   }
 
   const handleRoleChange = (userId: string) => {
+    updateUser(userId, { role: newRole });
     addAuditEntry({ action: 'USER_ROLE_CHANGED', entityType: 'user', entityId: userId, userId: currentUser.id, details: `Role changed to ${newRole} for ${users.find(u => u.id === userId)?.name}` });
     toast({ title: 'Role Updated', description: `User role has been updated to ${newRole.replace('_', ' ')}` });
     setEditingUser(null);
