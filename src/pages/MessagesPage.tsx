@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Message, DealStage } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Send } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare } from 'lucide-react';
 import SecureChat from '@/components/SecureChat';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
+import { mergeDealFromText, isStageForward } from '@/lib/alertParsing';
 
 const stageBadge: Record<DealStage, { label: string; className: string }> = {
   Mandate: { label: 'Mandate', className: 'bg-blue-900/50 text-blue-400 border-blue-800' },
@@ -32,7 +32,7 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage } = useApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage } = useApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
@@ -94,6 +94,33 @@ export default function MessagesPage() {
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
   const getRecipientNames = (ids: string[]) => ids.map(id => getUserName(id)).join(', ');
+
+  const handlePostUpdate = (originalId: string, edits: { subject: string; body: string }) => {
+    const original = messages.find(m => m.id === originalId);
+    if (!original) return;
+    const newDraft = createMessage({
+      dealIds: original.dealIds,
+      subject: edits.subject,
+      body: edits.body,
+      status: 'draft',
+      senderId: currentUser.id,
+      recipients: original.recipients,
+      attachments: original.attachments,
+      threadId: original.threadId ?? original.id,
+      parentMessageId: original.id,
+    });
+    // Re-parse and merge into the parent deal(s)
+    for (const dealId of original.dealIds) {
+      const deal = deals.find(d => d.id === dealId);
+      if (!deal) continue;
+      const { patch, detectedStage } = mergeDealFromText(deal, `${edits.subject}\n${edits.body}`);
+      if (Object.keys(patch).length > 0) updateDeal(dealId, patch);
+      if (detectedStage && isStageForward(deal.stage, detectedStage)) {
+        updateDealStage(dealId, detectedStage, 'Auto-detected from alert update');
+      }
+    }
+    toast({ title: 'Update Drafted', description: `New update created (${newDraft.id}). Review and Send to dispatch.` });
+  };
 
   return (
     <div className="space-y-4">
@@ -199,26 +226,35 @@ export default function MessagesPage() {
                         </Button>
                       </div>
 
-                      {/* Editable alert cards */}
-                      {group.messages.map(msg => (
-                        <AlertHistoryCard
-                          key={msg.id}
-                          message={msg}
-                          senderName={getUserName(msg.senderId)}
-                          recipientNames={getRecipientNames(msg.recipients)}
-                          canManage={canManageMessages}
-                          onUpdate={updateMessage}
-                          onRetract={(id) => {
-                            retractMessage(id);
-                            toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
-                          }}
-                          onSend={(id) => {
-                            sendMessage(id);
-                            const m = messages.find(x => x.id === id);
-                            toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
-                          }}
-                        />
-                      ))}
+                      {/* Editable alert cards — newest first; version # counts oldest=1 */}
+                      {group.messages.map((msg, idx) => {
+                        const total = group.messages.length;
+                        const versionNum = total - idx;
+                        const versionLabel = total > 1
+                          ? (versionNum === 1 ? 'Original' : `Update #${versionNum - 1}`)
+                          : undefined;
+                        return (
+                          <AlertHistoryCard
+                            key={msg.id}
+                            message={msg}
+                            senderName={getUserName(msg.senderId)}
+                            recipientNames={getRecipientNames(msg.recipients)}
+                            canManage={canManageMessages}
+                            versionLabel={versionLabel}
+                            onUpdate={updateMessage}
+                            onRetract={(id) => {
+                              retractMessage(id);
+                              toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+                            }}
+                            onSend={(id) => {
+                              sendMessage(id);
+                              const m = messages.find(x => x.id === id);
+                              toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
+                            }}
+                            onPostUpdate={handlePostUpdate}
+                          />
+                        );
+                      })}
                     </div>
                   )}
                 </div>
