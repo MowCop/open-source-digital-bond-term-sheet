@@ -211,7 +211,7 @@ export default function AIDraftPage() {
       aiSuggestions: aiFields ? { headline, borrowerDetails: '', dealSummary: '', keyTerms: aiFields, confidence: aiConfidence } : undefined,
     });
     toast({ title: 'Alert Sent', description: `Sent to ${selectedRecipients.length} recipient(s)` });
-    setHeadline(''); setBody(''); setAttachments([]); setSelectedRecipients([]); setAiFields(null);
+    setHeadline(''); setBody(''); setAttachments([]); setSelectedRecipients([]); setAiFields(null); setAiBookrunners([]);
   };
 
   return (
