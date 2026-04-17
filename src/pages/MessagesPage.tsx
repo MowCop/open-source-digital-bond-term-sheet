@@ -226,26 +226,35 @@ export default function MessagesPage() {
                         </Button>
                       </div>
 
-                      {/* Editable alert cards */}
-                      {group.messages.map(msg => (
-                        <AlertHistoryCard
-                          key={msg.id}
-                          message={msg}
-                          senderName={getUserName(msg.senderId)}
-                          recipientNames={getRecipientNames(msg.recipients)}
-                          canManage={canManageMessages}
-                          onUpdate={updateMessage}
-                          onRetract={(id) => {
-                            retractMessage(id);
-                            toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
-                          }}
-                          onSend={(id) => {
-                            sendMessage(id);
-                            const m = messages.find(x => x.id === id);
-                            toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
-                          }}
-                        />
-                      ))}
+                      {/* Editable alert cards — newest first; version # counts oldest=1 */}
+                      {group.messages.map((msg, idx) => {
+                        const total = group.messages.length;
+                        const versionNum = total - idx;
+                        const versionLabel = total > 1
+                          ? (versionNum === 1 ? 'Original' : `Update #${versionNum - 1}`)
+                          : undefined;
+                        return (
+                          <AlertHistoryCard
+                            key={msg.id}
+                            message={msg}
+                            senderName={getUserName(msg.senderId)}
+                            recipientNames={getRecipientNames(msg.recipients)}
+                            canManage={canManageMessages}
+                            versionLabel={versionLabel}
+                            onUpdate={updateMessage}
+                            onRetract={(id) => {
+                              retractMessage(id);
+                              toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+                            }}
+                            onSend={(id) => {
+                              sendMessage(id);
+                              const m = messages.find(x => x.id === id);
+                              toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
+                            }}
+                            onPostUpdate={handlePostUpdate}
+                          />
+                        );
+                      })}
                     </div>
                   )}
                 </div>
