@@ -1,33 +1,47 @@
 
 
-## Why Bookrunners Aren't Captured
+## Why the Eurofima Alert Disappears
 
-In `AIDraftPage.tsx`, the `simulateAIExtraction` function only extracts 8 fields (Issuer, Currency, Size, Tenor, Spread, Rating, ISIN, LEI). **Bookrunners are never parsed**, even though phrases like *"has appointed BNP Paribas, Deutsche Bank, NatWest and Rabobank as joint lead managers"* clearly state them.
+All app data (deals, messages, users, audit log) lives in **React `useState` inside `AppProvider`** (`src/context/AppContext.tsx`). That state exists only in memory for the lifetime of the component.
 
-Then `createDealFromFields()` always passes `bookrunners: []`, so the column in Master Deal Alerts stays blank.
-
-### Fix (2 small changes)
-
-**1. `src/pages/AIDraftPage.tsx` — Extract bookrunners from text**
-
-Add a regex pass to detect bank names following appointment cues:
-- Trigger phrases: *"appointed"*, *"mandated"*, *"joint lead managers"*, *"bookrunners"*, *"global coordinators"*
-- Capture the comma/`and`-separated list of bank names that follow
-- Identify role: *"global coordinator"* → `isGlobalCoordinator: true`; *"passive"* → `role: 'passive'`; default → `role: 'active'`
-- Maintain a known-bank dictionary (BNP Paribas, Deutsche Bank, JPMorgan, Goldman Sachs, Citi, HSBC, Barclays, NatWest, Rabobank, Morgan Stanley, BofA, UBS, Credit Agricole, Société Générale, etc.) to improve precision
-
-Display detected bookrunners in the AI Field Extraction panel as chips.
-
-**2. `src/pages/AIDraftPage.tsx` — Pass them into the deal**
-
-Update `createDealFromFields()`:
+Looking at `src/App.tsx`, the structure is:
 ```
-bookrunners: aiBookrunners ?? []
+AppProvider → BrowserRouter → AppLayout → Routes
 ```
+
+So `AppProvider` sits *above* the router and should persist across route changes. **It does** — but only if React doesn't unmount it. The most likely cause of data loss here is one of:
+
+1. **Hot Module Replacement (HMR)** during dev re-initialises `mockUsers`/`mockDeals`/`mockMessages` from `mockData.ts`, wiping the in-memory additions. This happens silently when any file is edited or saved.
+2. **A full page reload** (refresh, back/forward across an external nav) resets all state because nothing is persisted.
+3. Even without HMR, navigating to certain routes that throw or remount the tree would clear state.
+
+In short: **there is no persistence layer**. Everything resets to `mockData.ts` on any reload/HMR. New deals and alerts you create only live in memory.
+
+## Fix: Persist app state to `localStorage`
+
+Add a lightweight persistence layer inside `AppContext.tsx` so user-created data survives reloads, HMR, and navigation.
+
+### Changes (single file: `src/context/AppContext.tsx`)
+
+1. Add a small helper `usePersistedState<T>(key, initial)` that:
+   - Reads `localStorage` on init, falling back to `initial` (the mock data) if empty or parse fails.
+   - Revives `Date` fields (createdAt, updatedAt, sentAt, timestamp, etc.) since JSON loses Date types.
+   - Writes back to `localStorage` whenever state changes (debounced via `useEffect`).
+
+2. Replace each `useState(mockX)` with `usePersistedState('bondvdr.x', mockX)` for: `users`, `deals`, `messages`, `auditLog`, `notifications`, `distributionLists`, `chatChannels`, `chatMessages`, `currentUser`.
+
+3. Add a **"Reset demo data"** button (small, in `AppLayout` footer or sidebar) that clears all `bondvdr.*` keys and reloads — useful for the prototype so you can return to the seeded mock state.
 
 ### Result
 
-Typing the EUROFIMA-style alert auto-detects *BNP Paribas, Deutsche Bank, NatWest, Rabobank* → they appear in the AI panel → on Save/Send the deal is created with those bookrunners → the Bookrunners column in Master Deal Alerts populates correctly.
+- Creating the Eurofima alert writes the new deal + message to `localStorage`.
+- Navigating away from `/messages` and back: state is still in memory (no change needed).
+- Refresh / HMR / closing tab and reopening: state is rehydrated from `localStorage`, so Eurofima still appears.
+- Reset button restores original mock data when needed.
 
-No changes needed in `MessagesPage.tsx` (it already reads `deal.bookrunners`).
+### Notes
+
+- Pure client-side, no backend required — fits the prototype scope.
+- Date revival is done by walking known field names per entity type to avoid a generic reviver hurting performance.
+- If a future step moves to Lovable Cloud / Supabase, this layer is easy to swap out for real persistence.
 
