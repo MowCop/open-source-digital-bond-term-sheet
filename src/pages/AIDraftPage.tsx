@@ -94,6 +94,7 @@ export default function AIDraftPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [aiFields, setAiFields] = useState<Record<string, string> | null>(null);
+  const [aiBookrunners, setAiBookrunners] = useState<Bookrunner[]>([]);
   const [aiConfidence, setAiConfidence] = useState<number>(0);
   const [sendTarget, setSendTarget] = useState<'all' | 'selected'>('all');
   const [isDragOver, setIsDragOver] = useState(false);
@@ -107,14 +108,17 @@ export default function AIDraftPage() {
     const combined = `${headline} ${body}`.trim();
     if (combined.length < 10) {
       setAiFields(null);
+      setAiBookrunners([]);
       return;
     }
     const timer = setTimeout(() => {
       const result = simulateAIExtraction(combined);
       const nonEmpty = Object.entries(result.keyTerms).filter(([, v]) => v);
-      if (nonEmpty.length > 0) {
+      const bookrunners = extractBookrunners(combined);
+      if (nonEmpty.length > 0 || bookrunners.length > 0) {
         setAiFields(result.keyTerms);
         setAiConfidence(result.confidence);
+        setAiBookrunners(bookrunners);
       }
     }, 800);
     return () => clearTimeout(timer);
