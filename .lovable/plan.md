@@ -1,47 +1,52 @@
 
 
-## Why the Eurofima Alert Disappears
+## Goal
 
-All app data (deals, messages, users, audit log) lives in **React `useState` inside `AppProvider`** (`src/context/AppContext.tsx`). That state exists only in memory for the lifetime of the component.
+When a user edits an existing Eurofima-style alert in Master Deal Alerts, the system should **clone** the original instead of overwriting it: the first version is preserved in history, and the edit becomes a new "update" entry. Any new fields parsed from the updated text (bookrunners, size, spread, ISIN, stage, etc.) flow back into the parent Deal so all other parts of the app stay in sync.
 
-Looking at `src/App.tsx`, the structure is:
-```
-AppProvider → BrowserRouter → AppLayout → Routes
-```
+## Current Behaviour (the problem)
 
-So `AppProvider` sits *above* the router and should persist across route changes. **It does** — but only if React doesn't unmount it. The most likely cause of data loss here is one of:
+In `src/components/AlertHistoryCard.tsx`, clicking **Edit → Save Changes** calls `onUpdate(message.id, { subject, body })` which mutates the existing message in place. There is no version history — the original headline/body is lost. The Deal record is also never re-parsed, so updates like a newly-announced size or bookrunner don't propagate.
 
-1. **Hot Module Replacement (HMR)** during dev re-initialises `mockUsers`/`mockDeals`/`mockMessages` from `mockData.ts`, wiping the in-memory additions. This happens silently when any file is edited or saved.
-2. **A full page reload** (refresh, back/forward across an external nav) resets all state because nothing is persisted.
-3. Even without HMR, navigating to certain routes that throw or remount the tree would clear state.
+## Proposed Solution
 
-In short: **there is no persistence layer**. Everything resets to `mockData.ts` on any reload/HMR. New deals and alerts you create only live in memory.
+### 1. "Edit as new update" flow (clone, don't overwrite)
 
-## Fix: Persist app state to `localStorage`
+In `AlertHistoryCard.tsx`, replace the single **Edit** button with two actions on a sent alert:
+- **Edit (correct typo)** — current in-place edit, kept for fixing mistakes on a draft or genuine corrections.
+- **Post Update** — the new default action. Opens the same edit UI but on Save:
+  1. Creates a **new Message** (clone) with the same `dealIds`, `recipients`, `senderId`, a new `id`, status `draft`, `parentMessageId = original.id`, `threadId = original.threadId ?? original.id`, and the edited subject/body/attachments.
+  2. Leaves the original message untouched (status stays `sent`, visible in history).
+  3. The new draft appears at the top of the alert's history with a **Send** button so the user can review and dispatch it (matching today's draft → send flow).
 
-Add a lightweight persistence layer inside `AppContext.tsx` so user-created data survives reloads, HMR, and navigation.
+### 2. Re-parse and merge into the Deal
 
-### Changes (single file: `src/context/AppContext.tsx`)
+When **Post Update** is saved, run the same AI extraction used in `AIDraftPage.tsx` (`simulateAIExtraction` + `extractBookrunners`) over the new body and call `updateDeal(dealId, mergedFields)` where:
+- Newly-found values **fill blanks** on the deal (early-stage fields are often empty by design).
+- Newly-found values **overwrite** existing ones only when they differ and are non-empty (e.g. size moves from "TBD" → "EUR 500m"; stage advances Mandate → Launched if detected).
+- Bookrunners are **merged** (union by name; role upgraded if "global coordinator" appears).
 
-1. Add a small helper `usePersistedState<T>(key, initial)` that:
-   - Reads `localStorage` on init, falling back to `initial` (the mock data) if empty or parse fails.
-   - Revives `Date` fields (createdAt, updatedAt, sentAt, timestamp, etc.) since JSON loses Date types.
-   - Writes back to `localStorage` whenever state changes (debounced via `useEffect`).
+This keeps the Master Deal Alerts row, Deals page, and any downstream views consistent without manual re-entry.
 
-2. Replace each `useState(mockX)` with `usePersistedState('bondvdr.x', mockX)` for: `users`, `deals`, `messages`, `auditLog`, `notifications`, `distributionLists`, `chatChannels`, `chatMessages`, `currentUser`.
+### 3. Stage auto-progression (light touch)
 
-3. Add a **"Reset demo data"** button (small, in `AppLayout` footer or sidebar) that clears all `bondvdr.*` keys and reloads — useful for the prototype so you can return to the seeded mock state.
+If the updated body contains stage cues ("books open", "priced at", "settled"), advance `deal.stage` and append to `stageHistory`. Otherwise leave the stage alone.
+
+### 4. UI changes in the expanded alert history
+
+- History list already sorts newest-first — the new draft will naturally appear above the original sent version.
+- Add a small "Update #N" label per entry (computed from position in the thread) so users can see version progression at a glance.
+- Original sent alerts get a **Post Update** button (primary) plus **Edit** (secondary, for true corrections) plus **Retract**.
+- Drafts keep today's **Edit / Send / Retract** behaviour.
+
+### 5. Files touched
+
+- `src/components/AlertHistoryCard.tsx` — add `onPostUpdate` prop, new button, version label.
+- `src/pages/MessagesPage.tsx` — wire `onPostUpdate` to a handler that `createMessage`s a clone and triggers re-parse.
+- `src/pages/AIDraftPage.tsx` — export the existing `simulateAIExtraction` and `extractBookrunners` helpers (or move them to `src/lib/alertParsing.ts`) so `MessagesPage` can reuse them without duplication.
+- `src/context/AppContext.tsx` — confirm `updateDeal` exists; if not, add it (small addition, persisted via the existing localStorage layer).
 
 ### Result
 
-- Creating the Eurofima alert writes the new deal + message to `localStorage`.
-- Navigating away from `/messages` and back: state is still in memory (no change needed).
-- Refresh / HMR / closing tab and reopening: state is rehydrated from `localStorage`, so Eurofima still appears.
-- Reset button restores original mock data when needed.
-
-### Notes
-
-- Pure client-side, no backend required — fits the prototype scope.
-- Date revival is done by walking known field names per entity type to avoid a generic reviver hurting performance.
-- If a future step moves to Lovable Cloud / Supabase, this layer is easy to swap out for real persistence.
+Posting an update to the Eurofima alert preserves the original "Mandate" alert in history, creates a new draft with the fuller text (size, spread, ISIN, additional bookrunners), and on Send the parent Deal is automatically enriched — so the Bookrunners column, stage badge, and any future Deal detail view all reflect the latest information without losing the audit trail.
 
