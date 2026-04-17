@@ -4,16 +4,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
-import { Edit2, RotateCcw, Save, X, Send } from 'lucide-react';
+import { Edit2, RotateCcw, Save, Send, GitBranch } from 'lucide-react';
 
 interface AlertHistoryCardProps {
   message: Message;
   senderName: string;
   recipientNames: string;
   canManage: boolean;
+  versionLabel?: string;
   onUpdate: (id: string, updates: Partial<Message>) => void;
   onRetract: (id: string) => void;
   onSend: (id: string) => void;
+  onPostUpdate: (id: string, edits: { subject: string; body: string }) => void;
 }
 
 export default function AlertHistoryCard({
@@ -21,28 +23,35 @@ export default function AlertHistoryCard({
   senderName,
   recipientNames,
   canManage,
+  versionLabel,
   onUpdate,
   onRetract,
   onSend,
+  onPostUpdate,
 }: AlertHistoryCardProps) {
-  const [editing, setEditing] = useState(false);
+  const [mode, setMode] = useState<'view' | 'edit' | 'update'>('view');
   const [editSubject, setEditSubject] = useState(message.subject);
   const [editBody, setEditBody] = useState(message.body);
 
   const handleSave = () => {
-    onUpdate(message.id, { subject: editSubject, body: editBody });
-    setEditing(false);
+    if (mode === 'update') {
+      onPostUpdate(message.id, { subject: editSubject, body: editBody });
+    } else {
+      onUpdate(message.id, { subject: editSubject, body: editBody });
+    }
+    setMode('view');
   };
 
   const handleCancel = () => {
     setEditSubject(message.subject);
     setEditBody(message.body);
-    setEditing(false);
+    setMode('view');
   };
 
   const isRetracted = message.status === 'retracted';
   const isSent = message.status === 'sent';
   const isDraft = message.status === 'draft';
+  const editing = mode !== 'view';
 
   return (
     <div className={`rounded-lg border border-border bg-card/60 p-4 space-y-3 ${isRetracted ? 'opacity-50' : ''}`}>
@@ -56,7 +65,14 @@ export default function AlertHistoryCard({
               className="w-full bg-background border border-border rounded px-3 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           ) : (
-            <div className="text-sm font-medium">{message.subject}</div>
+            <div className="text-sm font-medium flex items-center gap-2">
+              {versionLabel && (
+                <span className="text-[10px] font-semibold uppercase text-accent bg-accent/10 px-1.5 py-0.5 rounded">
+                  {versionLabel}
+                </span>
+              )}
+              <span>{message.subject}</span>
+            </div>
           )}
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
             <span>{senderName}</span>
@@ -94,12 +110,12 @@ export default function AlertHistoryCard({
 
       {/* Action buttons */}
       {canManage && !isRetracted && (
-        <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+        <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
           {editing ? (
             <>
               <Button size="sm" className="text-xs" onClick={handleSave}>
                 <Save className="h-3 w-3 mr-1" />
-                Save Changes
+                {mode === 'update' ? 'Save as New Update' : 'Save Changes'}
               </Button>
               <Button size="sm" variant="ghost" className="text-xs" onClick={handleCancel}>
                 Cancel
@@ -107,7 +123,13 @@ export default function AlertHistoryCard({
             </>
           ) : (
             <>
-              <Button size="sm" variant="outline" className="text-xs" onClick={() => setEditing(true)}>
+              {isSent && (
+                <Button size="sm" className="text-xs" onClick={() => setMode('update')}>
+                  <GitBranch className="h-3 w-3 mr-1" />
+                  Post Update
+                </Button>
+              )}
+              <Button size="sm" variant="outline" className="text-xs" onClick={() => setMode('edit')}>
                 <Edit2 className="h-3 w-3 mr-1" />
                 Edit
               </Button>
