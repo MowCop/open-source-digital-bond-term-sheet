@@ -316,7 +316,19 @@ export default function AIDraftPage() {
                       </div>
                     ) : null
                   ))}
-                  {Object.values(aiFields).every(v => !v) && (
+                  {aiBookrunners.length > 0 && (
+                    <div className="flex items-start gap-2 text-xs pt-2 border-t border-border">
+                      <span className="text-muted-foreground w-24 shrink-0 mt-1">Bookrunners</span>
+                      <div className="flex flex-wrap gap-1">
+                        {aiBookrunners.map(b => (
+                          <Badge key={b.name} variant="secondary" className="text-[10px]">
+                            {b.name}{b.isGlobalCoordinator ? ' (GC)' : ''}{b.role === 'passive' ? ' (P)' : ''}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {Object.values(aiFields).every(v => !v) && aiBookrunners.length === 0 && (
                     <p className="text-xs text-muted-foreground text-center py-4">No fields detected yet.</p>
                   )}
                 </div>
