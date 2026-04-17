@@ -1,32 +1,33 @@
 
 
-## Why Your New Alert Is Invisible
+## Why Bookrunners Aren't Captured
 
-The alert was saved successfully, but **it doesn't appear** because of how Master Deal Alerts groups messages. The `createMessage` call in `AIDraftPage.tsx` sets `dealIds: []` (empty array). In `MessagesPage.tsx`, the grouping logic looks up the first deal ID to find the associated deal object — when `dealIds` is empty, `deals.find(d => d.id === undefined)` returns nothing, and the group is silently skipped.
+In `AIDraftPage.tsx`, the `simulateAIExtraction` function only extracts 8 fields (Issuer, Currency, Size, Tenor, Spread, Rating, ISIN, LEI). **Bookrunners are never parsed**, even though phrases like *"has appointed BNP Paribas, Deutsche Bank, NatWest and Rabobank as joint lead managers"* clearly state them.
 
-### Fix
+Then `createDealFromFields()` always passes `bookrunners: []`, so the column in Master Deal Alerts stays blank.
 
-Two changes:
+### Fix (2 small changes)
 
-1. **`src/pages/AIDraftPage.tsx`** — When saving/sending, auto-create a deal from AI-extracted fields (issuer name, currency, tenor) using `createDeal`, then attach the new deal's ID to the message's `dealIds`. If AI extraction didn't find enough data, create a placeholder deal using the headline as the issuer name.
+**1. `src/pages/AIDraftPage.tsx` — Extract bookrunners from text**
 
-2. **`src/pages/MessagesPage.tsx`** — Add a fallback section for "unlinked" alerts (messages with empty `dealIds`) so they still appear in the list, with borrower shown as "Unlinked" or derived from the subject line. This ensures no alert is ever invisible.
+Add a regex pass to detect bank names following appointment cues:
+- Trigger phrases: *"appointed"*, *"mandated"*, *"joint lead managers"*, *"bookrunners"*, *"global coordinators"*
+- Capture the comma/`and`-separated list of bank names that follow
+- Identify role: *"global coordinator"* → `isGlobalCoordinator: true`; *"passive"* → `role: 'passive'`; default → `role: 'active'`
+- Maintain a known-bank dictionary (BNP Paribas, Deutsche Bank, JPMorgan, Goldman Sachs, Citi, HSBC, Barclays, NatWest, Rabobank, Morgan Stanley, BofA, UBS, Credit Agricole, Société Générale, etc.) to improve precision
 
-### Technical detail
+Display detected bookrunners in the AI Field Extraction panel as chips.
 
-In `AIDraftPage.tsx`, the `handleSave` and `handleSend` functions will be updated to:
+**2. `src/pages/AIDraftPage.tsx` — Pass them into the deal**
 
+Update `createDealFromFields()`:
 ```
-const deal = createDeal({
-  issuerName: aiFields?.['Issuer Name'] || headline.split(' ')[0] || 'New Deal',
-  currency: aiFields?.['Currency'] || '',
-  tenor: aiFields?.['Tenor'] || '',
-  size: aiFields?.['Size'] || '',
-  stage: 'Mandate',
-  // ... minimal required fields
-});
-createMessage({ dealIds: [deal.id], ... });
+bookrunners: aiBookrunners ?? []
 ```
 
-In `MessagesPage.tsx`, messages with empty `dealIds` will be shown as a separate group with a synthetic borrower label extracted from the subject.
+### Result
+
+Typing the EUROFIMA-style alert auto-detects *BNP Paribas, Deutsche Bank, NatWest, Rabobank* → they appear in the AI panel → on Save/Send the deal is created with those bookrunners → the Bookrunners column in Master Deal Alerts populates correctly.
+
+No changes needed in `MessagesPage.tsx` (it already reads `deal.bookrunners`).
 
