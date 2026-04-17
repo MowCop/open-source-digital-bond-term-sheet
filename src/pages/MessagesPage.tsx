@@ -32,7 +32,7 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage } = useApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage } = useApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
@@ -94,6 +94,33 @@ export default function MessagesPage() {
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
   const getRecipientNames = (ids: string[]) => ids.map(id => getUserName(id)).join(', ');
+
+  const handlePostUpdate = (originalId: string, edits: { subject: string; body: string }) => {
+    const original = messages.find(m => m.id === originalId);
+    if (!original) return;
+    const newDraft = createMessage({
+      dealIds: original.dealIds,
+      subject: edits.subject,
+      body: edits.body,
+      status: 'draft',
+      senderId: currentUser.id,
+      recipients: original.recipients,
+      attachments: original.attachments,
+      threadId: original.threadId ?? original.id,
+      parentMessageId: original.id,
+    });
+    // Re-parse and merge into the parent deal(s)
+    for (const dealId of original.dealIds) {
+      const deal = deals.find(d => d.id === dealId);
+      if (!deal) continue;
+      const { patch, detectedStage } = mergeDealFromText(deal, `${edits.subject}\n${edits.body}`);
+      if (Object.keys(patch).length > 0) updateDeal(dealId, patch);
+      if (detectedStage && isStageForward(deal.stage, detectedStage)) {
+        updateDealStage(dealId, detectedStage, 'Auto-detected from alert update');
+      }
+    }
+    toast({ title: 'Update Drafted', description: `New update created (${newDraft.id}). Review and Send to dispatch.` });
+  };
 
   return (
     <div className="space-y-4">
