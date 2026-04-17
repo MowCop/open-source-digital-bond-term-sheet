@@ -15,6 +15,47 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Bookrunner } from '@/types/bond';
+
+const KNOWN_BANKS = [
+  'BNP Paribas', 'Deutsche Bank', 'JPMorgan', 'JP Morgan', 'Goldman Sachs', 'Citi', 'Citigroup',
+  'HSBC', 'Barclays', 'NatWest', 'Rabobank', 'Morgan Stanley', 'BofA', 'Bank of America',
+  'UBS', 'Credit Agricole', 'Crédit Agricole', 'Societe Generale', 'Société Générale',
+  'Nomura', 'Mizuho', 'MUFG', 'SMBC', 'Santander', 'BBVA', 'ING', 'Commerzbank',
+  'UniCredit', 'Intesa Sanpaolo', 'Standard Chartered', 'Wells Fargo', 'RBC', 'TD Securities',
+  'Scotiabank', 'CIBC', 'BMO', 'DZ Bank', 'LBBW', 'Helaba', 'Danske Bank', 'Nordea',
+  'SEB', 'Swedbank', 'DBS', 'OCBC', 'ANZ', 'Westpac', 'NAB', 'Lloyds',
+];
+
+function extractBookrunners(rawText: string): Bookrunner[] {
+  const text = rawText.replace(/\s+/g, ' ');
+  // Look for an appointment/role cue and capture the surrounding sentence
+  const cuePattern = /(appointed|mandated|joint lead managers?|bookrunners?|global coordinators?|lead managers?)/gi;
+  const found = new Map<string, Bookrunner>();
+
+  // Search a window around each cue
+  let match: RegExpExecArray | null;
+  while ((match = cuePattern.exec(text)) !== null) {
+    const windowText = text.slice(Math.max(0, match.index - 200), Math.min(text.length, match.index + 300));
+    const isGC = /global coordinator/i.test(windowText);
+    const isPassive = /passive/i.test(windowText);
+
+    for (const bank of KNOWN_BANKS) {
+      const bankRe = new RegExp(`\\b${bank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (bankRe.test(windowText)) {
+        const key = bank.toLowerCase();
+        if (!found.has(key)) {
+          found.set(key, {
+            name: bank,
+            role: isPassive ? 'passive' : 'active',
+            isGlobalCoordinator: isGC,
+          });
+        }
+      }
+    }
+  }
+  return Array.from(found.values());
+}
 
 function simulateAIExtraction(rawText: string): AISuggestion {
   const hasBorrower = /([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:\s(?:AG|Inc|PLC|SA|Ltd))?)/g.exec(rawText);
