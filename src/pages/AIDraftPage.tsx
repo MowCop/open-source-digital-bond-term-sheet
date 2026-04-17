@@ -167,7 +167,7 @@ export default function AIDraftPage() {
       tenor: aiFields?.['Tenor'] || '',
       coupon: '',
       stage: 'Mandate',
-      bookrunners: [],
+      bookrunners: aiBookrunners ?? [],
     });
   };
 
