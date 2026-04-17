@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, FileText, Bell as BellIcon, Bot, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Settings } from 'lucide-react';
-import { useApp } from '@/context/AppContext';
+import { useApp, resetDemoData } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
@@ -65,6 +65,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { if (confirm('Reset all demo data to seeded mock data? This will reload the page.')) resetDemoData(); }}
+            className="w-full mt-2 text-xs text-sidebar-foreground/60 hover:bg-sidebar-accent justify-start h-7"
+          >
+            Reset demo data
+          </Button>
         </div>
       </aside>
       {/* Main */}
