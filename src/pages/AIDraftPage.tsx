@@ -15,6 +15,47 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Bookrunner } from '@/types/bond';
+
+const KNOWN_BANKS = [
+  'BNP Paribas', 'Deutsche Bank', 'JPMorgan', 'JP Morgan', 'Goldman Sachs', 'Citi', 'Citigroup',
+  'HSBC', 'Barclays', 'NatWest', 'Rabobank', 'Morgan Stanley', 'BofA', 'Bank of America',
+  'UBS', 'Credit Agricole', 'Crédit Agricole', 'Societe Generale', 'Société Générale',
+  'Nomura', 'Mizuho', 'MUFG', 'SMBC', 'Santander', 'BBVA', 'ING', 'Commerzbank',
+  'UniCredit', 'Intesa Sanpaolo', 'Standard Chartered', 'Wells Fargo', 'RBC', 'TD Securities',
+  'Scotiabank', 'CIBC', 'BMO', 'DZ Bank', 'LBBW', 'Helaba', 'Danske Bank', 'Nordea',
+  'SEB', 'Swedbank', 'DBS', 'OCBC', 'ANZ', 'Westpac', 'NAB', 'Lloyds',
+];
+
+function extractBookrunners(rawText: string): Bookrunner[] {
+  const text = rawText.replace(/\s+/g, ' ');
+  // Look for an appointment/role cue and capture the surrounding sentence
+  const cuePattern = /(appointed|mandated|joint lead managers?|bookrunners?|global coordinators?|lead managers?)/gi;
+  const found = new Map<string, Bookrunner>();
+
+  // Search a window around each cue
+  let match: RegExpExecArray | null;
+  while ((match = cuePattern.exec(text)) !== null) {
+    const windowText = text.slice(Math.max(0, match.index - 200), Math.min(text.length, match.index + 300));
+    const isGC = /global coordinator/i.test(windowText);
+    const isPassive = /passive/i.test(windowText);
+
+    for (const bank of KNOWN_BANKS) {
+      const bankRe = new RegExp(`\\b${bank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (bankRe.test(windowText)) {
+        const key = bank.toLowerCase();
+        if (!found.has(key)) {
+          found.set(key, {
+            name: bank,
+            role: isPassive ? 'passive' : 'active',
+            isGlobalCoordinator: isGC,
+          });
+        }
+      }
+    }
+  }
+  return Array.from(found.values());
+}
 
 function simulateAIExtraction(rawText: string): AISuggestion {
   const hasBorrower = /([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:\s(?:AG|Inc|PLC|SA|Ltd))?)/g.exec(rawText);
@@ -53,6 +94,7 @@ export default function AIDraftPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [aiFields, setAiFields] = useState<Record<string, string> | null>(null);
+  const [aiBookrunners, setAiBookrunners] = useState<Bookrunner[]>([]);
   const [aiConfidence, setAiConfidence] = useState<number>(0);
   const [sendTarget, setSendTarget] = useState<'all' | 'selected'>('all');
   const [isDragOver, setIsDragOver] = useState(false);
@@ -66,14 +108,17 @@ export default function AIDraftPage() {
     const combined = `${headline} ${body}`.trim();
     if (combined.length < 10) {
       setAiFields(null);
+      setAiBookrunners([]);
       return;
     }
     const timer = setTimeout(() => {
       const result = simulateAIExtraction(combined);
       const nonEmpty = Object.entries(result.keyTerms).filter(([, v]) => v);
-      if (nonEmpty.length > 0) {
+      const bookrunners = extractBookrunners(combined);
+      if (nonEmpty.length > 0 || bookrunners.length > 0) {
         setAiFields(result.keyTerms);
         setAiConfidence(result.confidence);
+        setAiBookrunners(bookrunners);
       }
     }, 800);
     return () => clearTimeout(timer);
@@ -122,7 +167,7 @@ export default function AIDraftPage() {
       tenor: aiFields?.['Tenor'] || '',
       coupon: '',
       stage: 'Mandate',
-      bookrunners: [],
+      bookrunners: aiBookrunners ?? [],
     });
   };
 
@@ -166,7 +211,7 @@ export default function AIDraftPage() {
       aiSuggestions: aiFields ? { headline, borrowerDetails: '', dealSummary: '', keyTerms: aiFields, confidence: aiConfidence } : undefined,
     });
     toast({ title: 'Alert Sent', description: `Sent to ${selectedRecipients.length} recipient(s)` });
-    setHeadline(''); setBody(''); setAttachments([]); setSelectedRecipients([]); setAiFields(null);
+    setHeadline(''); setBody(''); setAttachments([]); setSelectedRecipients([]); setAiFields(null); setAiBookrunners([]);
   };
 
   return (
@@ -271,7 +316,19 @@ export default function AIDraftPage() {
                       </div>
                     ) : null
                   ))}
-                  {Object.values(aiFields).every(v => !v) && (
+                  {aiBookrunners.length > 0 && (
+                    <div className="flex items-start gap-2 text-xs pt-2 border-t border-border">
+                      <span className="text-muted-foreground w-24 shrink-0 mt-1">Bookrunners</span>
+                      <div className="flex flex-wrap gap-1">
+                        {aiBookrunners.map(b => (
+                          <Badge key={b.name} variant="secondary" className="text-[10px]">
+                            {b.name}{b.isGlobalCoordinator ? ' (GC)' : ''}{b.role === 'passive' ? ' (P)' : ''}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {Object.values(aiFields).every(v => !v) && aiBookrunners.length === 0 && (
                     <p className="text-xs text-muted-foreground text-center py-4">No fields detected yet.</p>
                   )}
                 </div>
