@@ -351,7 +351,9 @@ export default function UserManagementPage() {
                       <SelectContent>
                         <SelectItem value="master_admin">Master Admin</SelectItem>
                         <SelectItem value="syndicate_admin">Syndicate Admin</SelectItem>
-                        <SelectItem value="vendor_user">Vendor</SelectItem>
+                        <SelectItem value="vendor_user">Read Only</SelectItem>
+                        <SelectItem value="syndicate_readonly">Syndicate – Read Only</SelectItem>
+                        <SelectItem value="sales_readonly">Sales – Read Only</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -402,7 +404,7 @@ export default function UserManagementPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => openEditUser(u)}><Pencil className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(u)} disabled={u.id === currentUser.id}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
