@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserRole, UserCategory, User, DistributionList } from '@/types/bond';
 import { useToast } from '@/hooks/use-toast';
 import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const roleLabels: Record<UserRole, string> = {
   master_admin: 'Master Admin',
@@ -417,6 +418,68 @@ export default function UserManagementPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Edit User Dialog */}
+      <Dialog open={!!editingUser} onOpenChange={(o) => !o && setEditingUser(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Full Name</Label>
+                  <Input value={editName} onChange={e => setEditName(e.target.value)} className="mt-2 bg-background border-border" />
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Work Email</Label>
+                  <Input value={editEmail} onChange={e => setEditEmail(e.target.value)} className="mt-2 bg-background border-border" />
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Phone Number</Label>
+                  <Input value={editPhone} onChange={e => setEditPhone(e.target.value)} className="mt-2 bg-background border-border" />
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Organization</Label>
+                  <Input value={editOrg} onChange={e => setEditOrg(e.target.value)} className="mt-2 bg-background border-border" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">User Role</Label>
+                  <Select value={editRole} onValueChange={v => setEditRole(v as UserRole)}>
+                    <SelectTrigger className="mt-2 bg-background border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="master_admin">Master Admin</SelectItem>
+                      <SelectItem value="syndicate_admin">Syndicate Admin</SelectItem>
+                      <SelectItem value="vendor_user">Read Only</SelectItem>
+                      <SelectItem value="syndicate_readonly">Syndicate – Read Only</SelectItem>
+                      <SelectItem value="sales_readonly">Sales – Read Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Category</Label>
+                  <Select value={editCategory} onValueChange={v => setEditCategory(v as UserCategory)}>
+                    <SelectTrigger className="mt-2 bg-background border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="rounded-md bg-muted/40 border border-border px-3 py-2 text-xs text-muted-foreground">
+                Created: {formatDate(editingUser.createdAt)} by {creatorName(editingUser.createdBy || 'System')}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+                <Button onClick={handleSaveEditUser}>Save Changes</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
