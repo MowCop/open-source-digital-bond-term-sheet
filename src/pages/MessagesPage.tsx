@@ -243,8 +243,32 @@ export default function MessagesPage() {
                     <div className="col-span-2 text-timestamp text-sm">
                       {format(group.latestMessage.updatedAt, 'MMM d, hh:mm a')}
                     </div>
-                    <div className="col-span-2 font-medium text-sm">
-                      {group.borrower}
+                    <div className="col-span-2 font-medium text-sm" data-borrower-editor onClick={(e) => e.stopPropagation()}>
+                      {canManageMessages && editingBorrowerKey === groupKey ? (
+                        <Input
+                          autoFocus
+                          value={borrowerDraft}
+                          onChange={(e) => setBorrowerDraft(e.target.value)}
+                          onBlur={() => saveBorrower(group)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); saveBorrower(group); }
+                            if (e.key === 'Escape') { setEditingBorrowerKey(null); }
+                          }}
+                          className="h-7 text-sm"
+                        />
+                      ) : (
+                        <span
+                          className={canManageMessages ? 'cursor-text hover:bg-background/50 rounded px-1 -mx-1' : ''}
+                          onClick={() => {
+                            if (!canManageMessages || !group.dealIds[0]) return;
+                            setEditingBorrowerKey(groupKey);
+                            setBorrowerDraft(group.borrower);
+                          }}
+                          title={canManageMessages ? 'Click to edit borrower name' : ''}
+                        >
+                          {group.borrower}
+                        </span>
+                      )}
                     </div>
                     <div className="col-span-4 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
