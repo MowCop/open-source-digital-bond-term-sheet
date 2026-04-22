@@ -86,6 +86,8 @@ interface AppContextType {
   updateMessage: (id: string, updates: Partial<Message>) => void;
   sendMessage: (id: string) => void;
   retractMessage: (id: string) => void;
+  deleteMessage: (id: string) => void;
+  deleteMessageThread: (dealIds: string[]) => void;
   markNotificationRead: (id: string) => void;
   addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => void;
   sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string) => void;
@@ -189,6 +191,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addAuditEntry({ action: 'MESSAGE_RETRACTED', entityType: 'message', entityId: id, userId: currentUser.id, details: `Message retracted` });
   }, [currentUser.id, addAuditEntry, setMessages]);
 
+  const deleteMessage = useCallback((id: string) => {
+    setMessages(prev => prev.filter(m => m.id !== id));
+    addAuditEntry({ action: 'MESSAGE_DELETED', entityType: 'message', entityId: id, userId: currentUser.id, details: `Message deleted` });
+  }, [currentUser.id, addAuditEntry, setMessages]);
+
+  const deleteMessageThread = useCallback((dealIds: string[]) => {
+    const key = dealIds.join(',');
+    setMessages(prev => prev.filter(m => m.dealIds.join(',') !== key));
+    addAuditEntry({ action: 'MESSAGE_THREAD_DELETED', entityType: 'message', entityId: key, userId: currentUser.id, details: `Alert thread deleted (deals: ${key})` });
+  }, [currentUser.id, addAuditEntry, setMessages]);
+
   const markNotificationRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   }, [setNotifications]);
@@ -250,6 +263,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       currentUser, setCurrentUser, users, deals, messages, auditLog, notifications, distributionLists,
       chatChannels, chatMessages,
       createDeal, updateDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addAuditEntry, sendChatMessage,
+      deleteMessage, deleteMessageThread,
       addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList,
     }}>
       {children}
