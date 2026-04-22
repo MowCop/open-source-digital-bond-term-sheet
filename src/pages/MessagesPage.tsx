@@ -230,6 +230,7 @@ export default function MessagesPage() {
                     onClick={(e) => {
                       // Don't toggle when interacting with the inline headline editor
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
+                      if ((e.target as HTMLElement).closest('[data-borrower-editor]')) return;
                       toggleExpand(groupKey);
                     }}
                   >
