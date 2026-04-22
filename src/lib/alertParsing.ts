@@ -32,8 +32,82 @@ export function extractBookrunners(rawText: string): Bookrunner[] {
   return Array.from(found.values());
 }
 
+const KNOWN_SUPRAS = [
+  'European Investment Bank',
+  'European Bank for Reconstruction and Development',
+  'Asian Development Bank',
+  'Inter-American Development Bank',
+  'African Development Bank',
+  'Council of Europe Development Bank',
+  'International Finance Corporation',
+  'World Bank',
+  'Eurofima',
+  'KfW',
+  'Nordic Investment Bank',
+  'Islamic Development Bank',
+];
+
+const BORROWER_TERMINATORS = /\b(plans?|priced|prices|pricing|mandates?|mandated|announces?|announced|launches?|launched|opens?|closes?|settled|today|tomorrow|tap|taps|issues?|issued|issuing|completes?|completed|prints?|printed|set|sets|to)\b/i;
+
+function trimBorrower(name: string): string {
+  return name
+    .replace(/[\s,;:.\-–—]+$/g, '')
+    .replace(/\s+(of|and|for|the|de|du|la|von|van)$/i, '')
+    .trim();
+}
+
+export function extractBorrowerName(rawText: string): string {
+  const text = rawText.replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+
+  const candidates: Array<{ start: number; value: string }> = [];
+
+  // Layer 1: known supranationals
+  for (const supra of KNOWN_SUPRAS) {
+    const re = new RegExp(`\\b${supra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    const m = re.exec(text);
+    if (m) candidates.push({ start: m.index, value: supra });
+  }
+
+  // Layer 2: sovereign patterns
+  const sovereignPatterns: RegExp[] = [
+    /\b(?:Federal |Democratic |Islamic |People's )?Republic of [A-Z][\w'-]+(?: and [A-Z][\w'-]+)*/,
+    /\bKingdom of [A-Z][\w'-]+/,
+    /\bGrand Duchy of [A-Z][\w'-]+/,
+    /\b(?:State|Commonwealth|Principality|Sultanate|Emirate) of [A-Z][\w'-]+/,
+    /\bUnited (?:States|Kingdom|Arab Emirates|Mexican States)(?: of [A-Z][\w'-]+)?/,
+  ];
+  for (const re of sovereignPatterns) {
+    const m = re.exec(text);
+    if (m) candidates.push({ start: m.index, value: m[0] });
+  }
+
+  // Layer 3: corporate suffix anchor
+  const corpRe = /\b([A-Z][\w&.'-]+(?:\s+[A-Z][\w&.'-]+){0,5})\s+(AG|Inc|PLC|SA|Ltd|NV|SpA|GmbH|Holdings|Group|Corp|Corporation|Bank|Capital)\b/;
+  const corpMatch = corpRe.exec(text);
+  if (corpMatch) candidates.push({ start: corpMatch.index, value: `${corpMatch[1]} ${corpMatch[2]}` });
+
+  // Layer 4: connector-aware capitalized run, terminated by verbs
+  const connectorRe = /\b[A-Z][\w'-]+(?:\s+(?:[A-Z][\w'-]+|of|and|for|the|de|du|la|von|van)){0,6}/;
+  const connMatch = connectorRe.exec(text);
+  if (connMatch) {
+    let value = connMatch[0];
+    // Cut at any terminator verb inside the match
+    const termMatch = BORROWER_TERMINATORS.exec(value);
+    if (termMatch) value = value.slice(0, termMatch.index).trim();
+    if (value) candidates.push({ start: connMatch.index, value });
+  }
+
+  if (candidates.length === 0) return '';
+
+  // Pick longest match; tiebreak by leftmost
+  const trimmed = candidates.map(c => ({ ...c, value: trimBorrower(c.value) })).filter(c => c.value);
+  trimmed.sort((a, b) => b.value.length - a.value.length || a.start - b.start);
+  return trimmed[0].value;
+}
+
 export function simulateAIExtraction(rawText: string): AISuggestion {
-  const hasBorrower = /([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:\s(?:AG|Inc|PLC|SA|Ltd))?)/g.exec(rawText);
+  const borrower = extractBorrowerName(rawText);
   const hasAmount = /(\d[\d,.]+)/g.exec(rawText);
   const hasCurrency = /(EUR|USD|GBP|CHF)/g.exec(rawText);
   const hasTenor = /(\d+Y|\d+-year)/gi.exec(rawText);
@@ -43,11 +117,11 @@ export function simulateAIExtraction(rawText: string): AISuggestion {
   const hasRating = /((?:AAA|AA\+|AA|AA-|A\+|A|A-|BBB\+|BBB|BBB-)(?:\/(?:Aaa|Aa[123]|A[123]|Baa[123]))?)/g.exec(rawText);
 
   return {
-    headline: `${hasBorrower?.[1] || 'Issuer'} ${hasCurrency?.[1] || ''} ${hasTenor?.[1] || ''} — New Issue Alert`,
-    borrowerDetails: hasBorrower?.[1] || '',
+    headline: `${borrower || 'Issuer'} ${hasCurrency?.[1] || ''} ${hasTenor?.[1] || ''} — New Issue Alert`,
+    borrowerDetails: borrower,
     dealSummary: `${hasCurrency?.[1] || ''} ${hasAmount?.[1] || ''} ${hasTenor?.[1] || ''} at ${hasSpread?.[1] || ''}`.trim(),
     keyTerms: {
-      'Issuer Name': hasBorrower?.[1] || '',
+      'Issuer Name': borrower,
       Currency: hasCurrency?.[1] || '',
       Size: hasAmount?.[1] || '',
       Tenor: hasTenor?.[1] || '',
