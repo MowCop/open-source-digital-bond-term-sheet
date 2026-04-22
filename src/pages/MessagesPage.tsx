@@ -42,6 +42,8 @@ export default function MessagesPage() {
   const [editingHeadlineId, setEditingHeadlineId] = useState<string | null>(null);
   const [headlineDraft, setHeadlineDraft] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [editingBorrowerKey, setEditingBorrowerKey] = useState<string | null>(null);
+  const [borrowerDraft, setBorrowerDraft] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -123,6 +125,14 @@ export default function MessagesPage() {
     }
     setEditingHeadlineId(null);
     setShowSuggestions(false);
+  };
+
+  const saveBorrower = (group: AlertGroup) => {
+    const trimmed = borrowerDraft.trim();
+    if (trimmed && trimmed !== group.borrower && group.dealIds[0]) {
+      updateDeal(group.dealIds[0], { issuerName: trimmed });
+    }
+    setEditingBorrowerKey(null);
   };
 
   const handlePostUpdate = (originalId: string, edits: { subject: string; body: string }) => {
