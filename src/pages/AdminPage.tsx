@@ -11,7 +11,9 @@ import { useToast } from '@/hooks/use-toast';
 const roleBadge: Record<UserRole, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
   master_admin: { label: 'Master Admin', variant: 'default' },
   syndicate_admin: { label: 'Syndicate Admin', variant: 'secondary' },
-  vendor_user: { label: 'Vendor User', variant: 'outline' },
+  vendor_user: { label: 'Read Only', variant: 'outline' },
+  syndicate_readonly: { label: 'Syndicate – Read Only', variant: 'outline' },
+  sales_readonly: { label: 'Sales – Read Only', variant: 'outline' },
 };
 
 export default function AdminPage() {

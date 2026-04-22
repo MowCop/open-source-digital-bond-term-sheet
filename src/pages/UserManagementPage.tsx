@@ -12,11 +12,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserRole, UserCategory, User, DistributionList } from '@/types/bond';
 import { useToast } from '@/hooks/use-toast';
 import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const roleLabels: Record<UserRole, string> = {
   master_admin: 'Master Admin',
   syndicate_admin: 'Syndicate Admin',
-  vendor_user: 'Vendor',
+  vendor_user: 'Read Only',
+  syndicate_readonly: 'Syndicate – Read Only',
+  sales_readonly: 'Sales – Read Only',
+};
+
+// Centralised editable UI labels for User Management.
+const UM_LABELS = {
+  pageTitle: 'User Management',
+  pageSubtitle: 'Manage users, roles, and distribution lists.',
+  addUser: 'Add User',
+  createList: 'Create List',
+  tabLists: 'Distribution Lists',
+  tabUsers: 'Users',
+  colNameContact: 'Name & Contact',
+  colOrganization: 'Organization',
+  colRole: 'Role',
+  colCreated: 'Created Details',
+  colActions: 'Actions',
 };
 
 const categoryOptions: UserCategory[] = ['Vendor', 'Syndicate', 'Buy Side', 'Legal', 'Guest', 'DCM', 'Sales'];
@@ -37,6 +55,15 @@ export default function UserManagementPage() {
   const [newOrg, setNewOrg] = useState('');
   const [newRole, setNewRole] = useState<UserRole>('syndicate_admin');
   const [newCategory, setNewCategory] = useState<UserCategory>('Syndicate');
+
+  // Edit User state
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editOrg, setEditOrg] = useState('');
+  const [editRole, setEditRole] = useState<UserRole>('syndicate_admin');
+  const [editCategory, setEditCategory] = useState<UserCategory>('Syndicate');
 
   // Create List form state
   const [listName, setListName] = useState('');
@@ -62,11 +89,37 @@ export default function UserManagementPage() {
       toast({ title: 'Error', description: 'Please fill in all required fields', variant: 'destructive' });
       return;
     }
-    const orgType = newRole === 'vendor_user' ? 'vendor' as const : 'bank' as const;
+    const orgType: 'vendor' | 'bank' = newRole === 'vendor_user' ? 'vendor' : 'bank';
     addUser({ name: newName, email: newEmail, phone: newPhone, role: newRole, organization: newOrg, organizationType: orgType, category: newCategory });
     toast({ title: 'User Created', description: `${newName} has been added` });
     setShowAddUser(false);
     setNewName(''); setNewEmail(''); setNewPhone(''); setNewOrg('');
+  };
+
+  const openEditUser = (u: User) => {
+    setEditingUser(u);
+    setEditName(u.name);
+    setEditEmail(u.email);
+    setEditPhone(u.phone || '');
+    setEditOrg(u.organization);
+    setEditRole(u.role);
+    setEditCategory(u.category || 'Syndicate');
+  };
+
+  const handleSaveEditUser = () => {
+    if (!editingUser) return;
+    if (!editName || !editEmail || !editOrg) {
+      toast({ title: 'Error', description: 'Please fill in all required fields', variant: 'destructive' });
+      return;
+    }
+    const orgType: 'vendor' | 'bank' = editRole === 'vendor_user' ? 'vendor' : 'bank';
+    updateUser(editingUser.id, {
+      name: editName, email: editEmail, phone: editPhone,
+      organization: editOrg, organizationType: orgType,
+      role: editRole, category: editCategory,
+    });
+    toast({ title: 'User Updated', description: `${editName} has been saved` });
+    setEditingUser(null);
   };
 
   const handleDeleteUser = (u: User) => {
@@ -299,7 +352,9 @@ export default function UserManagementPage() {
                       <SelectContent>
                         <SelectItem value="master_admin">Master Admin</SelectItem>
                         <SelectItem value="syndicate_admin">Syndicate Admin</SelectItem>
-                        <SelectItem value="vendor_user">Vendor</SelectItem>
+                        <SelectItem value="vendor_user">Read Only</SelectItem>
+                        <SelectItem value="syndicate_readonly">Syndicate – Read Only</SelectItem>
+                        <SelectItem value="sales_readonly">Sales – Read Only</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -350,7 +405,7 @@ export default function UserManagementPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => openEditUser(u)}><Pencil className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(u)} disabled={u.id === currentUser.id}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -363,6 +418,68 @@ export default function UserManagementPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Edit User Dialog */}
+      <Dialog open={!!editingUser} onOpenChange={(o) => !o && setEditingUser(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Full Name</Label>
+                  <Input value={editName} onChange={e => setEditName(e.target.value)} className="mt-2 bg-background border-border" />
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Work Email</Label>
+                  <Input value={editEmail} onChange={e => setEditEmail(e.target.value)} className="mt-2 bg-background border-border" />
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Phone Number</Label>
+                  <Input value={editPhone} onChange={e => setEditPhone(e.target.value)} className="mt-2 bg-background border-border" />
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Organization</Label>
+                  <Input value={editOrg} onChange={e => setEditOrg(e.target.value)} className="mt-2 bg-background border-border" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">User Role</Label>
+                  <Select value={editRole} onValueChange={v => setEditRole(v as UserRole)}>
+                    <SelectTrigger className="mt-2 bg-background border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="master_admin">Master Admin</SelectItem>
+                      <SelectItem value="syndicate_admin">Syndicate Admin</SelectItem>
+                      <SelectItem value="vendor_user">Read Only</SelectItem>
+                      <SelectItem value="syndicate_readonly">Syndicate – Read Only</SelectItem>
+                      <SelectItem value="sales_readonly">Sales – Read Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Category</Label>
+                  <Select value={editCategory} onValueChange={v => setEditCategory(v as UserCategory)}>
+                    <SelectTrigger className="mt-2 bg-background border-border"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {categoryOptions.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="rounded-md bg-muted/40 border border-border px-3 py-2 text-xs text-muted-foreground">
+                Created: {formatDate(editingUser.createdAt)} by {creatorName(editingUser.createdBy || 'System')}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+                <Button onClick={handleSaveEditUser}>Save Changes</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

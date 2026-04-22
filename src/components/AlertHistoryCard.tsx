@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { Message } from '@/types/bond';
+import { useState, useRef } from 'react';
+import { Message, Attachment } from '@/types/bond';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { format } from 'date-fns';
-import { Edit2, RotateCcw, Save, Send, GitBranch } from 'lucide-react';
+import { Edit2, RotateCcw, Save, Send, GitBranch, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, Users } from 'lucide-react';
 
 interface AlertHistoryCardProps {
   message: Message;
@@ -16,6 +18,7 @@ interface AlertHistoryCardProps {
   onRetract: (id: string) => void;
   onSend: (id: string) => void;
   onPostUpdate: (id: string, edits: { subject: string; body: string }) => void;
+  onDelete: (id: string) => void;
 }
 
 export default function AlertHistoryCard({
@@ -28,10 +31,14 @@ export default function AlertHistoryCard({
   onRetract,
   onSend,
   onPostUpdate,
+  onDelete,
 }: AlertHistoryCardProps) {
   const [mode, setMode] = useState<'view' | 'edit' | 'update'>('view');
   const [editSubject, setEditSubject] = useState(message.subject);
   const [editBody, setEditBody] = useState(message.body);
+  const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const handleSave = () => {
     if (mode === 'update') {
@@ -47,6 +54,55 @@ export default function AlertHistoryCard({
     setEditBody(message.body);
     setMode('view');
   };
+
+  const inferType = (name: string): Attachment['type'] => {
+    const ext = name.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return 'pdf';
+    if (ext === 'pptx' || ext === 'ppt') return 'pptx';
+    return 'docx';
+  };
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const accepted = Array.from(files).filter(f => /\.(pdf|docx?|pptx?)$/i.test(f.name));
+    const oversize = accepted.find(f => f.size > 2 * 1024 * 1024);
+    if (oversize) {
+      alert(`"${oversize.name}" exceeds 2 MB. Files are stored in the browser; use smaller attachments for the prototype.`);
+    }
+    const newOnes: Attachment[] = await Promise.all(
+      accepted.filter(f => f.size <= 2 * 1024 * 1024).map(
+        (f) => new Promise<Attachment>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve({
+            id: `att${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+            name: f.name,
+            type: inferType(f.name),
+            size: f.size,
+            url: reader.result as string,
+          });
+          reader.readAsDataURL(f);
+        })
+      )
+    );
+    if (newOnes.length > 0) {
+      onUpdate(message.id, { attachments: [...message.attachments, ...newOnes] });
+    }
+  };
+
+  const removeAttachment = (id: string) => {
+    onUpdate(message.id, { attachments: message.attachments.filter(a => a.id !== id) });
+  };
+
+  const downloadAttachment = (a: Attachment) => {
+    const link = document.createElement('a');
+    link.href = a.url;
+    link.download = a.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const formatBytes = (b: number) => b < 1024 ? `${b} B` : b < 1048576 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1048576).toFixed(2)} MB`;
 
   const isRetracted = message.status === 'retracted';
   const isSent = message.status === 'sent';
@@ -76,7 +132,6 @@ export default function AlertHistoryCard({
           )}
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
             <span>{senderName}</span>
-            <span>To: {recipientNames}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -103,13 +158,98 @@ export default function AlertHistoryCard({
         <div className="text-sm text-muted-foreground whitespace-pre-wrap">{message.body}</div>
       )}
 
-      {/* Attachments */}
-      {message.attachments.length > 0 && (
-        <div className="text-xs text-muted-foreground">📎 {message.attachments.length} attachment(s)</div>
-      )}
+      {/* Distribution List (vendor recipients) */}
+      <Collapsible>
+        <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground">
+          <Users className="h-3 w-3" />
+          <span>Distribution ({message.recipients.length} recipient{message.recipients.length !== 1 ? 's' : ''})</span>
+          <ChevronDown className="h-3 w-3" />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-2 pl-5 text-xs text-muted-foreground">
+          {recipientNames || '(no recipients)'}
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Attachments panel */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Attachments ({message.attachments.length})
+          </div>
+          {canManage && !isRetracted && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.doc,.docx,.ppt,.pptx"
+                className="hidden"
+                onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
+              />
+              <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="h-3 w-3 mr-1" /> Add files
+              </Button>
+            </>
+          )}
+        </div>
+        {canManage && !isRetracted && (
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
+            className={`border border-dashed rounded p-2 text-center text-xs text-muted-foreground transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-border'}`}
+          >
+            Drop PDF, DOCX, or PPTX here
+          </div>
+        )}
+        {message.attachments.length > 0 && (
+          <div className="space-y-1">
+            {message.attachments.map(a => (
+              <div key={a.id} className="flex items-center gap-2 text-xs bg-background border border-border rounded px-2 py-1.5">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className="flex-1 truncate">{a.name}</span>
+                <span className="text-muted-foreground">{formatBytes(a.size)}</span>
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewAttachment(a)} title="Preview">
+                  <Eye className="h-3 w-3" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => downloadAttachment(a)} title="Download">
+                  <Download className="h-3 w-3" />
+                </Button>
+                {canManage && !isRetracted && (
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeAttachment(a.id)} title="Remove">
+                    <X className="h-3 w-3 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Preview dialog */}
+      <Dialog open={!!previewAttachment} onOpenChange={(o) => !o && setPreviewAttachment(null)}>
+        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{previewAttachment?.name}</DialogTitle>
+          </DialogHeader>
+          {previewAttachment?.type === 'pdf' ? (
+            <iframe src={previewAttachment.url} className="flex-1 w-full border border-border rounded" title={previewAttachment.name} />
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center text-sm text-muted-foreground">
+              <FileText className="h-12 w-12" />
+              <div>Inline preview unavailable for this file type.</div>
+              {previewAttachment && (
+                <Button onClick={() => downloadAttachment(previewAttachment)}>
+                  <Download className="h-4 w-4 mr-2" /> Download
+                </Button>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Action buttons */}
-      {canManage && !isRetracted && (
+      {canManage && (
         <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
           {editing ? (
             <>
@@ -123,28 +263,36 @@ export default function AlertHistoryCard({
             </>
           ) : (
             <>
-              {isSent && (
+              {isSent && !isRetracted && (
                 <Button size="sm" className="text-xs" onClick={() => setMode('update')}>
                   <GitBranch className="h-3 w-3 mr-1" />
                   Post Update
                 </Button>
               )}
-              <Button size="sm" variant="outline" className="text-xs" onClick={() => setMode('edit')}>
-                <Edit2 className="h-3 w-3 mr-1" />
-                Edit
-              </Button>
-              {(isSent || isDraft) && (
+              {!isRetracted && (
+                <Button size="sm" variant="outline" className="text-xs" onClick={() => setMode('edit')}>
+                  <Edit2 className="h-3 w-3 mr-1" />
+                  Edit
+                </Button>
+              )}
+              {(isSent || isDraft) && !isRetracted && (
                 <Button size="sm" variant="destructive" className="text-xs" onClick={() => onRetract(message.id)}>
                   <RotateCcw className="h-3 w-3 mr-1" />
                   Retract
                 </Button>
               )}
-              {isDraft && (
+              {isDraft && !isRetracted && (
                 <Button size="sm" className="text-xs" onClick={() => onSend(message.id)}>
                   <Send className="h-3 w-3 mr-1" />
                   Send
                 </Button>
               )}
+              <Button size="sm" variant="outline" className="text-xs ml-auto" onClick={() => {
+                if (confirm(`Delete this alert "${message.subject}"? This cannot be undone.`)) onDelete(message.id);
+              }}>
+                <Trash2 className="h-3 w-3 mr-1 text-destructive" />
+                Delete
+              </Button>
             </>
           )}
         </div>
