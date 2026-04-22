@@ -16,7 +16,24 @@ import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus } from '
 const roleLabels: Record<UserRole, string> = {
   master_admin: 'Master Admin',
   syndicate_admin: 'Syndicate Admin',
-  vendor_user: 'Vendor',
+  vendor_user: 'Read Only',
+  syndicate_readonly: 'Syndicate – Read Only',
+  sales_readonly: 'Sales – Read Only',
+};
+
+// Centralised editable UI labels for User Management.
+const UM_LABELS = {
+  pageTitle: 'User Management',
+  pageSubtitle: 'Manage users, roles, and distribution lists.',
+  addUser: 'Add User',
+  createList: 'Create List',
+  tabLists: 'Distribution Lists',
+  tabUsers: 'Users',
+  colNameContact: 'Name & Contact',
+  colOrganization: 'Organization',
+  colRole: 'Role',
+  colCreated: 'Created Details',
+  colActions: 'Actions',
 };
 
 const categoryOptions: UserCategory[] = ['Vendor', 'Syndicate', 'Buy Side', 'Legal', 'Guest', 'DCM', 'Sales'];
@@ -37,6 +54,15 @@ export default function UserManagementPage() {
   const [newOrg, setNewOrg] = useState('');
   const [newRole, setNewRole] = useState<UserRole>('syndicate_admin');
   const [newCategory, setNewCategory] = useState<UserCategory>('Syndicate');
+
+  // Edit User state
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editOrg, setEditOrg] = useState('');
+  const [editRole, setEditRole] = useState<UserRole>('syndicate_admin');
+  const [editCategory, setEditCategory] = useState<UserCategory>('Syndicate');
 
   // Create List form state
   const [listName, setListName] = useState('');
@@ -62,11 +88,37 @@ export default function UserManagementPage() {
       toast({ title: 'Error', description: 'Please fill in all required fields', variant: 'destructive' });
       return;
     }
-    const orgType = newRole === 'vendor_user' ? 'vendor' as const : 'bank' as const;
+    const orgType: 'vendor' | 'bank' = newRole === 'vendor_user' ? 'vendor' : 'bank';
     addUser({ name: newName, email: newEmail, phone: newPhone, role: newRole, organization: newOrg, organizationType: orgType, category: newCategory });
     toast({ title: 'User Created', description: `${newName} has been added` });
     setShowAddUser(false);
     setNewName(''); setNewEmail(''); setNewPhone(''); setNewOrg('');
+  };
+
+  const openEditUser = (u: User) => {
+    setEditingUser(u);
+    setEditName(u.name);
+    setEditEmail(u.email);
+    setEditPhone(u.phone || '');
+    setEditOrg(u.organization);
+    setEditRole(u.role);
+    setEditCategory(u.category || 'Syndicate');
+  };
+
+  const handleSaveEditUser = () => {
+    if (!editingUser) return;
+    if (!editName || !editEmail || !editOrg) {
+      toast({ title: 'Error', description: 'Please fill in all required fields', variant: 'destructive' });
+      return;
+    }
+    const orgType: 'vendor' | 'bank' = editRole === 'vendor_user' ? 'vendor' : 'bank';
+    updateUser(editingUser.id, {
+      name: editName, email: editEmail, phone: editPhone,
+      organization: editOrg, organizationType: orgType,
+      role: editRole, category: editCategory,
+    });
+    toast({ title: 'User Updated', description: `${editName} has been saved` });
+    setEditingUser(null);
   };
 
   const handleDeleteUser = (u: User) => {

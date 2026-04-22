@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -68,9 +69,18 @@ export default function DealsPage() {
   };
 
   const fieldRow = (label: string, value: string | undefined) => {
-    if (!value) return null;
-    return <div><span className="text-muted-foreground">{label}:</span> {value}</div>;
+    return <div><span className="text-muted-foreground">{label}:</span> {value && value.trim() ? value : 'TBA'}</div>;
   };
+
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const dealId = searchParams.get('dealId');
+    if (dealId) {
+      const d = deals.find(x => x.id === dealId);
+      if (d) setSelectedDeal(d);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, deals]);
 
   return (
     <div className="space-y-6">

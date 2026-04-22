@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Message, DealStage } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database } from 'lucide-react';
 import SecureChat from '@/components/SecureChat';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
-import { mergeDealFromText, isStageForward } from '@/lib/alertParsing';
+import { mergeDealFromText, isStageForward, simulateAIExtraction } from '@/lib/alertParsing';
 
 const stageBadge: Record<DealStage, { label: string; className: string }> = {
   Mandate: { label: 'Mandate', className: 'bg-blue-900/50 text-blue-400 border-blue-800' },
@@ -32,21 +34,26 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage } = useApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteMessageThread } = useApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(false);
+  const [editingHeadlineId, setEditingHeadlineId] = useState<string | null>(null);
+  const [headlineDraft, setHeadlineDraft] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const canManageMessages = currentUser.role === 'syndicate_admin' || currentUser.role === 'master_admin';
+  const isReadOnly = currentUser.role === 'syndicate_readonly' || currentUser.role === 'sales_readonly' || currentUser.role === 'vendor_user';
 
   // Group messages by their primary deal (first dealId) to create alert groups
   const alertGroups: AlertGroup[] = [];
   const dealGroupMap = new Map<string, Message[]>();
 
   const visibleMessages = messages.filter(m => {
-    if (currentUser.role === 'vendor_user') return m.recipients.includes(currentUser.id) || m.senderId === currentUser.id;
+    if (isReadOnly) return m.recipients.includes(currentUser.id) || m.senderId === currentUser.id;
     return true;
   });
 
@@ -90,10 +97,33 @@ export default function MessagesPage() {
     setShowChat(true);
   };
 
-  const navigate = useNavigate();
-
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
   const getRecipientNames = (ids: string[]) => ids.map(id => getUserName(id)).join(', ');
+
+  const buildSuggestions = (msg: Message): string[] => {
+    const ai = simulateAIExtraction(`${msg.subject}\n${msg.body}`);
+    const deal = msg.dealIds.length ? deals.find(d => d.id === msg.dealIds[0]) : undefined;
+    const borrower = ai.borrowerDetails || deal?.issuerName || 'Issuer';
+    const ccy = ai.keyTerms.Currency || deal?.currency || '';
+    const tenor = ai.keyTerms.Tenor || deal?.tenor || '';
+    const stage = deal?.stage || 'Mandate';
+    const candidates = [
+      `${borrower} — ${stage}`,
+      `${borrower} ${ccy} ${tenor} — ${stage}`.replace(/\s+/g, ' ').trim(),
+      `${borrower} ${ccy} ${tenor} New Issue Alert`.replace(/\s+/g, ' ').trim(),
+      ai.headline,
+    ];
+    const seen = new Set<string>();
+    return candidates.filter(c => c && !seen.has(c) && (seen.add(c), true) && c.toLowerCase().includes(headlineDraft.toLowerCase()));
+  };
+
+  const saveHeadline = () => {
+    if (editingHeadlineId && headlineDraft.trim() && headlineDraft !== messages.find(m => m.id === editingHeadlineId)?.subject) {
+      updateMessage(editingHeadlineId, { subject: headlineDraft.trim() });
+    }
+    setEditingHeadlineId(null);
+    setShowSuggestions(false);
+  };
 
   const handlePostUpdate = (originalId: string, edits: { subject: string; body: string }) => {
     const original = messages.find(m => m.id === originalId);
@@ -120,6 +150,14 @@ export default function MessagesPage() {
       }
     }
     toast({ title: 'Update Drafted', description: `New update created (${newDraft.id}). Review and Send to dispatch.` });
+  };
+
+  const handleDeleteThread = (group: AlertGroup) => {
+    if (confirm(`Delete the entire alert thread for "${group.borrower}" (${group.messages.length} message${group.messages.length !== 1 ? 's' : ''})?`)) {
+      deleteMessageThread(group.dealIds);
+      toast({ title: 'Thread Deleted', description: `Removed ${group.messages.length} alert(s).` });
+      setExpandedAlertId(null);
+    }
   };
 
   return (
@@ -179,7 +217,11 @@ export default function MessagesPage() {
                   {/* Main row */}
                   <div
                     className="grid grid-cols-12 gap-2 px-4 py-3 items-center cursor-pointer hover:bg-card/60 transition-colors"
-                    onClick={() => toggleExpand(groupKey)}
+                    onClick={(e) => {
+                      // Don't toggle when interacting with the inline headline editor
+                      if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
+                      toggleExpand(groupKey);
+                    }}
                   >
                     <div className="col-span-1 flex items-center gap-1">
                       {isExpanded ? (
@@ -194,67 +236,163 @@ export default function MessagesPage() {
                     <div className="col-span-2 font-medium text-sm">
                       {group.borrower}
                     </div>
-                    <div className="col-span-4 text-sm text-muted-foreground truncate">
-                      {group.headline}
+                    <div className="col-span-4 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
+                      {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
+                        <div className="relative">
+                          <Input
+                            autoFocus
+                            value={headlineDraft}
+                            onChange={(e) => { setHeadlineDraft(e.target.value); setShowSuggestions(true); }}
+                            onBlur={() => setTimeout(() => saveHeadline(), 150)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') { e.preventDefault(); saveHeadline(); }
+                              if (e.key === 'Escape') { setEditingHeadlineId(null); setShowSuggestions(false); }
+                            }}
+                            className="h-7 text-sm"
+                          />
+                          {showSuggestions && (() => {
+                            const sugs = buildSuggestions(group.latestMessage).slice(0, 4);
+                            if (sugs.length === 0) return null;
+                            return (
+                              <div className="absolute z-10 left-0 right-0 top-full mt-1 bg-popover border border-border rounded-md shadow-lg overflow-hidden">
+                                {sugs.map((s, i) => (
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    onMouseDown={(e) => { e.preventDefault(); setHeadlineDraft(s); }}
+                                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground"
+                                  >
+                                    {s}
+                                  </button>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      ) : (
+                        <span
+                          className={canManageMessages ? 'cursor-text hover:bg-background/50 rounded px-1 -mx-1' : ''}
+                          onClick={() => {
+                            if (!canManageMessages) return;
+                            setEditingHeadlineId(group.latestMessage.id);
+                            setHeadlineDraft(group.headline);
+                            setShowSuggestions(true);
+                          }}
+                          title={canManageMessages ? 'Click to edit headline' : ''}
+                        >
+                          {group.headline}
+                        </span>
+                      )}
                     </div>
                     <div className="col-span-2 text-sm text-muted-foreground truncate">
                       {group.bookrunners}
                     </div>
-                    <div className="col-span-1">
+                    <div className="col-span-1 flex items-center gap-1">
                       <Badge className={`text-[10px] border ${badge.className}`}>
                         {badge.label}
                       </Badge>
+                      {canManageMessages && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                          onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
+                          title="Delete entire alert thread"
+                        >
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
+                      )}
                     </div>
                   </div>
 
                   {/* Expanded content */}
                   {isExpanded && (
                     <div className="bg-card/40 border-t border-border px-8 py-4 space-y-4">
-                      {/* Top action bar */}
-                      <div className="flex items-center justify-between pb-2 border-b border-border/50">
-                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                          Alerts History ({group.messages.length} update{group.messages.length !== 1 ? 's' : ''})
+                      <Tabs defaultValue="history" className="w-full">
+                        <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                          <TabsList className="bg-card border border-border">
+                            <TabsTrigger value="history" className="text-xs">
+                              Alerts History ({group.messages.length})
+                            </TabsTrigger>
+                            <TabsTrigger value="data" className="text-xs">
+                              <Database className="h-3 w-3 mr-1" />
+                              Deal Alert Data
+                            </TabsTrigger>
+                          </TabsList>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            onClick={(e) => { e.stopPropagation(); handleOpenChat(group.dealIds); }}
+                          >
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            Open Chat
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs"
-                          onClick={(e) => { e.stopPropagation(); handleOpenChat(group.dealIds); }}
-                        >
-                          <MessageSquare className="h-3 w-3 mr-1" />
-                          Open Chat
-                        </Button>
-                      </div>
 
-                      {/* Editable alert cards — newest first; version # counts oldest=1 */}
-                      {group.messages.map((msg, idx) => {
-                        const total = group.messages.length;
-                        const versionNum = total - idx;
-                        const versionLabel = total > 1
-                          ? (versionNum === 1 ? 'Original' : `Update #${versionNum - 1}`)
-                          : undefined;
-                        return (
-                          <AlertHistoryCard
-                            key={msg.id}
-                            message={msg}
-                            senderName={getUserName(msg.senderId)}
-                            recipientNames={getRecipientNames(msg.recipients)}
-                            canManage={canManageMessages}
-                            versionLabel={versionLabel}
-                            onUpdate={updateMessage}
-                            onRetract={(id) => {
-                              retractMessage(id);
-                              toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
-                            }}
-                            onSend={(id) => {
-                              sendMessage(id);
-                              const m = messages.find(x => x.id === id);
-                              toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
-                            }}
-                            onPostUpdate={handlePostUpdate}
-                          />
-                        );
-                      })}
+                        <TabsContent value="history" className="space-y-4 mt-4">
+                          {group.messages.map((msg, idx) => {
+                            const total = group.messages.length;
+                            const versionNum = total - idx;
+                            const versionLabel = total > 1
+                              ? (versionNum === 1 ? 'Original' : `Update #${versionNum - 1}`)
+                              : undefined;
+                            return (
+                              <AlertHistoryCard
+                                key={msg.id}
+                                message={msg}
+                                senderName={getUserName(msg.senderId)}
+                                recipientNames={getRecipientNames(msg.recipients)}
+                                canManage={canManageMessages}
+                                versionLabel={versionLabel}
+                                onUpdate={updateMessage}
+                                onRetract={(id) => {
+                                  retractMessage(id);
+                                  toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+                                }}
+                                onSend={(id) => {
+                                  sendMessage(id);
+                                  const m = messages.find(x => x.id === id);
+                                  toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
+                                }}
+                                onPostUpdate={handlePostUpdate}
+                                onDelete={(id) => {
+                                  deleteMessage(id);
+                                  toast({ title: 'Alert Deleted', description: 'The alert has been removed.' });
+                                }}
+                              />
+                            );
+                          })}
+                        </TabsContent>
+
+                        <TabsContent value="data" className="mt-4">
+                          <div className="bg-card/60 border border-border rounded-lg p-4 space-y-3">
+                            <div className="text-xs text-muted-foreground">
+                              Linked Deal{group.dealIds.length > 1 ? 's' : ''} for this alert
+                            </div>
+                            {group.dealIds.length === 0 && (
+                              <div className="text-sm text-muted-foreground">No deals linked to this alert.</div>
+                            )}
+                            {group.dealIds.map(did => {
+                              const d = deals.find(x => x.id === did);
+                              if (!d) return null;
+                              return (
+                                <div key={did} className="flex items-center justify-between p-3 border border-border rounded bg-background">
+                                  <div>
+                                    <div className="text-sm font-medium">{d.issuerName}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {d.currency || 'TBA'} {d.size || 'TBA'} — {d.tenor || 'TBA'} · Stage: {d.stage}
+                                    </div>
+                                  </div>
+                                  <Button size="sm" variant="outline" onClick={() => navigate(`/deals?dealId=${d.id}`)}>
+                                    Open Deal Data <ChevronRight className="h-3 w-3 ml-1" />
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </TabsContent>
+                      </Tabs>
                     </div>
                   )}
                 </div>
