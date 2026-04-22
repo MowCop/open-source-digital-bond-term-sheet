@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { Deal, Message, User, AuditLogEntry, Notification, DealStage, MessageStatus, DistributionList, ChatChannel, ChatMessage, UserRole, UserCategory } from '@/types/bond';
 import { mockUsers, mockDeals, mockMessages, mockAuditLog, mockNotifications, mockDistributionLists, mockChatChannels, mockChatMessages } from '@/data/mockData';
+import { extractBorrowerName } from '@/lib/alertParsing';
 
 // Date field names that may appear in persisted entities — revived from string to Date on load.
 const DATE_FIELDS = new Set([
@@ -111,6 +112,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [distributionLists, setDistributionLists] = usePersistedState<DistributionList[]>('bondvdr.distributionLists', mockDistributionLists);
   const [chatChannels, setChatChannels] = usePersistedState<ChatChannel[]>('bondvdr.chatChannels', mockChatChannels);
   const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('bondvdr.chatMessages', mockChatMessages);
+
+  // One-time backfill: extend short borrower names using the improved extractor.
+  // Only extends (new starts with old) — never overwrites a divergent manual edit.
+  const didBackfill = useRef(false);
+  useEffect(() => {
+    if (didBackfill.current) return;
+    didBackfill.current = true;
+    setDeals(prevDeals => {
+      let changed = false;
+      const next = prevDeals.map(d => {
+        const dealMsgs = messages
+          .filter(m => m.dealIds.includes(d.id))
+          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+        if (dealMsgs.length === 0) return d;
+        const first = dealMsgs[0];
+        const extracted = extractBorrowerName(`${first.subject}\n${first.body}`);
+        if (
+          extracted &&
+          extracted.length > (d.issuerName?.length ?? 0) &&
+          extracted.toLowerCase().startsWith((d.issuerName ?? '').toLowerCase())
+        ) {
+          changed = true;
+          return { ...d, issuerName: extracted };
+        }
+        return d;
+      });
+      return changed ? next : prevDeals;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const addAuditEntry = useCallback((entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => {
     setAuditLog(prev => [{ ...entry, id: `al${Date.now()}`, timestamp: new Date() }, ...prev]);

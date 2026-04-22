@@ -42,6 +42,8 @@ export default function MessagesPage() {
   const [editingHeadlineId, setEditingHeadlineId] = useState<string | null>(null);
   const [headlineDraft, setHeadlineDraft] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [editingBorrowerKey, setEditingBorrowerKey] = useState<string | null>(null);
+  const [borrowerDraft, setBorrowerDraft] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -123,6 +125,14 @@ export default function MessagesPage() {
     }
     setEditingHeadlineId(null);
     setShowSuggestions(false);
+  };
+
+  const saveBorrower = (group: AlertGroup) => {
+    const trimmed = borrowerDraft.trim();
+    if (trimmed && trimmed !== group.borrower && group.dealIds[0]) {
+      updateDeal(group.dealIds[0], { issuerName: trimmed });
+    }
+    setEditingBorrowerKey(null);
   };
 
   const handlePostUpdate = (originalId: string, edits: { subject: string; body: string }) => {
@@ -220,6 +230,7 @@ export default function MessagesPage() {
                     onClick={(e) => {
                       // Don't toggle when interacting with the inline headline editor
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
+                      if ((e.target as HTMLElement).closest('[data-borrower-editor]')) return;
                       toggleExpand(groupKey);
                     }}
                   >
@@ -233,8 +244,32 @@ export default function MessagesPage() {
                     <div className="col-span-2 text-timestamp text-sm">
                       {format(group.latestMessage.updatedAt, 'MMM d, hh:mm a')}
                     </div>
-                    <div className="col-span-2 font-medium text-sm">
-                      {group.borrower}
+                    <div className="col-span-2 font-medium text-sm" data-borrower-editor onClick={(e) => e.stopPropagation()}>
+                      {canManageMessages && editingBorrowerKey === groupKey ? (
+                        <Input
+                          autoFocus
+                          value={borrowerDraft}
+                          onChange={(e) => setBorrowerDraft(e.target.value)}
+                          onBlur={() => saveBorrower(group)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); saveBorrower(group); }
+                            if (e.key === 'Escape') { setEditingBorrowerKey(null); }
+                          }}
+                          className="h-7 text-sm"
+                        />
+                      ) : (
+                        <span
+                          className={canManageMessages ? 'cursor-text hover:bg-background/50 rounded px-1 -mx-1' : ''}
+                          onClick={() => {
+                            if (!canManageMessages || !group.dealIds[0]) return;
+                            setEditingBorrowerKey(groupKey);
+                            setBorrowerDraft(group.borrower);
+                          }}
+                          title={canManageMessages ? 'Click to edit borrower name' : ''}
+                        >
+                          {group.borrower}
+                        </span>
+                      )}
                     </div>
                     <div className="col-span-4 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
