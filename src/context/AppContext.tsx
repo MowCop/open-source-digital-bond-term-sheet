@@ -321,6 +321,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addUser = useCallback((user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => {
     const newUser: User = { ...user, id: `u${Date.now()}`, createdAt: new Date(), createdBy: currentUser.id };
     setUsers(prev => [...prev, newUser]);
+    insertUser(newUser).catch(e => console.error('[Cloud] insertUser failed', e));
     addAuditEntry({ action: 'USER_CREATED', entityType: 'user', entityId: newUser.id, userId: currentUser.id, details: `Created user: ${user.name}` });
     return newUser;
   }, [currentUser.id, addAuditEntry, setUsers]);
@@ -328,11 +329,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const deleteUser = useCallback((id: string) => {
     const user = users.find(u => u.id === id);
     setUsers(prev => prev.filter(u => u.id !== id));
+    deleteUserRow(id).catch(e => console.error('[Cloud] deleteUser failed', e));
     addAuditEntry({ action: 'USER_DELETED', entityType: 'user', entityId: id, userId: currentUser.id, details: `Deleted user: ${user?.name}` });
   }, [currentUser.id, addAuditEntry, users, setUsers]);
 
   const updateUser = useCallback((id: string, updates: Partial<User>) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
+    updateUserRow(id, updates).catch(e => console.error('[Cloud] updateUser failed', e));
     addAuditEntry({ action: 'USER_UPDATED', entityType: 'user', entityId: id, userId: currentUser.id, details: `Updated user ${id}` });
   }, [currentUser.id, addAuditEntry, setUsers]);
 
