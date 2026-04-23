@@ -117,12 +117,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = usePersistedState<User>('bondvdr.currentUser', mockUsers[0]);
   const [users, setUsers] = useState<User[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [messages, setMessages] = usePersistedState<Message[]>('bondvdr.messages', mockMessages);
-  const [auditLog, setAuditLog] = usePersistedState<AuditLogEntry[]>('bondvdr.auditLog', mockAuditLog);
-  const [notifications, setNotifications] = usePersistedState<Notification[]>('bondvdr.notifications', mockNotifications);
-  const [distributionLists, setDistributionLists] = usePersistedState<DistributionList[]>('bondvdr.distributionLists', mockDistributionLists);
-  const [chatChannels, setChatChannels] = usePersistedState<ChatChannel[]>('bondvdr.chatChannels', mockChatChannels);
-  const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('bondvdr.chatMessages', mockChatMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [distributionLists, setDistributionLists] = useState<DistributionList[]>([]);
+  const [chatChannels, setChatChannels] = useState<ChatChannel[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   // Load users + deals from Cloud, then subscribe to realtime updates.
   useEffect(() => {
