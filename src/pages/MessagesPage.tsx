@@ -30,6 +30,7 @@ interface AlertGroup {
   latestMessage: Message;
   headline: string;
   bookrunners: string;
+  bookrunnersFull: string;
   stage: DealStage;
 }
 
