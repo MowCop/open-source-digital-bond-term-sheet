@@ -30,6 +30,7 @@ interface AlertGroup {
   latestMessage: Message;
   headline: string;
   bookrunners: string;
+  bookrunnersFull: string;
   stage: DealStage;
 }
 
@@ -44,6 +45,8 @@ export default function MessagesPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [editingBorrowerKey, setEditingBorrowerKey] = useState<string | null>(null);
   const [borrowerDraft, setBorrowerDraft] = useState('');
+  const [editingBookrunnersKey, setEditingBookrunnersKey] = useState<string | null>(null);
+  const [bookrunnersDraft, setBookrunnersDraft] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -80,6 +83,7 @@ export default function MessagesPage() {
       latestMessage: sorted[0],
       headline: sorted[0].subject,
       bookrunners: bookrunnerNames.length > 30 ? bookrunnerNames.slice(0, 28) + '...' : bookrunnerNames,
+      bookrunnersFull: bookrunnerNames,
       stage: primaryDeal?.stage || 'Mandate',
     });
   });
@@ -133,6 +137,21 @@ export default function MessagesPage() {
       updateDeal(group.dealIds[0], { issuerName: trimmed });
     }
     setEditingBorrowerKey(null);
+  };
+
+  const saveBookrunners = (group: AlertGroup) => {
+    const dealId = group.dealIds[0];
+    if (!dealId) { setEditingBookrunnersKey(null); return; }
+    const names = bookrunnersDraft.split(',').map(s => s.trim()).filter(Boolean);
+    const existing = deals.find(d => d.id === dealId)?.bookrunners || [];
+    const next = names.map(n => {
+      const prior = existing.find(b => b.name.toLowerCase() === n.toLowerCase());
+      return prior ? { ...prior, name: n } : { name: n, role: 'passive' as const, isGlobalCoordinator: false };
+    });
+    if (JSON.stringify(next) !== JSON.stringify(existing)) {
+      updateDeal(dealId, { bookrunners: next });
+    }
+    setEditingBookrunnersKey(null);
   };
 
   const handlePostUpdate = (originalId: string, edits: { subject: string; body: string }) => {
@@ -319,8 +338,33 @@ export default function MessagesPage() {
                         </span>
                       )}
                     </div>
-                    <div className="col-span-2 text-sm text-muted-foreground truncate">
-                      {group.bookrunners}
+                    <div className="col-span-2 text-sm text-muted-foreground truncate" onClick={(e) => e.stopPropagation()}>
+                      {canManageMessages && editingBookrunnersKey === groupKey ? (
+                        <Input
+                          autoFocus
+                          value={bookrunnersDraft}
+                          onChange={(e) => setBookrunnersDraft(e.target.value)}
+                          onBlur={() => saveBookrunners(group)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); saveBookrunners(group); }
+                            if (e.key === 'Escape') { setEditingBookrunnersKey(null); }
+                          }}
+                          placeholder="Comma-separated names"
+                          className="h-7 text-sm"
+                        />
+                      ) : (
+                        <span
+                          className={canManageMessages && group.dealIds[0] ? 'cursor-text hover:bg-background/50 rounded px-1 -mx-1 block truncate' : 'block truncate'}
+                          onClick={() => {
+                            if (!canManageMessages || !group.dealIds[0]) return;
+                            setEditingBookrunnersKey(groupKey);
+                            setBookrunnersDraft(group.bookrunnersFull);
+                          }}
+                          title={canManageMessages ? (group.bookrunnersFull || 'Click to add bookrunners') : group.bookrunnersFull}
+                        >
+                          {group.bookrunners || (canManageMessages ? <span className="italic opacity-60">Add bookrunners…</span> : '—')}
+                        </span>
+                      )}
                     </div>
                     <div className="col-span-1 flex items-center gap-1">
                       <Badge className={`text-[10px] border ${badge.className}`}>
