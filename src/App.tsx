@@ -8,6 +8,7 @@ import AppLayout from "@/components/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import DealsPage from "@/pages/DealsPage";
 import MessagesPage from "@/pages/MessagesPage";
+import InboxPage from "@/pages/InboxPage";
 import AIDraftPage from "@/pages/AIDraftPage";
 import UserManagementPage from "@/pages/UserManagementPage";
 import AuditLogPage from "@/pages/AuditLogPage";
@@ -27,6 +28,7 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/deals" element={<DealsPage />} />
               <Route path="/messages" element={<MessagesPage />} />
+              <Route path="/inbox" element={<InboxPage />} />
               <Route path="/ai-draft" element={<AIDraftPage />} />
               <Route path="/admin" element={<UserManagementPage />} />
               <Route path="/audit-log" element={<AuditLogPage />} />

@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Bell as BellIcon, Bot, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Settings } from 'lucide-react';
+import { LayoutDashboard, FileText, Bell as BellIcon, Bot, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Settings, Inbox } from 'lucide-react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 
 const navItems = [
   { path: '/messages', label: 'Master Deal Alerts', icon: BellIcon },
+  { path: '/inbox', label: 'Deal Inbox', icon: Inbox },
   { path: '/ai-draft', label: 'Create New Alert', icon: PenSquare },
   { path: '/admin', label: 'User Management', icon: Users, adminOnly: true },
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
