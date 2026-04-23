@@ -14,7 +14,174 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      deals: {
+        Row: {
+          bookrunners: Json
+          business_day_convention: string | null
+          common_code: string | null
+          coupon: string
+          created_at: string
+          currency: string
+          cusip: string | null
+          day_count_fraction: string | null
+          form_of_note: string | null
+          governing_law: string | null
+          id: string
+          interest_payment_frequency: string | null
+          interest_rate: string | null
+          interest_type: string | null
+          isin: string | null
+          issuance_type: string | null
+          issue_date: string | null
+          issue_price: string | null
+          issuer_lei: string | null
+          issuer_name: string
+          issuer_rating: string | null
+          listing_venue: string | null
+          maturity_date: string | null
+          mid_swap_rate: string | null
+          optionality: string | null
+          pricing_date: string | null
+          rating_outlook: string | null
+          reoffer_price: string | null
+          reoffer_spread: string | null
+          reoffer_yield: string | null
+          selling_restrictions: string | null
+          settlement_date: string | null
+          size: string
+          specified_denomination: string | null
+          stage: string
+          stage_history: Json
+          status_of_note: string | null
+          taxonomy: string | null
+          tenor: string
+          updated_at: string
+        }
+        Insert: {
+          bookrunners?: Json
+          business_day_convention?: string | null
+          common_code?: string | null
+          coupon: string
+          created_at?: string
+          currency: string
+          cusip?: string | null
+          day_count_fraction?: string | null
+          form_of_note?: string | null
+          governing_law?: string | null
+          id: string
+          interest_payment_frequency?: string | null
+          interest_rate?: string | null
+          interest_type?: string | null
+          isin?: string | null
+          issuance_type?: string | null
+          issue_date?: string | null
+          issue_price?: string | null
+          issuer_lei?: string | null
+          issuer_name: string
+          issuer_rating?: string | null
+          listing_venue?: string | null
+          maturity_date?: string | null
+          mid_swap_rate?: string | null
+          optionality?: string | null
+          pricing_date?: string | null
+          rating_outlook?: string | null
+          reoffer_price?: string | null
+          reoffer_spread?: string | null
+          reoffer_yield?: string | null
+          selling_restrictions?: string | null
+          settlement_date?: string | null
+          size: string
+          specified_denomination?: string | null
+          stage: string
+          stage_history?: Json
+          status_of_note?: string | null
+          taxonomy?: string | null
+          tenor: string
+          updated_at?: string
+        }
+        Update: {
+          bookrunners?: Json
+          business_day_convention?: string | null
+          common_code?: string | null
+          coupon?: string
+          created_at?: string
+          currency?: string
+          cusip?: string | null
+          day_count_fraction?: string | null
+          form_of_note?: string | null
+          governing_law?: string | null
+          id?: string
+          interest_payment_frequency?: string | null
+          interest_rate?: string | null
+          interest_type?: string | null
+          isin?: string | null
+          issuance_type?: string | null
+          issue_date?: string | null
+          issue_price?: string | null
+          issuer_lei?: string | null
+          issuer_name?: string
+          issuer_rating?: string | null
+          listing_venue?: string | null
+          maturity_date?: string | null
+          mid_swap_rate?: string | null
+          optionality?: string | null
+          pricing_date?: string | null
+          rating_outlook?: string | null
+          reoffer_price?: string | null
+          reoffer_spread?: string | null
+          reoffer_yield?: string | null
+          selling_restrictions?: string | null
+          settlement_date?: string | null
+          size?: string
+          specified_denomination?: string | null
+          stage?: string
+          stage_history?: Json
+          status_of_note?: string | null
+          taxonomy?: string | null
+          tenor?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          name: string
+          organization: string
+          organization_type: string
+          phone: string | null
+          role: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id: string
+          name: string
+          organization: string
+          organization_type: string
+          phone?: string | null
+          role: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          name?: string
+          organization?: string
+          organization_type?: string
+          phone?: string | null
+          role?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

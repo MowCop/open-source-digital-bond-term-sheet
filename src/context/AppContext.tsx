@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { Deal, Message, User, AuditLogEntry, Notification, DealStage, MessageStatus, DistributionList, ChatChannel, ChatMessage, UserRole, UserCategory } from '@/types/bond';
 import { mockUsers, mockDeals, mockMessages, mockAuditLog, mockNotifications, mockDistributionLists, mockChatChannels, mockChatMessages } from '@/data/mockData';
 import { extractBorrowerName } from '@/lib/alertParsing';
+import { supabase } from '@/integrations/supabase/client';
+import { fetchUsers, fetchDeals, insertUser, updateUserRow, deleteUserRow, insertDeal, updateDealRow, rowToDeal, rowToUser } from '@/integrations/supabase/cloudData';
 
 // Date field names that may appear in persisted entities — revived from string to Date on load.
 const DATE_FIELDS = new Set([
@@ -104,14 +106,72 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = usePersistedState<User>('bondvdr.currentUser', mockUsers[0]);
-  const [users, setUsers] = usePersistedState<User[]>('bondvdr.users', mockUsers);
-  const [deals, setDeals] = usePersistedState<Deal[]>('bondvdr.deals', mockDeals);
+  const [users, setUsers] = useState<User[]>([]);
+  const [deals, setDeals] = useState<Deal[]>([]);
   const [messages, setMessages] = usePersistedState<Message[]>('bondvdr.messages', mockMessages);
   const [auditLog, setAuditLog] = usePersistedState<AuditLogEntry[]>('bondvdr.auditLog', mockAuditLog);
   const [notifications, setNotifications] = usePersistedState<Notification[]>('bondvdr.notifications', mockNotifications);
   const [distributionLists, setDistributionLists] = usePersistedState<DistributionList[]>('bondvdr.distributionLists', mockDistributionLists);
   const [chatChannels, setChatChannels] = usePersistedState<ChatChannel[]>('bondvdr.chatChannels', mockChatChannels);
   const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('bondvdr.chatMessages', mockChatMessages);
+
+  // Load users + deals from Cloud, then subscribe to realtime updates.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [u, d] = await Promise.all([fetchUsers(), fetchDeals()]);
+        if (cancelled) return;
+        setUsers(u);
+        setDeals(d);
+      } catch (e) {
+        console.error('[Cloud] Failed to load users/deals', e);
+      }
+    })();
+
+    const channel = supabase
+      .channel('bondvdr-cloud')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'users' }, (payload: any) => {
+        setUsers(prev => {
+          if (payload.eventType === 'INSERT') {
+            const u = rowToUser(payload.new);
+            return prev.some(x => x.id === u.id) ? prev : [...prev, u];
+          }
+          if (payload.eventType === 'UPDATE') {
+            const u = rowToUser(payload.new);
+            return prev.map(x => x.id === u.id ? u : x);
+          }
+          if (payload.eventType === 'DELETE') {
+            return prev.filter(x => x.id !== payload.old.id);
+          }
+          return prev;
+        });
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'deals' }, (payload: any) => {
+        setDeals(prev => {
+          if (payload.eventType === 'INSERT') {
+            const d = rowToDeal(payload.new);
+            return prev.some(x => x.id === d.id) ? prev : [d, ...prev];
+          }
+          if (payload.eventType === 'UPDATE') {
+            const d = rowToDeal(payload.new);
+            return prev.map(x => x.id === d.id ? d : x);
+          }
+          if (payload.eventType === 'DELETE') {
+            return prev.filter(x => x.id !== payload.old.id);
+          }
+          return prev;
+        });
+      })
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // One-time backfill: extend short borrower names using the improved extractor.
   // Only extends (new starts with old) — never overwrites a divergent manual edit.
@@ -150,6 +210,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>) => {
     const newDeal: Deal = { ...deal, id: `d${Date.now()}`, createdAt: new Date(), updatedAt: new Date(), stageHistory: [] };
     setDeals(prev => [newDeal, ...prev]);
+    insertDeal(newDeal).catch(e => console.error('[Cloud] insertDeal failed', e));
     const newChannel: ChatChannel = {
       id: `ch${Date.now()}`,
       participantIds: [...users.filter(u => u.organizationType === 'bank' || u.organizationType === 'vendor').map(u => u.id)],
@@ -164,15 +225,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateDeal = useCallback((dealId: string, updates: Partial<Deal>) => {
     setDeals(prev => prev.map(d => d.id === dealId ? { ...d, ...updates, updatedAt: new Date() } : d));
+    updateDealRow(dealId, updates).catch(e => console.error('[Cloud] updateDeal failed', e));
     addAuditEntry({ action: 'DEAL_UPDATED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Deal updated (${Object.keys(updates).join(', ')})` });
   }, [currentUser.id, addAuditEntry, setDeals]);
 
   const updateDealStage = useCallback((dealId: string, newStage: DealStage, note?: string) => {
+    let nextHistory: Deal['stageHistory'] | undefined;
     setDeals(prev => prev.map(d => {
       if (d.id !== dealId) return d;
       const transition = { from: d.stage, to: newStage, timestamp: new Date(), userId: currentUser.id, note };
-      return { ...d, stage: newStage, updatedAt: new Date(), stageHistory: [...d.stageHistory, transition] };
+      nextHistory = [...d.stageHistory, transition];
+      return { ...d, stage: newStage, updatedAt: new Date(), stageHistory: nextHistory };
     }));
+    updateDealRow(dealId, { stage: newStage, stageHistory: nextHistory }).catch(e => console.error('[Cloud] updateDealStage failed', e));
     addAuditEntry({ action: 'DEAL_STAGE_CHANGED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Stage changed to ${newStage}${note ? `: ${note}` : ''}` });
   }, [currentUser.id, addAuditEntry, setDeals]);
 
@@ -256,6 +321,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addUser = useCallback((user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => {
     const newUser: User = { ...user, id: `u${Date.now()}`, createdAt: new Date(), createdBy: currentUser.id };
     setUsers(prev => [...prev, newUser]);
+    insertUser(newUser).catch(e => console.error('[Cloud] insertUser failed', e));
     addAuditEntry({ action: 'USER_CREATED', entityType: 'user', entityId: newUser.id, userId: currentUser.id, details: `Created user: ${user.name}` });
     return newUser;
   }, [currentUser.id, addAuditEntry, setUsers]);
@@ -263,11 +329,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const deleteUser = useCallback((id: string) => {
     const user = users.find(u => u.id === id);
     setUsers(prev => prev.filter(u => u.id !== id));
+    deleteUserRow(id).catch(e => console.error('[Cloud] deleteUser failed', e));
     addAuditEntry({ action: 'USER_DELETED', entityType: 'user', entityId: id, userId: currentUser.id, details: `Deleted user: ${user?.name}` });
   }, [currentUser.id, addAuditEntry, users, setUsers]);
 
   const updateUser = useCallback((id: string, updates: Partial<User>) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
+    updateUserRow(id, updates).catch(e => console.error('[Cloud] updateUser failed', e));
     addAuditEntry({ action: 'USER_UPDATED', entityType: 'user', entityId: id, userId: currentUser.id, details: `Updated user ${id}` });
   }, [currentUser.id, addAuditEntry, setUsers]);
 
