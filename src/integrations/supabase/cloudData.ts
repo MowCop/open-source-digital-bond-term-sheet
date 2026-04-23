@@ -117,7 +117,7 @@ function dealToRow(d: Deal): Record<string, unknown> {
     bookrunners: d.bookrunners ?? [],
   };
   for (const [tsKey, dbKey] of Object.entries(dealFieldMap)) {
-    const v = (d as Record<string, unknown>)[tsKey];
+    const v = (d as unknown as Record<string, unknown>)[tsKey];
     row[dbKey] = v === undefined ? null : v;
   }
   return row;
@@ -129,7 +129,7 @@ function dealUpdatesToRow(updates: Partial<Deal>): Record<string, unknown> {
   if (updates.bookrunners !== undefined) row.bookrunners = updates.bookrunners;
   for (const [tsKey, dbKey] of Object.entries(dealFieldMap)) {
     if (tsKey in updates) {
-      const v = (updates as Record<string, unknown>)[tsKey];
+      const v = (updates as unknown as Record<string, unknown>)[tsKey];
       row[dbKey] = v === undefined ? null : v;
     }
   }
