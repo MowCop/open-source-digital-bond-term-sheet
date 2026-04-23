@@ -14,6 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          details: string
+          entity_id: string
+          entity_type: string
+          id: string
+          ip_address: string | null
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          details: string
+          entity_id: string
+          entity_type: string
+          id: string
+          ip_address?: string | null
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          details?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chat_channels: {
+        Row: {
+          created_at: string
+          deal_id: string | null
+          id: string
+          label: string
+          participant_ids: Json
+        }
+        Insert: {
+          created_at?: string
+          deal_id?: string | null
+          id: string
+          label: string
+          participant_ids?: Json
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string | null
+          id?: string
+          label?: string
+          participant_ids?: Json
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          attachments: Json
+          body: string
+          channel_id: string
+          deal_id: string | null
+          id: string
+          linked_message_id: string | null
+          sender_id: string
+          sender_name: string
+          sender_type: string
+          timestamp: string
+        }
+        Insert: {
+          attachments?: Json
+          body: string
+          channel_id: string
+          deal_id?: string | null
+          id: string
+          linked_message_id?: string | null
+          sender_id: string
+          sender_name: string
+          sender_type: string
+          timestamp?: string
+        }
+        Update: {
+          attachments?: Json
+          body?: string
+          channel_id?: string
+          deal_id?: string | null
+          id?: string
+          linked_message_id?: string | null
+          sender_id?: string
+          sender_name?: string
+          sender_type?: string
+          timestamp?: string
+        }
+        Relationships: []
+      }
       deals: {
         Row: {
           bookrunners: Json
@@ -140,6 +236,126 @@ export type Database = {
           taxonomy?: string | null
           tenor?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      distribution_lists: {
+        Row: {
+          created_by: string
+          id: string
+          last_used: string | null
+          member_ids: Json
+          name: string
+          vendor_ids: Json
+        }
+        Insert: {
+          created_by: string
+          id: string
+          last_used?: string | null
+          member_ids?: Json
+          name: string
+          vendor_ids?: Json
+        }
+        Update: {
+          created_by?: string
+          id?: string
+          last_used?: string | null
+          member_ids?: Json
+          name?: string
+          vendor_ids?: Json
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          ai_suggestions: Json | null
+          attachments: Json
+          body: string
+          created_at: string
+          deal_ids: Json
+          id: string
+          parent_message_id: string | null
+          recipients: Json
+          retracted_at: string | null
+          retracted_by: string | null
+          sender_id: string
+          sent_at: string | null
+          status: string
+          subject: string
+          thread_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_suggestions?: Json | null
+          attachments?: Json
+          body: string
+          created_at?: string
+          deal_ids?: Json
+          id: string
+          parent_message_id?: string | null
+          recipients?: Json
+          retracted_at?: string | null
+          retracted_by?: string | null
+          sender_id: string
+          sent_at?: string | null
+          status: string
+          subject: string
+          thread_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_suggestions?: Json | null
+          attachments?: Json
+          body?: string
+          created_at?: string
+          deal_ids?: Json
+          id?: string
+          parent_message_id?: string | null
+          recipients?: Json
+          retracted_at?: string | null
+          retracted_by?: string | null
+          sender_id?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          thread_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string
+          deal_id: string | null
+          id: string
+          message_id: string | null
+          read: boolean
+          timestamp: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          deal_id?: string | null
+          id: string
+          message_id?: string | null
+          read?: boolean
+          timestamp?: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          deal_id?: string | null
+          id?: string
+          message_id?: string | null
+          read?: boolean
+          timestamp?: string
+          title?: string
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
