@@ -106,14 +106,72 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = usePersistedState<User>('bondvdr.currentUser', mockUsers[0]);
-  const [users, setUsers] = usePersistedState<User[]>('bondvdr.users', mockUsers);
-  const [deals, setDeals] = usePersistedState<Deal[]>('bondvdr.deals', mockDeals);
+  const [users, setUsers] = useState<User[]>([]);
+  const [deals, setDeals] = useState<Deal[]>([]);
   const [messages, setMessages] = usePersistedState<Message[]>('bondvdr.messages', mockMessages);
   const [auditLog, setAuditLog] = usePersistedState<AuditLogEntry[]>('bondvdr.auditLog', mockAuditLog);
   const [notifications, setNotifications] = usePersistedState<Notification[]>('bondvdr.notifications', mockNotifications);
   const [distributionLists, setDistributionLists] = usePersistedState<DistributionList[]>('bondvdr.distributionLists', mockDistributionLists);
   const [chatChannels, setChatChannels] = usePersistedState<ChatChannel[]>('bondvdr.chatChannels', mockChatChannels);
   const [chatMessages, setChatMessages] = usePersistedState<ChatMessage[]>('bondvdr.chatMessages', mockChatMessages);
+
+  // Load users + deals from Cloud, then subscribe to realtime updates.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [u, d] = await Promise.all([fetchUsers(), fetchDeals()]);
+        if (cancelled) return;
+        setUsers(u);
+        setDeals(d);
+      } catch (e) {
+        console.error('[Cloud] Failed to load users/deals', e);
+      }
+    })();
+
+    const channel = supabase
+      .channel('bondvdr-cloud')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'users' }, (payload: any) => {
+        setUsers(prev => {
+          if (payload.eventType === 'INSERT') {
+            const u = rowToUser(payload.new);
+            return prev.some(x => x.id === u.id) ? prev : [...prev, u];
+          }
+          if (payload.eventType === 'UPDATE') {
+            const u = rowToUser(payload.new);
+            return prev.map(x => x.id === u.id ? u : x);
+          }
+          if (payload.eventType === 'DELETE') {
+            return prev.filter(x => x.id !== payload.old.id);
+          }
+          return prev;
+        });
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'deals' }, (payload: any) => {
+        setDeals(prev => {
+          if (payload.eventType === 'INSERT') {
+            const d = rowToDeal(payload.new);
+            return prev.some(x => x.id === d.id) ? prev : [d, ...prev];
+          }
+          if (payload.eventType === 'UPDATE') {
+            const d = rowToDeal(payload.new);
+            return prev.map(x => x.id === d.id ? d : x);
+          }
+          if (payload.eventType === 'DELETE') {
+            return prev.filter(x => x.id !== payload.old.id);
+          }
+          return prev;
+        });
+      })
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // One-time backfill: extend short borrower names using the improved extractor.
   // Only extends (new starts with old) — never overwrites a divergent manual edit.
