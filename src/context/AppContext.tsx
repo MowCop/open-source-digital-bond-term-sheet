@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { Deal, Message, User, AuditLogEntry, Notification, DealStage, MessageStatus, DistributionList, ChatChannel, ChatMessage, UserRole, UserCategory } from '@/types/bond';
 import { mockUsers, mockDeals, mockMessages, mockAuditLog, mockNotifications, mockDistributionLists, mockChatChannels, mockChatMessages } from '@/data/mockData';
 import { extractBorrowerName } from '@/lib/alertParsing';
+import { supabase } from '@/integrations/supabase/client';
+import { fetchUsers, fetchDeals, insertUser, updateUserRow, deleteUserRow, insertDeal, updateDealRow, rowToDeal, rowToUser } from '@/integrations/supabase/cloudData';
 
 // Date field names that may appear in persisted entities — revived from string to Date on load.
 const DATE_FIELDS = new Set([
