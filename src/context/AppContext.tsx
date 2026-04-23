@@ -360,6 +360,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const now = new Date();
     const msg = messages.find(m => m.id === id);
     setMessages(prev => prev.map(m => m.id === id ? { ...m, status: 'sent' as MessageStatus, sentAt: now, updatedAt: now } : m));
+    updateMessageRow(id, { status: 'sent', sentAt: now, updatedAt: now }).catch(e => console.error('[Cloud] sendMessage failed', e));
     addAuditEntry({ action: 'MESSAGE_SENT', entityType: 'message', entityId: id, userId: currentUser.id, details: `Message sent` });
     if (msg) {
       for (const dealId of msg.dealIds) {
@@ -368,7 +369,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (channel && deal) {
           const stageTag = deal.stage.toUpperCase();
           const botMsg: ChatMessage = {
-            id: `cm${Date.now()}_${dealId}`,
+            id: `cm${Date.now()}_${dealId}_${Math.random().toString(36).slice(2,7)}`,
             channelId: channel.id,
             dealId,
             senderId: 'system',
@@ -380,35 +381,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             timestamp: new Date(),
           };
           setChatMessages(prev => [...prev, botMsg]);
+          insertChatMessage(botMsg).catch(e => console.error('[Cloud] insertChatMessage failed', e));
         }
       }
     }
-  }, [currentUser.id, addAuditEntry, messages, deals, chatChannels, setMessages, setChatMessages]);
+  }, [currentUser.id, addAuditEntry, messages, deals, chatChannels]);
 
   const retractMessage = useCallback((id: string) => {
     const now = new Date();
     setMessages(prev => prev.map(m => m.id === id ? { ...m, status: 'retracted' as MessageStatus, retractedAt: now, retractedBy: currentUser.id, updatedAt: now } : m));
+    updateMessageRow(id, { status: 'retracted', retractedAt: now, retractedBy: currentUser.id, updatedAt: now })
+      .catch(e => console.error('[Cloud] retractMessage failed', e));
     addAuditEntry({ action: 'MESSAGE_RETRACTED', entityType: 'message', entityId: id, userId: currentUser.id, details: `Message retracted` });
-  }, [currentUser.id, addAuditEntry, setMessages]);
+  }, [currentUser.id, addAuditEntry]);
 
   const deleteMessage = useCallback((id: string) => {
     setMessages(prev => prev.filter(m => m.id !== id));
+    deleteMessageRow(id).catch(e => console.error('[Cloud] deleteMessage failed', e));
     addAuditEntry({ action: 'MESSAGE_DELETED', entityType: 'message', entityId: id, userId: currentUser.id, details: `Message deleted` });
-  }, [currentUser.id, addAuditEntry, setMessages]);
+  }, [currentUser.id, addAuditEntry]);
 
   const deleteMessageThread = useCallback((dealIds: string[]) => {
     const key = dealIds.join(',');
     setMessages(prev => prev.filter(m => m.dealIds.join(',') !== key));
+    deleteMessagesByDealKey(dealIds).catch(e => console.error('[Cloud] deleteThread failed', e));
     addAuditEntry({ action: 'MESSAGE_THREAD_DELETED', entityType: 'message', entityId: key, userId: currentUser.id, details: `Alert thread deleted (deals: ${key})` });
-  }, [currentUser.id, addAuditEntry, setMessages]);
+  }, [currentUser.id, addAuditEntry]);
 
   const markNotificationRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  }, [setNotifications]);
+    markNotificationReadRow(id).catch(e => console.error('[Cloud] markNotifRead failed', e));
+  }, []);
 
   const sendChatMessage = useCallback((channelId: string, body: string, attachments: ChatMessage['attachments'] = [], linkedMessageId?: string) => {
     const newMsg: ChatMessage = {
-      id: `cm${Date.now()}`,
+      id: `cm${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
       channelId,
       senderId: currentUser.id,
       senderName: currentUser.name,
@@ -419,8 +426,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       timestamp: new Date(),
     };
     setChatMessages(prev => [...prev, newMsg]);
+    insertChatMessage(newMsg).catch(e => console.error('[Cloud] sendChatMessage failed', e));
     addAuditEntry({ action: 'CHAT_MESSAGE_SENT', entityType: 'message', entityId: newMsg.id, userId: currentUser.id, details: `Secure chat message in channel ${channelId}` });
-  }, [currentUser.id, currentUser.name, currentUser.organizationType, addAuditEntry, setChatMessages]);
+  }, [currentUser.id, currentUser.name, currentUser.organizationType, addAuditEntry]);
 
   const addUser = useCallback((user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => {
     const newUser: User = { ...user, id: `u${Date.now()}`, createdAt: new Date(), createdBy: currentUser.id };
@@ -428,38 +436,41 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     insertUser(newUser).catch(e => console.error('[Cloud] insertUser failed', e));
     addAuditEntry({ action: 'USER_CREATED', entityType: 'user', entityId: newUser.id, userId: currentUser.id, details: `Created user: ${user.name}` });
     return newUser;
-  }, [currentUser.id, addAuditEntry, setUsers]);
+  }, [currentUser.id, addAuditEntry]);
 
   const deleteUser = useCallback((id: string) => {
     const user = users.find(u => u.id === id);
     setUsers(prev => prev.filter(u => u.id !== id));
     deleteUserRow(id).catch(e => console.error('[Cloud] deleteUser failed', e));
     addAuditEntry({ action: 'USER_DELETED', entityType: 'user', entityId: id, userId: currentUser.id, details: `Deleted user: ${user?.name}` });
-  }, [currentUser.id, addAuditEntry, users, setUsers]);
+  }, [currentUser.id, addAuditEntry, users]);
 
   const updateUser = useCallback((id: string, updates: Partial<User>) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
     updateUserRow(id, updates).catch(e => console.error('[Cloud] updateUser failed', e));
     addAuditEntry({ action: 'USER_UPDATED', entityType: 'user', entityId: id, userId: currentUser.id, details: `Updated user ${id}` });
-  }, [currentUser.id, addAuditEntry, setUsers]);
+  }, [currentUser.id, addAuditEntry]);
 
   const addDistributionList = useCallback((list: Omit<DistributionList, 'id'>) => {
     const newList: DistributionList = { ...list, id: `dl${Date.now()}` };
     setDistributionLists(prev => [...prev, newList]);
+    insertDistributionList(newList).catch(e => console.error('[Cloud] insertDistList failed', e));
     addAuditEntry({ action: 'DIST_LIST_CREATED', entityType: 'permission', entityId: newList.id, userId: currentUser.id, details: `Created distribution list: ${list.name}` });
     return newList;
-  }, [currentUser.id, addAuditEntry, setDistributionLists]);
+  }, [currentUser.id, addAuditEntry]);
 
   const updateDistributionList = useCallback((id: string, updates: Partial<DistributionList>) => {
     setDistributionLists(prev => prev.map(dl => dl.id === id ? { ...dl, ...updates } : dl));
+    updateDistributionListRow(id, updates).catch(e => console.error('[Cloud] updateDistList failed', e));
     addAuditEntry({ action: 'DIST_LIST_UPDATED', entityType: 'permission', entityId: id, userId: currentUser.id, details: `Updated distribution list ${id}` });
-  }, [currentUser.id, addAuditEntry, setDistributionLists]);
+  }, [currentUser.id, addAuditEntry]);
 
   const deleteDistributionList = useCallback((id: string) => {
     const list = distributionLists.find(dl => dl.id === id);
     setDistributionLists(prev => prev.filter(dl => dl.id !== id));
+    deleteDistributionListRow(id).catch(e => console.error('[Cloud] deleteDistList failed', e));
     addAuditEntry({ action: 'DIST_LIST_DELETED', entityType: 'permission', entityId: id, userId: currentUser.id, details: `Deleted distribution list: ${list?.name}` });
-  }, [currentUser.id, addAuditEntry, distributionLists, setDistributionLists]);
+  }, [currentUser.id, addAuditEntry, distributionLists]);
 
   return (
     <AppContext.Provider value={{
