@@ -139,6 +139,21 @@ export default function MessagesPage() {
     setEditingBorrowerKey(null);
   };
 
+  const saveBookrunners = (group: AlertGroup) => {
+    const dealId = group.dealIds[0];
+    if (!dealId) { setEditingBookrunnersKey(null); return; }
+    const names = bookrunnersDraft.split(',').map(s => s.trim()).filter(Boolean);
+    const existing = deals.find(d => d.id === dealId)?.bookrunners || [];
+    const next = names.map(n => {
+      const prior = existing.find(b => b.name.toLowerCase() === n.toLowerCase());
+      return prior ? { ...prior, name: n } : { name: n, role: 'passive' as const, isGlobalCoordinator: false };
+    });
+    if (JSON.stringify(next) !== JSON.stringify(existing)) {
+      updateDeal(dealId, { bookrunners: next });
+    }
+    setEditingBookrunnersKey(null);
+  };
+
   const handlePostUpdate = (originalId: string, edits: { subject: string; body: string }) => {
     const original = messages.find(m => m.id === originalId);
     if (!original) return;
