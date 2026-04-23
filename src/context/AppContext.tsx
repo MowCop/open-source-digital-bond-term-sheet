@@ -303,8 +303,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addAuditEntry = useCallback((entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => {
-    setAuditLog(prev => [{ ...entry, id: `al${Date.now()}`, timestamp: new Date() }, ...prev]);
-  }, [setAuditLog]);
+    const full: AuditLogEntry = { ...entry, id: `al${Date.now()}_${Math.random().toString(36).slice(2,7)}`, timestamp: new Date() };
+    setAuditLog(prev => [full, ...prev]);
+    insertAudit(full).catch(e => console.error('[Cloud] insertAudit failed', e));
+  }, []);
 
   const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>) => {
     const newDeal: Deal = { ...deal, id: `d${Date.now()}`, createdAt: new Date(), updatedAt: new Date(), stageHistory: [] };
@@ -318,15 +320,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date(),
     };
     setChatChannels(prev => [...prev, newChannel]);
+    insertChatChannel(newChannel).catch(e => console.error('[Cloud] insertChatChannel failed', e));
     addAuditEntry({ action: 'DEAL_CREATED', entityType: 'deal', entityId: newDeal.id, userId: currentUser.id, details: `Created deal: ${deal.issuerName} ${deal.currency} ${deal.tenor}` });
     return newDeal;
-  }, [currentUser.id, addAuditEntry, users, setDeals, setChatChannels]);
+  }, [currentUser.id, addAuditEntry, users]);
 
   const updateDeal = useCallback((dealId: string, updates: Partial<Deal>) => {
     setDeals(prev => prev.map(d => d.id === dealId ? { ...d, ...updates, updatedAt: new Date() } : d));
     updateDealRow(dealId, updates).catch(e => console.error('[Cloud] updateDeal failed', e));
     addAuditEntry({ action: 'DEAL_UPDATED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Deal updated (${Object.keys(updates).join(', ')})` });
-  }, [currentUser.id, addAuditEntry, setDeals]);
+  }, [currentUser.id, addAuditEntry]);
 
   const updateDealStage = useCallback((dealId: string, newStage: DealStage, note?: string) => {
     let nextHistory: Deal['stageHistory'] | undefined;
@@ -338,18 +341,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
     updateDealRow(dealId, { stage: newStage, stageHistory: nextHistory }).catch(e => console.error('[Cloud] updateDealStage failed', e));
     addAuditEntry({ action: 'DEAL_STAGE_CHANGED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Stage changed to ${newStage}${note ? `: ${note}` : ''}` });
-  }, [currentUser.id, addAuditEntry, setDeals]);
+  }, [currentUser.id, addAuditEntry]);
 
   const createMessage = useCallback((msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newMsg: Message = { ...msg, id: `m${Date.now()}`, createdAt: new Date(), updatedAt: new Date() };
     setMessages(prev => [newMsg, ...prev]);
+    insertMessage(newMsg).catch(e => console.error('[Cloud] insertMessage failed', e));
     addAuditEntry({ action: 'MESSAGE_CREATED', entityType: 'message', entityId: newMsg.id, userId: currentUser.id, details: `Draft created: ${msg.subject}` });
     return newMsg;
-  }, [currentUser.id, addAuditEntry, setMessages]);
+  }, [currentUser.id, addAuditEntry]);
 
   const updateMessage = useCallback((id: string, updates: Partial<Message>) => {
     setMessages(prev => prev.map(m => m.id === id ? { ...m, ...updates, updatedAt: new Date() } : m));
-  }, [setMessages]);
+    updateMessageRow(id, { ...updates, updatedAt: new Date() }).catch(e => console.error('[Cloud] updateMessage failed', e));
+  }, []);
 
   const sendMessageAction = useCallback((id: string) => {
     const now = new Date();
