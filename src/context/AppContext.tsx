@@ -230,7 +230,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser.id, addAuditEntry, setDeals]);
 
   const updateDealStage = useCallback((dealId: string, newStage: DealStage, note?: string) => {
-    let nextHistory: typeof Deal.prototype.stageHistory | undefined;
+    let nextHistory: Deal['stageHistory'] | undefined;
     setDeals(prev => prev.map(d => {
       if (d.id !== dealId) return d;
       const transition = { from: d.stage, to: newStage, timestamp: new Date(), userId: currentUser.id, note };
