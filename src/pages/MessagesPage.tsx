@@ -83,6 +83,7 @@ export default function MessagesPage() {
       latestMessage: sorted[0],
       headline: sorted[0].subject,
       bookrunners: bookrunnerNames.length > 30 ? bookrunnerNames.slice(0, 28) + '...' : bookrunnerNames,
+      bookrunnersFull: bookrunnerNames,
       stage: primaryDeal?.stage || 'Mandate',
     });
   });
