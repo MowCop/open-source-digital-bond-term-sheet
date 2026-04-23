@@ -129,12 +129,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        const [u, d] = await Promise.all([fetchUsers(), fetchDeals()]);
+        const [u, d, m, a, n, dl, cc, cm] = await Promise.all([
+          fetchUsers(), fetchDeals(), fetchMessages(), fetchAuditLog(),
+          fetchNotifications(), fetchDistributionLists(), fetchChatChannels(), fetchChatMessages(),
+        ]);
         if (cancelled) return;
         setUsers(u);
         setDeals(d);
+        setMessages(m);
+        setAuditLog(a);
+        setNotifications(n);
+        setDistributionLists(dl);
+        setChatChannels(cc);
+        setChatMessages(cm);
       } catch (e) {
-        console.error('[Cloud] Failed to load users/deals', e);
+        console.error('[Cloud] Failed to load data', e);
       }
     })();
 
@@ -171,6 +180,87 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           if (payload.eventType === 'DELETE') {
             return prev.filter(x => x.id !== payload.old.id);
           }
+          return prev;
+        });
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'messages' }, (payload: any) => {
+        setMessages(prev => {
+          if (payload.eventType === 'INSERT') {
+            const x = rowToMessage(payload.new);
+            return prev.some(p => p.id === x.id) ? prev : [x, ...prev];
+          }
+          if (payload.eventType === 'UPDATE') {
+            const x = rowToMessage(payload.new);
+            return prev.map(p => p.id === x.id ? x : p);
+          }
+          if (payload.eventType === 'DELETE') return prev.filter(p => p.id !== payload.old.id);
+          return prev;
+        });
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'audit_log' }, (payload: any) => {
+        setAuditLog(prev => {
+          if (payload.eventType === 'INSERT') {
+            const x = rowToAudit(payload.new);
+            return prev.some(p => p.id === x.id) ? prev : [x, ...prev];
+          }
+          return prev;
+        });
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'notifications' }, (payload: any) => {
+        setNotifications(prev => {
+          if (payload.eventType === 'INSERT') {
+            const x = rowToNotification(payload.new);
+            return prev.some(p => p.id === x.id) ? prev : [x, ...prev];
+          }
+          if (payload.eventType === 'UPDATE') {
+            const x = rowToNotification(payload.new);
+            return prev.map(p => p.id === x.id ? x : p);
+          }
+          if (payload.eventType === 'DELETE') return prev.filter(p => p.id !== payload.old.id);
+          return prev;
+        });
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'distribution_lists' }, (payload: any) => {
+        setDistributionLists(prev => {
+          if (payload.eventType === 'INSERT') {
+            const x = rowToDistList(payload.new);
+            return prev.some(p => p.id === x.id) ? prev : [...prev, x];
+          }
+          if (payload.eventType === 'UPDATE') {
+            const x = rowToDistList(payload.new);
+            return prev.map(p => p.id === x.id ? x : p);
+          }
+          if (payload.eventType === 'DELETE') return prev.filter(p => p.id !== payload.old.id);
+          return prev;
+        });
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'chat_channels' }, (payload: any) => {
+        setChatChannels(prev => {
+          if (payload.eventType === 'INSERT') {
+            const x = rowToChatChannel(payload.new);
+            return prev.some(p => p.id === x.id) ? prev : [...prev, x];
+          }
+          if (payload.eventType === 'UPDATE') {
+            const x = rowToChatChannel(payload.new);
+            return prev.map(p => p.id === x.id ? x : p);
+          }
+          if (payload.eventType === 'DELETE') return prev.filter(p => p.id !== payload.old.id);
+          return prev;
+        });
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .on('postgres_changes' as any, { event: '*', schema: 'public', table: 'chat_messages' }, (payload: any) => {
+        setChatMessages(prev => {
+          if (payload.eventType === 'INSERT') {
+            const x = rowToChatMessage(payload.new);
+            return prev.some(p => p.id === x.id) ? prev : [...prev, x];
+          }
+          if (payload.eventType === 'DELETE') return prev.filter(p => p.id !== payload.old.id);
           return prev;
         });
       })
