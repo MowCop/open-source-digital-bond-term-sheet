@@ -187,7 +187,7 @@ export default function AIDraftPage() {
       attachments,
       aiSuggestions: aiFields ? { headline, borrowerDetails: '', dealSummary: '', keyTerms: aiFields, confidence: aiConfidence } : undefined,
     });
-    toast({ title: 'Draft Saved', description: 'Alert saved as draft in Master Deal Alerts.' });
+    toast({ title: 'Draft Saved', description: 'Issue saved as draft in New Issue Board.' });
   };
 
   const handleSend = () => {
@@ -217,7 +217,7 @@ export default function AIDraftPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Create New Alert</h1>
+        <h1 className="text-2xl font-bold">Create New Issue</h1>
         <p className="text-muted-foreground text-sm">Draft a new message to automatically generate deal records.</p>
       </div>
 

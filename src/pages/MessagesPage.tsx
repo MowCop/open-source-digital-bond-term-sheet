@@ -214,12 +214,12 @@ export default function MessagesPage() {
 
       <div className={`grid gap-4 ${showChat ? 'grid-cols-3' : 'grid-cols-1'}`}>
         <div className={showChat ? 'col-span-2' : ''}>
-          {/* Create New Alert button */}
+          {/* Create New Issue button */}
           {canManageMessages && (
             <div className="flex justify-center mb-4">
               <Button onClick={() => navigate('/ai-draft')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
                 <Plus className="h-4 w-4 mr-2" />
-                Create New Alert
+                Create New Issue
               </Button>
             </div>
           )}

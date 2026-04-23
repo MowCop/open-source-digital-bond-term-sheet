@@ -365,7 +365,7 @@ export default function InboxPage() {
       <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Inbox className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">Deal Inbox</h1>
+          <h1 className="text-2xl font-bold">Deal Chat Box</h1>
           {totalUnread > 0 && (
             <Badge className="bg-destructive text-destructive-foreground">{totalUnread} unread</Badge>
           )}
