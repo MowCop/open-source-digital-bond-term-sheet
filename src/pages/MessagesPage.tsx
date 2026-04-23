@@ -338,8 +338,33 @@ export default function MessagesPage() {
                         </span>
                       )}
                     </div>
-                    <div className="col-span-2 text-sm text-muted-foreground truncate">
-                      {group.bookrunners}
+                    <div className="col-span-2 text-sm text-muted-foreground truncate" onClick={(e) => e.stopPropagation()}>
+                      {canManageMessages && editingBookrunnersKey === groupKey ? (
+                        <Input
+                          autoFocus
+                          value={bookrunnersDraft}
+                          onChange={(e) => setBookrunnersDraft(e.target.value)}
+                          onBlur={() => saveBookrunners(group)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); saveBookrunners(group); }
+                            if (e.key === 'Escape') { setEditingBookrunnersKey(null); }
+                          }}
+                          placeholder="Comma-separated names"
+                          className="h-7 text-sm"
+                        />
+                      ) : (
+                        <span
+                          className={canManageMessages && group.dealIds[0] ? 'cursor-text hover:bg-background/50 rounded px-1 -mx-1 block truncate' : 'block truncate'}
+                          onClick={() => {
+                            if (!canManageMessages || !group.dealIds[0]) return;
+                            setEditingBookrunnersKey(groupKey);
+                            setBookrunnersDraft(group.bookrunnersFull);
+                          }}
+                          title={canManageMessages ? (group.bookrunnersFull || 'Click to add bookrunners') : group.bookrunnersFull}
+                        >
+                          {group.bookrunners || (canManageMessages ? <span className="italic opacity-60">Add bookrunners…</span> : '—')}
+                        </span>
+                      )}
                     </div>
                     <div className="col-span-1 flex items-center gap-1">
                       <Badge className={`text-[10px] border ${badge.className}`}>
