@@ -193,7 +193,7 @@ export default function MessagesPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Master Deal Alerts</h1>
+        <h1 className="text-2xl font-bold">New Issue Board</h1>
         <div className="flex items-center gap-3">
           {/* Stage filter tabs */}
           <div className="flex items-center gap-1 bg-card rounded-lg p-1 border border-border">
