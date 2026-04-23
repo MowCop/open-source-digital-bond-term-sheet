@@ -210,6 +210,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>) => {
     const newDeal: Deal = { ...deal, id: `d${Date.now()}`, createdAt: new Date(), updatedAt: new Date(), stageHistory: [] };
     setDeals(prev => [newDeal, ...prev]);
+    insertDeal(newDeal).catch(e => console.error('[Cloud] insertDeal failed', e));
     const newChannel: ChatChannel = {
       id: `ch${Date.now()}`,
       participantIds: [...users.filter(u => u.organizationType === 'bank' || u.organizationType === 'vendor').map(u => u.id)],
@@ -224,15 +225,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateDeal = useCallback((dealId: string, updates: Partial<Deal>) => {
     setDeals(prev => prev.map(d => d.id === dealId ? { ...d, ...updates, updatedAt: new Date() } : d));
+    updateDealRow(dealId, updates).catch(e => console.error('[Cloud] updateDeal failed', e));
     addAuditEntry({ action: 'DEAL_UPDATED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Deal updated (${Object.keys(updates).join(', ')})` });
   }, [currentUser.id, addAuditEntry, setDeals]);
 
   const updateDealStage = useCallback((dealId: string, newStage: DealStage, note?: string) => {
+    let nextHistory: typeof Deal.prototype.stageHistory | undefined;
     setDeals(prev => prev.map(d => {
       if (d.id !== dealId) return d;
       const transition = { from: d.stage, to: newStage, timestamp: new Date(), userId: currentUser.id, note };
-      return { ...d, stage: newStage, updatedAt: new Date(), stageHistory: [...d.stageHistory, transition] };
+      nextHistory = [...d.stageHistory, transition];
+      return { ...d, stage: newStage, updatedAt: new Date(), stageHistory: nextHistory };
     }));
+    updateDealRow(dealId, { stage: newStage, stageHistory: nextHistory }).catch(e => console.error('[Cloud] updateDealStage failed', e));
     addAuditEntry({ action: 'DEAL_STAGE_CHANGED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Stage changed to ${newStage}${note ? `: ${note}` : ''}` });
   }, [currentUser.id, addAuditEntry, setDeals]);
 
