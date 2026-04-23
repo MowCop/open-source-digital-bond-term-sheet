@@ -44,6 +44,8 @@ export default function MessagesPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [editingBorrowerKey, setEditingBorrowerKey] = useState<string | null>(null);
   const [borrowerDraft, setBorrowerDraft] = useState('');
+  const [editingBookrunnersKey, setEditingBookrunnersKey] = useState<string | null>(null);
+  const [bookrunnersDraft, setBookrunnersDraft] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
