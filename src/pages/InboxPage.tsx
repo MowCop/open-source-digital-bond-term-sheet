@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import LinkifiedText from '@/components/LinkifiedText';
 import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 import type { ChatChannel, ChatMessage, Deal, DealStage } from '@/types/bond';
@@ -128,7 +129,7 @@ function ChannelThread({ channel, search, lastSeen, onSeen }: ChannelThreadProps
                         </Badge>
                       </div>
                     )}
-                    <p className="whitespace-pre-wrap">{cm.body}</p>
+                    <p className="whitespace-pre-wrap"><LinkifiedText text={cm.body} /></p>
                   </div>
                   {linked && (
                     <div className="flex items-center gap-1 px-2 py-1 rounded bg-accent/50 text-[10px] text-muted-foreground">
