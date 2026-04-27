@@ -2,5 +2,5 @@
 
 declare module 'mammoth/mammoth.browser' {
   const mammoth: typeof import('mammoth');
-  export = mammoth;
+  export default mammoth;
 }
