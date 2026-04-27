@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Attachment } from '@/types/bond';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AISuggestion } from '@/types/bond';
+import { Bookrunner } from '@/types/bond';
+import { extractBookrunners, simulateAIExtraction } from '@/lib/alertParsing';
 import { Sparkles, Paperclip, Send, Save, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -15,75 +16,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Bookrunner } from '@/types/bond';
-
-const KNOWN_BANKS = [
-  'BNP Paribas', 'Deutsche Bank', 'JPMorgan', 'JP Morgan', 'Goldman Sachs', 'Citi', 'Citigroup',
-  'HSBC', 'Barclays', 'NatWest', 'Rabobank', 'Morgan Stanley', 'BofA', 'Bank of America',
-  'UBS', 'Credit Agricole', 'Crédit Agricole', 'Societe Generale', 'Société Générale',
-  'Nomura', 'Mizuho', 'MUFG', 'SMBC', 'Santander', 'BBVA', 'ING', 'Commerzbank',
-  'UniCredit', 'Intesa Sanpaolo', 'Standard Chartered', 'Wells Fargo', 'RBC', 'TD Securities',
-  'Scotiabank', 'CIBC', 'BMO', 'DZ Bank', 'LBBW', 'Helaba', 'Danske Bank', 'Nordea',
-  'SEB', 'Swedbank', 'DBS', 'OCBC', 'ANZ', 'Westpac', 'NAB', 'Lloyds',
-];
-
-function extractBookrunners(rawText: string): Bookrunner[] {
-  const text = rawText.replace(/\s+/g, ' ');
-  // Look for an appointment/role cue and capture the surrounding sentence
-  const cuePattern = /(appointed|mandated|joint lead managers?|bookrunners?|global coordinators?|lead managers?)/gi;
-  const found = new Map<string, Bookrunner>();
-
-  // Search a window around each cue
-  let match: RegExpExecArray | null;
-  while ((match = cuePattern.exec(text)) !== null) {
-    const windowText = text.slice(Math.max(0, match.index - 200), Math.min(text.length, match.index + 300));
-    const isGC = /global coordinator/i.test(windowText);
-    const isPassive = /passive/i.test(windowText);
-
-    for (const bank of KNOWN_BANKS) {
-      const bankRe = new RegExp(`\\b${bank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-      if (bankRe.test(windowText)) {
-        const key = bank.toLowerCase();
-        if (!found.has(key)) {
-          found.set(key, {
-            name: bank,
-            role: isPassive ? 'passive' : 'active',
-            isGlobalCoordinator: isGC,
-          });
-        }
-      }
-    }
-  }
-  return Array.from(found.values());
-}
-
-function simulateAIExtraction(rawText: string): AISuggestion {
-  const hasBorrower = /([A-Z][a-z]+(?: [A-Z][a-z]+)*(?:\s(?:AG|Inc|PLC|SA|Ltd))?)/g.exec(rawText);
-  const hasAmount = /(\d[\d,.]+)/g.exec(rawText);
-  const hasCurrency = /(EUR|USD|GBP|CHF)/g.exec(rawText);
-  const hasTenor = /(\d+Y|\d+-year)/gi.exec(rawText);
-  const hasSpread = /(MS[+\-]\d+(?:bps)?|[Ss]waps?\s*[+\-]\s*\d+)/g.exec(rawText);
-  const hasISIN = /([A-Z]{2}[A-Z0-9]{9}\d)/g.exec(rawText);
-  const hasLEI = /([A-Z0-9]{20})/g.exec(rawText);
-  const hasRating = /((?:AAA|AA\+|AA|AA-|A\+|A|A-|BBB\+|BBB|BBB-)(?:\/(?:Aaa|Aa[123]|A[123]|Baa[123]))?)/g.exec(rawText);
-
-  return {
-    headline: `${hasBorrower?.[1] || 'Issuer'} ${hasCurrency?.[1] || ''} ${hasTenor?.[1] || ''} — New Issue Alert`,
-    borrowerDetails: hasBorrower?.[1] || '',
-    dealSummary: `${hasCurrency?.[1] || ''} ${hasAmount?.[1] || ''} ${hasTenor?.[1] || ''} at ${hasSpread?.[1] || ''}`.trim(),
-    keyTerms: {
-      'Issuer Name': hasBorrower?.[1] || '',
-      Currency: hasCurrency?.[1] || '',
-      Size: hasAmount?.[1] || '',
-      Tenor: hasTenor?.[1] || '',
-      'Reoffer Spread': hasSpread?.[1] || '',
-      'Issuer Rating': hasRating?.[1] || '',
-      ISIN: hasISIN?.[1] || '',
-      LEI: hasLEI?.[1] || '',
-    },
-    confidence: 0.75 + Math.random() * 0.2,
-  };
-}
 
 export default function AIDraftPage() {
   const { distributionLists, createMessage, createDeal, currentUser, users } = useApp();
@@ -98,6 +30,7 @@ export default function AIDraftPage() {
   const [aiConfidence, setAiConfidence] = useState<number>(0);
   const [sendTarget, setSendTarget] = useState<'all' | 'selected'>('all');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isExtractingAttachment, setIsExtractingAttachment] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Vendor/distribution recipients
@@ -132,17 +65,58 @@ export default function AIDraftPage() {
     url: '',
   });
 
+  const applyExtractedText = (text: string, fileName: string) => {
+    const clean = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n').trim();
+    if (!clean) return;
+    const result = simulateAIExtraction(clean);
+    const subjectLine = result.headline && !result.headline.startsWith('Issuer ')
+      ? result.headline
+      : fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+
+    setHeadline(prev => prev.trim() ? prev : subjectLine);
+    setBody(prev => prev.trim() ? `${prev.trim()}\n\n${clean}` : clean);
+    setAiFields(result.keyTerms);
+    setAiConfidence(result.confidence);
+    setAiBookrunners(extractBookrunners(clean));
+  };
+
+  const handleFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+    setAttachments(prev => [...prev, ...files.map(toAttachment)]);
+
+    const docxFiles = files.filter(file => file.name.toLowerCase().endsWith('.docx'));
+    if (docxFiles.length === 0) {
+      toast({ title: 'Files attached', description: `${files.length} file(s) added` });
+      return;
+    }
+
+    setIsExtractingAttachment(true);
+    try {
+      const mammoth = (await import('mammoth/mammoth.browser')).default;
+      for (const file of docxFiles) {
+        const { value } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+        applyExtractedText(value, file.name);
+      }
+      toast({ title: 'AI extraction complete', description: `Extracted terms from ${docxFiles.length} Word attachment(s).` });
+    } catch (error) {
+      console.error('Attachment extraction failed', error);
+      toast({ title: 'Extraction failed', description: 'The Word attachment could not be read.', variant: 'destructive' });
+    } finally {
+      setIsExtractingAttachment(false);
+    }
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
     const files = Array.from(e.dataTransfer.files);
-    setAttachments(prev => [...prev, ...files.map(toAttachment)]);
-    toast({ title: 'Files attached', description: `${files.length} file(s) added` });
+    void handleFiles(files);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setAttachments(prev => [...prev, ...files.map(toAttachment)]);
+    void handleFiles(files);
+    e.target.value = '';
   };
 
   const toggleRecipient = (id: string) => {
@@ -165,9 +139,23 @@ export default function AIDraftPage() {
       currency: aiFields?.['Currency'] || '',
       size: aiFields?.['Size'] || '',
       tenor: aiFields?.['Tenor'] || '',
-      coupon: '',
+      coupon: aiFields?.['Coupon'] || '',
       stage: 'Mandate',
       bookrunners: aiBookrunners ?? [],
+      issuerRating: aiFields?.['Issuer Rating'] || undefined,
+      issuerLEI: aiFields?.['LEI'] || undefined,
+      isin: aiFields?.['ISIN'] || undefined,
+      reofferSpread: aiFields?.['Reoffer Spread'] || undefined,
+      issuePrice: aiFields?.['Issue Price'] || undefined,
+      reofferPrice: aiFields?.['Reoffer Price'] || undefined,
+      reofferYield: aiFields?.['Reoffer Yield'] || undefined,
+      midSwapRate: aiFields?.['Mid-Swap Rate'] || undefined,
+      pricingDate: aiFields?.['Pricing Date'] || undefined,
+      settlementDate: aiFields?.['Settlement Date'] || undefined,
+      maturityDate: aiFields?.['Maturity Date'] || undefined,
+      specifiedDenomination: aiFields?.['Denomination'] || undefined,
+      governingLaw: aiFields?.['Governing Law'] ? aiFields['Governing Law'].toUpperCase().replace(/ /g, '_') as any : undefined,
+      listingVenue: aiFields?.['Listing'] || undefined,
     });
   };
 
@@ -248,6 +236,12 @@ export default function AIDraftPage() {
             >
               {attachments.length > 0 ? (
                 <div className="space-y-1">
+                  {isExtractingAttachment && (
+                    <div className="flex items-center gap-2 text-xs text-accent">
+                      <Sparkles className="h-3 w-3 animate-pulse" />
+                      Extracting headline, body, and deal fields from attachment…
+                    </div>
+                  )}
                   {attachments.map((f, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs text-foreground">
                       <Paperclip className="h-3 w-3" />
