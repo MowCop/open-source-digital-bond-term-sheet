@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import LinkifiedText from '@/components/LinkifiedText';
 import { format } from 'date-fns';
 import { Edit2, RotateCcw, Save, Send, GitBranch, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, Users } from 'lucide-react';
 
@@ -155,7 +156,7 @@ export default function AlertHistoryCard({
           className="min-h-[100px] text-sm bg-background"
         />
       ) : (
-        <div className="text-sm text-muted-foreground whitespace-pre-wrap">{message.body}</div>
+        <div className="text-sm text-muted-foreground whitespace-pre-wrap"><LinkifiedText text={message.body} /></div>
       )}
 
       {/* Distribution List (vendor recipients) */}
