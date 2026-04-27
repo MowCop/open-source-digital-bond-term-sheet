@@ -236,6 +236,12 @@ export default function AIDraftPage() {
             >
               {attachments.length > 0 ? (
                 <div className="space-y-1">
+                  {isExtractingAttachment && (
+                    <div className="flex items-center gap-2 text-xs text-accent">
+                      <Sparkles className="h-3 w-3 animate-pulse" />
+                      Extracting headline, body, and deal fields from attachment…
+                    </div>
+                  )}
                   {attachments.map((f, i) => (
                     <div key={i} className="flex items-center gap-2 text-xs text-foreground">
                       <Paperclip className="h-3 w-3" />
