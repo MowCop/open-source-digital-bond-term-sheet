@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import LinkifiedText from '@/components/LinkifiedText';
 import { Send, Paperclip, Link2, ShieldCheck, FileText, X, Bot } from 'lucide-react';
 import { format } from 'date-fns';
 import { ChatChannel, DealStage } from '@/types/bond';
@@ -160,7 +161,7 @@ export default function SecureChat({ activeDealId }: SecureChatProps) {
                               <Badge variant="outline" className="text-[8px] px-1 py-0 h-3">{cm.senderType}</Badge>
                             </div>
                           )}
-                          <p>{cm.body}</p>
+                          <p className="whitespace-pre-wrap"><LinkifiedText text={cm.body} /></p>
                         </div>
                         {linked && (
                           <div className="flex items-center gap-1 px-2 py-1 rounded bg-accent/50 text-[10px] text-muted-foreground">
