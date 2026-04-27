@@ -31,6 +31,7 @@ export default function AIDraftPage() {
   const [aiConfidence, setAiConfidence] = useState<number>(0);
   const [sendTarget, setSendTarget] = useState<'all' | 'selected'>('all');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isExtractingAttachment, setIsExtractingAttachment] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Vendor/distribution recipients
@@ -65,17 +66,57 @@ export default function AIDraftPage() {
     url: '',
   });
 
+  const applyExtractedText = (text: string, fileName: string) => {
+    const clean = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n').trim();
+    if (!clean) return;
+    const result = simulateAIExtraction(clean);
+    const subjectLine = result.headline && !result.headline.startsWith('Issuer ')
+      ? result.headline
+      : fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+
+    setHeadline(prev => prev.trim() ? prev : subjectLine);
+    setBody(prev => prev.trim() ? `${prev.trim()}\n\n${clean}` : clean);
+    setAiFields(result.keyTerms);
+    setAiConfidence(result.confidence);
+    setAiBookrunners(extractBookrunners(clean));
+  };
+
+  const handleFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+    setAttachments(prev => [...prev, ...files.map(toAttachment)]);
+
+    const docxFiles = files.filter(file => file.name.toLowerCase().endsWith('.docx'));
+    if (docxFiles.length === 0) {
+      toast({ title: 'Files attached', description: `${files.length} file(s) added` });
+      return;
+    }
+
+    setIsExtractingAttachment(true);
+    try {
+      for (const file of docxFiles) {
+        const { value } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+        applyExtractedText(value, file.name);
+      }
+      toast({ title: 'AI extraction complete', description: `Extracted terms from ${docxFiles.length} Word attachment(s).` });
+    } catch (error) {
+      console.error('Attachment extraction failed', error);
+      toast({ title: 'Extraction failed', description: 'The Word attachment could not be read.', variant: 'destructive' });
+    } finally {
+      setIsExtractingAttachment(false);
+    }
+  };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
     const files = Array.from(e.dataTransfer.files);
-    setAttachments(prev => [...prev, ...files.map(toAttachment)]);
-    toast({ title: 'Files attached', description: `${files.length} file(s) added` });
+    void handleFiles(files);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setAttachments(prev => [...prev, ...files.map(toAttachment)]);
+    void handleFiles(files);
+    e.target.value = '';
   };
 
   const toggleRecipient = (id: string) => {
