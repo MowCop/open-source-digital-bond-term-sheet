@@ -220,39 +220,41 @@ export default function AIDraftPage() {
               placeholder="Enter deal headline (e.g. Republic of Italy EUR 1.5bn 10Y BTP Syndication)"
               className="border-0 border-b border-border rounded-none text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
             />
-            {/* Body */}
-            <Textarea
-              value={body}
-              onChange={e => setBody(e.target.value)}
-              placeholder="Enter message body..."
-              className="border-0 rounded-none flex-1 min-h-[200px] px-4 py-3 bg-transparent focus-visible:ring-0 resize-none placeholder:text-muted-foreground/50"
-            />
-            {/* Drop zone */}
-            <div
-              onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
-              onDragLeave={() => setIsDragOver(false)}
-              onDrop={handleDrop}
-              className={`px-4 py-4 border-t border-border text-sm text-muted-foreground/50 transition-colors ${isDragOver ? 'bg-accent/10' : ''}`}
-            >
-              {attachments.length > 0 ? (
-                <div className="space-y-1">
-                  {isExtractingAttachment && (
-                    <div className="flex items-center gap-2 text-xs text-accent">
-                      <Sparkles className="h-3 w-3 animate-pulse" />
-                      Extracting headline, body, and deal fields from attachment…
-                    </div>
-                  )}
-                  {attachments.map((f, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs text-foreground">
-                      <Paperclip className="h-3 w-3" />
-                      <span>{f.name}</span>
-                      <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} className="text-destructive ml-auto text-[10px]">✕</button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                'Drag and drop PDF, Word, or PPT files here to attach them.'
-              )}
+            <div className="grid flex-1 grid-rows-2 min-h-[400px]">
+              {/* Body */}
+              <Textarea
+                value={body}
+                onChange={e => setBody(e.target.value)}
+                placeholder="Enter message body..."
+                className="h-full min-h-0 border-0 rounded-none px-4 py-3 bg-transparent focus-visible:ring-0 resize-none placeholder:text-muted-foreground/50"
+              />
+              {/* Drop zone */}
+              <div
+                onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={handleDrop}
+                className={`flex min-h-0 items-start overflow-y-auto px-4 py-4 border-t border-border text-sm text-muted-foreground/50 transition-colors ${isDragOver ? 'bg-accent/10' : ''}`}
+              >
+                {attachments.length > 0 ? (
+                  <div className="w-full space-y-1">
+                    {isExtractingAttachment && (
+                      <div className="flex items-center gap-2 text-xs text-accent">
+                        <Sparkles className="h-3 w-3 animate-pulse" />
+                        Extracting headline, body, and deal fields from attachment…
+                      </div>
+                    )}
+                    {attachments.map((f, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs text-foreground">
+                        <Paperclip className="h-3 w-3" />
+                        <span>{f.name}</span>
+                        <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} className="text-destructive ml-auto text-[10px]">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  'Drag and drop PDF, Word, or PPT files here to attach them.'
+                )}
+              </div>
             </div>
           </div>
 
