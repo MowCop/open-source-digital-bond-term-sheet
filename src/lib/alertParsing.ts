@@ -108,16 +108,28 @@ export function extractBorrowerName(rawText: string): string {
 
 export function simulateAIExtraction(rawText: string): AISuggestion {
   const borrower = extractBorrowerName(rawText);
-  const hasAmount = /(\d[\d,.]+)/g.exec(rawText);
+  const compactText = rawText.replace(/\s+/g, ' ');
+  const hasAmount = /(?:\b(?:EUR|USD|GBP|CHF)\s*)?(\d[\d,.]+\s*(?:bn|mm|m|million|billion)?)/i.exec(compactText);
   const hasCurrency = /(EUR|USD|GBP|CHF)/g.exec(rawText);
-  const hasTenor = /(\d+Y|\d+-year)/gi.exec(rawText);
+  const hasTenor = /(\d+\s*Y|\d+\s*-\s*year|due\s+\d{4})/gi.exec(rawText);
   const hasSpread = /(MS[+\-]\d+(?:bps)?|[Ss]waps?\s*[+\-]\s*\d+)/g.exec(rawText);
   const hasISIN = /([A-Z]{2}[A-Z0-9]{9}\d)/g.exec(rawText);
   const hasLEI = /([A-Z0-9]{20})/g.exec(rawText);
   const hasRating = /((?:AAA|AA\+|AA|AA-|A\+|A|A-|BBB\+|BBB|BBB-)(?:\/(?:Aaa|Aa[123]|A[123]|Baa[123]))?)/g.exec(rawText);
+  const hasCoupon = /(?:coupon|cpn)\s*[:\-]?\s*([\d.]+\s*%|[\d.]+\s*per cent|TBD)/i.exec(compactText);
+  const hasIssuePrice = /issue\s+price\s*[:\-]?\s*([\d.]+)/i.exec(compactText);
+  const hasReofferPrice = /reoffer\s+price\s*[:\-]?\s*([\d.]+)/i.exec(compactText);
+  const hasReofferYield = /reoffer\s+yield\s*[:\-]?\s*([\d.]+\s*%?)/i.exec(compactText);
+  const hasMidSwap = /mid\s*-?\s*swap(?:\s+rate)?\s*[:\-]?\s*([\d.]+\s*%?)/i.exec(compactText);
+  const hasSettlementDate = /(?:settlement|settle(?:ment)?\s+date)\s*[:\-]?\s*([A-Z][a-z]+\s+\d{1,2},?\s+\d{4}|\d{1,2}\s+[A-Z][a-z]+\s+\d{4}|\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4})/i.exec(compactText);
+  const hasPricingDate = /pricing\s+date\s*[:\-]?\s*([A-Z][a-z]+\s+\d{1,2},?\s+\d{4}|\d{1,2}\s+[A-Z][a-z]+\s+\d{4}|\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4})/i.exec(compactText);
+  const hasMaturityDate = /maturity\s+date\s*[:\-]?\s*([A-Z][a-z]+\s+\d{1,2},?\s+\d{4}|\d{1,2}\s+[A-Z][a-z]+\s+\d{4}|\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4})/i.exec(compactText);
+  const hasDenomination = /(?:denom(?:ination)?s?)\s*[:\-]?\s*([A-Z]{3}\s*[\d,]+(?:\s*x\s*[\d,]+)?)/i.exec(compactText);
+  const hasListing = /listing\s*[:\-]?\s*([^.;\n]+)/i.exec(rawText);
+  const hasLaw = /(English Law|New York Law|German Law|French Law|Swiss Law)/i.exec(compactText);
 
   return {
-    headline: `${borrower || 'Issuer'} ${hasCurrency?.[1] || ''} ${hasTenor?.[1] || ''} — New Issue Alert`,
+    headline: `${borrower || 'Issuer'} ${hasCurrency?.[1] || ''} ${hasTenor?.[1] || ''} — New Issue Alert`.replace(/\s+/g, ' ').trim(),
     borrowerDetails: borrower,
     dealSummary: `${hasCurrency?.[1] || ''} ${hasAmount?.[1] || ''} ${hasTenor?.[1] || ''} at ${hasSpread?.[1] || ''}`.trim(),
     keyTerms: {
@@ -129,6 +141,17 @@ export function simulateAIExtraction(rawText: string): AISuggestion {
       'Issuer Rating': hasRating?.[1] || '',
       ISIN: hasISIN?.[1] || '',
       LEI: hasLEI?.[1] || '',
+      Coupon: hasCoupon?.[1] || '',
+      'Issue Price': hasIssuePrice?.[1] || '',
+      'Reoffer Price': hasReofferPrice?.[1] || '',
+      'Reoffer Yield': hasReofferYield?.[1] || '',
+      'Mid-Swap Rate': hasMidSwap?.[1] || '',
+      'Pricing Date': hasPricingDate?.[1] || '',
+      'Settlement Date': hasSettlementDate?.[1] || '',
+      'Maturity Date': hasMaturityDate?.[1] || '',
+      Denomination: hasDenomination?.[1] || '',
+      'Governing Law': hasLaw?.[1] || '',
+      Listing: hasListing?.[1]?.trim() || '',
     },
     confidence: 0.75 + Math.random() * 0.2,
   };
