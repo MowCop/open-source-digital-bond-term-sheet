@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import mammoth from 'mammoth/mammoth.browser';
 import { useApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -93,6 +92,7 @@ export default function AIDraftPage() {
 
     setIsExtractingAttachment(true);
     try {
+      const mammoth = (await import('mammoth/mammoth.browser')).default;
       for (const file of docxFiles) {
         const { value } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
         applyExtractedText(value, file.name);
