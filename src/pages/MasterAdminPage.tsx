@@ -1,0 +1,155 @@
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, Shield } from 'lucide-react';
+
+const MASTER_EMAIL = 'karl.mallalieu@gmail.com';
+
+type Row = {
+  user_id: string;
+  email: string;
+  name: string | null;
+  organization: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+};
+
+export default function MasterAdminPage() {
+  const { authUser } = useAuth();
+  const { toast } = useToast();
+  const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('');
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const isMaster = authUser?.email?.toLowerCase() === MASTER_EMAIL;
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('user_id, email, name, organization, status, created_at')
+      .order('created_at', { ascending: false });
+    if (error) {
+      toast({ title: 'Failed to load users', description: error.message, variant: 'destructive' });
+    } else {
+      setRows((data ?? []) as Row[]);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { if (isMaster) load(); }, [isMaster]);
+
+  if (!isMaster) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Card><CardContent className="p-6 text-center">
+          <Shield className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+          <p className="text-muted-foreground">Restricted — Master Admin only.</p>
+        </CardContent></Card>
+      </div>
+    );
+  }
+
+  const toggle = async (row: Row, active: boolean) => {
+    const newStatus = active ? 'approved' : 'rejected';
+    setBusy(row.user_id);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ status: newStatus })
+      .eq('user_id', row.user_id);
+    setBusy(null);
+    if (error) {
+      toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setRows(prev => prev.map(r => r.user_id === row.user_id ? { ...r, status: newStatus } : r));
+    toast({ title: active ? 'User activated' : 'User deactivated', description: row.email });
+  };
+
+  const filtered = rows.filter(r => {
+    const q = filter.trim().toLowerCase();
+    if (!q) return true;
+    return (r.email?.toLowerCase().includes(q) || r.name?.toLowerCase().includes(q) || r.organization?.toLowerCase().includes(q));
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Shield className="h-5 w-5" /> Master Admin
+          </h1>
+          <p className="text-muted-foreground text-sm">Activate or deactivate registered users.</p>
+        </div>
+        <Input
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          placeholder="Search name, email, organization"
+          className="max-w-xs"
+        />
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="p-10 flex justify-center">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Organization</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.length === 0 && (
+                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No users found.</TableCell></TableRow>
+                )}
+                {filtered.map(r => {
+                  const active = r.status === 'approved';
+                  const isSelf = r.email?.toLowerCase() === MASTER_EMAIL;
+                  return (
+                    <TableRow key={r.user_id}>
+                      <TableCell className="font-medium">{r.name || '—'}</TableCell>
+                      <TableCell>{r.email}</TableCell>
+                      <TableCell>{r.organization || '—'}</TableCell>
+                      <TableCell>
+                        {active
+                          ? <Badge className="bg-success text-success-foreground">Active</Badge>
+                          : <Badge variant="outline">{r.status === 'pending' ? 'Pending' : 'Inactive'}</Badge>}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {busy === r.user_id && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                          <Switch
+                            checked={active}
+                            disabled={isSelf || busy === r.user_id}
+                            onCheckedChange={(v) => toggle(r, v)}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+      <p className="text-xs text-muted-foreground">Deactivated users lose access on next page load.</p>
+    </div>
+  );
+}
