@@ -73,14 +73,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
-              {users.map(u => (
-                <DropdownMenuItem key={u.id} onClick={() => setCurrentUser(u)}>
-                  <div>
-                    <div className="font-medium">{u.name}</div>
-                    <div className="text-xs text-muted-foreground">{u.role.replace('_', ' ')} — {u.organization}</div>
-                  </div>
-                </DropdownMenuItem>
-              ))}
+              <DropdownMenuItem disabled>
+                <div>
+                  <div className="font-medium">{profileName || currentUser.name}</div>
+                  <div className="text-xs text-muted-foreground">{currentUser.role.replace('_', ' ')} — {currentUser.organization}</div>
+                </div>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={signOut}>
                 <LogOut className="h-4 w-4 mr-2" /> Log out
               </DropdownMenuItem>
