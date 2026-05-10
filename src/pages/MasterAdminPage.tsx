@@ -19,6 +19,7 @@ type Row = {
   organization: string | null;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
+  syndicate_admin: boolean;
 };
 
 export default function MasterAdminPage() {
@@ -33,14 +34,22 @@ export default function MasterAdminPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const [{ data, error }, { data: roleRows, error: roleErr }] = await Promise.all([
+      supabase
       .from('profiles')
       .select('user_id, email, name, organization, status, created_at')
-      .order('created_at', { ascending: false });
-    if (error) {
-      toast({ title: 'Failed to load users', description: error.message, variant: 'destructive' });
+        .order('created_at', { ascending: false }),
+      supabase.from('user_roles').select('user_id, role').eq('role', 'syndicate_admin'),
+    ]);
+    if (error || roleErr) {
+      toast({ title: 'Failed to load users', description: (error || roleErr)?.message, variant: 'destructive' });
     } else {
-      setRows((data ?? []) as Row[]);
+      const synSet = new Set((roleRows ?? []).map((r: { user_id: string }) => r.user_id));
+      const merged = (data ?? []).map((r: Omit<Row, 'syndicate_admin'>) => ({
+        ...r,
+        syndicate_admin: synSet.has(r.user_id),
+      }));
+      setRows(merged as Row[]);
     }
     setLoading(false);
   };
@@ -87,6 +96,41 @@ export default function MasterAdminPage() {
     toast({ title: active ? 'User activated' : 'User deactivated', description: row.email });
   };
 
+  const toggleSyndicate = async (row: Row, grant: boolean) => {
+    setBusy(row.user_id);
+    let error;
+    if (grant) {
+      ({ error } = await supabase
+        .from('user_roles')
+        .upsert({ user_id: row.user_id, role: 'syndicate_admin' }, { onConflict: 'user_id,role' }));
+    } else {
+      ({ error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', row.user_id)
+        .eq('role', 'syndicate_admin'));
+    }
+    setBusy(null);
+    if (error) {
+      toast({ title: 'Role update failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setRows(prev => prev.map(r => r.user_id === row.user_id ? { ...r, syndicate_admin: grant } : r));
+    try {
+      await supabase.from('audit_log').insert({
+        id: `ma_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        action: grant ? 'MASTER_ROLE_GRANTED' : 'MASTER_ROLE_REVOKED',
+        entity_type: 'master_admin',
+        entity_id: row.user_id,
+        user_id: authUser?.id ?? 'master-admin',
+        details: `${grant ? 'Granted' : 'Revoked'} syndicate_admin for ${row.email}`,
+      });
+    } catch (e) {
+      console.warn('[MasterAdmin] role audit insert failed', e);
+    }
+    toast({ title: grant ? 'Syndicate Admin granted' : 'Syndicate Admin revoked', description: row.email });
+  };
+
   const filtered = rows.filter(r => {
     const q = filter.trim().toLowerCase();
     if (!q) return true;
@@ -124,12 +168,13 @@ export default function MasterAdminPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Organization</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Syndicate Admin</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No users found.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No users found.</TableCell></TableRow>
                 )}
                 {filtered.map(r => {
                   const active = r.status === 'approved';
@@ -143,6 +188,13 @@ export default function MasterAdminPage() {
                         {active
                           ? <Badge className="bg-success text-success-foreground">Active</Badge>
                           : <Badge variant="outline">{r.status === 'pending' ? 'Pending' : 'Inactive'}</Badge>}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Switch
+                          checked={r.syndicate_admin}
+                          disabled={isSelf || busy === r.user_id}
+                          onCheckedChange={(v) => toggleSyndicate(r, v)}
+                        />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
