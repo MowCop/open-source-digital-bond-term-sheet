@@ -482,12 +482,12 @@ export default function UserManagementPage() {
                             </div>
                             <div className="max-h-80 overflow-y-auto">
                               {[
-                                { label: 'Active — manage & edit', list: activeDeals, tone: 'default' as const },
-                                { label: 'Passive — read only', list: passiveDeals, tone: 'outline' as const },
+                                { label: 'Active — manage & edit', list: activeDeals, tone: 'default' as const, labelClass: 'font-bold text-green-500' },
+                                { label: 'Passive — read only', list: passiveDeals, tone: 'outline' as const, labelClass: 'font-bold text-white' },
                               ].map(section => (
                                 <div key={section.label}>
                                   <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between">
-                                    <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{section.label}</span>
+                                    <span className={`text-[11px] uppercase tracking-wider ${section.labelClass}`}>{section.label}</span>
                                     <Badge variant={section.tone} className="text-[10px]">{section.list.length}</Badge>
                                   </div>
                                   {section.list.length === 0 ? (
