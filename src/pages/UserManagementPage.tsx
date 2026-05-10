@@ -13,6 +13,10 @@ import { UserRole, UserCategory, User, DistributionList } from '@/types/bond';
 import { useToast } from '@/hooks/use-toast';
 import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useAuth } from '@/context/AuthContext';
+import { KeyRound, UserCheck } from 'lucide-react';
+import GuestsTab from '@/components/GuestsTab';
+import PendingApprovalsTab from '@/components/PendingApprovalsTab';
 
 const roleLabels: Record<UserRole, string> = {
   master_admin: 'Master Admin',
@@ -42,6 +46,7 @@ const categoryOptions: UserCategory[] = ['Vendor', 'Syndicate', 'Buy Side', 'Leg
 export default function UserManagementPage() {
   const { users, currentUser, distributionLists, addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList } = useApp();
   const { toast } = useToast();
+  const { isAdmin } = useAuth();
 
   const [activeTab, setActiveTab] = useState('lists');
   const [showAddUser, setShowAddUser] = useState(false);
@@ -74,11 +79,11 @@ export default function UserManagementPage() {
   const [editListName, setEditListName] = useState('');
   const [editMembers, setEditMembers] = useState<string[]>([]);
 
-  if (currentUser.role !== 'master_admin') {
+  if (!isAdmin && currentUser.role !== 'master_admin') {
     return (
       <div className="flex items-center justify-center h-64">
         <Card><CardContent className="p-6 text-center">
-          <p className="text-muted-foreground">Access restricted to Master Admins</p>
+          <p className="text-muted-foreground">Access restricted to administrators</p>
         </CardContent></Card>
       </div>
     );
@@ -241,6 +246,12 @@ export default function UserManagementPage() {
           </TabsTrigger>
           <TabsTrigger value="users" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
             <Users className="h-4 w-4 mr-2" /> Users
+          </TabsTrigger>
+          <TabsTrigger value="approvals" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+            <UserCheck className="h-4 w-4 mr-2" /> Approvals
+          </TabsTrigger>
+          <TabsTrigger value="guests" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+            <KeyRound className="h-4 w-4 mr-2" /> Guests
           </TabsTrigger>
         </TabsList>
 
@@ -416,6 +427,12 @@ export default function UserManagementPage() {
               </TableBody>
             </Table>
           )}
+        </TabsContent>
+        <TabsContent value="approvals" className="mt-6">
+          <PendingApprovalsTab />
+        </TabsContent>
+        <TabsContent value="guests" className="mt-6">
+          <GuestsTab />
         </TabsContent>
       </Tabs>
 
