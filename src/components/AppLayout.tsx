@@ -26,7 +26,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Guests get a heavily restricted nav
   const visibleNav = guest
-    ? navItems.filter(n => n.path === '/messages' || n.path === '/deals')
+    ? navItems.filter(n => n.path === '/messages' || n.path === '/inbox')
     : navItems;
 
   return (
