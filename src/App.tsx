@@ -8,7 +8,6 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import RequireAuth from "@/components/RequireAuth";
 import AuthPage from "@/pages/AuthPage";
 import AppLayout from "@/components/AppLayout";
-import Dashboard from "@/pages/Dashboard";
 import DealsPage from "@/pages/DealsPage";
 import MessagesPage from "@/pages/MessagesPage";
 import InboxPage from "@/pages/InboxPage";
