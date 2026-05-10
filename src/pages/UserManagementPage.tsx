@@ -207,6 +207,25 @@ export default function UserManagementPage() {
     return deals.filter(d => ids.has(d.id));
   };
 
+  // Split a user's authorised deals into active (manage/edit) and passive (read-only).
+  // Active: the user's org created the deal, or is listed as an "active" bookrunner.
+  // Passive: everything else they have access to (passive bookrunner, or recipient-only).
+  const splitDealsForUser = (u: User) => {
+    const all = dealsForUser(u);
+    const org = norm(u.organization);
+    const active: typeof all = [];
+    const passive: typeof all = [];
+    for (const d of all) {
+      const br = (d.bookrunners ?? []).find(b => norm(b.name) === org);
+      const isActive =
+        (u.organizationType === 'bank' && !!org && norm(d.createdByOrg) === org) ||
+        (br && br.role === 'active');
+      if (isActive) active.push(d);
+      else passive.push(d);
+    }
+    return { active, passive };
+  };
+
   // Editing a distribution list view
   if (editingList) {
     return (
