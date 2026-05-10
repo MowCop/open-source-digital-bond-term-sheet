@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Bell as BellIcon, Bot, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Settings, Inbox, LogOut } from 'lucide-react';
+import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut } from 'lucide-react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
