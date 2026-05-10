@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
-import { useApp } from '@/context/AppContext';
+import { useApp, useScopedApp } from '@/context/AppContext';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +35,7 @@ interface ChannelThreadProps {
 }
 
 function ChannelThread({ channel, search, lastSeen, onSeen }: ChannelThreadProps) {
-  const { currentUser, users, chatMessages, messages, sendChatMessage } = useApp();
+  const { currentUser, users, chatMessages, messages, sendChatMessage } = useScopedApp();
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -189,7 +189,7 @@ interface DealRowProps {
 }
 
 function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen }: DealRowProps) {
-  const { chatMessages } = useApp();
+  const { chatMessages } = useScopedApp();
 
   const channelStats = useMemo(() => {
     return channels.map(ch => {
@@ -267,7 +267,7 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen 
 }
 
 export default function InboxPage() {
-  const { currentUser, deals, chatChannels, chatMessages } = useApp();
+  const { currentUser, deals, chatChannels, chatMessages } = useScopedApp();
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   // Session-only last-seen timestamps per channel. Initialized to "now" so existing
