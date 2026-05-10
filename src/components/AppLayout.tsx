@@ -13,7 +13,6 @@ const navItems = [
   { path: '/admin', label: 'User Management', icon: Users, adminOnly: true },
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
   { path: '/deals', label: 'Deal Data', icon: FileText },
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/master-admin', label: 'Master Admin', icon: Shield, masterOnly: true },
 ];
 
