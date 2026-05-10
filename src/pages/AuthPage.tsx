@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, KeyRound, Shield } from 'lucide-react';
+import { Loader2, KeyRound, Shield, Link2, Building2, LineChart } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 export default function AuthPage() {
   const { signIn, signUp, loginAsGuest } = useAuth();
@@ -135,6 +136,40 @@ export default function AuthPage() {
                     {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                     Create account
                   </Button>
+
+                  <div className="pt-2">
+                    <Separator />
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Link2 className="h-4 w-4 text-primary" />
+                      <h3 className="font-semibold text-sm">Link accounts</h3>
+                      <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground border border-border rounded px-1.5 py-0.5">
+                        Preview
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Optionally link your corporate identity for single sign-on and richer market data. These integrations are display-only in this prototype.
+                    </p>
+                    <div className="grid gap-2">
+                      <Button type="button" variant="outline" className="w-full justify-start" disabled aria-disabled="true">
+                        <Building2 className="h-4 w-4 mr-2" />
+                        Link Microsoft corporate account
+                      </Button>
+                      <Button type="button" variant="outline" className="w-full justify-start" disabled aria-disabled="true">
+                        <LineChart className="h-4 w-4 mr-2" />
+                        Link Bloomberg account
+                      </Button>
+                      <Button type="button" variant="outline" className="w-full justify-start" disabled aria-disabled="true">
+                        <Shield className="h-4 w-4 mr-2" />
+                        Internal corporate authentication (SSO / SAML)
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground italic">
+                      Coming soon — not active in this demo.
+                    </p>
+                  </div>
                 </form>
               </TabsContent>
             </Tabs>
