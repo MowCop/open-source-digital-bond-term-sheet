@@ -15,6 +15,7 @@ import InboxPage from "@/pages/InboxPage";
 import AIDraftPage from "@/pages/AIDraftPage";
 import UserManagementPage from "@/pages/UserManagementPage";
 import AuditLogPage from "@/pages/AuditLogPage";
+import MasterAdminPage from "@/pages/MasterAdminPage";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
                       <Route path="/ai-draft" element={<AIDraftPage />} />
                       <Route path="/admin" element={<UserManagementPage />} />
                       <Route path="/audit-log" element={<AuditLogPage />} />
+                      <Route path="/master-admin" element={<MasterAdminPage />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </AppLayout>
