@@ -27,7 +27,7 @@ export default function AuditLogPage() {
   const [search, setSearch] = useState('');
 
   const filtered = auditLog
-    .filter(e => isMaster || e.entityType !== 'master_admin')
+    .filter(e => isMaster || (e.entityType as string) !== 'master_admin')
     .filter(e => filterType === 'all' || e.entityType === filterType)
     .filter(e => !search || e.details.toLowerCase().includes(search.toLowerCase()) || e.action.toLowerCase().includes(search.toLowerCase()));
 
