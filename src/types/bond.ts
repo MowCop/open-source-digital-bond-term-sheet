@@ -34,6 +34,7 @@ export interface User {
   category?: UserCategory;
   createdAt?: Date;
   createdBy?: string;
+  createdByOrg?: string;
 }
 
 export interface Deal {
@@ -42,6 +43,7 @@ export interface Deal {
   createdAt: Date;
   updatedAt: Date;
   stageHistory: StageTransition[];
+  createdByOrg?: string;
 
   // Party / Issuer (5 fields)
   issuerName: string;        // borrower / PartyName ISSUER
@@ -157,6 +159,7 @@ export interface DistributionList {
   memberIds: string[];
   vendorIds: string[];
   createdBy: string;
+  createdByOrg?: string;
   lastUsed?: Date;
 }
 

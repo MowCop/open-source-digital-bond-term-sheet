@@ -117,6 +117,7 @@ export type Database = {
           common_code: string | null
           coupon: string
           created_at: string
+          created_by_org: string | null
           currency: string
           cusip: string | null
           day_count_fraction: string | null
@@ -159,6 +160,7 @@ export type Database = {
           common_code?: string | null
           coupon: string
           created_at?: string
+          created_by_org?: string | null
           currency: string
           cusip?: string | null
           day_count_fraction?: string | null
@@ -201,6 +203,7 @@ export type Database = {
           common_code?: string | null
           coupon?: string
           created_at?: string
+          created_by_org?: string | null
           currency?: string
           cusip?: string | null
           day_count_fraction?: string | null
@@ -242,6 +245,7 @@ export type Database = {
       distribution_lists: {
         Row: {
           created_by: string
+          created_by_org: string | null
           id: string
           last_used: string | null
           member_ids: Json
@@ -250,6 +254,7 @@ export type Database = {
         }
         Insert: {
           created_by: string
+          created_by_org?: string | null
           id: string
           last_used?: string | null
           member_ids?: Json
@@ -258,6 +263,7 @@ export type Database = {
         }
         Update: {
           created_by?: string
+          created_by_org?: string | null
           id?: string
           last_used?: string | null
           member_ids?: Json
@@ -457,6 +463,7 @@ export type Database = {
           category: string | null
           created_at: string
           created_by: string | null
+          created_by_org: string | null
           email: string
           id: string
           name: string
@@ -469,6 +476,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           created_by?: string | null
+          created_by_org?: string | null
           email: string
           id: string
           name: string
@@ -481,6 +489,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           created_by?: string | null
+          created_by_org?: string | null
           email?: string
           id?: string
           name?: string
