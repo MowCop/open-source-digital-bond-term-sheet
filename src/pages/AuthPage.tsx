@@ -62,7 +62,7 @@ export default function AuthPage() {
     setGuestBusy(false);
     if (error) return toast({ title: 'Guest access failed', description: error, variant: 'destructive' });
     toast({ title: 'Welcome', description: 'Read-only guest access granted.' });
-    navigate('/');
+    navigate('/messages');
   };
 
   return (

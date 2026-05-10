@@ -1,10 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider } from "@/context/AppContext";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import RequireAuth from "@/components/RequireAuth";
 import AuthPage from "@/pages/AuthPage";
 import AppLayout from "@/components/AppLayout";
@@ -20,6 +20,12 @@ import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
 
+function GuestBlock({ children }: { children: React.ReactNode }) {
+  const { guest } = useAuth();
+  if (guest) return <Navigate to="/messages" replace />;
+  return <>{children}</>;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -34,14 +40,14 @@ const App = () => (
                 <AppProvider>
                   <AppLayout>
                     <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/deals" element={<DealsPage />} />
+                      <Route path="/" element={<GuestBlock><Dashboard /></GuestBlock>} />
+                      <Route path="/deals" element={<GuestBlock><DealsPage /></GuestBlock>} />
                       <Route path="/messages" element={<MessagesPage />} />
                       <Route path="/inbox" element={<InboxPage />} />
-                      <Route path="/ai-draft" element={<AIDraftPage />} />
-                      <Route path="/admin" element={<UserManagementPage />} />
-                      <Route path="/audit-log" element={<AuditLogPage />} />
-                      <Route path="/master-admin" element={<MasterAdminPage />} />
+                      <Route path="/ai-draft" element={<GuestBlock><AIDraftPage /></GuestBlock>} />
+                      <Route path="/admin" element={<GuestBlock><UserManagementPage /></GuestBlock>} />
+                      <Route path="/audit-log" element={<GuestBlock><AuditLogPage /></GuestBlock>} />
+                      <Route path="/master-admin" element={<GuestBlock><MasterAdminPage /></GuestBlock>} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </AppLayout>
