@@ -15,7 +15,7 @@ export default function AuthPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'guest'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -75,10 +75,11 @@ export default function AuthPage() {
 
         <Card className="card-elevated">
           <CardContent className="p-6 space-y-6">
-            <Tabs value={mode} onValueChange={(v) => setMode(v as 'login' | 'signup')}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login"><Shield className="h-4 w-4 mr-2" />Syndicate Log in</TabsTrigger>
+            <Tabs value={mode} onValueChange={(v) => setMode(v as 'login' | 'signup' | 'guest')}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="login"><Shield className="h-4 w-4 mr-2" />Log in</TabsTrigger>
                 <TabsTrigger value="signup">Sign up</TabsTrigger>
+                <TabsTrigger value="guest"><KeyRound className="h-4 w-4 mr-2" />Guest</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login" className="mt-5">
@@ -172,33 +173,29 @@ export default function AuthPage() {
                   </div>
                 </form>
               </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <KeyRound className="h-4 w-4 text-primary" />
-              <h2 className="font-semibold">Guest access</h2>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Use the email and passcode provided by your syndicate administrator to view specific deals (read-only).
-            </p>
-            <form onSubmit={submitGuest} className="space-y-3">
-              <div>
-                <Label>Email</Label>
-                <Input type="email" value={guestEmail} onChange={e => setGuestEmail(e.target.value)} required />
-              </div>
-              <div>
-                <Label>Passcode</Label>
-                <Input value={passcode} onChange={e => setPasscode(e.target.value.toUpperCase())} required placeholder="e.g. K7XP-9QM2" />
-              </div>
-              <Button type="submit" variant="outline" className="w-full" disabled={guestBusy}>
-                {guestBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Enter as guest
-              </Button>
-            </form>
+              <TabsContent value="guest" className="mt-5">
+                <div className="space-y-4">
+                  <p className="text-xs text-muted-foreground">
+                    Use the email and passcode provided by your syndicate administrator to view specific deals (read-only).
+                  </p>
+                  <form onSubmit={submitGuest} className="space-y-3">
+                    <div>
+                      <Label>Email</Label>
+                      <Input type="email" value={guestEmail} onChange={e => setGuestEmail(e.target.value)} required />
+                    </div>
+                    <div>
+                      <Label>Passcode</Label>
+                      <Input value={passcode} onChange={e => setPasscode(e.target.value.toUpperCase())} required placeholder="e.g. K7XP-9QM2" />
+                    </div>
+                    <Button type="submit" variant="outline" className="w-full" disabled={guestBusy}>
+                      {guestBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Enter as guest
+                    </Button>
+                  </form>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
