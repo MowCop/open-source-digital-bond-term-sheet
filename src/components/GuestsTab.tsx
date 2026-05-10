@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Copy, KeyRound, RefreshCw, Trash2, Plus } from 'lucide-react';
+import GuestDetailDrawer, { type GuestRow as DrawerGuestRow } from './GuestDetailDrawer';
 
 interface GuestRow {
   id: string;
@@ -22,6 +23,7 @@ interface GuestRow {
   revoked_at: string | null;
   last_used_at: string | null;
   created_at: string;
+  created_by?: string | null;
 }
 
 export default function GuestsTab() {
@@ -38,6 +40,7 @@ export default function GuestsTab() {
   const [busy, setBusy] = useState(false);
 
   const [issued, setIssued] = useState<{ email: string; passcode: string } | null>(null);
+  const [selected, setSelected] = useState<DrawerGuestRow | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -131,11 +134,15 @@ export default function GuestsTab() {
             const expired = r.expires_at && new Date(r.expires_at) < new Date();
             const status = r.revoked_at ? 'revoked' : expired ? 'expired' : 'active';
             return (
-              <TableRow key={r.id}>
+              <TableRow
+                key={r.id}
+                className="cursor-pointer hover:bg-accent/50"
+                onClick={() => setSelected(r as DrawerGuestRow)}
+              >
                 <TableCell>{r.email}</TableCell>
                 <TableCell>{r.name || '—'}</TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <code className="text-xs bg-muted px-2 py-1 rounded">{r.passcode}</code>
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copy(r.passcode)}><Copy className="h-3 w-3" /></Button>
                   </div>
@@ -148,7 +155,7 @@ export default function GuestsTab() {
                   <Badge variant={status === 'active' ? 'default' : 'secondary'}>{status}</Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
+                  <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" title="Regenerate" onClick={() => regenerate(r.id)} disabled={!!r.revoked_at}><RefreshCw className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" title="Revoke" onClick={() => revoke(r.id)} disabled={!!r.revoked_at}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </div>
@@ -158,6 +165,13 @@ export default function GuestsTab() {
           })}
         </TableBody>
       </Table>
+
+      <GuestDetailDrawer
+        guest={selected}
+        open={!!selected}
+        onOpenChange={(o) => !o && setSelected(null)}
+        onChanged={() => { load(); setSelected(null); }}
+      />
 
       <Dialog open={showInvite} onOpenChange={setShowInvite}>
         <DialogContent className="max-w-lg">
