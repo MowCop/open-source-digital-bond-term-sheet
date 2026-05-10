@@ -44,7 +44,7 @@ const UM_LABELS = {
 const categoryOptions: UserCategory[] = ['Vendor', 'Syndicate', 'Buy Side', 'Legal', 'Guest', 'DCM', 'Sales'];
 
 export default function UserManagementPage() {
-  const { users, currentUser, distributionLists, addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList } = useScopedApp();
+  const { users, currentUser, deals, messages, distributionLists, addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList } = useScopedApp();
   const { toast } = useToast();
   const { isAdmin, isMaster } = useAuth();
 
@@ -182,6 +182,28 @@ export default function UserManagementPage() {
   const creatorName = (id: string) => {
     if (id === 'System') return 'System';
     return users.find(u => u.id === id)?.name || 'Unknown';
+  };
+
+  // Compute authorised deals per user:
+  // - bank users: deals where their org is creator or a bookrunner
+  // - all users: deals where they are a recipient on any sent message
+  const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
+  const dealsForUser = (u: User) => {
+    const ids = new Set<string>();
+    const org = norm(u.organization);
+    if (u.organizationType === 'bank' && org) {
+      for (const d of deals) {
+        if (norm(d.createdByOrg) === org || (d.bookrunners ?? []).some(b => norm(b.name) === org)) {
+          ids.add(d.id);
+        }
+      }
+    }
+    for (const m of messages) {
+      if ((m.recipients ?? []).includes(u.id)) {
+        for (const did of (m.dealIds ?? [])) ids.add(did);
+      }
+    }
+    return deals.filter(d => ids.has(d.id));
   };
 
   // Editing a distribution list view
@@ -392,12 +414,15 @@ export default function UserManagementPage() {
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Name & Contact</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Organization</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Deals</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Created Details</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map(u => (
+                {users.map(u => {
+                  const userDeals = dealsForUser(u);
+                  return (
                   <TableRow key={u.id} className="border-border">
                     <TableCell>
                       <div className="font-medium">{u.name}</div>
@@ -409,6 +434,19 @@ export default function UserManagementPage() {
                       <Badge variant={u.role === 'master_admin' ? 'default' : u.role === 'syndicate_admin' ? 'secondary' : 'outline'}>
                         {u.category || roleLabels[u.role]}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {userDeals.length === 0 ? (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      ) : (
+                        <div title={userDeals.map(d => `${d.issuerName} ${d.currency} ${d.size}`).join('\n')}>
+                          <Badge variant="outline">{userDeals.length} deal{userDeals.length === 1 ? '' : 's'}</Badge>
+                          <div className="text-xs text-muted-foreground mt-1 line-clamp-2 max-w-[220px]">
+                            {userDeals.slice(0, 2).map(d => `${d.issuerName} ${d.currency}${d.size}`).join(', ')}
+                            {userDeals.length > 2 ? ` +${userDeals.length - 2}` : ''}
+                          </div>
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="text-sm text-timestamp">{formatDate(u.createdAt)}</div>
@@ -423,7 +461,8 @@ export default function UserManagementPage() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}
