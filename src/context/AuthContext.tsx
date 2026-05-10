@@ -20,6 +20,8 @@ interface AuthContextType {
   profileOrg: string | null;
   roles: string[];
   isAdmin: boolean;
+  isMaster: boolean;
+  isSyndicateAdmin: boolean;
   guest: GuestSession | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
@@ -152,11 +154,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [authUser, loadProfile]);
 
   const isAdmin = roles.includes('master_admin') || roles.includes('syndicate_admin');
+  const isMaster = (authUser?.email?.toLowerCase() === 'karl.mallalieu@gmail.com') || roles.includes('master_admin');
+  const isSyndicateAdmin = !isMaster && roles.includes('syndicate_admin');
 
   return (
     <AuthContext.Provider value={{
       session, authUser, profileStatus, profileName, profileOrg,
-      roles, isAdmin, guest, loading,
+      roles, isAdmin, isMaster, isSyndicateAdmin, guest, loading,
       signIn, signUp, signOut, loginAsGuest, refreshProfile,
     }}>
       {children}

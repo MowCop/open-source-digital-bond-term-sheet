@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useApp } from '@/context/AppContext';
+import { useApp, useScopedApp } from '@/context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ const roleColors: Record<string, string> = {
 };
 
 export default function DealsPage() {
-  const { deals, createDeal, updateDealStage, currentUser } = useApp();
+  const { deals, createDeal, updateDealStage, currentUser } = useScopedApp();
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [stageNote, setStageNote] = useState('');

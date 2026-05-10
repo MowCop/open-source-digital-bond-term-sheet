@@ -1,4 +1,4 @@
-import { useApp } from '@/context/AppContext';
+import { useApp, useScopedApp } from '@/context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -16,7 +16,7 @@ const stageColors: Record<string, string> = {
 };
 
 export default function Dashboard() {
-  const { deals, messages, auditLog, currentUser } = useApp();
+  const { deals, messages, auditLog, currentUser } = useScopedApp();
 
   const activeDeals = deals.filter(d => d.stage !== 'Settled');
   const draftMessages = messages.filter(m => m.status === 'draft');
