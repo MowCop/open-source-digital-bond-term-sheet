@@ -61,7 +61,7 @@ export default function AuthPage() {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-1">
           <h1 className="text-3xl font-bold tracking-tight">BondVDR</h1>
-          <p className="text-sm text-muted-foreground">Virtual Data Room — secure access</p>
+          <p className="text-sm text-muted-foreground">Virtual Deal Room — secure access</p>
         </div>
 
         <Card className="card-elevated">
