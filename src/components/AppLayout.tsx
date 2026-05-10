@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Bell as BellIcon, Bot, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Settings, Inbox, LogOut } from 'lucide-react';
+import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut } from 'lucide-react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,6 @@ const navItems = [
   { path: '/admin', label: 'User Management', icon: Users, adminOnly: true },
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
   { path: '/deals', label: 'Deal Data', icon: FileText },
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/master-admin', label: 'Master Admin', icon: Shield, masterOnly: true },
 ];
 

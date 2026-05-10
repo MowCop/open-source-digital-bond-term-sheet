@@ -8,7 +8,6 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import RequireAuth from "@/components/RequireAuth";
 import AuthPage from "@/pages/AuthPage";
 import AppLayout from "@/components/AppLayout";
-import Dashboard from "@/pages/Dashboard";
 import DealsPage from "@/pages/DealsPage";
 import MessagesPage from "@/pages/MessagesPage";
 import InboxPage from "@/pages/InboxPage";
@@ -40,7 +39,7 @@ const App = () => (
                 <AppProvider>
                   <AppLayout>
                     <Routes>
-                      <Route path="/" element={<GuestBlock><Dashboard /></GuestBlock>} />
+                      <Route path="/" element={<Navigate to="/messages" replace />} />
                       <Route path="/deals" element={<GuestBlock><DealsPage /></GuestBlock>} />
                       <Route path="/messages" element={<MessagesPage />} />
                       <Route path="/inbox" element={<InboxPage />} />
