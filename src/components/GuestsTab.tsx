@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useApp } from '@/context/AppContext';
+import { useScopedApp } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +25,7 @@ interface GuestRow {
 }
 
 export default function GuestsTab() {
-  const { deals } = useApp();
+  const { deals } = useScopedApp();
   const { toast } = useToast();
   const [rows, setRows] = useState<GuestRow[]>([]);
   const [loading, setLoading] = useState(true);

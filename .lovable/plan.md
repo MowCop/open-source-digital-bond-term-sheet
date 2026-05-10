@@ -1,41 +1,39 @@
 ## Goal
-Lock down the Master Admin section so only `karl.mallalieu@gmail.com` can see it, prevent its data from leaking elsewhere, and ensure Master Admin–specific audit entries are visible only to him.
+Implement the simplified Syndicate Admin access model and surface it as a tooltip in the Master Admin page.
 
-## Scope of changes
+## Behavior changes
 
-### 1. Master Admin access (already gated, hardening)
-- Confirm in `src/components/AppLayout.tsx` and `src/pages/MasterAdminPage.tsx` that the nav link and page body are only rendered when `authUser?.email === 'karl.mallalieu@gmail.com'` (already implemented). Add the same guard inside `App.tsx` route element so direct navigation to `/master-admin` for any other user (including admins) renders the "Restricted" card.
-- No other page imports `MasterAdminPage` data — confirmed. No copy/parse of its user list elsewhere.
+**Syndicate Admin (owner of own workspace)**
+- Sees only deals where they are creator/bookrunner, plus users and distribution lists tied to those deals (already in place via `scoping.ts`).
+- Can invite any user (including Syndicate Admins from other firms) as **read-only guests** on specific deals they own.
 
-### 2. Tag Master Admin audit entries
-- In `MasterAdminPage.tsx`, when toggling user status, write a dedicated audit entry via `supabase.from('audit_log').insert(...)` with:
-  - `action`: `MASTER_USER_ACTIVATED` / `MASTER_USER_DEACTIVATED`
-  - `entity_type`: `master_admin`
-  - `user_id`: Karl's auth id
-  - `details`: `Activated/Deactivated <email>`
-- Use a distinct `entity_type = 'master_admin'` so RLS and UI filters can isolate it.
+**Read-only guest invites (per deal)**
+- Per-deal, not per-org. Doesn't change the invitee's Syndicate Admin status anywhere else.
+- A user can simultaneously be Syndicate Admin on Deal A and read-only guest on Deal B.
 
-### 3. Hide Master Admin audit rows from everyone except Karl
-Two layers:
+## Implementation
 
-**a) Database (RLS) — replace the current "anon read audit" all-true policy with role-based rules:**
-- `SELECT` for Master Admin (`has_role(auth.uid(), 'master_admin')` AND email matches): can read all rows.
-- `SELECT` for everyone else (anon + authenticated): can read rows where `entity_type <> 'master_admin'`.
-- Keep INSERT permissive (the app writes audit rows from many flows).
-- DELETE/UPDATE: restrict to Master Admin only (no general need to mutate audit history).
+### 1. Tooltip in Master Admin page
+- Add an info icon next to the "Syndicate Admin" column header in `src/pages/MasterAdminPage.tsx`.
+- On hover, show the simplified explanation:
+  > Syndicate Admin = owner of their own deals/users/lists.
+  > Inside User Management they can invite anyone (even Syndicate Admins from other firms) as read-only guests on specific deals they own.
+  > Read-only invites are per-deal and don't change the invitee's Syndicate Admin status.
+  > Example: Sarah (GlobalBank) invites Anna (EuroBank) as read-only on Deal A. Anna stays full Syndicate Admin on her own Deal B.
+- Use existing shadcn `Tooltip` component.
 
-**b) Frontend filter in `AuditLogPage.tsx`:** also filter out `entity_type === 'master_admin'` rows for non-master users, as defense-in-depth in case the cached `auditLog` in `AppContext` contains them.
+### 2. Per-deal read-only guest invites in User Management
+- In `src/pages/UserManagementPage.tsx`, add an "Invite read-only guest" action (visible to Syndicate Admins) that lets them:
+  - Pick an existing user (any org) or enter email + name.
+  - Pick one or more deals from the deals **they own**.
+  - Submit → creates a `guest_passcodes` row scoped to those deal IDs (reuses existing guest mechanism + `invite-guest` edge function).
+- Show a "Read-only guests" section listing active invites for the current Syndicate Admin's deals, with revoke action.
 
-### 4. Don't pollute the global app audit feed
-- `AppContext.addAuditEntry` currently pushes to a shared `auditLog` state used by `AuditLogPage`. For Master Admin events, bypass `addAuditEntry` and write straight to `supabase` (so the row exists in DB only). The realtime subscription in `AppContext` will receive it for Karl but RLS will filter it out for everyone else.
-
-## Files to edit
-- `supabase/migrations/<new>.sql` — replace audit_log SELECT/UPDATE/DELETE policies, add master-admin scoped policies.
-- `src/pages/MasterAdminPage.tsx` — write Master Admin audit rows directly to `audit_log` on activate/deactivate.
-- `src/pages/AuditLogPage.tsx` — client-side filter to drop `master_admin` entity_type rows for non-master viewers.
-- `src/App.tsx` — wrap `/master-admin` route to render Restricted card for non-master users (defense-in-depth alongside the page-level check).
+### 3. Scoping clarifications (no schema change required)
+- `scopeDeals`/`scopeUsers`/`scopeDistributionLists` already correctly isolate per-org data — no change.
+- Read-only guest access continues to flow through the existing `loginAsGuest` path; no role table changes.
 
 ## Out of scope
-- No schema column changes; reusing existing `entity_type` field.
-- No changes to existing non-audit RLS policies.
-- No email notifications on activation events.
+- No DB migrations (existing `guest_passcodes` table covers per-deal read-only access).
+- No changes to Master Admin role logic.
+- No RLS rewrite.

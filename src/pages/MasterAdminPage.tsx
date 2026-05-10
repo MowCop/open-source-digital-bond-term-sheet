@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Shield } from 'lucide-react';
+import { Loader2, Shield, Info } from 'lucide-react';
 
 const MASTER_EMAIL = 'karl.mallalieu@gmail.com';
 
@@ -168,7 +169,27 @@ export default function MasterAdminPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Organization</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-center">Syndicate Admin</TableHead>
+                  <TableHead className="text-center">
+                    <div className="inline-flex items-center gap-1">
+                      <span>Syndicate Admin</span>
+                      <TooltipProvider delayDuration={150}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button type="button" className="text-muted-foreground hover:text-foreground">
+                              <Info className="h-3.5 w-3.5" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-sm text-xs leading-relaxed">
+                            <p className="font-semibold mb-1">Syndicate Admin</p>
+                            <p>Owner of their own deals, users and distribution lists.</p>
+                            <p className="mt-2">Inside User Management → Guests they can invite anyone (even Syndicate Admins from other firms) as <b>read-only guests</b> on specific deals they own.</p>
+                            <p className="mt-2">Read-only invites are per-deal and don't change the invitee's Syndicate Admin status.</p>
+                            <p className="mt-2 italic">Example: Sarah (GlobalBank) invites Anna (EuroBank) as read-only on Deal A. Anna stays full Syndicate Admin on her own Deal B.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
