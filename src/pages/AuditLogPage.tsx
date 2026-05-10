@@ -1,4 +1,5 @@
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -20,10 +21,13 @@ const actionColors: Record<string, 'default' | 'secondary' | 'destructive' | 'ou
 
 export default function AuditLogPage() {
   const { auditLog, users } = useApp();
+  const { authUser } = useAuth();
+  const isMaster = authUser?.email?.toLowerCase() === 'karl.mallalieu@gmail.com';
   const [filterType, setFilterType] = useState<string>('all');
   const [search, setSearch] = useState('');
 
   const filtered = auditLog
+    .filter(e => isMaster || e.entityType !== 'master_admin')
     .filter(e => filterType === 'all' || e.entityType === filterType)
     .filter(e => !search || e.details.toLowerCase().includes(search.toLowerCase()) || e.action.toLowerCase().includes(search.toLowerCase()));
 
