@@ -33,7 +33,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className="w-60 bg-sidebar text-sidebar-foreground flex flex-col shrink-0">
         <div className="p-4 border-b border-sidebar-border">
           <h1 className="text-lg font-bold text-sidebar-primary-foreground">BondVDR</h1>
-          <p className="text-xs text-sidebar-foreground/60">Virtual Data Room</p>
+          <p className="text-xs text-sidebar-foreground/60">Virtual Deal Room</p>
         </div>
         <nav className="flex-1 p-2 space-y-1">
           {visibleNav.map(item => {
