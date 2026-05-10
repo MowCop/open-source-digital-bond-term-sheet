@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Bell as BellIcon, Bot, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Settings, Inbox } from 'lucide-react';
+import { LayoutDashboard, FileText, Bell as BellIcon, Bot, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Settings, Inbox, LogOut } from 'lucide-react';
 import { useApp, resetDemoData } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,13 @@ const navItems = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { currentUser, setCurrentUser, users, notifications } = useApp();
+  const { signOut, guest, profileName, isAdmin } = useAuth();
   const unreadCount = notifications.filter(n => !n.read && n.userId === currentUser.id).length;
+
+  // Guests get a heavily restricted nav
+  const visibleNav = guest
+    ? navItems.filter(n => n.path === '/messages' || n.path === '/deals')
+    : navItems;
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -29,10 +36,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <p className="text-xs text-sidebar-foreground/60">Virtual Data Room</p>
         </div>
         <nav className="flex-1 p-2 space-y-1">
-          {navItems.map(item => {
+          {visibleNav.map(item => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
-            const visible = item.adminOnly ? currentUser.role === 'master_admin' : true;
+            const visible = item.adminOnly ? isAdmin : true;
             if (!visible) return null;
             return (
               <Link key={item.path} to={item.path}
@@ -45,11 +52,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
         {/* User switcher */}
         <div className="p-3 border-t border-sidebar-border">
+          {guest ? (
+            <div className="text-xs">
+              <div className="font-medium">{guest.name || guest.email}</div>
+              <div className="text-sidebar-foreground/60">Guest · read-only</div>
+              <Button variant="ghost" size="sm" onClick={signOut} className="w-full mt-2 justify-start h-7 text-xs">
+                <LogOut className="h-3 w-3 mr-2" /> Log out
+              </Button>
+            </div>
+          ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent text-xs h-auto py-2">
                 <div className="text-left">
-                  <div className="font-medium">{currentUser.name}</div>
+                  <div className="font-medium">{profileName || currentUser.name}</div>
                   <div className="text-sidebar-foreground/60">{currentUser.role.replace('_', ' ')}</div>
                 </div>
                 <ChevronDown className="h-3 w-3" />
@@ -64,8 +80,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </div>
                 </DropdownMenuItem>
               ))}
+              <DropdownMenuItem onClick={signOut}>
+                <LogOut className="h-4 w-4 mr-2" /> Log out
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          )}
           <Button
             variant="ghost"
             size="sm"
