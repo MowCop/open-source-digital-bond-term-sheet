@@ -46,7 +46,7 @@ const categoryOptions: UserCategory[] = ['Vendor', 'Syndicate', 'Buy Side', 'Leg
 export default function UserManagementPage() {
   const { users, currentUser, distributionLists, addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList } = useScopedApp();
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isMaster } = useAuth();
 
   const [activeTab, setActiveTab] = useState('lists');
   const [showAddUser, setShowAddUser] = useState(false);
@@ -361,7 +361,7 @@ export default function UserManagementPage() {
                     <Select value={newRole} onValueChange={v => setNewRole(v as UserRole)}>
                       <SelectTrigger className="mt-2 bg-background border-border"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="master_admin">Master Admin</SelectItem>
+                        {isMaster && <SelectItem value="master_admin">Master Admin</SelectItem>}
                         <SelectItem value="syndicate_admin">Syndicate Admin</SelectItem>
                         <SelectItem value="vendor_user">Read Only</SelectItem>
                         <SelectItem value="syndicate_readonly">Syndicate – Read Only</SelectItem>
@@ -468,7 +468,7 @@ export default function UserManagementPage() {
                   <Select value={editRole} onValueChange={v => setEditRole(v as UserRole)}>
                     <SelectTrigger className="mt-2 bg-background border-border"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="master_admin">Master Admin</SelectItem>
+                      {isMaster && <SelectItem value="master_admin">Master Admin</SelectItem>}
                       <SelectItem value="syndicate_admin">Syndicate Admin</SelectItem>
                       <SelectItem value="vendor_user">Read Only</SelectItem>
                       <SelectItem value="syndicate_readonly">Syndicate – Read Only</SelectItem>

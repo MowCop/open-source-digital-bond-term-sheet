@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Check, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 interface PendingProfile {
   user_id: string;
@@ -16,7 +17,7 @@ interface PendingProfile {
   created_at: string;
 }
 
-const ROLES = [
+const ALL_ROLES = [
   { value: 'syndicate_admin', label: 'Syndicate Admin' },
   { value: 'syndicate_readonly', label: 'Syndicate – Read Only' },
   { value: 'sales_readonly', label: 'Sales – Read Only' },
@@ -25,6 +26,8 @@ const ROLES = [
 
 export default function PendingApprovalsTab() {
   const { toast } = useToast();
+  const { isMaster } = useAuth();
+  const ROLES = isMaster ? ALL_ROLES : ALL_ROLES.filter(r => r.value !== 'master_admin');
   const [rows, setRows] = useState<PendingProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [roleByUser, setRoleByUser] = useState<Record<string, string>>({});
