@@ -38,6 +38,14 @@ export default function AuthPage() {
         setBusy(false);
         return toast({ title: 'Missing fields', description: 'Name and organization are required.', variant: 'destructive' });
       }
+      if (password.length < 8 || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+        setBusy(false);
+        return toast({
+          title: 'Password does not meet requirements',
+          description: 'Create a password with at least 8 characters, one number, and one symbol (e.g. !@#$%).',
+          variant: 'destructive',
+        });
+      }
       const { error } = await signUp(email, password, name, organization);
       setBusy(false);
       if (error) return toast({ title: 'Signup failed', description: error, variant: 'destructive' });
@@ -106,9 +114,22 @@ export default function AuthPage() {
                     <Input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
                   </div>
                   <div>
-                    <Label>Password</Label>
-                    <Input type="password" minLength={8} value={password} onChange={e => setPassword(e.target.value)} required autoComplete="new-password" />
-                    <p className="text-xs text-muted-foreground mt-1">Min 8 characters. Account requires admin approval before access.</p>
+                    <Label>Create password</Label>
+                    <Input
+                      type="password"
+                      minLength={8}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      required
+                      autoComplete="new-password"
+                      placeholder="Choose your own secure password"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Choose your own password. Must be at least <strong>8 characters</strong> and include at least <strong>one number</strong> and <strong>one symbol</strong> (e.g. ! @ # $ %).
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Your account will require admin approval before access is granted.
+                    </p>
                   </div>
                   <Button type="submit" className="w-full" disabled={busy}>
                     {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
