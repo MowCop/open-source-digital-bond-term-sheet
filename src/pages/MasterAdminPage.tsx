@@ -71,6 +71,19 @@ export default function MasterAdminPage() {
       return;
     }
     setRows(prev => prev.map(r => r.user_id === row.user_id ? { ...r, status: newStatus } : r));
+    // Master Admin–only audit entry (RLS hides this from everyone but Master Admin)
+    try {
+      await supabase.from('audit_log').insert({
+        id: `ma_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        action: active ? 'MASTER_USER_ACTIVATED' : 'MASTER_USER_DEACTIVATED',
+        entity_type: 'master_admin',
+        entity_id: row.user_id,
+        user_id: authUser?.id ?? 'master-admin',
+        details: `${active ? 'Activated' : 'Deactivated'} ${row.email}`,
+      });
+    } catch (e) {
+      console.warn('[MasterAdmin] audit insert failed', e);
+    }
     toast({ title: active ? 'User activated' : 'User deactivated', description: row.email });
   };
 
