@@ -16,6 +16,7 @@ interface UserRow {
   id: string; name: string; email: string; phone: string | null;
   role: string; organization: string; organization_type: string;
   category: string | null; created_at: string; created_by: string | null;
+  created_by_org?: string | null;
 }
 
 function rowToUser(r: UserRow): User {
@@ -28,6 +29,7 @@ function rowToUser(r: UserRow): User {
     category: (r.category ?? undefined) as UserCategory | undefined,
     createdAt: r.created_at ? new Date(r.created_at) : undefined,
     createdBy: r.created_by ?? undefined,
+    createdByOrg: r.created_by_org ?? undefined,
   };
 }
 
@@ -38,6 +40,7 @@ function userToRow(u: User): UserRow {
     category: u.category ?? null,
     created_at: (u.createdAt ?? new Date()).toISOString(),
     created_by: u.createdBy ?? null,
+    created_by_org: u.createdByOrg ?? null,
   };
 }
 
@@ -59,6 +62,7 @@ export async function updateUserRow(id: string, updates: Partial<User>) {
   if (updates.organization !== undefined) patch.organization = updates.organization;
   if (updates.organizationType !== undefined) patch.organization_type = updates.organizationType;
   if (updates.category !== undefined) patch.category = updates.category ?? null;
+  if (updates.createdByOrg !== undefined) patch.created_by_org = updates.createdByOrg ?? null;
   const { error } = await db.from('users').update(patch).eq('id', id);
   if (error) throw error;
 }
@@ -87,6 +91,7 @@ const dealFieldMap: Record<string, string> = {
   interestPaymentFrequency: 'interest_payment_frequency',
   dayCountFraction: 'day_count_fraction', businessDayConvention: 'business_day_convention',
   optionality: 'optionality', taxonomy: 'taxonomy',
+  createdByOrg: 'created_by_org',
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -320,6 +325,7 @@ function rowToDistList(r: any): DistributionList {
     memberIds: (r.member_ids ?? []) as string[],
     vendorIds: (r.vendor_ids ?? []) as string[],
     createdBy: r.created_by,
+    createdByOrg: r.created_by_org ?? undefined,
     lastUsed: r.last_used ? new Date(r.last_used) : undefined,
   };
 }
@@ -328,6 +334,7 @@ function distListToRow(d: DistributionList): Record<string, unknown> {
     id: d.id, name: d.name,
     member_ids: d.memberIds, vendor_ids: d.vendorIds,
     created_by: d.createdBy,
+    created_by_org: d.createdByOrg ?? null,
     last_used: d.lastUsed ? d.lastUsed.toISOString() : null,
   };
 }
@@ -337,6 +344,7 @@ function distListUpdatesToRow(u: Partial<DistributionList>): Record<string, unkn
   if (u.memberIds !== undefined) r.member_ids = u.memberIds;
   if (u.vendorIds !== undefined) r.vendor_ids = u.vendorIds;
   if (u.createdBy !== undefined) r.created_by = u.createdBy;
+  if (u.createdByOrg !== undefined) r.created_by_org = u.createdByOrg ?? null;
   if (u.lastUsed !== undefined) r.last_used = u.lastUsed ? u.lastUsed.toISOString() : null;
   return r;
 }
