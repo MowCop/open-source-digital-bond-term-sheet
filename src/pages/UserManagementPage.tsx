@@ -13,6 +13,7 @@ import { UserRole, UserCategory, User, DistributionList } from '@/types/bond';
 import { useToast } from '@/hooks/use-toast';
 import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/AuthContext';
 import { KeyRound, UserCheck } from 'lucide-react';
 import GuestsTab from '@/components/GuestsTab';
@@ -439,13 +440,41 @@ export default function UserManagementPage() {
                       {userDeals.length === 0 ? (
                         <span className="text-xs text-muted-foreground">—</span>
                       ) : (
-                        <div title={userDeals.map(d => `${d.issuerName} ${d.currency} ${d.size}`).join('\n')}>
-                          <Badge variant="outline">{userDeals.length} deal{userDeals.length === 1 ? '' : 's'}</Badge>
-                          <div className="text-xs text-muted-foreground mt-1 line-clamp-2 max-w-[220px]">
-                            {userDeals.slice(0, 2).map(d => `${d.issuerName} ${d.currency}${d.size}`).join(', ')}
-                            {userDeals.length > 2 ? ` +${userDeals.length - 2}` : ''}
-                          </div>
-                        </div>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button type="button" className="text-left group">
+                              <Badge variant="outline" className="cursor-pointer group-hover:bg-accent">
+                                {userDeals.length} deal{userDeals.length === 1 ? '' : 's'}
+                              </Badge>
+                              <div className="text-xs text-muted-foreground mt-1 line-clamp-2 max-w-[220px]">
+                                {userDeals.slice(0, 2).map(d => `${d.issuerName} ${d.currency}${d.size}`).join(', ')}
+                                {userDeals.length > 2 ? ` +${userDeals.length - 2}` : ''}
+                              </div>
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent align="start" className="w-96 p-0">
+                            <div className="p-3 border-b border-border">
+                              <div className="text-xs uppercase tracking-wider text-muted-foreground">Authorised Deals</div>
+                              <div className="text-sm font-medium">{u.name} · {userDeals.length} deal{userDeals.length === 1 ? '' : 's'}</div>
+                            </div>
+                            <div className="max-h-80 overflow-y-auto divide-y divide-border">
+                              {userDeals.map(d => (
+                                <div key={d.id} className="p-3 text-sm">
+                                  <div className="font-medium">{d.issuerName}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {d.currency} {d.size} · {d.tenor} · {d.coupon}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-[10px]">{d.stage}</Badge>
+                                    {d.createdByOrg && (
+                                      <span className="text-[11px] text-muted-foreground">Created by {d.createdByOrg}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       )}
                     </TableCell>
                     <TableCell>
