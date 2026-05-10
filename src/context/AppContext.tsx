@@ -4,7 +4,7 @@ import { mockUsers } from '@/data/mockData';
 import { extractBorrowerName } from '@/lib/alertParsing';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { scopeDeals, scopeUsers, scopeDistributionLists } from '@/lib/scoping';
+import { scopeDeals, scopeUsers, scopeDistributionLists, scopeMessages } from '@/lib/scoping';
 import {
   fetchUsers, fetchDeals, insertUser, updateUserRow, deleteUserRow,
   insertDeal, updateDealRow, rowToDeal, rowToUser,
@@ -516,17 +516,29 @@ export function useApp() {
  */
 export function useScopedApp() {
   const app = useApp();
-  const { isMaster, isSyndicateAdmin, profileOrg, authUser } = useAuth();
+  const { isMaster, isSyndicateAdmin, profileOrg, authUser, guest } = useAuth();
   const ctx = {
     isMaster,
     isSyndicateAdmin,
     currentOrg: profileOrg,
     currentAuthUserId: authUser?.id ?? null,
+    isGuest: !!guest,
+    guestDealIds: guest?.dealIds ?? [],
   };
+  const allowedDealIds = new Set(guest?.dealIds ?? []);
+  const scopedChatChannels = guest
+    ? app.chatChannels.filter(c => !c.dealId || allowedDealIds.has(c.dealId))
+    : app.chatChannels;
+  const scopedChatMessages = guest
+    ? app.chatMessages.filter(m => !m.dealId || allowedDealIds.has(m.dealId))
+    : app.chatMessages;
   return {
     ...app,
     deals: scopeDeals(app.deals, ctx),
     users: scopeUsers(app.users, ctx),
     distributionLists: scopeDistributionLists(app.distributionLists, ctx),
+    messages: scopeMessages(app.messages, ctx),
+    chatChannels: scopedChatChannels,
+    chatMessages: scopedChatMessages,
   };
 }
