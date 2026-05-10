@@ -14,12 +14,14 @@ const navItems = [
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
   { path: '/deals', label: 'Deal Data', icon: FileText },
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/master-admin', label: 'Master Admin', icon: Shield, masterOnly: true },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { currentUser, setCurrentUser, users, notifications } = useApp();
-  const { signOut, guest, profileName, isAdmin } = useAuth();
+  const { signOut, guest, profileName, isAdmin, authUser } = useAuth();
+  const isMaster = authUser?.email?.toLowerCase() === 'karl.mallalieu@gmail.com';
   const unreadCount = notifications.filter(n => !n.read && n.userId === currentUser.id).length;
 
   // Guests get a heavily restricted nav
@@ -39,7 +41,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {visibleNav.map(item => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
-            const visible = item.adminOnly ? isAdmin : true;
+            const visible = item.masterOnly ? isMaster : item.adminOnly ? isAdmin : true;
             if (!visible) return null;
             return (
               <Link key={item.path} to={item.path}
