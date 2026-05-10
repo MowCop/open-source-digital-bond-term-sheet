@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '@/context/AppContext';
+import { useApp, useScopedApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,7 +35,7 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteMessageThread } = useApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteMessageThread } = useScopedApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
