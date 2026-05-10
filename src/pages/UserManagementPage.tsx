@@ -44,7 +44,7 @@ const UM_LABELS = {
 const categoryOptions: UserCategory[] = ['Vendor', 'Syndicate', 'Buy Side', 'Legal', 'Guest', 'DCM', 'Sales'];
 
 export default function UserManagementPage() {
-  const { users, currentUser, distributionLists, addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList } = useScopedApp();
+  const { users, currentUser, deals, messages, distributionLists, addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList } = useScopedApp();
   const { toast } = useToast();
   const { isAdmin, isMaster } = useAuth();
 
@@ -182,6 +182,28 @@ export default function UserManagementPage() {
   const creatorName = (id: string) => {
     if (id === 'System') return 'System';
     return users.find(u => u.id === id)?.name || 'Unknown';
+  };
+
+  // Compute authorised deals per user:
+  // - bank users: deals where their org is creator or a bookrunner
+  // - all users: deals where they are a recipient on any sent message
+  const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
+  const dealsForUser = (u: User) => {
+    const ids = new Set<string>();
+    const org = norm(u.organization);
+    if (u.organizationType === 'bank' && org) {
+      for (const d of deals) {
+        if (norm(d.createdByOrg) === org || (d.bookrunners ?? []).some(b => norm(b.name) === org)) {
+          ids.add(d.id);
+        }
+      }
+    }
+    for (const m of messages) {
+      if ((m.recipients ?? []).includes(u.id)) {
+        for (const did of (m.dealIds ?? [])) ids.add(did);
+      }
+    }
+    return deals.filter(d => ids.has(d.id));
   };
 
   // Editing a distribution list view
