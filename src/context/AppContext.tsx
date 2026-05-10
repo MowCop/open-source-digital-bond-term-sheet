@@ -508,3 +508,25 @@ export function useApp() {
   if (!ctx) throw new Error('useApp must be used within AppProvider');
   return ctx;
 }
+
+/**
+ * Scoped view of app data filtered to the current user's organization.
+ * Master Admin and non-syndicate users see all data unchanged.
+ * Syndicate Admins see only deals / users / distribution lists tied to their org.
+ */
+export function useScopedApp() {
+  const app = useApp();
+  const { isMaster, isSyndicateAdmin, profileOrg, authUser } = useAuth();
+  const ctx = {
+    isMaster,
+    isSyndicateAdmin,
+    currentOrg: profileOrg,
+    currentAuthUserId: authUser?.id ?? null,
+  };
+  return {
+    ...app,
+    deals: scopeDeals(app.deals, ctx),
+    users: scopeUsers(app.users, ctx),
+    distributionLists: scopeDistributionLists(app.distributionLists, ctx),
+  };
+}
