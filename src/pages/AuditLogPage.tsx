@@ -1,4 +1,4 @@
-import { useApp } from '@/context/AppContext';
+import { useApp, useScopedApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +20,9 @@ const actionColors: Record<string, 'default' | 'secondary' | 'destructive' | 'ou
 };
 
 export default function AuditLogPage() {
-  const { auditLog, users } = useApp();
+  const scoped = useScopedApp();
+  const { users } = useApp();
+  const auditLog = scoped.auditLog;
   const { authUser } = useAuth();
   const isMaster = authUser?.email?.toLowerCase() === 'karl.mallalieu@gmail.com';
   const [filterType, setFilterType] = useState<string>('all');

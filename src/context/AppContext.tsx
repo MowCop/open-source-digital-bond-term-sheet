@@ -4,7 +4,7 @@ import { mockUsers } from '@/data/mockData';
 import { extractBorrowerName } from '@/lib/alertParsing';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { scopeDeals, scopeUsers, scopeDistributionLists, scopeMessages } from '@/lib/scoping';
+import { scopeDeals, scopeUsers, scopeDistributionLists, scopeMessages, scopeAuditLog } from '@/lib/scoping';
 import {
   fetchUsers, fetchDeals, insertUser, updateUserRow, deleteUserRow,
   insertDeal, updateDealRow, rowToDeal, rowToUser,
@@ -522,6 +522,7 @@ export function useScopedApp() {
     isSyndicateAdmin,
     currentOrg: profileOrg,
     currentAuthUserId: authUser?.id ?? null,
+    currentUserId: app.currentUser?.id ?? null,
     isGuest: !!guest,
     guestDealIds: guest?.dealIds ?? [],
   };
@@ -538,6 +539,7 @@ export function useScopedApp() {
     users: scopeUsers(app.users, ctx),
     distributionLists: scopeDistributionLists(app.distributionLists, ctx),
     messages: scopeMessages(app.messages, ctx),
+    auditLog: scopeAuditLog(app.auditLog, ctx),
     chatChannels: scopedChatChannels,
     chatMessages: scopedChatMessages,
   };
