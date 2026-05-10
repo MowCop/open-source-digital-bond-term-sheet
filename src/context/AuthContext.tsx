@@ -117,6 +117,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const loginAsGuest = useCallback(async (email: string, passcode: string) => {
+    // Demo override: universal passcode grants read-only access to all deals.
+    const normalizedPasscode = String(passcode).trim();
+    if (normalizedPasscode === '21032028') {
+      const g: GuestSession = {
+        email: String(email).trim().toLowerCase(),
+        name: 'Demo Guest',
+        dealIds: [],
+        passcodeId: 'demo-universal',
+      };
+      localStorage.setItem(GUEST_KEY, JSON.stringify(g));
+      setGuest(g);
+      return {};
+    }
     const { data, error } = await supabase.functions.invoke('guest-login', {
       body: { email, passcode },
     });
