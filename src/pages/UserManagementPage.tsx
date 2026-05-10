@@ -442,6 +442,7 @@ export default function UserManagementPage() {
               <TableBody>
                 {users.map(u => {
                   const userDeals = dealsForUser(u);
+                  const { active: activeDeals, passive: passiveDeals } = splitDealsForUser(u);
                   return (
                   <TableRow key={u.id} className="border-border">
                     <TableCell>
@@ -475,20 +476,40 @@ export default function UserManagementPage() {
                             <div className="p-3 border-b border-border">
                               <div className="text-xs uppercase tracking-wider text-muted-foreground">Authorised Deals</div>
                               <div className="text-sm font-medium">{u.name} · {userDeals.length} deal{userDeals.length === 1 ? '' : 's'}</div>
+                              <div className="text-[11px] text-muted-foreground mt-1">
+                                {activeDeals.length} active (manage/edit) · {passiveDeals.length} passive (read-only)
+                              </div>
                             </div>
-                            <div className="max-h-80 overflow-y-auto divide-y divide-border">
-                              {userDeals.map(d => (
-                                <div key={d.id} className="p-3 text-sm">
-                                  <div className="font-medium">{d.issuerName}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {d.currency} {d.size} · {d.tenor} · {d.coupon}
+                            <div className="max-h-80 overflow-y-auto">
+                              {[
+                                { label: 'Active — manage & edit', list: activeDeals, tone: 'default' as const },
+                                { label: 'Passive — read only', list: passiveDeals, tone: 'outline' as const },
+                              ].map(section => (
+                                <div key={section.label}>
+                                  <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between">
+                                    <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{section.label}</span>
+                                    <Badge variant={section.tone} className="text-[10px]">{section.list.length}</Badge>
                                   </div>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Badge variant="outline" className="text-[10px]">{d.stage}</Badge>
-                                    {d.createdByOrg && (
-                                      <span className="text-[11px] text-muted-foreground">Created by {d.createdByOrg}</span>
-                                    )}
-                                  </div>
+                                  {section.list.length === 0 ? (
+                                    <div className="px-3 py-2 text-xs text-muted-foreground">None</div>
+                                  ) : (
+                                    <div className="divide-y divide-border">
+                                      {section.list.map(d => (
+                                        <div key={d.id} className="p-3 text-sm">
+                                          <div className="font-medium">{d.issuerName}</div>
+                                          <div className="text-xs text-muted-foreground">
+                                            {d.currency} {d.size} · {d.tenor} · {d.coupon}
+                                          </div>
+                                          <div className="flex items-center gap-2 mt-1">
+                                            <Badge variant="outline" className="text-[10px]">{d.stage}</Badge>
+                                            {d.createdByOrg && (
+                                              <span className="text-[11px] text-muted-foreground">Created by {d.createdByOrg}</span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
