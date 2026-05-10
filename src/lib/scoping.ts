@@ -1,4 +1,4 @@
-import type { Deal, User, DistributionList, Message } from '@/types/bond';
+import type { Deal, User, DistributionList, Message, AuditLogEntry } from '@/types/bond';
 
 /**
  * Org-based tenant isolation for Syndicate Admins.
@@ -11,6 +11,7 @@ export interface ScopeContext {
   isSyndicateAdmin: boolean;
   currentOrg: string | null;
   currentAuthUserId?: string | null;
+  currentUserId?: string | null;
   isGuest?: boolean;
   guestDealIds?: string[];
 }
@@ -54,4 +55,18 @@ export function scopeMessages(messages: Message[], ctx: ScopeContext): Message[]
   if (!ctx.isGuest) return messages;
   const allowed = new Set(ctx.guestDealIds ?? []);
   return messages.filter(m => (m.dealIds ?? []).some(id => allowed.has(id)));
+}
+
+/**
+ * Syndicate Admins should only see their own activity in the audit log.
+ * Master Admin sees everything. Guests see nothing.
+ */
+export function scopeAuditLog(entries: AuditLogEntry[], ctx: ScopeContext): AuditLogEntry[] {
+  if (ctx.isGuest) return [];
+  if (ctx.isMaster) return entries;
+  if (!ctx.isSyndicateAdmin) return entries;
+  const ids = new Set<string>();
+  if (ctx.currentUserId) ids.add(ctx.currentUserId);
+  if (ctx.currentAuthUserId) ids.add(ctx.currentAuthUserId);
+  return entries.filter(e => ids.has(e.userId) && (e.entityType as string) !== 'master_admin');
 }
