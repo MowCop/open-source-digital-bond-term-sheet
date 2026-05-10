@@ -1,39 +1,31 @@
 ## Goal
-Implement the simplified Syndicate Admin access model and surface it as a tooltip in the Master Admin page.
+After login, guests land on the New Issue Board, can only navigate between New Issue Board and Deal Chat Box, and only see data for the deals they were pre-approved on.
 
-## Behavior changes
+## Changes
 
-**Syndicate Admin (owner of own workspace)**
-- Sees only deals where they are creator/bookrunner, plus users and distribution lists tied to those deals (already in place via `scoping.ts`).
-- Can invite any user (including Syndicate Admins from other firms) as **read-only guests** on specific deals they own.
+### 1. Routing (`src/App.tsx`)
+- Wrap each non-guest route in a small `GuestBlock` that renders `<Navigate to="/messages" replace />` when `auth.guest` is set.
+- Allowed for guests: `/messages` (New Issue Board) and `/inbox` (Deal Chat Box).
+- Blocked for guests: `/`, `/deals`, `/ai-draft`, `/admin`, `/audit-log`, `/master-admin` → redirect to `/messages`.
 
-**Read-only guest invites (per deal)**
-- Per-deal, not per-org. Doesn't change the invitee's Syndicate Admin status anywhere else.
-- A user can simultaneously be Syndicate Admin on Deal A and read-only guest on Deal B.
+### 2. Sidebar nav (`src/components/AppLayout.tsx`)
+- Change the guest nav filter from `'/messages' | '/deals'` to `'/messages' | '/inbox'`.
+- Hide everything else (already done by the `visibleNav` filter).
 
-## Implementation
+### 3. Post-login landing
+- In `AuthPage` (or wherever post-login redirect lives), send guests to `/messages` instead of `/`. If logic already redirects to `from || '/'`, add a guest-aware override.
 
-### 1. Tooltip in Master Admin page
-- Add an info icon next to the "Syndicate Admin" column header in `src/pages/MasterAdminPage.tsx`.
-- On hover, show the simplified explanation:
-  > Syndicate Admin = owner of their own deals/users/lists.
-  > Inside User Management they can invite anyone (even Syndicate Admins from other firms) as read-only guests on specific deals they own.
-  > Read-only invites are per-deal and don't change the invitee's Syndicate Admin status.
-  > Example: Sarah (GlobalBank) invites Anna (EuroBank) as read-only on Deal A. Anna stays full Syndicate Admin on her own Deal B.
-- Use existing shadcn `Tooltip` component.
+### 4. Data scoping for guests (`src/lib/scoping.ts` + consumers)
+- Extend `ScopeContext` with `isGuest: boolean` and `guestDealIds: string[]`.
+- Add `scopeMessages(messages, ctx)` and update `scopeDeals` so that when `isGuest` is true, only items whose `dealIds`/`id` intersect `guestDealIds` are returned.
+- Update `useScopedApp()` in `AppContext.tsx` to pass guest info from `useAuth()`.
+- `MessagesPage` and `InboxPage` already use `useScopedApp` — they will auto-filter once the helper is guest-aware. Chat channels in `InboxPage` filtered by deal id similarly.
 
-### 2. Per-deal read-only guest invites in User Management
-- In `src/pages/UserManagementPage.tsx`, add an "Invite read-only guest" action (visible to Syndicate Admins) that lets them:
-  - Pick an existing user (any org) or enter email + name.
-  - Pick one or more deals from the deals **they own**.
-  - Submit → creates a `guest_passcodes` row scoped to those deal IDs (reuses existing guest mechanism + `invite-guest` edge function).
-- Show a "Read-only guests" section listing active invites for the current Syndicate Admin's deals, with revoke action.
-
-### 3. Scoping clarifications (no schema change required)
-- `scopeDeals`/`scopeUsers`/`scopeDistributionLists` already correctly isolate per-org data — no change.
-- Read-only guest access continues to flow through the existing `loginAsGuest` path; no role table changes.
+### 5. Guest UX polish
+- Hide the org badge in the header for guests (already partly done).
+- Sidebar already shows "Guest · read-only" — keep.
 
 ## Out of scope
-- No DB migrations (existing `guest_passcodes` table covers per-deal read-only access).
-- No changes to Master Admin role logic.
-- No RLS rewrite.
+- No DB / RLS changes (scoping stays client-side, consistent with current pattern).
+- No changes to the guest-login edge function or passcode model.
+- No new pages.
