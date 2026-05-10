@@ -1,52 +1,41 @@
 ## Goal
-Add a Master Admin–only section that lists all registered users (from the backend `profiles` table), shows each user's active/inactive status, and lets karl.mallalieu@gmail.com toggle them on/off.
+Lock down the Master Admin section so only `karl.mallalieu@gmail.com` can see it, prevent its data from leaking elsewhere, and ensure Master Admin–specific audit entries are visible only to him.
 
-## Access control
-- Gate by email: only the logged-in user with `karl.mallalieu@gmail.com` can see and use this section.
-- Hide the nav entry for everyone else; if anyone navigates directly to the route, show a "Restricted" message.
-- Expose the user's email from `AuthContext` (already available via `authUser.email`).
+## Scope of changes
 
-## Where it lives
-- New page: `src/pages/MasterAdminPage.tsx`
-- New route: `/master-admin` registered in `src/App.tsx`
-- New sidebar link "Master Admin" (shield icon) in `src/components/AppLayout.tsx`, visible only when `authUser?.email === 'karl.mallalieu@gmail.com'`
+### 1. Master Admin access (already gated, hardening)
+- Confirm in `src/components/AppLayout.tsx` and `src/pages/MasterAdminPage.tsx` that the nav link and page body are only rendered when `authUser?.email === 'karl.mallalieu@gmail.com'` (already implemented). Add the same guard inside `App.tsx` route element so direct navigation to `/master-admin` for any other user (including admins) renders the "Restricted" card.
+- No other page imports `MasterAdminPage` data — confirmed. No copy/parse of its user list elsewhere.
 
-## Data model
-The `profiles` table already has a `status` column (`pending` | `approved` | `rejected`). We'll reuse it as the active/inactive flag:
-- **Active** = `approved`
-- **Inactive** = `rejected` (or `pending` for never-activated)
+### 2. Tag Master Admin audit entries
+- In `MasterAdminPage.tsx`, when toggling user status, write a dedicated audit entry via `supabase.from('audit_log').insert(...)` with:
+  - `action`: `MASTER_USER_ACTIVATED` / `MASTER_USER_DEACTIVATED`
+  - `entity_type`: `master_admin`
+  - `user_id`: Karl's auth id
+  - `details`: `Activated/Deactivated <email>`
+- Use a distinct `entity_type = 'master_admin'` so RLS and UI filters can isolate it.
 
-This avoids a schema migration and keeps `RequireAuth`'s existing approval gate working — deactivating a user immediately blocks their access on next load.
+### 3. Hide Master Admin audit rows from everyone except Karl
+Two layers:
 
-## Page UI
-A single table of all profiles with columns:
+**a) Database (RLS) — replace the current "anon read audit" all-true policy with role-based rules:**
+- `SELECT` for Master Admin (`has_role(auth.uid(), 'master_admin')` AND email matches): can read all rows.
+- `SELECT` for everyone else (anon + authenticated): can read rows where `entity_type <> 'master_admin'`.
+- Keep INSERT permissive (the app writes audit rows from many flows).
+- DELETE/UPDATE: restrict to Master Admin only (no general need to mutate audit history).
 
-```text
-Name | Email | Organization | Status | Action
-```
+**b) Frontend filter in `AuditLogPage.tsx`:** also filter out `entity_type === 'master_admin'` rows for non-master users, as defense-in-depth in case the cached `auditLog` in `AppContext` contains them.
 
-- **Status** column: green "Active" badge if `status='approved'`, grey "Inactive" badge otherwise.
-- **Action** column: a `Switch` (or Activate/Deactivate button) that flips the row's status between `approved` and `rejected`.
-- Confirmation toast on success; error toast on failure.
-- Optional search box at the top to filter by name/email.
+### 4. Don't pollute the global app audit feed
+- `AppContext.addAuditEntry` currently pushes to a shared `auditLog` state used by `AuditLogPage`. For Master Admin events, bypass `addAuditEntry` and write straight to `supabase` (so the row exists in DB only). The realtime subscription in `AppContext` will receive it for Karl but RLS will filter it out for everyone else.
 
-## How updates work
-- On toggle, call `supabase.from('profiles').update({ status: newStatus }).eq('user_id', row.user_id)`.
-- Existing RLS policy `admins update profiles` requires `is_admin(auth.uid())`. Karl's account must have a row in `user_roles` with role `master_admin` for the update to succeed.
-- After update, refetch the list (or optimistically update local state).
-
-### Bootstrapping Karl's admin role
-If Karl doesn't yet have a `master_admin` role row, the page will show a one-time banner "You need master_admin role to manage users" — we'll handle this by running an insert during the implementation step (via the data tool) so the very first load works:
-- Find Karl's `user_id` from `profiles` where `email='karl.mallalieu@gmail.com'`
-- Insert into `user_roles` with role `master_admin` if missing
-- Also flip his profile `status` to `approved`
-
-## Files to create / edit
-- **Add** `src/pages/MasterAdminPage.tsx` — list + toggle UI
-- **Edit** `src/App.tsx` — register `/master-admin` route
-- **Edit** `src/components/AppLayout.tsx` — add sidebar item gated by Karl's email
+## Files to edit
+- `supabase/migrations/<new>.sql` — replace audit_log SELECT/UPDATE/DELETE policies, add master-admin scoped policies.
+- `src/pages/MasterAdminPage.tsx` — write Master Admin audit rows directly to `audit_log` on activate/deactivate.
+- `src/pages/AuditLogPage.tsx` — client-side filter to drop `master_admin` entity_type rows for non-master viewers.
+- `src/App.tsx` — wrap `/master-admin` route to render Restricted card for non-master users (defense-in-depth alongside the page-level check).
 
 ## Out of scope
-- No schema changes (reusing existing `status` field).
-- No email notifications on activate/deactivate.
-- No bulk actions (single-row toggle only).
+- No schema column changes; reusing existing `entity_type` field.
+- No changes to existing non-audit RLS policies.
+- No email notifications on activation events.
