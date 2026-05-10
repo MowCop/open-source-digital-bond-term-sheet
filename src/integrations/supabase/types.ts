@@ -266,6 +266,45 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_passcodes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deal_ids: Json
+          email: string
+          expires_at: string | null
+          id: string
+          last_used_at: string | null
+          name: string | null
+          passcode: string
+          revoked_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deal_ids?: Json
+          email: string
+          expires_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          name?: string | null
+          passcode: string
+          revoked_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deal_ids?: Json
+          email?: string
+          expires_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          name?: string | null
+          passcode?: string
+          revoked_at?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           ai_suggestions: Json | null
@@ -359,6 +398,60 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          legacy_user_id: string | null
+          name: string | null
+          organization: string | null
+          status: Database["public"]["Enums"]["profile_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          legacy_user_id?: string | null
+          name?: string | null
+          organization?: string | null
+          status?: Database["public"]["Enums"]["profile_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          legacy_user_id?: string | null
+          name?: string | null
+          organization?: string | null
+          status?: Database["public"]["Enums"]["profile_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           category: string | null
@@ -403,10 +496,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "master_admin"
+        | "syndicate_admin"
+        | "syndicate_readonly"
+        | "sales_readonly"
+        | "vendor_user"
+        | "guest"
+      profile_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -533,6 +640,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "master_admin",
+        "syndicate_admin",
+        "syndicate_readonly",
+        "sales_readonly",
+        "vendor_user",
+        "guest",
+      ],
+      profile_status: ["pending", "approved", "rejected"],
+    },
   },
 } as const
