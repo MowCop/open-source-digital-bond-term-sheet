@@ -3,6 +3,8 @@ import { Deal, Message, User, AuditLogEntry, Notification, DealStage, MessageSta
 import { mockUsers } from '@/data/mockData';
 import { extractBorrowerName } from '@/lib/alertParsing';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { scopeDeals, scopeUsers, scopeDistributionLists } from '@/lib/scoping';
 import {
   fetchUsers, fetchDeals, insertUser, updateUserRow, deleteUserRow,
   insertDeal, updateDealRow, rowToDeal, rowToUser,
@@ -115,6 +117,9 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = usePersistedState<User>('bondvdr.currentUser', mockUsers[0]);
+  const { profileOrg } = useAuth();
+  // Effective owning-org used to tag newly created deals/users/lists for tenant isolation.
+  const ownerOrg = (profileOrg ?? currentUser?.organization ?? '').trim() || undefined;
   const [users, setUsers] = useState<User[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -309,7 +314,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>) => {
-    const newDeal: Deal = { ...deal, id: `d${Date.now()}`, createdAt: new Date(), updatedAt: new Date(), stageHistory: [] };
+    const newDeal: Deal = {
+      ...deal,
+      id: `d${Date.now()}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      stageHistory: [],
+      createdByOrg: deal.createdByOrg ?? ownerOrg,
+    };
     setDeals(prev => [newDeal, ...prev]);
     insertDeal(newDeal).catch(e => console.error('[Cloud] insertDeal failed', e));
     const newChannel: ChatChannel = {
@@ -323,7 +335,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     insertChatChannel(newChannel).catch(e => console.error('[Cloud] insertChatChannel failed', e));
     addAuditEntry({ action: 'DEAL_CREATED', entityType: 'deal', entityId: newDeal.id, userId: currentUser.id, details: `Created deal: ${deal.issuerName} ${deal.currency} ${deal.tenor}` });
     return newDeal;
-  }, [currentUser.id, addAuditEntry, users]);
+  }, [currentUser.id, addAuditEntry, users, ownerOrg]);
 
   const updateDeal = useCallback((dealId: string, updates: Partial<Deal>) => {
     setDeals(prev => prev.map(d => d.id === dealId ? { ...d, ...updates, updatedAt: new Date() } : d));
@@ -431,12 +443,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser.id, currentUser.name, currentUser.organizationType, addAuditEntry]);
 
   const addUser = useCallback((user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => {
-    const newUser: User = { ...user, id: `u${Date.now()}`, createdAt: new Date(), createdBy: currentUser.id };
+    const newUser: User = {
+      ...user,
+      id: `u${Date.now()}`,
+      createdAt: new Date(),
+      createdBy: currentUser.id,
+      createdByOrg: user.createdByOrg ?? ownerOrg,
+    };
     setUsers(prev => [...prev, newUser]);
     insertUser(newUser).catch(e => console.error('[Cloud] insertUser failed', e));
     addAuditEntry({ action: 'USER_CREATED', entityType: 'user', entityId: newUser.id, userId: currentUser.id, details: `Created user: ${user.name}` });
     return newUser;
-  }, [currentUser.id, addAuditEntry]);
+  }, [currentUser.id, addAuditEntry, ownerOrg]);
 
   const deleteUser = useCallback((id: string) => {
     const user = users.find(u => u.id === id);
@@ -452,12 +470,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser.id, addAuditEntry]);
 
   const addDistributionList = useCallback((list: Omit<DistributionList, 'id'>) => {
-    const newList: DistributionList = { ...list, id: `dl${Date.now()}` };
+    const newList: DistributionList = { ...list, id: `dl${Date.now()}`, createdByOrg: list.createdByOrg ?? ownerOrg };
     setDistributionLists(prev => [...prev, newList]);
     insertDistributionList(newList).catch(e => console.error('[Cloud] insertDistList failed', e));
     addAuditEntry({ action: 'DIST_LIST_CREATED', entityType: 'permission', entityId: newList.id, userId: currentUser.id, details: `Created distribution list: ${list.name}` });
     return newList;
-  }, [currentUser.id, addAuditEntry]);
+  }, [currentUser.id, addAuditEntry, ownerOrg]);
 
   const updateDistributionList = useCallback((id: string, updates: Partial<DistributionList>) => {
     setDistributionLists(prev => prev.map(dl => dl.id === id ? { ...dl, ...updates } : dl));
