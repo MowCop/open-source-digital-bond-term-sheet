@@ -454,6 +454,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addAuditEntry({ action: 'MESSAGE_THREAD_DELETED', entityType: 'message', entityId: key, userId: currentUser.id, details: `Alert thread deleted (deals: ${key})` });
   }, [currentUser.id, addAuditEntry]);
 
+  const deleteDeal = useCallback((dealId: string) => {
+    const deal = deals.find(d => d.id === dealId);
+    const msgCount = messages.filter(m => m.dealIds.includes(dealId)).length;
+    const chCount = chatChannels.filter(c => c.dealId === dealId).length;
+    const cmCount = chatMessages.filter(c => c.dealId === dealId).length;
+    const ntCount = notifications.filter(n => n.dealId === dealId).length;
+
+    // Local state purge
+    setDeals(prev => prev.filter(d => d.id !== dealId));
+    setMessages(prev => prev.filter(m => !m.dealIds.includes(dealId)));
+    setChatChannels(prev => prev.filter(c => c.dealId !== dealId));
+    setChatMessages(prev => prev.filter(c => c.dealId !== dealId));
+    setNotifications(prev => prev.filter(n => n.dealId !== dealId));
+
+    // Cloud cascade (fire-and-forget; order: dependents first)
+    deleteMessagesContainingDeal(dealId).catch(e => console.error('[Cloud] deleteDeal messages failed', e));
+    deleteChatMessagesByDeal(dealId).catch(e => console.error('[Cloud] deleteDeal chat msgs failed', e));
+    deleteChatChannelsByDeal(dealId).catch(e => console.error('[Cloud] deleteDeal channels failed', e));
+    deleteNotificationsByDeal(dealId).catch(e => console.error('[Cloud] deleteDeal notifs failed', e));
+    deleteDealRow(dealId).catch(e => console.error('[Cloud] deleteDeal row failed', e));
+
+    const label = deal ? `${deal.issuerName} ${deal.currency} ${deal.tenor}` : dealId;
+    addAuditEntry({
+      action: 'DEAL_DELETED',
+      entityType: 'deal',
+      entityId: dealId,
+      userId: currentUser.id,
+      details: `Deleted deal ${label} (cascaded: ${msgCount} alert(s), ${chCount} chat channel(s), ${cmCount} chat message(s), ${ntCount} notification(s))`,
+    });
+  }, [currentUser.id, addAuditEntry, deals, messages, chatChannels, chatMessages, notifications]);
+
   const markNotificationRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     markNotificationReadRow(id).catch(e => console.error('[Cloud] markNotifRead failed', e));
@@ -530,6 +561,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       chatChannels, chatMessages,
       createDeal, updateDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addAuditEntry, sendChatMessage,
       deleteMessage, deleteMessageThread,
+      deleteDeal,
       addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList,
     }}>
       {children}
