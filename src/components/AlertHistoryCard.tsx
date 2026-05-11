@@ -34,7 +34,7 @@ export default function AlertHistoryCard({
   onPostUpdate,
   onDelete,
 }: AlertHistoryCardProps) {
-  const [mode, setMode] = useState<'view' | 'edit' | 'update'>('view');
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [editSubject, setEditSubject] = useState(message.subject);
   const [editBody, setEditBody] = useState(message.body);
   const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
@@ -42,11 +42,12 @@ export default function AlertHistoryCard({
   const [dragOver, setDragOver] = useState(false);
 
   const handleSave = () => {
-    if (mode === 'update') {
-      onPostUpdate(message.id, { subject: editSubject, body: editBody });
-    } else {
-      onUpdate(message.id, { subject: editSubject, body: editBody });
-    }
+    onUpdate(message.id, { subject: editSubject, body: editBody });
+    setMode('view');
+  };
+
+  const handleSaveAndSend = () => {
+    onPostUpdate(message.id, { subject: editSubject, body: editBody });
     setMode('view');
   };
 
@@ -137,7 +138,7 @@ export default function AlertHistoryCard({
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-timestamp text-xs whitespace-nowrap">
-            {format(message.updatedAt, 'MMM d, hh:mm a')}
+            {versionLabel ? `${versionLabel} · ` : ''}{format(message.updatedAt, 'MMM d, hh:mm a')}
           </span>
           <Badge
             variant={isSent ? 'default' : isDraft ? 'secondary' : 'destructive'}
@@ -254,22 +255,22 @@ export default function AlertHistoryCard({
         <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
           {editing ? (
             <>
-              <Button size="sm" className="text-xs" onClick={handleSave}>
+              <Button size="sm" variant="outline" className="text-xs" onClick={handleSave}>
                 <Save className="h-3 w-3 mr-1" />
-                {mode === 'update' ? 'Save as New Update' : 'Save Changes'}
+                Save
               </Button>
+              {isSent && !isRetracted && (
+                <Button size="sm" className="text-xs" onClick={handleSaveAndSend}>
+                  <Send className="h-3 w-3 mr-1" />
+                  Save & Send
+                </Button>
+              )}
               <Button size="sm" variant="ghost" className="text-xs" onClick={handleCancel}>
                 Cancel
               </Button>
             </>
           ) : (
             <>
-              {isSent && !isRetracted && (
-                <Button size="sm" className="text-xs" onClick={() => setMode('update')}>
-                  <GitBranch className="h-3 w-3 mr-1" />
-                  Post Update
-                </Button>
-              )}
               {!isRetracted && (
                 <Button size="sm" variant="outline" className="text-xs" onClick={() => setMode('edit')}>
                   <Edit2 className="h-3 w-3 mr-1" />
