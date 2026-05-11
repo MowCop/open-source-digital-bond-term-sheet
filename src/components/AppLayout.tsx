@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut } from 'lucide-react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 
 const navItems = [
   { path: '/messages', label: 'New Issue Board', icon: BellIcon },
-  { path: '/inbox', label: 'Deal Chat Box', icon: Inbox },
+  { path: '/inbox', label: 'My Deal Chats', icon: Inbox },
   { path: '/ai-draft', label: 'Create New Issue', icon: PenSquare },
   { path: '/admin', label: 'Address Book & User Admin', icon: Users, adminOnly: true },
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
@@ -18,10 +18,19 @@ const navItems = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const { currentUser, setCurrentUser, users, notifications } = useApp();
+  const navigate = useNavigate();
+  const { currentUser, setCurrentUser, users, notifications, markNotificationRead } = useApp();
   const { signOut, guest, profileName, isAdmin, authUser } = useAuth();
   const isMaster = authUser?.email?.toLowerCase() === 'karl.mallalieu@gmail.com';
-  const unreadCount = notifications.filter(n => !n.read && n.userId === currentUser.id).length;
+  const myUnread = notifications.filter(n => !n.read && n.userId === currentUser.id);
+  const unreadCount = myUnread.length;
+  const hasChatInvite = myUnread.some(n => n.type === 'chat_invite');
+
+  const handleBellClick = () => {
+    // Going to My Deal Chats — mark chat-invite notifications as read.
+    myUnread.filter(n => n.type === 'chat_invite').forEach(n => markNotificationRead(n.id));
+    navigate('/inbox');
+  };
 
   // Guests get a heavily restricted nav
   const visibleNav = guest
@@ -100,12 +109,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="h-12 border-b flex items-center justify-between px-4 bg-card shrink-0">
           <div />
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <Bell className="h-5 w-5 text-muted-foreground" />
+            <button
+              type="button"
+              onClick={handleBellClick}
+              className="relative p-1 -m-1 rounded hover:bg-accent/50 transition-colors"
+              title={hasChatInvite ? 'Pending chat invite — open My Deal Chats' : 'Notifications'}
+              aria-label="Notifications"
+            >
+              <Bell className={`h-5 w-5 ${hasChatInvite ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
               {unreadCount > 0 && (
-                <Badge className="absolute -top-2 -right-2 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-destructive">{unreadCount}</Badge>
+                <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-destructive">{unreadCount}</Badge>
               )}
-            </div>
+            </button>
             <Badge variant="outline" className="text-xs">{currentUser.organization}</Badge>
           </div>
         </header>
