@@ -93,7 +93,7 @@ interface AppContextType {
   distributionLists: DistributionList[];
   chatChannels: ChatChannel[];
   chatMessages: ChatMessage[];
-  createDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>) => Deal;
+  createDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[]) => Deal;
   updateDeal: (dealId: string, updates: Partial<Deal>) => void;
   updateDealStage: (dealId: string, newStage: DealStage, note?: string) => void;
   createMessage: (msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => Message;
@@ -313,7 +313,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     insertAudit(full).catch(e => console.error('[Cloud] insertAudit failed', e));
   }, []);
 
-  const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>) => {
+  const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[]) => {
     const newDeal: Deal = {
       ...deal,
       id: `d${Date.now()}`,
@@ -324,9 +324,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
     setDeals(prev => [newDeal, ...prev]);
     insertDeal(newDeal).catch(e => console.error('[Cloud] insertDeal failed', e));
+    // Chat channel participants = creator + any selected Syndicate Chat Participants (SCPs).
+    // Distribution-list recipients are NOT added — distribution governs deal/screen access only.
+    const participantIds = Array.from(new Set([
+      currentUser.id,
+      ...(scpIds ?? []),
+    ]));
     const newChannel: ChatChannel = {
       id: `ch${Date.now()}`,
-      participantIds: [...users.filter(u => u.organizationType === 'bank' || u.organizationType === 'vendor').map(u => u.id)],
+      participantIds,
       dealId: newDeal.id,
       label: `${deal.issuerName} ${deal.currency} ${deal.tenor} — Deal Thread`,
       createdAt: new Date(),
@@ -335,7 +341,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     insertChatChannel(newChannel).catch(e => console.error('[Cloud] insertChatChannel failed', e));
     addAuditEntry({ action: 'DEAL_CREATED', entityType: 'deal', entityId: newDeal.id, userId: currentUser.id, details: `Created deal: ${deal.issuerName} ${deal.currency} ${deal.tenor}` });
     return newDeal;
-  }, [currentUser.id, addAuditEntry, users, ownerOrg]);
+  }, [currentUser.id, addAuditEntry, ownerOrg]);
 
   const updateDeal = useCallback((dealId: string, updates: Partial<Deal>) => {
     setDeals(prev => prev.map(d => d.id === dealId ? { ...d, ...updates, updatedAt: new Date() } : d));
