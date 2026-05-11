@@ -1,6 +1,6 @@
 export type DealStage = 'Mandate' | 'Announced' | 'Launched' | 'Books Open' | 'Books Closed' | 'Priced' | 'Settled';
 
-export type UserRole = 'master_admin' | 'syndicate_admin' | 'vendor_user' | 'syndicate_readonly' | 'sales_readonly';
+export type UserRole = 'master_admin' | 'syndicate_admin' | 'vendor_user' | 'syndicate_readonly' | 'sales_readonly' | 'guest_readonly';
 
 export type UserCategory = 'Vendor' | 'Syndicate' | 'Buy Side' | 'Legal' | 'Guest' | 'DCM' | 'Sales';
 
