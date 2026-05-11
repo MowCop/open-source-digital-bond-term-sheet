@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import LinkifiedText from '@/components/LinkifiedText';
 import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History } from 'lucide-react';
-import { format, isToday, isYesterday } from 'date-fns';
+import { format } from 'date-fns';
 import type { ChatChannel, ChatMessage, Deal, DealStage } from '@/types/bond';
 
 const stageColor: Record<DealStage, string> = {
@@ -20,12 +20,6 @@ const stageColor: Record<DealStage, string> = {
   Priced: 'bg-amber-100 text-amber-800',
   Settled: 'bg-amber-100 text-amber-800',
 };
-
-function formatTime(ts: Date) {
-  if (isToday(ts)) return format(ts, 'HH:mm');
-  if (isYesterday(ts)) return 'Yesterday';
-  return format(ts, 'd MMM');
-}
 
 interface ChannelThreadProps {
   channel: ChatChannel;
@@ -186,9 +180,10 @@ interface DealRowProps {
   onToggle: () => void;
   lastSeen: Record<string, number>;
   onSeen: (channelId: string, ts: number) => void;
+  sortBy: 'chat' | 'updated';
 }
 
-function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen }: DealRowProps) {
+function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen, sortBy }: DealRowProps) {
   const { chatMessages, messages } = useScopedApp();
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -216,6 +211,10 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen 
     .map(c => c.last)
     .filter((m): m is ChatMessage => Boolean(m))
     .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0];
+
+  const tsLabel = sortBy === 'updated'
+    ? `Updated: ${format(deal.updatedAt, 'd MMM, HH:mm')}`
+    : newestLast ? `Last chat: ${format(newestLast.timestamp, 'd MMM, HH:mm')}` : 'Last chat: —';
 
   return (
     <Card className="overflow-hidden">
@@ -246,9 +245,9 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen 
           {newestLast && (
             <div className="text-xs text-muted-foreground mt-1 truncate">
               <span className="font-medium">{newestLast.senderName}:</span> {newestLast.body}
-              <span className="ml-2 text-[10px]">{formatTime(newestLast.timestamp)}</span>
             </div>
           )}
+          <div className="text-[10px] text-muted-foreground mt-1">{tsLabel}</div>
         </div>
       </button>
 
@@ -312,6 +311,13 @@ export default function InboxPage() {
   const { currentUser, deals, chatChannels, chatMessages } = useScopedApp();
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [sortBy, setSortBy] = useState<'chat' | 'updated'>(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('bondvdr.inbox.sortBy') : null;
+    return saved === 'updated' ? 'updated' : 'chat';
+  });
+  useEffect(() => {
+    try { localStorage.setItem('bondvdr.inbox.sortBy', sortBy); } catch { /* ignore */ }
+  }, [sortBy]);
   // Session-only last-seen timestamps per channel. Initialized to "now" so existing
   // history is considered already read; only NEW activity creates badges.
   const [lastSeen, setLastSeen] = useState<Record<string, number>>(() => {
@@ -365,15 +371,17 @@ export default function InboxPage() {
     }
     // Sort by most-recent activity
     entries.sort((a, b) => {
-      const lastOf = (chs: ChatChannel[]) =>
-        Math.max(
+      const tsOf = (entry: { deal: Deal; channels: ChatChannel[] }) => {
+        if (sortBy === 'updated') return entry.deal.updatedAt.getTime();
+        return Math.max(
           0,
-          ...chatMessages.filter(m => chs.some(c => c.id === m.channelId)).map(m => m.timestamp.getTime()),
+          ...chatMessages.filter(m => entry.channels.some(c => c.id === m.channelId)).map(m => m.timestamp.getTime()),
         );
-      return lastOf(b.channels) - lastOf(a.channels);
+      };
+      return tsOf(b) - tsOf(a);
     });
     return { entries, orphan };
-  }, [myChannels, deals, chatMessages]);
+  }, [myChannels, deals, chatMessages, sortBy]);
 
   const q = search.trim().toLowerCase();
   const matchesSearch = (deal: Deal, channels: ChatChannel[]) => {
@@ -422,6 +430,26 @@ export default function InboxPage() {
         Showing only chats you are a member of. New invites appear in the bell above.
       </p>
 
+      <div className="flex items-center gap-2 text-xs">
+        <span className="text-muted-foreground">Sort by:</span>
+        <div className="inline-flex rounded-md border border-border bg-card p-0.5">
+          <button
+            type="button"
+            onClick={() => setSortBy('chat')}
+            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${sortBy === 'chat' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Last Chat
+          </button>
+          <button
+            type="button"
+            onClick={() => setSortBy('updated')}
+            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${sortBy === 'updated' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Last Updated
+          </button>
+        </div>
+      </div>
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -448,6 +476,7 @@ export default function InboxPage() {
             onToggle={() => setExpanded(prev => ({ ...prev, [deal.id]: !prev[deal.id] }))}
             lastSeen={lastSeen}
             onSeen={onSeen}
+            sortBy={sortBy}
           />
         ))}
 
