@@ -35,7 +35,7 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteMessageThread } = useScopedApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteDeal } = useScopedApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
@@ -183,9 +183,11 @@ export default function MessagesPage() {
   };
 
   const handleDeleteThread = (group: AlertGroup) => {
-    if (confirm(`Delete the entire alert thread for "${group.borrower}" (${group.messages.length} message${group.messages.length !== 1 ? 's' : ''})?`)) {
-      deleteMessageThread(group.dealIds);
-      toast({ title: 'Thread Deleted', description: `Removed ${group.messages.length} alert(s).` });
+    if (confirm(
+      `Delete the entire deal "${group.borrower}" including ${group.messages.length} alert(s), its chat history, and all related notifications? This cannot be undone.`
+    )) {
+      group.dealIds.forEach(id => deleteDeal(id));
+      toast({ title: 'Deal Deleted', description: `${group.borrower} and all related data removed.` });
       setExpandedAlertId(null);
     }
   };
