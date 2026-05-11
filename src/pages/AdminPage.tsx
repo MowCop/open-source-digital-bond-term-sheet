@@ -14,6 +14,7 @@ const roleBadge: Record<UserRole, { label: string; variant: 'default' | 'seconda
   vendor_user: { label: 'Read Only', variant: 'outline' },
   syndicate_readonly: { label: 'Syndicate – Read Only', variant: 'outline' },
   sales_readonly: { label: 'Sales – Read Only', variant: 'outline' },
+  guest_readonly: { label: 'Guest Read Only', variant: 'outline' },
 };
 
 export default function AdminPage() {
