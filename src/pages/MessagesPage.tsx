@@ -178,7 +178,8 @@ export default function MessagesPage() {
         updateDealStage(dealId, detectedStage, 'Auto-detected from alert update');
       }
     }
-    toast({ title: 'Update Drafted', description: `New update created (${newDraft.id}). Review and Send to dispatch.` });
+    sendMessage(newDraft.id);
+    toast({ title: 'Update Sent', description: `Sent to ${original.recipients.length} recipient${original.recipients.length !== 1 ? 's' : ''}.` });
   };
 
   const handleDeleteThread = (group: AlertGroup) => {
