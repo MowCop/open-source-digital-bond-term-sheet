@@ -317,6 +317,13 @@ export default function InboxPage() {
   const { currentUser, deals, chatChannels, chatMessages } = useScopedApp();
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [sortBy, setSortBy] = useState<'chat' | 'updated'>(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('bondvdr.inbox.sortBy') : null;
+    return saved === 'updated' ? 'updated' : 'chat';
+  });
+  useEffect(() => {
+    try { localStorage.setItem('bondvdr.inbox.sortBy', sortBy); } catch { /* ignore */ }
+  }, [sortBy]);
   // Session-only last-seen timestamps per channel. Initialized to "now" so existing
   // history is considered already read; only NEW activity creates badges.
   const [lastSeen, setLastSeen] = useState<Record<string, number>>(() => {
@@ -370,15 +377,17 @@ export default function InboxPage() {
     }
     // Sort by most-recent activity
     entries.sort((a, b) => {
-      const lastOf = (chs: ChatChannel[]) =>
-        Math.max(
+      const tsOf = (entry: { deal: Deal; channels: ChatChannel[] }) => {
+        if (sortBy === 'updated') return entry.deal.updatedAt.getTime();
+        return Math.max(
           0,
-          ...chatMessages.filter(m => chs.some(c => c.id === m.channelId)).map(m => m.timestamp.getTime()),
+          ...chatMessages.filter(m => entry.channels.some(c => c.id === m.channelId)).map(m => m.timestamp.getTime()),
         );
-      return lastOf(b.channels) - lastOf(a.channels);
+      };
+      return tsOf(b) - tsOf(a);
     });
     return { entries, orphan };
-  }, [myChannels, deals, chatMessages]);
+  }, [myChannels, deals, chatMessages, sortBy]);
 
   const q = search.trim().toLowerCase();
   const matchesSearch = (deal: Deal, channels: ChatChannel[]) => {
@@ -427,6 +436,26 @@ export default function InboxPage() {
         Showing only chats you are a member of. New invites appear in the bell above.
       </p>
 
+      <div className="flex items-center gap-2 text-xs">
+        <span className="text-muted-foreground">Sort by:</span>
+        <div className="inline-flex rounded-md border border-border bg-card p-0.5">
+          <button
+            type="button"
+            onClick={() => setSortBy('chat')}
+            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${sortBy === 'chat' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Last Chat
+          </button>
+          <button
+            type="button"
+            onClick={() => setSortBy('updated')}
+            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${sortBy === 'updated' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Last Updated
+          </button>
+        </div>
+      </div>
+
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -453,6 +482,7 @@ export default function InboxPage() {
             onToggle={() => setExpanded(prev => ({ ...prev, [deal.id]: !prev[deal.id] }))}
             lastSeen={lastSeen}
             onSeen={onSeen}
+            sortBy={sortBy}
           />
         ))}
 
