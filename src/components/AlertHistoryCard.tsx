@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import LinkifiedText from '@/components/LinkifiedText';
 import { format } from 'date-fns';
-import { Edit2, RotateCcw, Save, Send, GitBranch, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, Users } from 'lucide-react';
+import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, Users } from 'lucide-react';
 
 interface AlertHistoryCardProps {
   message: Message;
