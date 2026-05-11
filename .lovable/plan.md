@@ -1,43 +1,55 @@
 ## Goal
 
-On the New Issue Board, simplify the alert edit panel so it offers two clear actions side-by-side — **Save** and **Save & Send** — and surface every prior sent version as a timestamped, expandable Update History under each New Issue. The deal's chat room is unaffected by edits or new versions.
+Make the chat surface consistent between the **New Issue Board** and the (renamed) **My Deal Chats** page, ensure every newly-created New Issue has a chat channel that flows through to both views, and wire chat-invite notifications to the top bell.
 
 ## Changes
 
-### 1. `src/components/AlertHistoryCard.tsx` — unified edit panel
+### 1. `src/pages/InboxPage.tsx` — rename + helper text + invite badge
 
-Today the card has two separate edit modes: **Edit** (shows `Save Changes`) and **Post Update** (shows `Save as New Update`). Replace with a single edit mode that shows both buttons on the same panel:
+- Rename the page header from **Deal Chat Box** to **My Deal Chats**.
+- Add a small muted note just above the search input:
+  *"Showing only chats you are a member of. New invites appear in the bell above."*
+- No change to scoping — the page continues to list only deals where `currentUser.id ∈ channel.participantIds` (per the user's preference).
+- Inside each expanded deal row, render the **alert Update History** alongside the existing chat thread:
+  - Above the channel messages, add a collapsible section *"Alert Update History (N)"* that lists each message version (Original / Update #n) with timestamp, headline and body — same data already shown on the New Issue Board's expanded row, sourced from `messages.filter(m => dealIds.includes(deal.id))` ordered newest-first.
+  - Keep the chat thread itself unchanged below it, so users see both the dispatched alerts and the live chat in one place.
 
-- **`Save`** — silent in-place update via `onUpdate`. No new history entry. Same status. (Renamed from `Save Changes`.)
-- **`Save & Send`** — calls `onPostUpdate`, which now creates a new versioned message AND sends it immediately in one click. New timestamped entry appears at the top of Update History. (Renamed from `Post Update` / `Save as New Update`.)
-- **`Cancel`** — unchanged.
+### 2. `src/components/SecureChat.tsx` and `src/pages/MessagesPage.tsx` — same data, no behavioural change
 
-Remove the standalone top-level **Post Update** button. The single **Edit** entry point opens the unified panel with both actions. Draft messages keep their existing `Send` button; retracted messages stay read-only.
+Both already read from the shared `chatChannels` / `chatMessages` state, so the chat thread shown inside the New Issue Board (`SecureChat`) and inside My Deal Chats is the same data. The only effective difference today is presentation — Update History is on the Board but not in the Chat Box. Change #1 closes that gap. No code changes in `SecureChat` itself.
 
-Small header polish: prefix the timestamp with the version label so each card reads as a time-stamped revision (e.g. `Original · May 11, 09:42 AM`, `Update #2 · May 11, 02:15 PM`).
+### 3. Chat-invite notification flow (bell)
 
-### 2. `src/pages/MessagesPage.tsx` — auto-send new version
+When a Syndicate Admin adds a Syndicate Chat Participant to a deal's channel (either at `createDeal` time via `scpIds`, or later via the existing participant editor), emit a notification of a new type `chat_invite`:
 
-Update `handlePostUpdate` so that after `createMessage(... status: 'draft' ...)` it immediately calls `sendMessage(newDraft.id)`. Toast becomes "Update Sent" with recipient count. Existing deal-merge and stage-forward logic stays as-is.
+- `title`: *"Chat invite: {issuerName} {ccy} {tenor}"*
+- `body`: *"You've been added to the deal chat. Open My Deal Chats to join."*
+- `dealId` set; `read=false`.
 
-Rename the expanded tab from `Alerts History (N)` to `Update History (N)`.
+Locations to wire this:
+- `src/context/AppContext.tsx` → inside `createDeal`, after building `newChannel`, push one notification per `scpId` (excluding the creator).
+- `src/context/AppContext.tsx` → wherever channel participants are mutated post-creation (search for `setChatChannels(prev => prev.map`); emit a notification for each newly-added participant id.
 
-### 3. Per-issue expandable Update History
+Add `'chat_invite'` to the `Notification['type']` union in `src/types/bond.ts`.
 
-The version list already exists in the row's expanded panel (`AlertHistoryCard` per message, newest first, with `Original` / `Update #n` chips). After change #2, every **Save & Send** automatically appends a new sent, timestamped entry — giving the requested expandable, time-specific history with no extra wiring. **Save** never adds an entry, so history reflects only dispatched updates.
+### 4. Bell highlight for unaccepted invites
 
-### 4. Chat room
+- `src/components/AppLayout.tsx` already shows `unreadCount` from `notifications`. Add a secondary state: if any unread notification has `type === 'chat_invite'`, render the bell icon in `text-primary` (instead of `text-muted-foreground`) and keep the destructive count badge. This makes pending invites visibly distinct without adding a separate UI surface.
+- Clicking the bell navigates to `/inbox` (My Deal Chats). On arrival, mark all `chat_invite` notifications as read via the existing `markNotificationRead`. No accept/reject flow — once a user is added as a participant they are already in the channel; the notification just surfaces it.
 
-No changes. `SecureChat` and the deal's `chat_channels` row are keyed off `dealId`, independent of message versions, so edits/new versions don't touch the chat thread.
+### 5. Side-nav label
+
+- Update the sidebar entry in `src/components/AppLayout.tsx` from **Inbox** / **Deal Chat Box** to **My Deal Chats** for consistency.
 
 ## Technical notes
 
-- Files edited: `src/components/AlertHistoryCard.tsx`, `src/pages/MessagesPage.tsx`.
-- No DB schema, RLS, edge function, or dependency changes.
-- Audit log: `createMessage` + `sendMessage` already write entries, so Save & Send produces a normal audit trail per dispatch.
+- Participants policy stays **Creator + SCPs only** as confirmed. Alert recipients are *not* added to chat channels.
+- No DB schema changes. `notifications` table already supports the new type (`type` is `text`).
+- Realtime: notifications already replicate through the existing Supabase subscription; new `chat_invite` rows will live-update the bell.
+- Audit log: emit a `CHAT_PARTICIPANT_ADDED` entry alongside each invite notification.
 
 ## Out of scope
 
-- Distribution list / SCP / role changes.
-- Chat schema or UI.
-- Recipient editing during Save & Send (reuses the original message's recipients, same as today).
+- Accept/decline UX for chat invites (auto-joined on add).
+- Changes to recipients / distribution lists.
+- Any new pages or new chat channels beyond the per-deal channel that already exists.
