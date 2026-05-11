@@ -1,45 +1,43 @@
-## Goal
+## User Management & New Issue Chat Overhaul
 
-In **User Management → Guests** (Syndicate Admin view), Sarah sees only the read-only guests she personally invited. Clicking a guest opens a right-hand drawer showing exactly which of her deals that guest can access, with inline edit/revoke controls.
+### 1. Rename "User Management" → "Address Book & User Admin"
+- Update page title, sidebar nav label, route label, and breadcrumbs.
+- Constant `UM_LABELS.pageTitle` and `AppLayout` nav item.
 
-## Part 1 — Scope the Guests list per Syndicate Admin
+### 2. Edit User → User Roles dropdown
+- Remove `master_admin` option from the dropdown shown to Syndicate Admins.
+- Add new role `guest_readonly` ("Guest Read Only") to the `UserRole` type and `roleLabels`.
+- Keep `master_admin` only assignable internally (not visible in the picker).
 
-Today `GuestsTab` runs `select * from guest_passcodes` with no filter, so any admin sees every invite. Tighten this so:
+### 3. Edit User → "Deal Chats" panel (new, read-only)
+- Below the global User Role dropdown, show a list of every New Issue chat this user is currently invited into, with deal name + stage.
+- Global role field remains independently editable. Per-deal chat membership is informational only (driven by chat channel participants).
 
-- **Master Admin**: sees all rows.
-- **Syndicate Admin**: sees only rows where `created_by = auth.uid()` (guests they personally invited). Same restriction for UPDATE/DELETE so Sarah cannot revoke Anna's invites.
-- **Guests**: never reach this page (already blocked).
+### 4. Syndicate Admin scoping (post-login)
+- Syndicate Admin can only invite users to chats on **deals they created** (`createdByOrg` match). Already partially enforced via `scopeDeals`; extend to chat invite UI.
+- Distribution Lists are managed inside Address Book & User Admin (already the case — confirm there is no "create list" entry point inside the Create New Issue flow itself; list selection only).
 
-### Database changes
-- Drop the existing `admins manage guest passcodes` ALL policy on `guest_passcodes`.
-- Add four role-aware policies on `guest_passcodes`:
-  - `master_admin` → full ALL.
-  - `syndicate_admin` → SELECT/INSERT/UPDATE/DELETE limited to `created_by = auth.uid()`.
-- `invite-guest` edge function already sets `created_by = user.id`, so no function change is needed.
+### 5. Distribution Lists vs Chat (separation of concerns)
+- Clarify in UI copy: Distribution Lists grant **screen + deal data access only** — NOT chat access.
+- Chat access is governed by a separate "Syndicate Chat Participants" (SCPs) selector on the New Issue form.
+- Add help text on both controls in the Create New Issue screen.
 
-## Part 2 — Drill-down side drawer (Option B)
+### 6. Create New Issue → Syndicate Chat Participants (SCPs) selector
+- New field on the Create/Edit New Issue form: **Syndicate Chat Participants**.
+- Eligibility: any user with `category === 'Syndicate'` (internal or external) from the Address Book.
+- Input: combobox with predictive search (type-ahead matching name, organization, email). Selected users render as removable chips.
+- On deal save: auto-create a chat channel for the deal and seed `participant_ids` with the SCP selections (+ the creating Syndicate Admin).
+- Allow creating additional separate chat channels for the same deal later (existing chat_channels table already supports multiple per deal_id).
 
-Clicking a row in the Guests table opens a right-hand `Sheet` drawer. Existing row actions (regenerate, revoke) stay on the row for quick use; the drawer is for review and editing deal access.
+### 7. Reset chat data
+- Delete all rows in `chat_messages`. Keep `chat_channels` intact.
 
-### Drawer contents
-- **Header**: guest name (or email), email, status badge (active / expired / revoked).
-- **Identity block**: invited on, invited by (current admin), expires on, last used.
-- **Authorised deals** section: list of deals the guest can access, each row shows `Issuer · Currency Size · Tenor · Stage` plus a small "Open deal" link. An `X` on each deal removes that deal from `deal_ids`. An "Add deal" combobox lets Sarah grant access to another of her deals (scoped via `useScopedApp().deals`, so she can only grant deals she owns).
-- **Passcode block**: masked passcode with copy, plus "Regenerate" button.
-- **Footer actions**: "Revoke access" (sets `revoked_at`), "Close".
+### 8. Seed dummy syndicate-only chats
+- For every deal currently in an **active** stage (Mandate, Announcement, Bookbuilding, Pricing — i.e. not Settled/Withdrawn), generate a short realistic thread (5–8 messages) between syndicate users from that deal's bookrunner orgs only.
+- No vendor, buyside, or guest senders.
+- Reuse existing chat channel for the deal if one exists; otherwise create one.
 
-### Behaviour
-- All edits persist to `guest_passcodes` immediately and refresh the row.
-- Add/remove deal writes to `deal_ids` via update; an audit_log entry is written (`guest_deal_access_changed`) with the diff.
-- The drawer is read-only (no edit controls) when the passcode is revoked or expired.
-
-## Out of scope
-- No new dedicated route; drawer only.
-- No login/passcode-flow changes.
-- No new activity timeline yet (room left in drawer to add later).
-- No changes to deal/message scoping logic — already handled by `scopeDeals` / `scopeMessages`.
-
-## Files touched
-- `supabase/migrations/<new>.sql` — replace `guest_passcodes` RLS policies.
-- `src/components/GuestsTab.tsx` — add row click handler, render `<GuestDetailDrawer />`, remove any client filtering that becomes redundant.
-- `src/components/GuestDetailDrawer.tsx` (new) — drawer UI + add/remove deal + revoke + regenerate.
+### Technical notes
+- Files touched: `src/pages/UserManagementPage.tsx`, `src/components/AppLayout.tsx`, `src/types/bond.ts` (add `guest_readonly`), Create/Edit New Issue form component(s) in `src/pages/DealsPage.tsx` and/or `src/pages/AIDraftPage.tsx`, `src/context/AppContext.tsx` (SCP → channel creation).
+- DB: `supabase--insert` to wipe `chat_messages` and seed new ones; no schema changes required (chat_channels already supports per-deal channels with participant_ids).
+- Audit log entries written for: SCP invitation, chat channel creation, dummy seed (tagged as system seed).
