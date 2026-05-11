@@ -186,9 +186,10 @@ interface DealRowProps {
   onToggle: () => void;
   lastSeen: Record<string, number>;
   onSeen: (channelId: string, ts: number) => void;
+  sortBy: 'chat' | 'updated';
 }
 
-function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen }: DealRowProps) {
+function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen, sortBy }: DealRowProps) {
   const { chatMessages, messages } = useScopedApp();
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -216,6 +217,10 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen 
     .map(c => c.last)
     .filter((m): m is ChatMessage => Boolean(m))
     .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0];
+
+  const tsLabel = sortBy === 'updated'
+    ? `Updated: ${format(deal.updatedAt, 'd MMM, HH:mm')}`
+    : newestLast ? `Last chat: ${format(newestLast.timestamp, 'd MMM, HH:mm')}` : 'Last chat: —';
 
   return (
     <Card className="overflow-hidden">
@@ -246,9 +251,9 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen 
           {newestLast && (
             <div className="text-xs text-muted-foreground mt-1 truncate">
               <span className="font-medium">{newestLast.senderName}:</span> {newestLast.body}
-              <span className="ml-2 text-[10px]">{formatTime(newestLast.timestamp)}</span>
             </div>
           )}
+          <div className="text-[10px] text-muted-foreground mt-1">{tsLabel}</div>
         </div>
       </button>
 
