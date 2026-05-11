@@ -1,55 +1,63 @@
-## Goal
+## Problem
 
-Make the chat surface consistent between the **New Issue Board** and the (renamed) **My Deal Chats** page, ensure every newly-created New Issue has a chat channel that flows through to both views, and wire chat-invite notifications to the top bell.
+Today's "Delete" on the New Issue Board only removes the **messages** for that deal — the Deal record itself (and its chat channel, chat messages, and notifications) stays in the database. That's why the duplicate Kingdom of Thailand row still appears on My Deal Chats and likely on Deals/Audit/Notifications too.
 
-## Changes
+Root cause: there is **no `deleteDeal` function anywhere** in `AppContext` or `cloudData`. `handleDeleteThread` in `MessagesPage.tsx` calls `deleteMessageThread(dealIds)` which only purges `messages` rows.
 
-### 1. `src/pages/InboxPage.tsx` — rename + helper text + invite badge
+## Fix — make Delete a true cascade
 
-- Rename the page header from **Deal Chat Box** to **My Deal Chats**.
-- Add a small muted note just above the search input:
-  *"Showing only chats you are a member of. New invites appear in the bell above."*
-- No change to scoping — the page continues to list only deals where `currentUser.id ∈ channel.participantIds` (per the user's preference).
-- Inside each expanded deal row, render the **alert Update History** alongside the existing chat thread:
-  - Above the channel messages, add a collapsible section *"Alert Update History (N)"* that lists each message version (Original / Update #n) with timestamp, headline and body — same data already shown on the New Issue Board's expanded row, sourced from `messages.filter(m => dealIds.includes(deal.id))` ordered newest-first.
-  - Keep the chat thread itself unchanged below it, so users see both the dispatched alerts and the live chat in one place.
+Add a single `deleteDeal(dealId)` function in `AppContext` that removes every trace of a deal from the platform, and wire the New Issue Board's "Delete" action to it.
 
-### 2. `src/components/SecureChat.tsx` and `src/pages/MessagesPage.tsx` — same data, no behavioural change
+### 1. `src/integrations/supabase/cloudData.ts`
+Add three new helpers:
+- `deleteDealRow(id)` → `delete from deals where id = id`
+- `deleteChatChannelsByDeal(dealId)` → delete from `chat_channels` where `deal_id = id`
+- `deleteChatMessagesByDeal(dealId)` → delete from `chat_messages` where `deal_id = id`
+- `deleteNotificationsByDeal(dealId)` → delete from `notifications` where `deal_id = id`
 
-Both already read from the shared `chatChannels` / `chatMessages` state, so the chat thread shown inside the New Issue Board (`SecureChat`) and inside My Deal Chats is the same data. The only effective difference today is presentation — Update History is on the Board but not in the Chat Box. Change #1 closes that gap. No code changes in `SecureChat` itself.
+(Messages are already keyed by `deal_ids` jsonb array — reuse existing `deleteMessagesByDealKey`.)
 
-### 3. Chat-invite notification flow (bell)
+### 2. `src/context/AppContext.tsx`
+Add `deleteDeal(dealId)`:
+1. Remove from local state: `deals`, `messages` (any row whose `dealIds` includes id), `chatChannels`, `chatMessages`, `notifications`.
+2. Fire-and-forget Supabase deletes for each of those tables (deal row + channels + chat msgs + notifications + messages-by-deal).
+3. Emit `DEAL_DELETED` audit log entry (`entityType: 'deal'`, `entityId: dealId`, details = issuer/ccy/tenor + count of cascaded rows).
+4. Expose on the context value.
 
-When a Syndicate Admin adds a Syndicate Chat Participant to a deal's channel (either at `createDeal` time via `scpIds`, or later via the existing participant editor), emit a notification of a new type `chat_invite`:
+### 3. `src/pages/MessagesPage.tsx`
+Change `handleDeleteThread` to call `deleteDeal(dealId)` for each `dealId` in the group (in addition to / instead of `deleteMessageThread`). Update the confirm copy:
 
-- `title`: *"Chat invite: {issuerName} {ccy} {tenor}"*
-- `body`: *"You've been added to the deal chat. Open My Deal Chats to join."*
-- `dealId` set; `read=false`.
+> "Delete the entire deal '{borrower}' including {N} alert(s), its chat history, and all related notifications? This cannot be undone."
 
-Locations to wire this:
-- `src/context/AppContext.tsx` → inside `createDeal`, after building `newChannel`, push one notification per `scpId` (excluding the creator).
-- `src/context/AppContext.tsx` → wherever channel participants are mutated post-creation (search for `setChatChannels(prev => prev.map`); emit a notification for each newly-added participant id.
+Toast: *"Deal Deleted — Kingdom of Thailand and all related data removed."*
 
-Add `'chat_invite'` to the `Notification['type']` union in `src/types/bond.ts`.
+### 4. Consistency check across the app
+After the cascade, these views automatically clear because they all derive from the same state:
+- `InboxPage` (My Deal Chats) — filters by `chatChannels` / `deals`
+- `DealsPage` — derives from `deals`
+- `AppLayout` bell — filters notifications by deal
+- `AuditLogPage` — will show the new `DEAL_DELETED` entry
+- `MessagesPage` (New Issue Board) — already keyed on messages
 
-### 4. Bell highlight for unaccepted invites
+No additional view-level changes required, but I'll spot-check each page to confirm there are no lingering `useMemo` snapshots keyed only on `messages`.
 
-- `src/components/AppLayout.tsx` already shows `unreadCount` from `notifications`. Add a secondary state: if any unread notification has `type === 'chat_invite'`, render the bell icon in `text-primary` (instead of `text-muted-foreground`) and keep the destructive count badge. This makes pending invites visibly distinct without adding a separate UI surface.
-- Clicking the bell navigates to `/inbox` (My Deal Chats). On arrival, mark all `chat_invite` notifications as read via the existing `markNotificationRead`. No accept/reject flow — once a user is added as a participant they are already in the channel; the notification just surfaces it.
+### 5. One-off cleanup of the existing orphan
+The duplicate Kingdom of Thailand deal currently in the DB has no messages but still has a `deals` row (and possibly `chat_channels`/`chat_messages`/`notifications`). After the code change ships, I'll run a targeted cleanup via the insert tool:
 
-### 5. Side-nav label
+```sql
+-- Identify the orphan first (read-only check), then:
+DELETE FROM chat_messages   WHERE deal_id = '<orphan deal id>';
+DELETE FROM chat_channels   WHERE deal_id = '<orphan deal id>';
+DELETE FROM notifications   WHERE deal_id = '<orphan deal id>';
+DELETE FROM deals           WHERE id      = '<orphan deal id>';
+```
 
-- Update the sidebar entry in `src/components/AppLayout.tsx` from **Inbox** / **Deal Chat Box** to **My Deal Chats** for consistency.
-
-## Technical notes
-
-- Participants policy stays **Creator + SCPs only** as confirmed. Alert recipients are *not* added to chat channels.
-- No DB schema changes. `notifications` table already supports the new type (`type` is `text`).
-- Realtime: notifications already replicate through the existing Supabase subscription; new `chat_invite` rows will live-update the bell.
-- Audit log: emit a `CHAT_PARTICIPANT_ADDED` entry alongside each invite notification.
+I'll first query `deals` for both Kingdom of Thailand rows and confirm with you which `id` to delete before running the cleanup.
 
 ## Out of scope
+- No schema changes (no FK cascades added — handled in app layer to keep audit/realtime hooks in one place).
+- No change to message-only retract/delete flows on individual alert versions.
+- No change to participants policy or chat invite flow.
 
-- Accept/decline UX for chat invites (auto-joined on add).
-- Changes to recipients / distribution lists.
-- Any new pages or new chat channels beyond the per-deal channel that already exists.
+## Open question
+Should "Delete" on the New Issue Board always delete the **whole deal** (current proposal), or should we offer two distinct actions — "Delete alerts only" vs "Delete entire deal"? I've assumed one consolidated Delete = full cascade, since the duplicate-deal problem you raised needs that. Let me know if you want both options instead.
