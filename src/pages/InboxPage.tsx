@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import LinkifiedText from '@/components/LinkifiedText';
 import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
-import type { ChatChannel, ChatMessage, Deal, DealStage, Message } from '@/types/bond';
+import type { ChatChannel, ChatMessage, Deal, DealStage } from '@/types/bond';
 
 const stageColor: Record<DealStage, string> = {
   Mandate: 'bg-blue-100 text-blue-800',
