@@ -48,9 +48,9 @@ const categoryOptions: UserCategory[] = ['Vendor', 'Syndicate', 'Buy Side', 'Leg
 export default function UserManagementPage() {
   const { users, currentUser, deals, messages, distributionLists, chatChannels, addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList } = useScopedApp();
   const { toast } = useToast();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isMaster } = useAuth();
 
-  const [activeTab, setActiveTab] = useState('lists');
+  const [activeTab, setActiveTab] = useState('users');
   const [showAddUser, setShowAddUser] = useState(false);
   const [showCreateList, setShowCreateList] = useState(false);
   const [editingList, setEditingList] = useState<DistributionList | null>(null);
@@ -284,15 +284,17 @@ export default function UserManagementPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-6 h-auto pb-0">
-          <TabsTrigger value="lists" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
-            <ListTree className="h-4 w-4 mr-2" /> Distribution Lists
-          </TabsTrigger>
           <TabsTrigger value="users" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
             <Users className="h-4 w-4 mr-2" /> Users
           </TabsTrigger>
-          <TabsTrigger value="approvals" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
-            <UserCheck className="h-4 w-4 mr-2" /> Approvals
+          <TabsTrigger value="lists" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+            <ListTree className="h-4 w-4 mr-2" /> Distribution Lists
           </TabsTrigger>
+          {isMaster && (
+            <TabsTrigger value="approvals" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+              <UserCheck className="h-4 w-4 mr-2" /> Approvals
+            </TabsTrigger>
+          )}
           <TabsTrigger value="guests" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
             <KeyRound className="h-4 w-4 mr-2" /> Guests
           </TabsTrigger>
