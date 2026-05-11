@@ -251,6 +251,31 @@ export async function deleteMessagesByDealKey(dealIds: string[]) {
   if (error) throw error;
 }
 
+export async function deleteMessagesContainingDeal(dealId: string) {
+  const all = await fetchMessages();
+  const ids = all.filter(m => m.dealIds.includes(dealId)).map(m => m.id);
+  if (ids.length === 0) return;
+  const { error } = await db.from('messages').delete().in('id', ids);
+  if (error) throw error;
+}
+
+export async function deleteDealRow(id: string) {
+  const { error } = await db.from('deals').delete().eq('id', id);
+  if (error) throw error;
+}
+export async function deleteChatChannelsByDeal(dealId: string) {
+  const { error } = await db.from('chat_channels').delete().eq('deal_id', dealId);
+  if (error) throw error;
+}
+export async function deleteChatMessagesByDeal(dealId: string) {
+  const { error } = await db.from('chat_messages').delete().eq('deal_id', dealId);
+  if (error) throw error;
+}
+export async function deleteNotificationsByDeal(dealId: string) {
+  const { error } = await db.from('notifications').delete().eq('deal_id', dealId);
+  if (error) throw error;
+}
+
 // ---------- Audit log ----------
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToAudit(r: any): AuditLogEntry {
