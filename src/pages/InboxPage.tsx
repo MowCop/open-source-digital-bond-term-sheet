@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import LinkifiedText from '@/components/LinkifiedText';
-import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox } from 'lucide-react';
+import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 import type { ChatChannel, ChatMessage, Deal, DealStage } from '@/types/bond';
 
@@ -189,7 +189,16 @@ interface DealRowProps {
 }
 
 function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen }: DealRowProps) {
-  const { chatMessages } = useScopedApp();
+  const { chatMessages, messages } = useScopedApp();
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  // Alert Update History for this deal (newest first). Matches New Issue Board grouping.
+  const dealAlerts = useMemo(() => {
+    return messages
+      .filter(m => m.dealIds.includes(deal.id))
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }, [messages, deal.id]);
+  const alertsNewestFirst = useMemo(() => [...dealAlerts].reverse(), [dealAlerts]);
 
   const channelStats = useMemo(() => {
     return channels.map(ch => {
@@ -243,6 +252,39 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen 
         </div>
       </button>
 
+      {expanded &&
+        (alertsNewestFirst.length > 0 && (
+          <div className="border-t bg-muted/10">
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(o => !o)}
+              className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium hover:bg-accent/40"
+            >
+              {historyOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+              <History className="h-3 w-3 text-muted-foreground" />
+              <span>Alert Update History ({alertsNewestFirst.length})</span>
+            </button>
+            {historyOpen && (
+              <div className="px-4 pb-3 space-y-2">
+                {alertsNewestFirst.map((m, idx) => {
+                  const versionNum = dealAlerts.length - idx; // 1 = original
+                  const label = versionNum === 1 ? 'Original' : `Update #${versionNum - 1}`;
+                  return (
+                    <div key={m.id} className="border rounded p-2 bg-card">
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">{label}</Badge>
+                        <span>{format(m.createdAt, 'd MMM, HH:mm')}</span>
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 ml-auto capitalize">{m.status}</Badge>
+                      </div>
+                      <div className="text-xs font-medium mt-1">{m.subject}</div>
+                      <div className="text-[11px] text-muted-foreground whitespace-pre-wrap mt-0.5 line-clamp-3">{m.body}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ))}
       {expanded &&
         channelStats.map(({ channel, unread }) => (
           <div key={channel.id}>
@@ -366,7 +408,7 @@ export default function InboxPage() {
       <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Inbox className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">Deal Chat Box</h1>
+          <h1 className="text-2xl font-bold">My Deal Chats</h1>
           {totalUnread > 0 && (
             <Badge className="bg-destructive text-destructive-foreground">{totalUnread} unread</Badge>
           )}
@@ -375,6 +417,10 @@ export default function InboxPage() {
           {visibleEntries.length} {visibleEntries.length === 1 ? 'deal' : 'deals'}
         </div>
       </header>
+
+      <p className="text-xs text-muted-foreground -mt-2">
+        Showing only chats you are a member of. New invites appear in the bell above.
+      </p>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
