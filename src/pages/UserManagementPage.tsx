@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserRole, UserCategory, User, DistributionList } from '@/types/bond';
 import { useToast } from '@/hooks/use-toast';
-import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus } from 'lucide-react';
+import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus, MessageSquare } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/AuthContext';
@@ -25,11 +25,12 @@ const roleLabels: Record<UserRole, string> = {
   vendor_user: 'Read Only',
   syndicate_readonly: 'Syndicate – Read Only',
   sales_readonly: 'Sales – Read Only',
+  guest_readonly: 'Guest Read Only',
 };
 
 // Centralised editable UI labels for User Management.
 const UM_LABELS = {
-  pageTitle: 'User Management',
+  pageTitle: 'Address Book & User Admin',
   pageSubtitle: 'Manage users, roles, and distribution lists.',
   addUser: 'Add User',
   createList: 'Create List',
@@ -45,7 +46,7 @@ const UM_LABELS = {
 const categoryOptions: UserCategory[] = ['Vendor', 'Syndicate', 'Buy Side', 'Legal', 'Guest', 'DCM', 'Sales'];
 
 export default function UserManagementPage() {
-  const { users, currentUser, deals, messages, distributionLists, addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList } = useScopedApp();
+  const { users, currentUser, deals, messages, distributionLists, chatChannels, addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList } = useScopedApp();
   const { toast } = useToast();
   const { isAdmin, isMaster } = useAuth();
 
@@ -268,7 +269,7 @@ export default function UserManagementPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">User Management</h1>
+          <h1 className="text-2xl font-bold">{UM_LABELS.pageTitle}</h1>
           <p className="text-muted-foreground text-sm">Manage users, roles, and distribution lists.</p>
         </div>
         <div className="flex gap-3">
@@ -403,11 +404,11 @@ export default function UserManagementPage() {
                     <Select value={newRole} onValueChange={v => setNewRole(v as UserRole)}>
                       <SelectTrigger className="mt-2 bg-background border-border"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {isMaster && <SelectItem value="master_admin">Master Admin</SelectItem>}
                         <SelectItem value="syndicate_admin">Syndicate Admin</SelectItem>
                         <SelectItem value="vendor_user">Read Only</SelectItem>
                         <SelectItem value="syndicate_readonly">Syndicate – Read Only</SelectItem>
                         <SelectItem value="sales_readonly">Sales – Read Only</SelectItem>
+                        <SelectItem value="guest_readonly">Guest Read Only</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -576,11 +577,11 @@ export default function UserManagementPage() {
                   <Select value={editRole} onValueChange={v => setEditRole(v as UserRole)}>
                     <SelectTrigger className="mt-2 bg-background border-border"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {isMaster && <SelectItem value="master_admin">Master Admin</SelectItem>}
                       <SelectItem value="syndicate_admin">Syndicate Admin</SelectItem>
                       <SelectItem value="vendor_user">Read Only</SelectItem>
                       <SelectItem value="syndicate_readonly">Syndicate – Read Only</SelectItem>
                       <SelectItem value="sales_readonly">Sales – Read Only</SelectItem>
+                      <SelectItem value="guest_readonly">Guest Read Only</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -596,6 +597,41 @@ export default function UserManagementPage() {
               </div>
               <div className="rounded-md bg-muted/40 border border-border px-3 py-2 text-xs text-muted-foreground">
                 Created: {formatDate(editingUser.createdAt)} by {creatorName(editingUser.createdBy || 'System')}
+              </div>
+              {/* Deal Chats this user is invited into */}
+              <div className="border border-border rounded-md">
+                <div className="px-3 py-2 border-b border-border flex items-center gap-2">
+                  <MessageSquare className="h-3.5 w-3.5 text-accent" />
+                  <span className="text-xs uppercase tracking-wider text-muted-foreground">Deal Chats — invited</span>
+                  <Badge variant="outline" className="ml-auto text-[10px]">
+                    {chatChannels.filter(c => (c.participantIds ?? []).includes(editingUser.id)).length}
+                  </Badge>
+                </div>
+                <div className="max-h-40 overflow-y-auto divide-y divide-border">
+                  {(() => {
+                    const myChannels = chatChannels.filter(c => (c.participantIds ?? []).includes(editingUser.id));
+                    if (myChannels.length === 0) {
+                      return <div className="px-3 py-3 text-xs text-muted-foreground">This user is not a participant in any New Issue chat.</div>;
+                    }
+                    return myChannels.map(ch => {
+                      const d = deals.find(x => x.id === ch.dealId);
+                      return (
+                        <div key={ch.id} className="px-3 py-2 text-sm flex items-center gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">{d ? d.issuerName : ch.label}</div>
+                            <div className="text-[11px] text-muted-foreground truncate">
+                              {d ? `${d.currency} ${d.size} · ${d.tenor}` : ch.label}
+                            </div>
+                          </div>
+                          {d && <Badge variant="outline" className="text-[10px]">{d.stage}</Badge>}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+                <div className="px-3 py-2 border-t border-border text-[11px] text-muted-foreground">
+                  Per-deal chat membership. Global User Role above is independent.
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
