@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import LinkifiedText from '@/components/LinkifiedText';
 import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History } from 'lucide-react';
-import { format, isToday, isYesterday } from 'date-fns';
+import { format } from 'date-fns';
 import type { ChatChannel, ChatMessage, Deal, DealStage } from '@/types/bond';
 
 const stageColor: Record<DealStage, string> = {
@@ -20,12 +20,6 @@ const stageColor: Record<DealStage, string> = {
   Priced: 'bg-amber-100 text-amber-800',
   Settled: 'bg-amber-100 text-amber-800',
 };
-
-function formatTime(ts: Date) {
-  if (isToday(ts)) return format(ts, 'HH:mm');
-  if (isYesterday(ts)) return 'Yesterday';
-  return format(ts, 'd MMM');
-}
 
 interface ChannelThreadProps {
   channel: ChatChannel;
