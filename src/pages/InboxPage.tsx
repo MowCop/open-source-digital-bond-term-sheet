@@ -408,7 +408,7 @@ export default function InboxPage() {
       <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Inbox className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-bold">Deal Chat Box</h1>
+          <h1 className="text-2xl font-bold">My Deal Chats</h1>
           {totalUnread > 0 && (
             <Badge className="bg-destructive text-destructive-foreground">{totalUnread} unread</Badge>
           )}
@@ -417,6 +417,10 @@ export default function InboxPage() {
           {visibleEntries.length} {visibleEntries.length === 1 ? 'deal' : 'deals'}
         </div>
       </header>
+
+      <p className="text-xs text-muted-foreground -mt-2">
+        Showing only chats you are a member of. New invites appear in the bell above.
+      </p>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
