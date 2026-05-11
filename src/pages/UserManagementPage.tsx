@@ -539,9 +539,11 @@ export default function UserManagementPage() {
             </Table>
           )}
         </TabsContent>
-        <TabsContent value="approvals" className="mt-6">
-          <PendingApprovalsTab />
-        </TabsContent>
+        {isMaster && (
+          <TabsContent value="approvals" className="mt-6">
+            <PendingApprovalsTab />
+          </TabsContent>
+        )}
         <TabsContent value="guests" className="mt-6">
           <GuestsTab />
         </TabsContent>
