@@ -144,7 +144,7 @@ export interface AuditLogEntry {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'deal_update' | 'message_received' | 'message_retracted' | 'role_change';
+  type: 'deal_update' | 'message_received' | 'message_retracted' | 'role_change' | 'chat_invite';
   title: string;
   body: string;
   read: boolean;
