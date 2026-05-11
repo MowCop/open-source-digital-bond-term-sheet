@@ -10,7 +10,7 @@ const navItems = [
   { path: '/messages', label: 'New Issue Board', icon: BellIcon },
   { path: '/inbox', label: 'Deal Chat Box', icon: Inbox },
   { path: '/ai-draft', label: 'Create New Issue', icon: PenSquare },
-  { path: '/admin', label: 'User Management', icon: Users, adminOnly: true },
+  { path: '/admin', label: 'Address Book & User Admin', icon: Users, adminOnly: true },
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
   { path: '/deals', label: 'Deal Data', icon: FileText },
   { path: '/master-admin', label: 'Master Admin', icon: Shield, masterOnly: true },
