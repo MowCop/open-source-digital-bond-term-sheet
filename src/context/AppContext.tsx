@@ -9,6 +9,7 @@ import {
   fetchUsers, fetchDeals, insertUser, updateUserRow, deleteUserRow,
   insertDeal, updateDealRow, rowToDeal, rowToUser,
   fetchMessages, insertMessage, updateMessageRow, deleteMessageRow, deleteMessagesByDealKey, rowToMessage,
+  deleteMessagesContainingDeal, deleteDealRow, deleteChatChannelsByDeal, deleteChatMessagesByDeal, deleteNotificationsByDeal,
   fetchAuditLog, insertAudit, rowToAudit,
   fetchNotifications, insertNotification, markNotificationReadRow, rowToNotification,
   fetchDistributionLists, insertDistributionList, updateDistributionListRow, deleteDistributionListRow, rowToDistList,
@@ -102,6 +103,7 @@ interface AppContextType {
   retractMessage: (id: string) => void;
   deleteMessage: (id: string) => void;
   deleteMessageThread: (dealIds: string[]) => void;
+  deleteDeal: (dealId: string) => void;
   markNotificationRead: (id: string) => void;
   addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => void;
   sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string) => void;
