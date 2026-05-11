@@ -392,7 +392,7 @@ export default function MessagesPage() {
                         <div className="flex items-center justify-between pb-2 border-b border-border/50">
                           <TabsList className="bg-card border border-border">
                             <TabsTrigger value="history" className="text-xs">
-                              Alerts History ({group.messages.length})
+                              Update History ({group.messages.length})
                             </TabsTrigger>
                             <TabsTrigger value="data" className="text-xs">
                               <Database className="h-3 w-3 mr-1" />
