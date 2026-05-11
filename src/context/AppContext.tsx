@@ -10,7 +10,7 @@ import {
   insertDeal, updateDealRow, rowToDeal, rowToUser,
   fetchMessages, insertMessage, updateMessageRow, deleteMessageRow, deleteMessagesByDealKey, rowToMessage,
   fetchAuditLog, insertAudit, rowToAudit,
-  fetchNotifications, markNotificationReadRow, rowToNotification,
+  fetchNotifications, insertNotification, markNotificationReadRow, rowToNotification,
   fetchDistributionLists, insertDistributionList, updateDistributionListRow, deleteDistributionListRow, rowToDistList,
   fetchChatChannels, insertChatChannel, rowToChatChannel,
   fetchChatMessages, insertChatMessage, rowToChatMessage,
@@ -339,6 +339,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
     setChatChannels(prev => [...prev, newChannel]);
     insertChatChannel(newChannel).catch(e => console.error('[Cloud] insertChatChannel failed', e));
+    // Emit chat-invite notifications for each SCP added (excluding creator)
+    const invitees = (scpIds ?? []).filter(id => id && id !== currentUser.id);
+    if (invitees.length > 0) {
+      const dealLabel = `${deal.issuerName} ${deal.currency} ${deal.tenor}`;
+      const newNotifs: Notification[] = invitees.map((uid, i) => ({
+        id: `n${Date.now()}_${i}_${Math.random().toString(36).slice(2, 6)}`,
+        userId: uid,
+        type: 'chat_invite',
+        title: `Chat invite: ${dealLabel}`,
+        body: `You've been added to the deal chat. Open My Deal Chats to join.`,
+        read: false,
+        timestamp: new Date(),
+        dealId: newDeal.id,
+      }));
+      setNotifications(prev => [...newNotifs, ...prev]);
+      newNotifs.forEach(n => insertNotification(n).catch(e => console.error('[Cloud] insertNotification failed', e)));
+      invitees.forEach(uid =>
+        addAuditEntry({
+          action: 'CHAT_PARTICIPANT_ADDED',
+          entityType: 'deal',
+          entityId: newDeal.id,
+          userId: currentUser.id,
+          details: `Added ${uid} to deal chat for ${dealLabel}`,
+        }),
+      );
+    }
     addAuditEntry({ action: 'DEAL_CREATED', entityType: 'deal', entityId: newDeal.id, userId: currentUser.id, details: `Created deal: ${deal.issuerName} ${deal.currency} ${deal.tenor}` });
     return newDeal;
   }, [currentUser.id, addAuditEntry, ownerOrg]);
