@@ -48,7 +48,7 @@ const categoryOptions: UserCategory[] = ['Vendor', 'Syndicate', 'Buy Side', 'Leg
 export default function UserManagementPage() {
   const { users, currentUser, deals, messages, distributionLists, chatChannels, addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList } = useScopedApp();
   const { toast } = useToast();
-  const { isAdmin, isMaster } = useAuth();
+  const { isAdmin } = useAuth();
 
   const [activeTab, setActiveTab] = useState('lists');
   const [showAddUser, setShowAddUser] = useState(false);
