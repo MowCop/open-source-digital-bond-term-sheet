@@ -11,8 +11,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Shield, Info } from 'lucide-react';
 
-const MASTER_EMAIL = 'karl.mallalieu@gmail.com';
-
 type Row = {
   user_id: string;
   email: string;
@@ -24,14 +22,12 @@ type Row = {
 };
 
 export default function MasterAdminPage() {
-  const { authUser } = useAuth();
+  const { authUser, isMaster } = useAuth();
   const { toast } = useToast();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
-
-  const isMaster = authUser?.email?.toLowerCase() === MASTER_EMAIL;
 
   const load = async () => {
     setLoading(true);
