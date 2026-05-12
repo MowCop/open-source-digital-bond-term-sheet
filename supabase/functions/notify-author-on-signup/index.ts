@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const AUTHOR_EMAIL = 'karl.mallalieu@gmail.com';
+const AUTHOR_EMAIL = 'karl@eurobondmarkets.com';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -28,19 +28,23 @@ Deno.serve(async (req) => {
       details: `New signup pending review — ${name} (${email}) from ${organization || 'unknown org'}. Notify ${AUTHOR_EMAIL}.`,
     });
 
-    // Try to send a transactional email if the project has it configured.
-    // If not, this fails silently — the audit log + admin UI still surface the pending user.
+    // Send branded notification email via the transactional email pipeline.
     try {
       await supabase.functions.invoke('send-transactional-email', {
         body: {
-          templateName: 'author-signup-notification',
+          templateName: 'signup-notification',
           recipientEmail: AUTHOR_EMAIL,
           idempotencyKey: `signup-${userId || email}`,
-          templateData: { name, email, organization },
+          templateData: {
+            name,
+            email,
+            organization,
+            signedUpAt: new Date().toISOString(),
+          },
         },
       });
     } catch (e) {
-      console.log('[notify-author-on-signup] transactional email not yet configured', e);
+      console.log('[notify-author-on-signup] transactional email send failed', e);
     }
 
     return new Response(JSON.stringify({ ok: true }), {
