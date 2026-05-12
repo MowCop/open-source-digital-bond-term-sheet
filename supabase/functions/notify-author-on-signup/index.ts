@@ -11,7 +11,33 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const { email, name, organization, userId } = await req.json();
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
+    if (claimsErr || !claimsData?.claims) {
+      return new Response(JSON.stringify({ ok: false, error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const callerId = claimsData.claims.sub as string;
+    const callerEmail = (claimsData.claims.email as string | undefined)?.toLowerCase();
+
+    const body = await req.json();
+    // Use only the verified identity from the JWT — never trust client-provided fields for identity.
+    const email = callerEmail ?? '';
+    const userId = callerId;
+    const name = typeof body?.name === 'string' ? String(body.name).slice(0, 200) : '';
+    const organization = typeof body?.organization === 'string' ? String(body.organization).slice(0, 200) : '';
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
