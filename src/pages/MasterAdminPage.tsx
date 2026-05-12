@@ -195,7 +195,7 @@ export default function MasterAdminPage() {
                 )}
                 {filtered.map(r => {
                   const active = r.status === 'approved';
-                  const isSelf = r.email?.toLowerCase() === MASTER_EMAIL;
+                  const isSelf = r.user_id === authUser?.id;
                   return (
                     <TableRow key={r.user_id}>
                       <TableCell className="font-medium">{r.name || '—'}</TableCell>
