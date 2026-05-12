@@ -7,6 +7,7 @@ import { AppProvider } from "@/context/AppContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import RequireAuth from "@/components/RequireAuth";
 import AuthPage from "@/pages/AuthPage";
+import UnsubscribePage from "@/pages/UnsubscribePage";
 import AppLayout from "@/components/AppLayout";
 import DealsPage from "@/pages/DealsPage";
 import MessagesPage from "@/pages/MessagesPage";
@@ -34,6 +35,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/unsubscribe" element={<UnsubscribePage />} />
             <Route path="/*" element={
               <RequireAuth>
                 <AppProvider>
