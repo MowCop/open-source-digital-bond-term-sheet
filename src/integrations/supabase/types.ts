@@ -658,7 +658,7 @@ export type Database = {
         | "sales_readonly"
         | "vendor_user"
         | "guest"
-      profile_status: "pending" | "approved" | "rejected"
+      profile_status: "pending" | "approved" | "rejected" | "disabled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -794,7 +794,7 @@ export const Constants = {
         "vendor_user",
         "guest",
       ],
-      profile_status: ["pending", "approved", "rejected"],
+      profile_status: ["pending", "approved", "rejected", "disabled"],
     },
   },
 } as const

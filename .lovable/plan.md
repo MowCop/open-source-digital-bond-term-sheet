@@ -1,39 +1,54 @@
-## Scope
-On `/inbox` (My Deal Chats), add a sort control with two modes and show the corresponding timestamp on each deal row.
+## Goal
 
-## Changes — `src/pages/InboxPage.tsx` only
+Improve the Approval row in **Address Book → Approvals** so actions are status-aware, and Delete is clearly separated from Reject with a confirmation dialog. Deletes are **soft** (preserve audit trail).
 
-### 1. Sort toggle (header area, next to the deal count)
-Small segmented control:
-- **Last Chat** (default) — newest chat message timestamp across the deal's channels (current behaviour)
-- **Last Updated** — `deal.updatedAt` (covers stage changes, alert posts, AI parse merges, participant edits)
+## UX changes (PendingApprovalsTab)
 
-State: `const [sortBy, setSortBy] = useState<'chat' | 'updated'>('chat')`, persisted to `localStorage` under `bondvdr.inbox.sortBy` so the choice sticks per browser.
+Replace the current `[Approve] [X]` pair with **status-aware actions** plus a separate destructive action behind a kebab menu.
 
-### 2. Sort logic
-Replace the existing inline sort in `dealEntries` useMemo:
+```text
+Status      | Actions
+------------|----------------------------------------------------
+Pending     | [Approve]  [Reject]                       ⋯
+Approved    | [Revoke access]                           ⋯
+Rejected    | [Re-approve]                              ⋯
+Disabled    | [Re-approve]                              ⋯
 ```
-const ts = sortBy === 'chat'
-  ? (chs) => max(0, ...chatMessages where channel in chs).timestamp
-  : (_chs, deal) => deal.updatedAt.getTime();
-entries.sort((a, b) => ts(b.channels, b.deal) - ts(a.channels, a.deal));
+
+The `⋯` menu always contains a single red **"Delete user…"** item, which opens an `AlertDialog` ("Delete this user? This will disable their account and revoke access. Y/N").
+
+### Action semantics
+
+- **Approve** → set `profiles.status = 'approved'` and upsert role from the row's role selector.
+- **Reject** → set `profiles.status = 'rejected'`. Role row is left untouched.
+- **Revoke access** → set `profiles.status = 'rejected'` and delete the row from `user_roles`.
+- **Re-approve** → set `profiles.status = 'approved'` and re-upsert the role from the selector.
+- **Delete user (soft)** → set `profiles.status = 'disabled'` and delete the row from `user_roles`. The auth user and profile row are kept so audit log entries still resolve to a known user. A small "Disabled" badge replaces the role selector.
+
+All actions write an entry to `audit_log` (action types: `USER_APPROVED`, `USER_REJECTED`, `USER_REVOKED`, `USER_DELETED`).
+
+## Schema change
+
+`profiles.status` is currently a `profile_status` enum with values `pending | approved | rejected`. Add a new value:
+
+```sql
+ALTER TYPE public.profile_status ADD VALUE IF NOT EXISTS 'disabled';
 ```
-Same comparator drives `orphan` channels (orphans have no deal → fall back to last chat).
 
-### 3. Per-row timestamp
-In `DealRow` header, replace the existing small timestamp shown under the preview line with a right-aligned label that reflects the current sort:
-- Last Chat mode: `Last chat: 11 May, 14:32` (or `Today HH:mm` / `Yesterday` via existing `formatTime`)
-- Last Updated mode: `Updated: 11 May, 14:32`
+No other schema changes. RLS already restricts approval/role management to admins via `is_admin()`.
 
-If the deal has no chat messages yet and Last Chat is selected, show `Last chat: —`. `Updated` always has a value.
+## Access control
 
-Pass `sortBy` into `DealRow` as a prop so the label switches in sync.
+The Approvals tab and the User Admin section are already gated to Master Admin in `UserManagementPage.tsx` (from the previous task). No change to gating.
 
-### 4. Orphan "General Conversations"
-Add the same timestamp line under each orphan row (`Last chat: …`). Orphans don't have a deal, so Last Updated falls back to last chat for them.
+## Files affected
+
+- `src/components/PendingApprovalsTab.tsx` — replace action cell with status-aware buttons + `DropdownMenu` (⋯) + `AlertDialog` for delete confirmation. Add handlers `approve`, `reject`, `revoke`, `reapprove`, `softDelete`. Render "Disabled" badge when status is `disabled`.
+- `supabase/migrations/<timestamp>_profile_status_disabled.sql` — add the `disabled` enum value.
+
+No changes to backend functions, auth, or other pages.
 
 ## Out of scope
-- No new DB fields. `deal.updatedAt` already exists and is bumped by `updateDeal` / `updateDealStage`.
-- No changes to the chat itself, message ordering inside a thread, or notifications.
-- No ascending/descending toggle — both modes are newest-first.
-- No filter UI changes beyond the sort control.
+
+- Hard-deleting the auth user (would need an admin edge function; rejected per "soft delete" choice).
+- Bulk actions, search/filter on the approvals list, or pagination.
