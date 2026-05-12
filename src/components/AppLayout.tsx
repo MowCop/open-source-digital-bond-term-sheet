@@ -20,8 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, setCurrentUser, users, notifications, markNotificationRead } = useApp();
-  const { signOut, guest, profileName, isAdmin, authUser } = useAuth();
-  const isMaster = authUser?.email?.toLowerCase() === 'karl.mallalieu@gmail.com';
+  const { signOut, guest, profileName, isAdmin, isMaster } = useAuth();
   const myUnread = notifications.filter(n => !n.read && n.userId === currentUser.id);
   const unreadCount = myUnread.length;
   const hasChatInvite = myUnread.some(n => n.type === 'chat_invite');
