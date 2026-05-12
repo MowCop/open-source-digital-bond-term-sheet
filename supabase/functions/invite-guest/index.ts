@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
       entity_type: 'user',
       entity_id: data.id,
       user_id: user.id,
-      details: `Invited guest ${email} to ${dealIds.length} deal(s). Passcode: ${passcode}`,
+      details: `Invited guest ${email} to ${dealIds.length} deal(s).`,
     });
 
     // Email is logged for now — wire to transactional email when domain is set up
