@@ -19,9 +19,9 @@ Deno.serve(async (req) => {
     if (!token) return new Response(JSON.stringify({ error: "Missing auth" }), { status: 401, headers: { ...corsHeaders, "content-type": "application/json" } });
 
     const userClient = createClient(SUPABASE_URL, ANON, { global: { headers: { Authorization: authHeader } } });
-    const { data: claims } = await userClient.auth.getClaims(token);
-    const callerId = claims?.claims?.sub;
-    if (!callerId) return new Response(JSON.stringify({ error: "Invalid auth" }), { status: 401, headers: { ...corsHeaders, "content-type": "application/json" } });
+    const { data: userData, error: userErr } = await userClient.auth.getUser(token);
+    const callerId = userData?.user?.id;
+    if (userErr || !callerId) return new Response(JSON.stringify({ error: "Invalid auth" }), { status: 401, headers: { ...corsHeaders, "content-type": "application/json" } });
 
     const admin = createClient(SUPABASE_URL, SERVICE);
 
