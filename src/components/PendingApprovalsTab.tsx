@@ -48,6 +48,8 @@ export default function PendingApprovalsTab() {
   const [loading, setLoading] = useState(true);
   const [roleByUser, setRoleByUser] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState<PendingProfile | null>(null);
+  const [confirmHardDelete, setConfirmHardDelete] = useState<PendingProfile | null>(null);
+  const [hardDeleting, setHardDeleting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -95,6 +97,20 @@ export default function PendingApprovalsTab() {
     await supabase.from('audit_log').insert({ id: crypto.randomUUID(), action: 'USER_DELETED', entity_type: 'user', entity_id: p.user_id, user_id: 'admin', details: `Soft-deleted ${p.email}` });
     toast({ title: 'User deleted', description: `${p.email} has been disabled.` });
     setConfirmDelete(null);
+    load();
+  };
+
+  const hardDelete = async (p: PendingProfile) => {
+    setHardDeleting(true);
+    const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+      body: { user_id: p.user_id, email: p.email },
+    });
+    setHardDeleting(false);
+    if (error || (data as any)?.error) {
+      return toast({ title: 'Failed', description: error?.message || (data as any)?.error, variant: 'destructive' });
+    }
+    toast({ title: 'User permanently deleted', description: p.email });
+    setConfirmHardDelete(null);
     load();
   };
 
@@ -167,6 +183,12 @@ export default function PendingApprovalsTab() {
                       >
                         <Trash2 className="h-4 w-4 mr-2" />Delete user…
                       </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => setConfirmHardDelete(p)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />Delete permanently…
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -192,6 +214,27 @@ export default function PendingApprovalsTab() {
               onClick={() => confirmDelete && softDelete(confirmDelete)}
             >
               Yes, delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!confirmHardDelete} onOpenChange={(o) => !o && setConfirmHardDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently delete this user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will <strong>permanently remove</strong> <strong>{confirmHardDelete?.email}</strong> — auth account, profile, and roles. This cannot be undone. Audit log entries will remain but reference an orphaned user ID.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={hardDeleting}
+              onClick={() => confirmHardDelete && hardDelete(confirmHardDelete)}
+            >
+              {hardDeleting ? 'Deleting…' : 'Yes, delete permanently'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
