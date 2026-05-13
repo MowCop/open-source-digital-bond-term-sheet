@@ -413,8 +413,14 @@ export default function MessagesPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className={`text-xs ${activePanel === 'data' ? 'bg-accent text-accent-foreground' : ''} ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
-                          onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:data`); setActivePanel(p => p === 'data' ? null : 'data'); }}
+                          className={`text-xs ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
+                          disabled={!group.dealIds[0]}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            flash(`${groupKey}:data`);
+                            const did = group.dealIds[0];
+                            if (did) setTimeout(() => navigate(`/deals?dealId=${did}`), 150);
+                          }}
                         >
                           <Database className="h-3 w-3 mr-1" />
                           Deal Alert Data
@@ -467,35 +473,6 @@ export default function MessagesPage() {
                         </div>
                       )}
 
-                      {activePanel === 'data' && (
-                        <div className="mt-4">
-                          <div className="bg-card/60 border border-border rounded-lg p-4 space-y-3">
-                            <div className="text-xs text-muted-foreground">
-                              Linked Deal{group.dealIds.length > 1 ? 's' : ''} for this alert
-                            </div>
-                            {group.dealIds.length === 0 && (
-                              <div className="text-sm text-muted-foreground">No deals linked to this alert.</div>
-                            )}
-                            {group.dealIds.map(did => {
-                              const d = deals.find(x => x.id === did);
-                              if (!d) return null;
-                              return (
-                                <div key={did} className="flex items-center justify-between p-3 border border-border rounded bg-background">
-                                  <div>
-                                    <div className="text-sm font-medium">{d.issuerName}</div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {d.currency || 'TBA'} {d.size || 'TBA'} — {d.tenor || 'TBA'} · Stage: {d.stage}
-                                    </div>
-                                  </div>
-                                  <Button size="sm" variant="outline" onClick={() => navigate(`/deals?dealId=${d.id}`)}>
-                                    Open Deal Data <ChevronRight className="h-3 w-3 ml-1" />
-                                  </Button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
