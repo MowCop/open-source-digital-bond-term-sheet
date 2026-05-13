@@ -4,10 +4,9 @@ import { useApp, useScopedApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Message, DealStage } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History } from 'lucide-react';
 import SecureChat from '@/components/SecureChat';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +36,8 @@ interface AlertGroup {
 export default function MessagesPage() {
   const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteDeal } = useScopedApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
+  const [activePanel, setActivePanel] = useState<'history' | 'data' | null>('history');
+  const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(false);
@@ -95,7 +96,16 @@ export default function MessagesPage() {
   const filtered = filterStage === 'all' ? alertGroups : alertGroups.filter(g => g.stage === filterStage);
 
   const toggleExpand = (id: string) => {
-    setExpandedAlertId(prev => prev === id ? null : id);
+    setExpandedAlertId(prev => {
+      const next = prev === id ? null : id;
+      if (next) setActivePanel('history');
+      return next;
+    });
+  };
+
+  const flash = (key: string) => {
+    setFlashingBtn(key);
+    setTimeout(() => setFlashingBtn(prev => (prev === key ? null : prev)), 500);
   };
 
   const handleOpenChat = (dealIds: string[]) => {
