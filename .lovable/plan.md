@@ -1,40 +1,97 @@
-# Contact Support on /auth
+# Fix: Contact Support "Edge Function returned a non-2xx status code"
 
-Add a "Contact support" button + dialog form on the Auth page. Submissions email `karl.mallalieu@gmail.com` via the existing Lovable Email pipeline. The recipient address is hard-coded server-side and never exposed to the browser.
+## Root cause
 
-## What gets built
+The Contact Support form on `/auth` calls `send-transactional-email` directly from the browser:
 
-1. **New email template** — `supabase/functions/_shared/transactional-email-templates/support-request.tsx`
-   - React Email component, BondVDR brand styling (matches existing templates)
-   - Renders: submitter name, submitter email, subject, message, timestamp
-   - `to: 'karl.mallalieu@gmail.com'` baked into the template (not exposed to client)
-   - Subject: `[BondVDR Support] {subject}`
-   - `displayName: 'Support request'`
+```ts
+await supabase.functions.invoke('send-transactional-email', { body: {...} })
+```
 
-2. **Registry update** — `supabase/functions/_shared/transactional-email-templates/registry.ts`
-   - Add `'support-request': supportRequest` to the `TEMPLATES` map
+That function is **service-to-service only**. Two layers reject the call:
 
-3. **Reply-To support** — `supabase/functions/send-transactional-email/index.ts`
-   - Accept optional `replyTo` in request body, validate as email
-   - Forward as `reply_to` in the enqueued payload so karl can reply directly to the submitter
-   - Deploy after edits
+1. The Supabase gateway runs with `verify_jwt = true` (default). On `/auth` the visitor is **not signed in**, so the request carries only the anon key and is rejected with 401 before the function even boots — which matches the empty edge logs (only "booted" entries, no invocations).
+2. Even with a valid user JWT, the function's own auth check requires the **service-role** key/JWT and otherwise returns 403.
 
-4. **Frontend** — `src/pages/AuthPage.tsx`
-   - "Contact support" link/button below the auth card (visible on all 3 tabs)
-   - Opens a Dialog containing a form: Name, Email, Subject (≤150), Message (≤2000)
-   - Validated with `react-hook-form` + `zod` (trim, length limits, valid email)
-   - Submit calls `supabase.functions.invoke('send-transactional-email', { body: { templateName: 'support-request', idempotencyKey: 'support-<uuid>', replyTo: values.email, templateData: { name, email, subject, message, submittedAt } } })`
-   - Toast on success/failure; reset + close dialog on success
-   - Submit button disabled while in flight
-   - Recipient address `karl.mallalieu@gmail.com` is **never** referenced in frontend code
+That's why the toast shows "Edge Function returned a non-2xx status code" and nothing appears in `email_send_log`.
 
-## Verification
+We must NOT expose the service role key to the browser, and we must NOT remove the service-role check on `send-transactional-email` (it would let anyone relay arbitrary emails through any registered template).
 
-- Submit a test message from /auth in preview
-- Confirm `email_send_log` shows `pending` → `sent` for `support-request`
-- Confirm arrival at karl.mallalieu@gmail.com with working Reply-To
+## Fix
+
+Introduce a small **public** edge function dedicated to the support form, and have the frontend call that instead. The public function validates input, applies basic abuse protection, then invokes `send-transactional-email` server-side using the service role key.
+
+### 1. New edge function `submit-support-request`
+
+Path: `supabase/functions/submit-support-request/index.ts`
+Config: add a block in `supabase/config.toml`:
+```toml
+[functions.submit-support-request]
+verify_jwt = false
+```
+(unauthenticated callers must be allowed — visitors on /auth aren't logged in).
+
+Behaviour:
+- CORS preflight handled.
+- Accept POST JSON: `{ name, email, subject, message }`.
+- Server-side validate:
+  - all fields present, trimmed, non-empty
+  - `name` ≤ 100, `subject` ≤ 150, `message` ≤ 2000
+  - `email` matches a basic email regex, ≤ 320 chars
+  - reject otherwise with 400.
+- Lightweight abuse protection (no captcha yet, keep scope tight):
+  - Honeypot field `website` — if present and non-empty, return 200 silently.
+  - Per-IP rate limit using a new table `support_request_rate_limit (ip text primary key, window_start timestamptz, count int)` — max 3 requests / 10 min / IP. Use `x-forwarded-for` first hop. On limit breach return 429.
+- Build a deterministic `idempotencyKey` = `support-${crypto.randomUUID()}`.
+- Use the service-role Supabase client to invoke `send-transactional-email`:
+  ```ts
+  await supabase.functions.invoke('send-transactional-email', {
+    body: {
+      templateName: 'support-request',
+      idempotencyKey,
+      replyTo: email,
+      templateData: { name, email, subject, message, submittedAt: new Date().toISOString() },
+    },
+  })
+  ```
+  The recipient stays baked into the `support-request` template (`karl.mallalieu@gmail.com`) — never referenced in the public function or the frontend.
+- Return `{ success: true }` on enqueue success, `{ error }` with 5xx on failure.
+
+### 2. Frontend change in `src/pages/AuthPage.tsx`
+
+In `submitSupport`, replace the `send-transactional-email` invoke with:
+```ts
+await supabase.functions.invoke('submit-support-request', {
+  body: { name, email, subject, message },
+})
+```
+Drop `templateName`, `idempotencyKey`, `replyTo`, `templateData` from the client payload — those are now server-owned. Keep the existing zod validation, toast, reset-on-success, and disabled-while-submitting behaviour. No UI changes.
+
+### 3. Deploy & verify
+
+1. `supabase--migration` to create `support_request_rate_limit` (RLS enabled, no policies — only service role writes).
+2. `supabase--deploy_edge_functions` for `submit-support-request` (and re-deploy `send-transactional-email` is **not** needed — unchanged).
+3. Manually submit the form from `/auth` while signed out.
+4. Check:
+   - `submit-support-request` logs show 200.
+   - `send-transactional-email` logs show enqueue success.
+   - `email_send_log` row transitions `pending` → `sent` for `template_name = 'support-request'`.
+   - Email arrives at `karl.mallalieu@gmail.com` with working Reply-To.
+5. Re-submit 4× quickly to confirm 429 on the 4th.
+
+## Debugging guidance if it still fails
+
+In order:
+
+1. **Browser network tab** — look at the failed request to `/functions/v1/submit-support-request`. The status code tells you which side failed (4xx = our validation/rate-limit/auth, 5xx = function or downstream).
+2. **`submit-support-request` edge logs** — confirm the function was actually invoked and inspect any console.error.
+3. **`send-transactional-email` edge logs** — should now show invocations originating from the support function. A 403 here means the service-role key isn't being read inside the public function (env var missing).
+4. **`email_send_log` table** — filter `template_name = 'support-request'`. `pending` with no follow-up = dispatcher not running; `failed` / `dlq` = check `error_message`.
+5. **`cron.job`** — verify `process-email-queue` is scheduled. If missing, the queue won't drain.
+6. **Suppression** — confirm `karl.mallalieu@gmail.com` is NOT in `suppressed_emails`.
 
 ## Out of scope
 
-- Server-side rate limiting / captcha (can add later if abuse appears)
-- Storing submissions in a DB table (email-only flow as requested)
+- hCaptcha / Turnstile (can be added later if abuse becomes an issue).
+- Persisting submissions to a dedicated `support_requests` table (the email + log already give an audit trail).
+- Any UI styling changes to the form.
