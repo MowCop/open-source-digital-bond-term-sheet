@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useApp, useScopedApp } from '@/context/AppContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useScopedApp } from '@/context/AppContext';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,24 +10,144 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Deal, DealStage, BookrunnerRole } from '@/types/bond';
 import { format } from 'date-fns';
-import { Plus, ChevronRight, X } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, X } from 'lucide-react';
 
 const STAGES: DealStage[] = ['Mandate', 'Announced', 'Launched', 'Books Open', 'Books Closed', 'Priced', 'Settled'];
 const stageColors: Record<string, string> = {
   Mandate: 'stage-mandate', Announced: 'stage-mandate', Launched: 'stage-launched',
   'Books Open': 'stage-launched', 'Books Closed': 'stage-launched', Priced: 'stage-priced', Settled: 'stage-closed',
 };
-
 const roleColors: Record<string, string> = {
   active: 'bg-green-100 text-green-800',
   passive: 'bg-gray-100 text-gray-700',
 };
 
+const fieldRow = (label: string, value: string | undefined) => (
+  <div><span className="text-muted-foreground">{label}:</span> {value && value.trim() ? value : 'TBA'}</div>
+);
+
+const getNextStage = (current: DealStage): DealStage | null => {
+  const idx = STAGES.indexOf(current);
+  return idx < STAGES.length - 1 ? STAGES[idx + 1] : null;
+};
+
+interface DealDetailProps {
+  deal: Deal;
+  canManage: boolean;
+  onAdvance: (next: DealStage, note?: string) => void;
+}
+
+function DealDetail({ deal, canManage, onAdvance }: DealDetailProps) {
+  const [stageNote, setStageNote] = useState('');
+  const next = getNextStage(deal.stage);
+
+  return (
+    <div className="border-t p-5 bg-card/40 space-y-6">
+      {canManage && next && (
+        <div className="flex items-center justify-end gap-2">
+          <Input value={stageNote} onChange={e => setStageNote(e.target.value)} placeholder="Stage transition note..." className="w-64 h-8 text-xs" />
+          <Button size="sm" onClick={() => { onAdvance(next, stageNote || undefined); setStageNote(''); }}>
+            Advance to {next} <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      )}
+
+      <div className="grid grid-cols-3 gap-6">
+        {/* Party / Issuer */}
+        <div className="space-y-2">
+          <h3 className="font-medium text-sm border-b pb-1">Party / Issuer</h3>
+          <div className="text-sm space-y-1">
+            {fieldRow('Issuer', deal.issuerName)}
+            {fieldRow('LEI', deal.issuerLEI)}
+            {fieldRow('Rating', deal.issuerRating)}
+            {fieldRow('Outlook', deal.ratingOutlook)}
+          </div>
+          <div className="mt-2">
+            <h4 className="text-xs font-medium text-muted-foreground mb-1">Bookrunners</h4>
+            <div className="space-y-1">
+              {deal.bookrunners.map((br, i) => (
+                <div key={i} className="flex items-center gap-1.5 text-sm">
+                  <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                  <span className="flex-1">{br.name}</span>
+                  <Badge className={`text-[9px] px-1 py-0 ${roleColors[br.role]}`}>{br.role === 'active' ? 'Active' : 'Passive'}</Badge>
+                  {br.isGlobalCoordinator && <Badge className="text-[9px] px-1 py-0 bg-purple-100 text-purple-800">GC</Badge>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Issuance */}
+        <div className="space-y-2">
+          <h3 className="font-medium text-sm border-b pb-1">Issuance</h3>
+          <div className="text-sm space-y-1">
+            {fieldRow('Type', deal.issuanceType)}
+            {fieldRow('Size', `${deal.currency} ${deal.size}`)}
+            {fieldRow('Denomination', deal.specifiedDenomination)}
+            {fieldRow('Coupon', deal.coupon)}
+            {fieldRow('Issue Price', deal.issuePrice)}
+            {fieldRow('Reoffer Price', deal.reofferPrice)}
+            {fieldRow('Reoffer Yield', deal.reofferYield)}
+            {fieldRow('Reoffer Spread', deal.reofferSpread)}
+            {fieldRow('Mid-Swap Rate', deal.midSwapRate)}
+            {fieldRow('Pricing Date', deal.pricingDate)}
+            {fieldRow('Issue Date', deal.issueDate)}
+            {fieldRow('Settlement Date', deal.settlementDate)}
+            {fieldRow('Governing Law', deal.governingLaw?.replace(/_/g, ' '))}
+            {fieldRow('Selling Restrictions', deal.sellingRestrictions)}
+            {fieldRow('Listing Venue', deal.listingVenue)}
+          </div>
+        </div>
+
+        {/* Product */}
+        <div className="space-y-2">
+          <h3 className="font-medium text-sm border-b pb-1">Product</h3>
+          <div className="text-sm space-y-1">
+            {fieldRow('ISIN', deal.isin)}
+            {fieldRow('CUSIP', deal.cusip)}
+            {fieldRow('Common Code', deal.commonCode)}
+            {fieldRow('Form of Note', deal.formOfNote?.replace(/_/g, ' '))}
+            {fieldRow('Status', deal.statusOfNote?.replace(/_/g, ' '))}
+            {fieldRow('Tenor', deal.tenor)}
+            {fieldRow('Maturity', deal.maturityDate)}
+            {fieldRow('Interest Type', deal.interestType)}
+            {fieldRow('Interest Rate', deal.interestRate)}
+            {fieldRow('Payment Freq.', deal.interestPaymentFrequency?.replace(/_/g, ' '))}
+            {fieldRow('Day Count', deal.dayCountFraction?.replace(/_/g, '/'))}
+            {fieldRow('Biz Day Conv.', deal.businessDayConvention?.replace(/_/g, ' '))}
+            {fieldRow('Optionality', deal.optionality)}
+            {fieldRow('ESG/Label', deal.taxonomy)}
+          </div>
+        </div>
+      </div>
+
+      {/* Stage History */}
+      <div className="space-y-2">
+        <h3 className="font-medium text-sm border-b pb-1">Stage History</h3>
+        {deal.stageHistory.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No transitions yet</p>
+        ) : (
+          <div className="space-y-2">
+            {deal.stageHistory.map((t, i) => (
+              <div key={i} className="flex items-start gap-2 text-sm">
+                <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                <div>
+                  <div>{t.from} → {t.to}</div>
+                  <div className="text-xs text-muted-foreground">{format(t.timestamp, 'MMM d, HH:mm')}{t.note && ` — ${t.note}`}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function DealsPage() {
   const { deals, createDeal, updateDealStage, currentUser } = useScopedApp();
-  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [stageNote, setStageNote] = useState('');
   const [newDeal, setNewDeal] = useState({
     issuerName: '', currency: 'EUR', size: '', tenor: '', coupon: 'TBD',
     issuerRating: '', issuanceType: '' as string, governingLaw: '' as string,
@@ -36,8 +156,14 @@ export default function DealsPage() {
   const [brName, setBrName] = useState('');
   const [brRole, setBrRole] = useState<BookrunnerRole>('active');
   const [brGC, setBrGC] = useState(false);
+  const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const canManageDeals = currentUser.role === 'syndicate_admin' || currentUser.role === 'master_admin';
+
+  const sortedDeals = useMemo(
+    () => [...deals].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
+    [deals]
+  );
 
   const handleAddBookrunner = () => {
     if (!brName.trim()) return;
@@ -63,21 +189,15 @@ export default function DealsPage() {
     setNewBookrunners([]);
   };
 
-  const getNextStage = (current: DealStage): DealStage | null => {
-    const idx = STAGES.indexOf(current);
-    return idx < STAGES.length - 1 ? STAGES[idx + 1] : null;
-  };
-
-  const fieldRow = (label: string, value: string | undefined) => {
-    return <div><span className="text-muted-foreground">{label}:</span> {value && value.trim() ? value : 'TBA'}</div>;
-  };
-
   const [searchParams] = useSearchParams();
   useEffect(() => {
     const dealId = searchParams.get('dealId');
-    if (dealId) {
-      const d = deals.find(x => x.id === dealId);
-      if (d) setSelectedDeal(d);
+    if (dealId && deals.some(d => d.id === dealId)) {
+      setExpandedDealId(dealId);
+      // Scroll once the row mounts
+      setTimeout(() => {
+        rowRefs.current[dealId]?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      }, 50);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, deals]);
@@ -172,137 +292,45 @@ export default function DealsPage() {
         ))}
       </div>
 
-      {/* Deal List */}
-      <div className="grid grid-cols-3 gap-4">
-        {deals.map(deal => (
-          <Card key={deal.id} className={`cursor-pointer transition-shadow hover:shadow-md ${selectedDeal?.id === deal.id ? 'ring-2 ring-primary' : ''}`} onClick={() => setSelectedDeal(deal)}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm">{deal.issuerName}</CardTitle>
-                <Badge className={stageColors[deal.stage]}>{deal.stage}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xs text-muted-foreground space-y-1">
-                <div>{deal.currency} {deal.size} — {deal.tenor}</div>
-                <div>Coupon: {deal.coupon} | Spread: {deal.reofferSpread || 'TBD'}</div>
-                {deal.issuerRating && <div>Rating: {deal.issuerRating}</div>}
-                {deal.taxonomy && <Badge className="text-[9px] bg-emerald-100 text-emerald-800 mt-1">{deal.taxonomy}</Badge>}
-                <div className="pt-1 text-muted-foreground/70">Updated: {format(deal.updatedAt, 'MMM d, HH:mm')}</div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Headline list */}
+      <div className="space-y-2">
+        {sortedDeals.length === 0 && (
+          <div className="text-center py-12 text-sm text-muted-foreground">No deals yet</div>
+        )}
+        {sortedDeals.map(deal => {
+          const expanded = expandedDealId === deal.id;
+          return (
+            <Card key={deal.id} ref={(el) => { rowRefs.current[deal.id] = el; }} className="overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setExpandedDealId(prev => prev === deal.id ? null : deal.id)}
+                className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-accent/40 transition-colors"
+              >
+                <span className="text-muted-foreground shrink-0">
+                  {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </span>
+                <span className="font-semibold text-sm truncate">{deal.issuerName}</span>
+                <span className="text-xs text-muted-foreground truncate">
+                  {deal.currency} {deal.size} · {deal.tenor}
+                </span>
+                <Badge className={`text-[10px] ${stageColors[deal.stage]}`}>{deal.stage}</Badge>
+                <span className="text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
+                  Updated {format(deal.updatedAt, 'MMM d, HH:mm')}
+                </span>
+              </button>
+              {expanded && (
+                <CardContent className="p-0">
+                  <DealDetail
+                    deal={deal}
+                    canManage={canManageDeals}
+                    onAdvance={(next, note) => updateDealStage(deal.id, next, note)}
+                  />
+                </CardContent>
+              )}
+            </Card>
+          );
+        })}
       </div>
-
-      {/* Deal Detail Panel */}
-      {selectedDeal && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>{selectedDeal.issuerName} — {selectedDeal.currency} {selectedDeal.tenor}</CardTitle>
-              {canManageDeals && getNextStage(selectedDeal.stage) && (
-                <div className="flex items-center gap-2">
-                  <Input value={stageNote} onChange={e => setStageNote(e.target.value)} placeholder="Stage transition note..." className="w-64" />
-                  <Button onClick={() => { updateDealStage(selectedDeal.id, getNextStage(selectedDeal.stage)!, stageNote || undefined); setStageNote(''); setSelectedDeal({ ...selectedDeal, stage: getNextStage(selectedDeal.stage)! }); }}>
-                    Advance to {getNextStage(selectedDeal.stage)} <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-6">
-              {/* Party / Issuer */}
-              <div className="space-y-2">
-                <h3 className="font-medium text-sm border-b pb-1">Party / Issuer</h3>
-                <div className="text-sm space-y-1">
-                  {fieldRow('Issuer', selectedDeal.issuerName)}
-                  {fieldRow('LEI', selectedDeal.issuerLEI)}
-                  {fieldRow('Rating', selectedDeal.issuerRating)}
-                  {fieldRow('Outlook', selectedDeal.ratingOutlook)}
-                </div>
-                <div className="mt-2">
-                  <h4 className="text-xs font-medium text-muted-foreground mb-1">Bookrunners</h4>
-                  <div className="space-y-1">
-                    {selectedDeal.bookrunners.map((br, i) => (
-                      <div key={i} className="flex items-center gap-1.5 text-sm">
-                        <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
-                        <span className="flex-1">{br.name}</span>
-                        <Badge className={`text-[9px] px-1 py-0 ${roleColors[br.role]}`}>{br.role === 'active' ? 'Active' : 'Passive'}</Badge>
-                        {br.isGlobalCoordinator && <Badge className="text-[9px] px-1 py-0 bg-purple-100 text-purple-800">GC</Badge>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Issuance */}
-              <div className="space-y-2">
-                <h3 className="font-medium text-sm border-b pb-1">Issuance</h3>
-                <div className="text-sm space-y-1">
-                  {fieldRow('Type', selectedDeal.issuanceType)}
-                  {fieldRow('Size', `${selectedDeal.currency} ${selectedDeal.size}`)}
-                  {fieldRow('Denomination', selectedDeal.specifiedDenomination)}
-                  {fieldRow('Coupon', selectedDeal.coupon)}
-                  {fieldRow('Issue Price', selectedDeal.issuePrice)}
-                  {fieldRow('Reoffer Price', selectedDeal.reofferPrice)}
-                  {fieldRow('Reoffer Yield', selectedDeal.reofferYield)}
-                  {fieldRow('Reoffer Spread', selectedDeal.reofferSpread)}
-                  {fieldRow('Mid-Swap Rate', selectedDeal.midSwapRate)}
-                  {fieldRow('Pricing Date', selectedDeal.pricingDate)}
-                  {fieldRow('Issue Date', selectedDeal.issueDate)}
-                  {fieldRow('Settlement Date', selectedDeal.settlementDate)}
-                  {fieldRow('Governing Law', selectedDeal.governingLaw?.replace(/_/g, ' '))}
-                  {fieldRow('Selling Restrictions', selectedDeal.sellingRestrictions)}
-                  {fieldRow('Listing Venue', selectedDeal.listingVenue)}
-                </div>
-              </div>
-
-              {/* Product */}
-              <div className="space-y-2">
-                <h3 className="font-medium text-sm border-b pb-1">Product</h3>
-                <div className="text-sm space-y-1">
-                  {fieldRow('ISIN', selectedDeal.isin)}
-                  {fieldRow('CUSIP', selectedDeal.cusip)}
-                  {fieldRow('Common Code', selectedDeal.commonCode)}
-                  {fieldRow('Form of Note', selectedDeal.formOfNote?.replace(/_/g, ' '))}
-                  {fieldRow('Status', selectedDeal.statusOfNote?.replace(/_/g, ' '))}
-                  {fieldRow('Tenor', selectedDeal.tenor)}
-                  {fieldRow('Maturity', selectedDeal.maturityDate)}
-                  {fieldRow('Interest Type', selectedDeal.interestType)}
-                  {fieldRow('Interest Rate', selectedDeal.interestRate)}
-                  {fieldRow('Payment Freq.', selectedDeal.interestPaymentFrequency?.replace(/_/g, ' '))}
-                  {fieldRow('Day Count', selectedDeal.dayCountFraction?.replace(/_/g, '/'))}
-                  {fieldRow('Biz Day Conv.', selectedDeal.businessDayConvention?.replace(/_/g, ' '))}
-                  {fieldRow('Optionality', selectedDeal.optionality)}
-                  {fieldRow('ESG/Label', selectedDeal.taxonomy)}
-                </div>
-              </div>
-            </div>
-
-            {/* Stage History */}
-            <div className="mt-6 space-y-2">
-              <h3 className="font-medium text-sm border-b pb-1">Stage History</h3>
-              {selectedDeal.stageHistory.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No transitions yet</p>
-              ) : (
-                <div className="space-y-2">
-                  {selectedDeal.stageHistory.map((t, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm">
-                      <div className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                      <div>
-                        <div>{t.from} → {t.to}</div>
-                        <div className="text-xs text-muted-foreground">{format(t.timestamp, 'MMM d, HH:mm')}{t.note && ` — ${t.note}`}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
