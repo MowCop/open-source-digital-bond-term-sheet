@@ -73,6 +73,22 @@ Deno.serve(async (req) => {
       console.log('[notify-author-on-signup] transactional email send failed', e);
     }
 
+    // Also send an acknowledgement email to the new user (best effort).
+    if (email) {
+      try {
+        await supabase.functions.invoke('send-transactional-email', {
+          body: {
+            templateName: 'signup-acknowledgement',
+            recipientEmail: email,
+            idempotencyKey: `signup-ack-${userId || email}`,
+            templateData: { name, organization },
+          },
+        });
+      } catch (e) {
+        console.log('[notify-author-on-signup] signup-ack email send failed', e);
+      }
+    }
+
     return new Response(JSON.stringify({ ok: true }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
