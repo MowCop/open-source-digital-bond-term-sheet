@@ -16,6 +16,7 @@ import AIDraftPage from "@/pages/AIDraftPage";
 import UserManagementPage from "@/pages/UserManagementPage";
 import AuditLogPage from "@/pages/AuditLogPage";
 import MasterAdminPage from "@/pages/MasterAdminPage";
+import BondConsolePage from "@/pages/BondConsolePage";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
                     <Routes>
                       <Route path="/" element={<Navigate to="/messages" replace />} />
                       <Route path="/deals" element={<GuestBlock><DealsPage /></GuestBlock>} />
+                      <Route path="/bond-console" element={<GuestBlock><BondConsolePage /></GuestBlock>} />
                       <Route path="/messages" element={<MessagesPage />} />
                       <Route path="/inbox" element={<InboxPage />} />
                       <Route path="/ai-draft" element={<GuestBlock><AIDraftPage /></GuestBlock>} />
