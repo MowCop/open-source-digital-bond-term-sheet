@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -7,8 +10,26 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, KeyRound, Shield, Link2, Building2, LineChart } from 'lucide-react';
+import { Loader2, KeyRound, Shield, Link2, Building2, LineChart, LifeBuoy } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/integrations/supabase/client';
+
+const supportSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(100),
+  email: z.string().trim().email('Enter a valid email').max(255),
+  subject: z.string().trim().min(1, 'Subject is required').max(150),
+  message: z.string().trim().min(1, 'Message is required').max(2000),
+});
+type SupportValues = z.infer<typeof supportSchema>;
 
 export default function AuthPage() {
   const { signIn, signUp, loginAsGuest } = useAuth();
@@ -25,6 +46,44 @@ export default function AuthPage() {
   const [guestEmail, setGuestEmail] = useState('');
   const [passcode, setPasscode] = useState('');
   const [guestBusy, setGuestBusy] = useState(false);
+
+  const [supportOpen, setSupportOpen] = useState(false);
+  const supportForm = useForm<SupportValues>({
+    resolver: zodResolver(supportSchema),
+    defaultValues: { name: '', email: '', subject: '', message: '' },
+  });
+
+  const submitSupport = async (values: SupportValues) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-transactional-email', {
+        body: {
+          templateName: 'support-request',
+          idempotencyKey: `support-${crypto.randomUUID()}`,
+          replyTo: values.email,
+          templateData: {
+            name: values.name,
+            email: values.email,
+            subject: values.subject,
+            message: values.message,
+            submittedAt: new Date().toISOString(),
+          },
+        },
+      });
+      if (error) throw error;
+      toast({
+        title: 'Message sent',
+        description: 'Thanks — our team will get back to you shortly.',
+      });
+      supportForm.reset();
+      setSupportOpen(false);
+    } catch (err: any) {
+      toast({
+        title: 'Could not send message',
+        description: err?.message ?? 'Please try again in a moment.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,6 +257,81 @@ export default function AuthPage() {
             </Tabs>
           </CardContent>
         </Card>
+
+        <div className="text-center">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setSupportOpen(true)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <LifeBuoy className="h-4 w-4 mr-2" />
+            Contact support via email
+          </Button>
+        </div>
+
+        <Dialog open={supportOpen} onOpenChange={setSupportOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Contact support</DialogTitle>
+              <DialogDescription>
+                Send a message to the BondVDR team. We'll reply to the email address you provide.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={supportForm.handleSubmit(submitSupport)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="support-name">Your name</Label>
+                  <Input id="support-name" {...supportForm.register('name')} maxLength={100} />
+                  {supportForm.formState.errors.name && (
+                    <p className="text-xs text-destructive mt-1">{supportForm.formState.errors.name.message}</p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="support-email">Your email</Label>
+                  <Input id="support-email" type="email" {...supportForm.register('email')} maxLength={255} />
+                  {supportForm.formState.errors.email && (
+                    <p className="text-xs text-destructive mt-1">{supportForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="support-subject">Subject</Label>
+                <Input id="support-subject" {...supportForm.register('subject')} maxLength={150} />
+                {supportForm.formState.errors.subject && (
+                  <p className="text-xs text-destructive mt-1">{supportForm.formState.errors.subject.message}</p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="support-message">Message</Label>
+                <Textarea
+                  id="support-message"
+                  rows={6}
+                  {...supportForm.register('message')}
+                  maxLength={2000}
+                />
+                {supportForm.formState.errors.message && (
+                  <p className="text-xs text-destructive mt-1">{supportForm.formState.errors.message.message}</p>
+                )}
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setSupportOpen(false)}
+                  disabled={supportForm.formState.isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={supportForm.formState.isSubmitting}>
+                  {supportForm.formState.isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Send message
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
