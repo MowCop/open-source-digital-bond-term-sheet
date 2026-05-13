@@ -85,6 +85,7 @@ Deno.serve(async (req) => {
   let idempotencyKey: string
   let messageId: string
   let templateData: Record<string, any> = {}
+  let replyTo: string | undefined
   try {
     const body = await req.json()
     templateName = body.templateName || body.template_name
@@ -93,6 +94,20 @@ Deno.serve(async (req) => {
     idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
     if (body.templateData && typeof body.templateData === 'object') {
       templateData = body.templateData
+    }
+    const rawReplyTo = body.replyTo || body.reply_to
+    if (typeof rawReplyTo === 'string' && rawReplyTo.trim()) {
+      const trimmed = rawReplyTo.trim()
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) || trimmed.length > 320) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid replyTo email' }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        )
+      }
+      replyTo = trimmed
     }
   } catch {
     return new Response(
@@ -348,6 +363,7 @@ Deno.serve(async (req) => {
       idempotency_key: idempotencyKey,
       unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
+      ...(replyTo ? { reply_to: replyTo } : {}),
     },
   })
 
