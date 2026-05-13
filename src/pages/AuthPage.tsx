@@ -55,18 +55,12 @@ export default function AuthPage() {
 
   const submitSupport = async (values: SupportValues) => {
     try {
-      const { error } = await supabase.functions.invoke('send-transactional-email', {
+      const { error } = await supabase.functions.invoke('submit-support-request', {
         body: {
-          templateName: 'support-request',
-          idempotencyKey: `support-${crypto.randomUUID()}`,
-          replyTo: values.email,
-          templateData: {
-            name: values.name,
-            email: values.email,
-            subject: values.subject,
-            message: values.message,
-            submittedAt: new Date().toISOString(),
-          },
+          name: values.name,
+          email: values.email,
+          subject: values.subject,
+          message: values.message,
         },
       });
       if (error) throw error;
