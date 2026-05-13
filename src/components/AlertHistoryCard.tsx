@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import LinkifiedText from '@/components/LinkifiedText';
 import { format } from 'date-fns';
-import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, Users } from 'lucide-react';
+import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users } from 'lucide-react';
 
 interface AlertHistoryCardProps {
   message: Message;
@@ -35,6 +35,7 @@ export default function AlertHistoryCard({
   onDelete,
 }: AlertHistoryCardProps) {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+  const [isOpen, setIsOpen] = useState(false);
   const [editSubject, setEditSubject] = useState(message.subject);
   const [editBody, setEditBody] = useState(message.body);
   const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
@@ -49,6 +50,11 @@ export default function AlertHistoryCard({
   const handleSaveAndSend = () => {
     onPostUpdate(message.id, { subject: editSubject, body: editBody });
     setMode('view');
+  };
+
+  const enterEdit = () => {
+    setIsOpen(true);
+    setMode('edit');
   };
 
   const handleCancel = () => {
@@ -114,26 +120,45 @@ export default function AlertHistoryCard({
   return (
     <div className={`rounded-lg border border-border bg-card/60 p-4 space-y-3 ${isRetracted ? 'opacity-50' : ''}`}>
       {/* Header row */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
+      <div
+        className={`flex items-start justify-between gap-4 ${!editing ? 'cursor-pointer hover:bg-card/80 rounded -m-1 p-1 transition-colors' : ''}`}
+        onClick={() => { if (!editing) setIsOpen(o => !o); }}
+        role={!editing ? 'button' : undefined}
+        tabIndex={!editing ? 0 : undefined}
+        onKeyDown={(e) => {
+          if (!editing && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            setIsOpen(o => !o);
+          }
+        }}
+      >
+        <div className="flex items-start gap-2 flex-1 min-w-0">
+          {!editing && (
+            <span className="mt-0.5 text-muted-foreground shrink-0">
+              {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </span>
+          )}
+          <div className="flex-1 min-w-0">
           {editing ? (
             <input
               value={editSubject}
               onChange={e => setEditSubject(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
               className="w-full bg-background border border-border rounded px-3 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           ) : (
-            <div className="text-sm font-medium flex items-center gap-2">
+            <div className="text-sm font-medium flex items-center gap-2 flex-wrap">
               {versionLabel && (
                 <span className="text-[10px] font-semibold uppercase text-accent bg-accent/10 px-1.5 py-0.5 rounded">
                   {versionLabel}
                 </span>
               )}
-              <span>{message.subject}</span>
+              <span className="truncate">{message.subject}</span>
             </div>
           )}
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
             <span>{senderName}</span>
+          </div>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -149,6 +174,8 @@ export default function AlertHistoryCard({
         </div>
       </div>
 
+      {(isOpen || editing) && (
+      <>
       {/* Body */}
       {editing ? (
         <Textarea
@@ -272,7 +299,7 @@ export default function AlertHistoryCard({
           ) : (
             <>
               {!isRetracted && (
-                <Button size="sm" variant="outline" className="text-xs" onClick={() => setMode('edit')}>
+                <Button size="sm" variant="outline" className="text-xs" onClick={enterEdit}>
                   <Edit2 className="h-3 w-3 mr-1" />
                   Edit
                 </Button>
@@ -298,6 +325,8 @@ export default function AlertHistoryCard({
             </>
           )}
         </div>
+      )}
+      </>
       )}
     </div>
   );
