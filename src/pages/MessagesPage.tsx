@@ -400,29 +400,38 @@ export default function MessagesPage() {
                   {/* Expanded content */}
                   {isExpanded && (
                     <div className="bg-card/40 border-t border-border px-8 py-4 space-y-4">
-                      <Tabs defaultValue="history" className="w-full">
-                        <div className="flex items-center justify-between pb-2 border-b border-border/50">
-                          <TabsList className="bg-card border border-border">
-                            <TabsTrigger value="history" className="text-xs">
-                              Update History ({group.messages.length})
-                            </TabsTrigger>
-                            <TabsTrigger value="data" className="text-xs">
-                              <Database className="h-3 w-3 mr-1" />
-                              Deal Alert Data
-                            </TabsTrigger>
-                          </TabsList>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-xs"
-                            onClick={(e) => { e.stopPropagation(); handleOpenChat(group.dealIds); }}
-                          >
-                            <MessageSquare className="h-3 w-3 mr-1" />
-                            Open Chat
-                          </Button>
-                        </div>
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className={`text-xs ${flashingBtn === `${groupKey}:chat` ? 'animate-border-flash' : ''}`}
+                          onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:chat`); handleOpenChat(group.dealIds); }}
+                        >
+                          <MessageSquare className="h-3 w-3 mr-1" />
+                          Deal Chat
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className={`text-xs ${activePanel === 'data' ? 'bg-accent text-accent-foreground' : ''} ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
+                          onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:data`); setActivePanel(p => p === 'data' ? null : 'data'); }}
+                        >
+                          <Database className="h-3 w-3 mr-1" />
+                          Deal Alert Data
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className={`text-xs ${activePanel === 'history' ? 'bg-accent text-accent-foreground' : ''} ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
+                          onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
+                        >
+                          <History className="h-3 w-3 mr-1" />
+                          Update History ({group.messages.length})
+                        </Button>
+                      </div>
 
-                        <TabsContent value="history" className="space-y-4 mt-4">
+                      {activePanel === 'history' && (
+                        <div className="space-y-4 mt-4">
                           {group.messages.map((msg, idx) => {
                             const total = group.messages.length;
                             const versionNum = total - idx;
@@ -455,9 +464,11 @@ export default function MessagesPage() {
                               />
                             );
                           })}
-                        </TabsContent>
+                        </div>
+                      )}
 
-                        <TabsContent value="data" className="mt-4">
+                      {activePanel === 'data' && (
+                        <div className="mt-4">
                           <div className="bg-card/60 border border-border rounded-lg p-4 space-y-3">
                             <div className="text-xs text-muted-foreground">
                               Linked Deal{group.dealIds.length > 1 ? 's' : ''} for this alert
@@ -483,8 +494,8 @@ export default function MessagesPage() {
                               );
                             })}
                           </div>
-                        </TabsContent>
-                      </Tabs>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
