@@ -70,6 +70,25 @@ export default function PendingApprovalsTab() {
     const { error: e2 } = await supabase.from('user_roles').upsert({ user_id: p.user_id, role: role as any });
     if (e1 || e2) return toast({ title: 'Failed', description: (e1 || e2)?.message, variant: 'destructive' });
     toast({ title: 'Approved', description: `${p.email} as ${role}` });
+    // Best-effort: email the user that their access has been approved.
+    try {
+      const { error: mailErr } = await supabase.functions.invoke('notify-user-on-approval', {
+        body: { userId: p.user_id, role },
+      });
+      if (mailErr) {
+        toast({
+          title: 'Approved (email not sent)',
+          description: `Approval saved, but notification email failed: ${mailErr.message}`,
+          variant: 'destructive',
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Approved (email not sent)',
+        description: `Approval saved, but notification email failed: ${err?.message ?? String(err)}`,
+        variant: 'destructive',
+      });
+    }
     load();
   };
 
