@@ -642,6 +642,15 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_user_login_stats: {
+        Args: never
+        Returns: {
+          confirmed_at: string
+          email: string
+          last_sign_in_at: string
+          user_created_at: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
