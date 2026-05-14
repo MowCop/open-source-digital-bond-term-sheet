@@ -492,6 +492,9 @@ export default function UserManagementPage() {
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Organization</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Deals</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
+                    <span className="inline-flex items-center gap-1"><Activity className="h-3 w-3" /> Login Activity</span>
+                  </TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Created Details</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
                 </TableRow>
