@@ -339,6 +339,7 @@ export default function DealsPage() {
                     deal={deal}
                     canManage={canManageDeals}
                     onAdvance={(next, note) => updateDealStage(deal.id, next, note)}
+                    fromBoard={!!searchParams.get('dealId')}
                   />
                 </CardContent>
               )}
