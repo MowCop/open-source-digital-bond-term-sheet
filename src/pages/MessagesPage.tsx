@@ -58,9 +58,19 @@ export default function MessagesPage() {
   const alertGroups: AlertGroup[] = [];
   const dealGroupMap = new Map<string, Message[]>();
 
+  // Only show message threads whose linked deal is visible in the current
+  // user's scope. Without this, syndicate users can see "orphan" rows where
+  // the message exists but the linked deal is filtered out — producing rows
+  // with missing borrower/bookrunner/stage data and inconsistent display
+  // between sessions/environments.
+  const visibleDealIds = new Set(deals.map(d => d.id));
   const visibleMessages = messages.filter(m => {
     if (isReadOnly) return m.recipients.includes(currentUser.id) || m.senderId === currentUser.id;
-    return true;
+    // Master Admin sees all deals (scopeDeals returns all), so this is a no-op for them.
+    // Syndicate Admins only see threads tied to their own org's visible deals.
+    // Messages with no linked deal at all are kept (genuine standalone alerts).
+    if (m.dealIds.length === 0) return true;
+    return m.dealIds.some(id => visibleDealIds.has(id));
   });
 
   visibleMessages.forEach(m => {
