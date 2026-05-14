@@ -406,17 +406,6 @@ export default function MessagesPage() {
                       <Badge className={`text-[10px] border ${badge.className}`}>
                         {badge.label}
                       </Badge>
-                      {canManageMessages && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                          onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
-                          title="Delete entire alert thread"
-                        >
-                          <Trash2 className="h-3 w-3 text-destructive" />
-                        </Button>
-                      )}
                     </div>
                   </div>
 
@@ -457,6 +446,18 @@ export default function MessagesPage() {
                           <History className="h-3 w-3 mr-1" />
                           Update History ({group.messages.length})
                         </Button>
+                        {canManageMessages && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
+                            title="Delete duplicate deal and all related data"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Delete
+                          </Button>
+                        )}
                       </div>
 
                       {activePanel === 'history' && (
