@@ -83,7 +83,7 @@ function isBusinessDay(dateStr: string, calendar: CalendarKey): boolean {
   const d = new Date(dateStr + 'T12:00:00Z');
   if (isNaN(d.getTime())) return false;
   if (isWeekend(d)) return false;
-  return !holidaySet(calendar).some(h => h === toISO(d));
+  return !holidaySet(calendar).has(toISO(d));
 }
 
 function calendarForCurrency(currency: string): CalendarKey {
