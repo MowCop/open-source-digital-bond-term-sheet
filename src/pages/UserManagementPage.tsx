@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp, useScopedApp } from '@/context/AppContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserRole, UserCategory, User, DistributionList } from '@/types/bond';
 import { useToast } from '@/hooks/use-toast';
-import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus, MessageSquare } from 'lucide-react';
+import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus, MessageSquare, Activity } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/AuthContext';
@@ -54,6 +55,59 @@ export default function UserManagementPage() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [showCreateList, setShowCreateList] = useState(false);
   const [editingList, setEditingList] = useState<DistributionList | null>(null);
+
+  // Login activity (Option A — derived from auth.users)
+  const [loginStats, setLoginStats] = useState<Record<string, { lastSignInAt: string | null; confirmedAt: string | null }>>({});
+  const [loginStatsLoading, setLoginStatsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin && currentUser.role !== 'master_admin') return;
+    let cancelled = false;
+    const load = async () => {
+      setLoginStatsLoading(true);
+      const { data, error } = await supabase.rpc('get_user_login_stats');
+      if (!cancelled && !error && Array.isArray(data)) {
+        const map: Record<string, { lastSignInAt: string | null; confirmedAt: string | null }> = {};
+        for (const row of data as any[]) {
+          if (row?.email) {
+            map[String(row.email).toLowerCase()] = {
+              lastSignInAt: row.last_sign_in_at ?? null,
+              confirmedAt: row.confirmed_at ?? null,
+            };
+          }
+        }
+        setLoginStats(map);
+      }
+      if (!cancelled) setLoginStatsLoading(false);
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [isAdmin, currentUser.role]);
+
+  const formatRelative = (iso: string | null): string => {
+    if (!iso) return 'Never';
+    const then = new Date(iso).getTime();
+    const diffMs = Date.now() - then;
+    const m = Math.floor(diffMs / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    if (d < 30) return `${d}d ago`;
+    const mo = Math.floor(d / 30);
+    return `${mo}mo ago`;
+  };
+
+  const loginStatusFor = (email: string): { label: string; tone: 'active' | 'dormant' | 'never' | 'unconfirmed'; lastIso: string | null } => {
+    const stats = loginStats[email.toLowerCase()];
+    if (!stats) return { label: 'Never', tone: 'never', lastIso: null };
+    if (!stats.confirmedAt) return { label: 'Unconfirmed', tone: 'unconfirmed', lastIso: stats.lastSignInAt };
+    if (!stats.lastSignInAt) return { label: 'Never', tone: 'never', lastIso: null };
+    const ageDays = (Date.now() - new Date(stats.lastSignInAt).getTime()) / 86400000;
+    if (ageDays > 30) return { label: 'Dormant', tone: 'dormant', lastIso: stats.lastSignInAt };
+    return { label: 'Active', tone: 'active', lastIso: stats.lastSignInAt };
+  };
 
   // Add User form state
   const [newName, setNewName] = useState('');
