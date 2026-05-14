@@ -1,35 +1,32 @@
-## What is happening
+## What's wrong
 
-The published site is updated, but the screenshot shows a different user context from the editor preview:
+The screenshot is the **Create New Issue** composer (`src/pages/AIDraftPage.tsx`). The body field there is a plain `<Textarea>` — by design textareas can't render clickable hyperlinks, so the EUROFIMA URLs in the message stay as raw text and can't be opened.
 
-- Published site opens on the public authentication screen unless you log in.
-- After login, the New Issue Board is scoped by the authenticated user’s role and organisation.
-- The board currently builds rows from `messages`, then looks up linked `deals` for borrower/bookrunner/stage data.
-- For syndicate users, the app applies extra client-side organisation scoping to deals, but not consistently to the message rows themselves. That can leave rows visible while their linked deal data is hidden or incomplete, so the public view can show different borrower/headline/bookrunner detail than the project/editor session.
+In other places the URLs already render correctly:
+- `AlertHistoryCard` (sent / saved alerts) → uses `LinkifiedText`
+- `InboxPage` and `SecureChat` (chat) → use `LinkifiedText`
 
-This is not a stale-publish problem anymore; it is an authentication/scoping/data-context problem.
+So the fix is scoped to the composer view only.
 
-## Correction plan
+A secondary check on the regex: `LinkifiedText`'s pattern `/https?:\/\/[^\s<]+[^\s<).,;:!?]/gi` correctly matches URLs containing `(1)` like the EUROFIMA `Slides(1).pdf` link, but it currently strips a trailing closing parenthesis on URLs that end with `)`. We'll tighten that so balanced `()` inside a URL are preserved.
 
-1. **Align New Issue Board rows with deal visibility**
-   - Update the board data grouping so a user only sees message threads whose linked deal is visible to their current role/org scope.
-   - Prevent “orphan” message rows where the message is visible but the linked deal details are not.
-   - Keep Master Admin able to see all rows.
+## Plan
 
-2. **Make the board’s displayed data deterministic**
-   - Keep borrower, stage, and bookrunners sourced from the linked deal when present.
-   - Add a safe fallback only when a message genuinely has no linked deal.
-   - This avoids different published/editor text caused by missing scoped deal joins.
+1. **Add an Edit / Preview toggle to the Create New Issue composer**
+   - In `src/pages/AIDraftPage.tsx`, wrap the body `<Textarea>` in a small two-tab control: "Write" (default, current Textarea) and "Preview".
+   - Preview pane renders `body` inside a `whitespace-pre-wrap` block using `<LinkifiedText text={body} />`, so all `https://…` URLs become clickable, open in a new tab, and match the styling used in alert history.
+   - No changes to save/send logic, attachments, AI extraction, or distribution.
 
-3. **Fix saved deal ownership for new issues if needed**
-   - Confirm new deals created from `Create New Issue` are tagged with the authenticated user’s organisation.
-   - If not, ensure the `createdByOrg` value follows the logged-in profile organisation, so newly created issues appear consistently after reload/publish/login.
+2. **Improve `LinkifiedText` URL detection (small, safe tweak)**
+   - In `src/components/LinkifiedText.tsx`, update the regex / trimming so a URL keeps internal balanced parentheses (e.g. `Slides(1).pdf`) and only strips a trailing `)` when there is no matching `(` earlier in the URL. Trailing punctuation handling (`.,;:!?`) stays the same.
+   - This benefits every place that already uses `LinkifiedText` (alert history, inbox, chat) without changing their markup.
 
-4. **Validate against the live backend data**
-   - Check with the current seeded/live rows: Lithuania, United States, Thailand, Eurofima, Greenland, Revolut, Apple, etc.
-   - Verify Master Admin sees the full board.
-   - Verify a Syndicate Admin sees only their organisation’s created/bookrunner deals and no incomplete/orphan rows.
+3. **Manual verification after implementation**
+   - In Create New Issue, paste the EUROFIMA body from the screenshot, switch to Preview, confirm all three URLs are clickable and open in a new tab.
+   - Open an existing sent alert in New Issue Board → expand → confirm the same URLs render as links (regression check on `AlertHistoryCard`).
 
-## Expected result
+## Out of scope
 
-After implementation and republishing, the public site and editor preview will show the same New Issue Board content for the same logged-in user. Different users may still see different rows by design, because access is role/organisation based.
+- No backend/database changes.
+- No changes to who can see which deal (separate scoping work already shipped).
+- No rich-text editor — Preview is read-only rendering of the same plain text.
