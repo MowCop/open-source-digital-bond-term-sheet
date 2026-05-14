@@ -34,13 +34,9 @@ export function scopeDeals(deals: Deal[], ctx: ScopeContext): Deal[] {
 
 export function scopeUsers(users: User[], ctx: ScopeContext): User[] {
   if (ctx.isGuest) return [];
-  if (ctx.isMaster || !ctx.isSyndicateAdmin) return users;
-  const org = norm(ctx.currentOrg);
-  if (!org) return [];
-  return users.filter(u =>
-    norm(u.organization) === org ||
-    norm(u.createdByOrg) === org
-  );
+  // Syndicate Admins, Syndicate Read-Only, and Master Admin all see every user
+  // so they can chat with and add anyone set up by any Syndicate Admin.
+  return users;
 }
 
 export function scopeDistributionLists(lists: DistributionList[], ctx: ScopeContext): DistributionList[] {
