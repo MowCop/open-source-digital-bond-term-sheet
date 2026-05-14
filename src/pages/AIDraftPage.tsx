@@ -8,6 +8,7 @@ import { Attachment } from '@/types/bond';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Bookrunner } from '@/types/bond';
 import { extractBookrunners, simulateAIExtraction } from '@/lib/alertParsing';
+import DealChecker from '@/components/DealChecker';
 import { Sparkles, Paperclip, Send, Save, ChevronDown, MessageSquare, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -352,6 +353,8 @@ export default function AIDraftPage() {
               )}
             </div>
           </div>
+
+          <DealChecker aiFields={aiFields} aiBookrunners={aiBookrunners} />
 
           {/* Distribution */}
           <div className="bg-card border border-border rounded-lg">
