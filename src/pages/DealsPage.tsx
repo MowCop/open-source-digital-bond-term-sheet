@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useScopedApp } from '@/context/AppContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Deal, DealStage, BookrunnerRole } from '@/types/bond';
 import { format } from 'date-fns';
-import { Plus, ChevronRight, ChevronDown, X } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, X, ArrowLeft } from 'lucide-react';
 
 const STAGES: DealStage[] = ['Mandate', 'Announced', 'Launched', 'Books Open', 'Books Closed', 'Priced', 'Settled'];
 const stageColors: Record<string, string> = {
@@ -35,22 +35,37 @@ interface DealDetailProps {
   deal: Deal;
   canManage: boolean;
   onAdvance: (next: DealStage, note?: string) => void;
+  fromBoard?: boolean;
 }
 
-function DealDetail({ deal, canManage, onAdvance }: DealDetailProps) {
+function DealDetail({ deal, canManage, onAdvance, fromBoard }: DealDetailProps) {
   const [stageNote, setStageNote] = useState('');
   const next = getNextStage(deal.stage);
+  const navigate = useNavigate();
 
   return (
     <div className="border-t p-5 bg-card/40 space-y-6">
-      {canManage && next && (
-        <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-between">
+        {fromBoard && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-xs text-muted-foreground hover:text-foreground -ml-2"
+            onClick={() => navigate(`/messages?dealId=${deal.id}`)}
+          >
+            <ArrowLeft className="h-3 w-3 mr-1" />
+            Back to New Issue Board
+          </Button>
+        )}
+        {canManage && next && (
+          <div className="flex items-center gap-2">
           <Input value={stageNote} onChange={e => setStageNote(e.target.value)} placeholder="Stage transition note..." className="w-64 h-8 text-xs" />
           <Button size="sm" onClick={() => { onAdvance(next, stageNote || undefined); setStageNote(''); }}>
             Advance to {next} <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
       )}
+      </div>
 
       <div className="grid grid-cols-3 gap-6">
         {/* Party / Issuer */}
@@ -324,6 +339,7 @@ export default function DealsPage() {
                     deal={deal}
                     canManage={canManageDeals}
                     onAdvance={(next, note) => updateDealStage(deal.id, next, note)}
+                    fromBoard={!!searchParams.get('dealId')}
                   />
                 </CardContent>
               )}

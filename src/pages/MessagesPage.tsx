@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp, useScopedApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,6 +61,7 @@ export default function MessagesPage() {
   const [bookrunnersDraft, setBookrunnersDraft] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const canManageMessages = currentUser.role === 'syndicate_admin' || currentUser.role === 'master_admin';
   const isReadOnly = currentUser.role === 'syndicate_readonly' || currentUser.role === 'sales_readonly' || currentUser.role === 'vendor_user';
@@ -115,6 +116,18 @@ export default function MessagesPage() {
 
   // Filter by stage
   const filtered = filterStage === 'all' ? alertGroups : alertGroups.filter(g => g.stage === filterStage);
+
+  // Auto-expand deal when arriving from Deal Data panel via ?dealId=
+  useEffect(() => {
+    const dealId = searchParams.get('dealId');
+    if (!dealId) return;
+    const group = alertGroups.find(g => g.dealIds.includes(dealId));
+    if (group) {
+      const groupKey = group.dealIds.join(',');
+      setExpandedAlertId(groupKey);
+      setActivePanel('history');
+    }
+  }, [searchParams, alertGroups]);
 
   const toggleExpand = (id: string) => {
     setExpandedAlertId(prev => {
