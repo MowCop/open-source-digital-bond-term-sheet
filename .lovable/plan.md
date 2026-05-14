@@ -1,55 +1,35 @@
-# Fix: PDF drop in Create New Issue does nothing
+## What is happening
 
-## Root cause
+The published site is updated, but the screenshot shows a different user context from the editor preview:
 
-In `src/pages/AIDraftPage.tsx`, `handleFiles` only extracts text from `.docx` files (via `mammoth`). PDFs and PPTs are added to the attachments list but their contents are never read, so `simulateAIExtraction` is never called → no headline, no body, no AI fields.
+- Published site opens on the public authentication screen unless you log in.
+- After login, the New Issue Board is scoped by the authenticated user’s role and organisation.
+- The board currently builds rows from `messages`, then looks up linked `deals` for borrower/bookrunner/stage data.
+- For syndicate users, the app applies extra client-side organisation scoping to deals, but not consistently to the message rows themselves. That can leave rows visible while their linked deal data is hidden or incomplete, so the public view can show different borrower/headline/bookrunner detail than the project/editor session.
 
-The placeholder advertises "PDF, Word, or PPT" — only Word actually works today.
+This is not a stale-publish problem anymore; it is an authentication/scoping/data-context problem.
 
-## Validation against the Aldar term sheet
+## Correction plan
 
-Parsed the uploaded `Aldar Properties PJSC Pricing Term Sheet`:
+1. **Align New Issue Board rows with deal visibility**
+   - Update the board data grouping so a user only sees message threads whose linked deal is visible to their current role/org scope.
+   - Prevent “orphan” message rows where the message is visible but the linked deal details are not.
+   - Keep Master Admin able to see all rows.
 
-- It is a **text-based PDF** (not scanned). Client-side text extraction will return clean text — no OCR / AI fallback needed.
-- Contains explicit labelled rows that map directly to fields the existing parser already understands:
-  - `Issuer: Aldar Properties PJSC` → caught by the Layer 0 label rule we just added to `extractBorrowerName`
-  - `Issuer LEI`, `Company/Issue Rating`, `Issue Size`, `Issue Price`, `Re-offer Yield`, `Re-offer Price`, `Pricing Date`, `Issue Date`, `Maturity Date`, `Denomination`, `Governing Law`, `Listing`, `ISIN`
-  - `Joint Lead Managers & Bookrunners: Abu Dhabi Commercial Bank PJSC, Citigroup …, Emirates NBD …, FAB …, Intesa …, J.P. Morgan …, Mashreq, SocGen, Standard Chartered, RAKBank` → matches `extractBookrunners`
-  - `Structuring Advisor & Global Coordinator (B&D): Citigroup` → GC flag
+2. **Make the board’s displayed data deterministic**
+   - Keep borrower, stage, and bookrunners sourced from the linked deal when present.
+   - Add a safe fallback only when a message genuinely has no linked deal.
+   - This avoids different published/editor text caused by missing scoped deal joins.
 
-So the only missing piece is feeding this PDF's text into the existing pipeline.
+3. **Fix saved deal ownership for new issues if needed**
+   - Confirm new deals created from `Create New Issue` are tagged with the authenticated user’s organisation.
+   - If not, ensure the `createdByOrg` value follows the logged-in profile organisation, so newly created issues appear consistently after reload/publish/login.
 
-## Scope
+4. **Validate against the live backend data**
+   - Check with the current seeded/live rows: Lithuania, United States, Thailand, Eurofima, Greenland, Revolut, Apple, etc.
+   - Verify Master Admin sees the full board.
+   - Verify a Syndicate Admin sees only their organisation’s created/bookrunner deals and no incomplete/orphan rows.
 
-One file change: `src/pages/AIDraftPage.tsx`. No backend, no AI gateway call, no changes to `alertParsing.ts`, `DealChecker`, or types.
+## Expected result
 
-## Implementation
-
-1. Add `pdfjs-dist` (already common in Lovable projects; small, browser-side).
-2. In `handleFiles`, branch by extension:
-   - `.docx` → existing `mammoth` path (unchanged).
-   - `.pdf` → dynamically `import('pdfjs-dist')`, configure the worker via `?url`, load the `ArrayBuffer`, iterate pages, concatenate `textContent.items[].str` with newlines, then call the existing `applyExtractedText(text, file.name)`.
-   - `.pptx` → out of scope for this fix; update placeholder text to "PDF or Word" so we don't promise something that doesn't work yet (PPT can be a follow-up).
-3. Show the existing "Extracting headline, body, and deal fields from attachment…" spinner during PDF parse (reuse `isExtractingAttachment`).
-4. On parse failure, fire the existing destructive toast and keep the file attached so the user can still send it.
-
-```text
-handleFiles(files)
- ├── attach all files (current behaviour)
- ├── for each .docx → mammoth.extractRawText → applyExtractedText
- ├── for each .pdf  → pdfjs getDocument → page.getTextContent → applyExtractedText
- └── toast summary
-```
-
-## Acceptance criteria
-
-- Drop the Aldar PDF onto the panel → headline auto-fills (something like "Aldar Properties PJSC …"), body fills with the term-sheet text, AI Field Extraction shows Issuer = Aldar Properties PJSC, LEI, ratings, size, price, dates, ISIN, listing, governing law, denomination, and the bookrunner list including Citigroup tagged as GC.
-- Drop a `.docx` → behaviour unchanged.
-- Drop a non-text/scanned PDF → file still attaches, destructive toast surfaces "could not be read", no crash.
-- No regressions in `simulateAIExtraction`, `extractBorrowerName`, `extractBookrunners`, or `DealChecker`.
-
-## Out of scope
-
-- `.pptx` extraction (placeholder will be updated to reflect this; can be added next).
-- Server-side / Gemini OCR fallback for scanned PDFs (can be added later if users hit image-only PDFs).
-- Any change to deal creation, validation, or chat flows.
+After implementation and republishing, the public site and editor preview will show the same New Issue Board content for the same logged-in user. Different users may still see different rows by design, because access is role/organisation based.
