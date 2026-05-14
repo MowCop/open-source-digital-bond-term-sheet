@@ -40,11 +40,22 @@ interface DealDetailProps {
 function DealDetail({ deal, canManage, onAdvance }: DealDetailProps) {
   const [stageNote, setStageNote] = useState('');
   const next = getNextStage(deal.stage);
+  const navigate = useNavigate();
 
   return (
     <div className="border-t p-5 bg-card/40 space-y-6">
-      {canManage && next && (
-        <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-between">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-xs text-muted-foreground hover:text-foreground -ml-2"
+          onClick={() => navigate(`/messages?dealId=${deal.id}`)}
+        >
+          <ArrowLeft className="h-3 w-3 mr-1" />
+          Back to New Issue Board
+        </Button>
+        {canManage && next && (
+          <div className="flex items-center gap-2">
           <Input value={stageNote} onChange={e => setStageNote(e.target.value)} placeholder="Stage transition note..." className="w-64 h-8 text-xs" />
           <Button size="sm" onClick={() => { onAdvance(next, stageNote || undefined); setStageNote(''); }}>
             Advance to {next} <ChevronRight className="h-4 w-4 ml-1" />
