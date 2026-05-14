@@ -11,6 +11,16 @@ import SecureChat from '@/components/SecureChat';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction } from '@/lib/alertParsing';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const stageBadge: Record<DealStage, { label: string; className: string }> = {
   Mandate: { label: 'Mandate', className: 'bg-blue-900/50 text-blue-400 border-blue-800' },
@@ -38,6 +48,7 @@ export default function MessagesPage() {
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'history' | 'data' | null>('history');
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(false);
@@ -203,13 +214,15 @@ export default function MessagesPage() {
   };
 
   const handleDeleteThread = (group: AlertGroup) => {
-    if (confirm(
-      `Delete the entire deal "${group.borrower}" including ${group.messages.length} alert(s), its chat history, and all related notifications? This cannot be undone.`
-    )) {
-      group.dealIds.forEach(id => deleteDeal(id));
-      toast({ title: 'Deal Deleted', description: `${group.borrower} and all related data removed.` });
-      setExpandedAlertId(null);
-    }
+    setPendingDelete(group);
+  };
+
+  const confirmDeleteThread = () => {
+    if (!pendingDelete) return;
+    pendingDelete.dealIds.forEach(id => deleteDeal(id));
+    toast({ title: 'Deal Deleted', description: `${pendingDelete.borrower} and all related data removed.` });
+    setExpandedAlertId(null);
+    setPendingDelete(null);
   };
 
   return (
@@ -393,17 +406,6 @@ export default function MessagesPage() {
                       <Badge className={`text-[10px] border ${badge.className}`}>
                         {badge.label}
                       </Badge>
-                      {canManageMessages && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                          onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
-                          title="Delete entire alert thread"
-                        >
-                          <Trash2 className="h-3 w-3 text-destructive" />
-                        </Button>
-                      )}
                     </div>
                   </div>
 
@@ -444,6 +446,18 @@ export default function MessagesPage() {
                           <History className="h-3 w-3 mr-1" />
                           Update History ({group.messages.length})
                         </Button>
+                        {canManageMessages && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
+                            title="Delete duplicate deal and all related data"
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Delete
+                          </Button>
+                        )}
                       </div>
 
                       {activePanel === 'history' && (
@@ -513,6 +527,29 @@ export default function MessagesPage() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open) setPendingDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this deal?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the deal
+              {pendingDelete ? ` "${pendingDelete.borrower}"` : ''}, its
+              {pendingDelete ? ` ${pendingDelete.messages.length}` : ''} alert(s), all related chat messages on My Deal Chats,
+              the Deal Data entry, and any notifications. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteThread}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete deal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
