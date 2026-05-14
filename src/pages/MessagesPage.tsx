@@ -11,6 +11,16 @@ import SecureChat from '@/components/SecureChat';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction } from '@/lib/alertParsing';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const stageBadge: Record<DealStage, { label: string; className: string }> = {
   Mandate: { label: 'Mandate', className: 'bg-blue-900/50 text-blue-400 border-blue-800' },
@@ -38,6 +48,7 @@ export default function MessagesPage() {
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'history' | 'data' | null>('history');
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
   const [showChat, setShowChat] = useState(false);
@@ -203,13 +214,15 @@ export default function MessagesPage() {
   };
 
   const handleDeleteThread = (group: AlertGroup) => {
-    if (confirm(
-      `Delete the entire deal "${group.borrower}" including ${group.messages.length} alert(s), its chat history, and all related notifications? This cannot be undone.`
-    )) {
-      group.dealIds.forEach(id => deleteDeal(id));
-      toast({ title: 'Deal Deleted', description: `${group.borrower} and all related data removed.` });
-      setExpandedAlertId(null);
-    }
+    setPendingDelete(group);
+  };
+
+  const confirmDeleteThread = () => {
+    if (!pendingDelete) return;
+    pendingDelete.dealIds.forEach(id => deleteDeal(id));
+    toast({ title: 'Deal Deleted', description: `${pendingDelete.borrower} and all related data removed.` });
+    setExpandedAlertId(null);
+    setPendingDelete(null);
   };
 
   return (
