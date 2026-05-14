@@ -61,6 +61,7 @@ export default function MessagesPage() {
   const [bookrunnersDraft, setBookrunnersDraft] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const canManageMessages = currentUser.role === 'syndicate_admin' || currentUser.role === 'master_admin';
   const isReadOnly = currentUser.role === 'syndicate_readonly' || currentUser.role === 'sales_readonly' || currentUser.role === 'vendor_user';
