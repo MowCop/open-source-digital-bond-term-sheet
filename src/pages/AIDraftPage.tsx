@@ -102,22 +102,67 @@ export default function AIDraftPage() {
     setAttachments(prev => [...prev, ...files.map(toAttachment)]);
 
     const docxFiles = files.filter(file => file.name.toLowerCase().endsWith('.docx'));
-    if (docxFiles.length === 0) {
+    const pdfFiles = files.filter(file => file.name.toLowerCase().endsWith('.pdf'));
+    if (docxFiles.length === 0 && pdfFiles.length === 0) {
       toast({ title: 'Files attached', description: `${files.length} file(s) added` });
       return;
     }
 
     setIsExtractingAttachment(true);
+    let extractedCount = 0;
+    const failures: string[] = [];
     try {
-      const mammoth = (await import('mammoth/mammoth.browser')).default;
-      for (const file of docxFiles) {
-        const { value } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
-        applyExtractedText(value, file.name);
+      if (docxFiles.length > 0) {
+        const mammoth = (await import('mammoth/mammoth.browser')).default;
+        for (const file of docxFiles) {
+          try {
+            const { value } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+            applyExtractedText(value, file.name);
+            extractedCount++;
+          } catch (err) {
+            console.error('docx extraction failed', file.name, err);
+            failures.push(file.name);
+          }
+        }
       }
-      toast({ title: 'AI extraction complete', description: `Extracted terms from ${docxFiles.length} Word attachment(s).` });
+      if (pdfFiles.length > 0) {
+        const pdfjs = await import('pdfjs-dist');
+        const workerSrc = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
+        (pdfjs as any).GlobalWorkerOptions.workerSrc = workerSrc;
+        for (const file of pdfFiles) {
+          try {
+            const buf = await file.arrayBuffer();
+            const doc = await (pdfjs as any).getDocument({ data: buf }).promise;
+            let text = '';
+            for (let i = 1; i <= doc.numPages; i++) {
+              const page = await doc.getPage(i);
+              const content = await page.getTextContent();
+              const pageText = content.items
+                .map((it: any) => ('str' in it ? it.str : ''))
+                .join(' ');
+              text += pageText + '\n\n';
+            }
+            if (text.trim()) {
+              applyExtractedText(text, file.name);
+              extractedCount++;
+            } else {
+              failures.push(file.name);
+            }
+          } catch (err) {
+            console.error('pdf extraction failed', file.name, err);
+            failures.push(file.name);
+          }
+        }
+      }
+      if (extractedCount > 0) {
+        toast({ title: 'AI extraction complete', description: `Extracted terms from ${extractedCount} attachment(s).` });
+      }
+      if (failures.length > 0) {
+        toast({ title: 'Extraction failed', description: `Could not read: ${failures.join(', ')}`, variant: 'destructive' });
+      }
     } catch (error) {
       console.error('Attachment extraction failed', error);
-      toast({ title: 'Extraction failed', description: 'The Word attachment could not be read.', variant: 'destructive' });
+      toast({ title: 'Extraction failed', description: 'The attachment could not be read.', variant: 'destructive' });
     } finally {
       setIsExtractingAttachment(false);
     }
