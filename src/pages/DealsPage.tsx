@@ -35,9 +35,10 @@ interface DealDetailProps {
   deal: Deal;
   canManage: boolean;
   onAdvance: (next: DealStage, note?: string) => void;
+  fromBoard?: boolean;
 }
 
-function DealDetail({ deal, canManage, onAdvance }: DealDetailProps) {
+function DealDetail({ deal, canManage, onAdvance, fromBoard }: DealDetailProps) {
   const [stageNote, setStageNote] = useState('');
   const next = getNextStage(deal.stage);
   const navigate = useNavigate();
