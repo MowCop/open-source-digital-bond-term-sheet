@@ -578,6 +578,27 @@ export default function UserManagementPage() {
                       )}
                     </TableCell>
                     <TableCell>
+                      {(() => {
+                        const status = loginStatusFor(u.email);
+                        const dotClass =
+                          status.tone === 'active' ? 'bg-green-500' :
+                          status.tone === 'dormant' ? 'bg-amber-500' :
+                          status.tone === 'unconfirmed' ? 'bg-blue-500' :
+                          'bg-muted-foreground/40';
+                        return (
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`h-2 w-2 rounded-full ${dotClass}`} />
+                              <span className="text-xs font-medium">{status.label}</span>
+                            </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              {loginStatsLoading ? '…' : `Last: ${formatRelative(status.lastIso)}`}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell>
                       <div className="text-sm text-timestamp">{formatDate(u.createdAt)}</div>
                       <div className="text-xs text-muted-foreground">by {creatorName(u.createdBy || 'System')}</div>
                     </TableCell>
