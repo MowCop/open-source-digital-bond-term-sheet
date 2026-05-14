@@ -56,17 +56,68 @@ function trimBorrower(name: string): string {
     .trim();
 }
 
+const SYNDICATE_CUE = /(mandated|appointed|joint lead manager|bookrunner|global coordinator|lead manager|arranger|dealer|co-manager)/i;
+const ISSUER_CUE_AFTER = /\b(has mandated|have mandated|mandated|has appointed|have appointed|appointed|is issuing|are issuing|plans to issue|priced|prices|launched|launches|announces|announced|tap|taps|issues|issued|prints|printed|completed|sells|sold|opens books|hits the market|comes to market|new issue)\b/i;
+
+function isKnownBank(name: string): boolean {
+  const low = name.toLowerCase();
+  return KNOWN_BANKS.some(b => {
+    const bl = b.toLowerCase();
+    return low === bl || low.includes(bl) || bl.includes(low);
+  });
+}
+
+function isInSyndicateContext(text: string, start: number, end: number): boolean {
+  // Look at ~150 chars BEFORE the candidate for a syndicate cue
+  const before = text.slice(Math.max(0, start - 150), start);
+  return SYNDICATE_CUE.test(before);
+}
+
+function hasIssuerCueAfter(text: string, end: number): boolean {
+  const after = text.slice(end, Math.min(text.length, end + 150));
+  return ISSUER_CUE_AFTER.test(after);
+}
+
+function extractByLabel(text: string): string {
+  const labels = [
+    /\b(?:Name\s+of\s+)?Issuer\s*[:\-–]\s*([^\n;]{2,120})/i,
+    /\bBorrower\s*[:\-–]\s*([^\n;]{2,120})/i,
+    /\bObligor\s*[:\-–]\s*([^\n;]{2,120})/i,
+  ];
+  for (const re of labels) {
+    const m = re.exec(text);
+    if (m && m[1]) {
+      let v = m[1].trim();
+      // Stop at common follow-on field labels
+      v = v.split(/\s{2,}|\s*\|\s*|\s+(?:Guarantor|Currency|Size|Tenor|Coupon|Maturity|ISIN|LEI|Rating|Bookrunner|Joint|Status|Form)\s*[:\-–]/i)[0];
+      v = trimBorrower(v);
+      if (v && !isKnownBank(v)) return v;
+    }
+  }
+  return '';
+}
+
 export function extractBorrowerName(rawText: string): string {
   const text = rawText.replace(/\s+/g, ' ').trim();
   if (!text) return '';
 
-  const candidates: Array<{ start: number; value: string }> = [];
+  // Layer 0: explicit labels win outright
+  const labelled = extractByLabel(text);
+  if (labelled) return labelled;
+
+  type Candidate = { start: number; end: number; value: string; rank: number };
+  const candidates: Candidate[] = [];
+  const push = (start: number, value: string, rank: number) => {
+    const v = trimBorrower(value);
+    if (!v) return;
+    candidates.push({ start, end: start + v.length, value: v, rank });
+  };
 
   // Layer 1: known supranationals
   for (const supra of KNOWN_SUPRAS) {
     const re = new RegExp(`\\b${supra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
     const m = re.exec(text);
-    if (m) candidates.push({ start: m.index, value: supra });
+    if (m) push(m.index, supra, 100);
   }
 
   // Layer 2: sovereign patterns
@@ -76,34 +127,51 @@ export function extractBorrowerName(rawText: string): string {
     /\bGrand Duchy of [A-Z][\w'-]+/,
     /\b(?:State|Commonwealth|Principality|Sultanate|Emirate) of [A-Z][\w'-]+/,
     /\bUnited (?:States|Kingdom|Arab Emirates|Mexican States)(?: of [A-Z][\w'-]+)?/,
+    // Reversed/adjective sovereign forms (e.g. "Slovak Republic", "Czech Republic")
+    /\b(?:The\s+)?(?:Slovak|Czech|French|Italian|Hellenic|Portuguese|Argentine|Dominican|Helvetic|Bolivarian|Lebanese|Tunisian|Algerian|Syrian|Iraqi|Yemeni|Federal)\s+Republic\b/,
   ];
   for (const re of sovereignPatterns) {
     const m = re.exec(text);
-    if (m) candidates.push({ start: m.index, value: m[0] });
+    if (m) push(m.index, m[0], 90);
   }
+
+  // Generic last-resort sovereign hint
+  const genericRepublic = /\b([A-Z][a-z]+)\s+Republic\b/.exec(text);
+  if (genericRepublic) push(genericRepublic.index, genericRepublic[0], 70);
 
   // Layer 3: corporate suffix anchor
   const corpRe = /\b([A-Z][\w&.'-]+(?:\s+[A-Z][\w&.'-]+){0,5})\s+(AG|Inc|PLC|SA|Ltd|NV|SpA|GmbH|Holdings|Group|Corp|Corporation|Bank|Capital)\b/;
   const corpMatch = corpRe.exec(text);
-  if (corpMatch) candidates.push({ start: corpMatch.index, value: `${corpMatch[1]} ${corpMatch[2]}` });
+  if (corpMatch) {
+    const value = `${corpMatch[1]} ${corpMatch[2]}`;
+    if (!isKnownBank(value) && !isInSyndicateContext(text, corpMatch.index, corpMatch.index + value.length)) {
+      const boost = hasIssuerCueAfter(text, corpMatch.index + value.length) ? 60 : 40;
+      push(corpMatch.index, value, boost);
+    }
+  }
 
   // Layer 4: connector-aware capitalized run, terminated by verbs
   const connectorRe = /\b[A-Z][\w'-]+(?:\s+(?:[A-Z][\w'-]+|of|and|for|the|de|du|la|von|van)){0,6}/;
   const connMatch = connectorRe.exec(text);
   if (connMatch) {
     let value = connMatch[0];
-    // Cut at any terminator verb inside the match
     const termMatch = BORROWER_TERMINATORS.exec(value);
     if (termMatch) value = value.slice(0, termMatch.index).trim();
-    if (value) candidates.push({ start: connMatch.index, value });
+    if (value && !isKnownBank(value) && !isInSyndicateContext(text, connMatch.index, connMatch.index + value.length)) {
+      const boost = hasIssuerCueAfter(text, connMatch.index + value.length) ? 50 : 20;
+      push(connMatch.index, value, boost);
+    }
   }
 
   if (candidates.length === 0) return '';
 
-  // Pick longest match; tiebreak by leftmost
-  const trimmed = candidates.map(c => ({ ...c, value: trimBorrower(c.value) })).filter(c => c.value);
-  trimmed.sort((a, b) => b.value.length - a.value.length || a.start - b.start);
-  return trimmed[0].value;
+  // Cross-validation: drop any candidate that resolves to a known bank
+  const safe = candidates.filter(c => !isKnownBank(c.value));
+  const pool = safe.length > 0 ? safe : candidates;
+
+  // Rank desc, then leftmost, then longer
+  pool.sort((a, b) => b.rank - a.rank || a.start - b.start || b.value.length - a.value.length);
+  return pool[0].value;
 }
 
 export function simulateAIExtraction(rawText: string): AISuggestion {
