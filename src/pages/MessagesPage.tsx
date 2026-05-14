@@ -117,6 +117,18 @@ export default function MessagesPage() {
   // Filter by stage
   const filtered = filterStage === 'all' ? alertGroups : alertGroups.filter(g => g.stage === filterStage);
 
+  // Auto-expand deal when arriving from Deal Data panel via ?dealId=
+  useEffect(() => {
+    const dealId = searchParams.get('dealId');
+    if (!dealId) return;
+    const group = alertGroups.find(g => g.dealIds.includes(dealId));
+    if (group) {
+      const groupKey = group.dealIds.join(',');
+      setExpandedAlertId(groupKey);
+      setActivePanel('history');
+    }
+  }, [searchParams, alertGroups]);
+
   const toggleExpand = (id: string) => {
     setExpandedAlertId(prev => {
       const next = prev === id ? null : id;
