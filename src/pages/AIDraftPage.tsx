@@ -10,6 +10,7 @@ import { Bookrunner } from '@/types/bond';
 import { extractBookrunners, simulateAIExtraction } from '@/lib/alertParsing';
 import DealChecker from '@/components/DealChecker';
 import { Sparkles, Paperclip, Send, Save, ChevronDown, MessageSquare, X } from 'lucide-react';
+import LinkifiedText from '@/components/LinkifiedText';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -24,6 +25,7 @@ export default function AIDraftPage() {
 
   const [headline, setHeadline] = useState('');
   const [body, setBody] = useState('');
+  const [bodyMode, setBodyMode] = useState<'write' | 'preview'>('write');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [aiFields, setAiFields] = useState<Record<string, string> | null>(null);
