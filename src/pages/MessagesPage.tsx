@@ -527,6 +527,29 @@ export default function MessagesPage() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open) setPendingDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this deal?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove the deal
+              {pendingDelete ? ` "${pendingDelete.borrower}"` : ''}, its
+              {pendingDelete ? ` ${pendingDelete.messages.length}` : ''} alert(s), all related chat messages on My Deal Chats,
+              the Deal Data entry, and any notifications. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteThread}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete deal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
