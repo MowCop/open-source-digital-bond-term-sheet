@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Message, Attachment } from '@/types/bond';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,8 @@ interface AlertHistoryCardProps {
   recipientNames: string;
   canManage: boolean;
   versionLabel?: string;
+  isLatest?: boolean;
+  editSignal?: number;
   onUpdate: (id: string, updates: Partial<Message>) => void;
   onRetract: (id: string) => void;
   onSend: (id: string) => void;
@@ -29,6 +31,8 @@ export default function AlertHistoryCard({
   recipientNames,
   canManage,
   versionLabel,
+  isLatest = false,
+  editSignal = 0,
   onUpdate,
   onRetract,
   onSend,
@@ -37,6 +41,7 @@ export default function AlertHistoryCard({
 }: AlertHistoryCardProps) {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [isOpen, setIsOpen] = useState(false);
+  const expanded = isOpen || isLatest;
   const [editSubject, setEditSubject] = useState(message.subject);
   const [editBody, setEditBody] = useState(message.body);
   const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
@@ -56,6 +61,16 @@ export default function AlertHistoryCard({
   const enterEdit = () => {
     setMode('edit');
   };
+
+  // Open the editor when the parent fires an external edit signal (latest card only).
+  useEffect(() => {
+    if (editSignal && editSignal > 0 && canManage && message.status !== 'retracted') {
+      setEditSubject(message.subject);
+      setEditBody(message.body);
+      setMode('edit');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editSignal]);
 
   const handleCancel = () => {
     setEditSubject(message.subject);
@@ -117,17 +132,27 @@ export default function AlertHistoryCard({
   const isDraft = message.status === 'draft';
   const editing = mode !== 'view';
   const bodyHasHtml = isHtml(message.body);
+  const latestEditable = isLatest && canManage && !isRetracted;
 
   return (
     <>
-    <div className={`rounded-lg border border-border bg-card/60 p-4 space-y-3 ${isRetracted ? 'opacity-50' : ''}`}>
+    <div
+      className={`rounded-lg border bg-card/60 p-4 space-y-3 ${isLatest ? 'border-2 border-white shadow-[0_0_0_1px_hsl(var(--background))]' : 'border-border'} ${isRetracted ? 'opacity-50' : ''} ${latestEditable ? 'cursor-pointer hover:bg-card/80 transition-colors' : ''}`}
+      onClick={latestEditable ? (e) => {
+        // Any click inside the latest panel opens the full-screen editor,
+        // except clicks on real interactive controls (action buttons, links, inputs).
+        const target = e.target as HTMLElement;
+        if (target.closest('button, a, input')) return;
+        enterEdit();
+      } : undefined}
+    >
       {/* Header row */}
       <div
-        className="flex items-start justify-between gap-4 cursor-pointer hover:bg-card/80 rounded -m-1 p-1 transition-colors"
-        onClick={() => setIsOpen(o => !o)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
+        className={`flex items-start justify-between gap-4 rounded -m-1 p-1 transition-colors ${latestEditable ? '' : 'cursor-pointer hover:bg-card/80'}`}
+        onClick={latestEditable ? undefined : () => setIsOpen(o => !o)}
+        role={latestEditable ? undefined : 'button'}
+        tabIndex={latestEditable ? undefined : 0}
+        onKeyDown={latestEditable ? undefined : (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             setIsOpen(o => !o);
@@ -136,7 +161,7 @@ export default function AlertHistoryCard({
       >
         <div className="flex items-start gap-2 flex-1 min-w-0">
           <span className="mt-0.5 text-muted-foreground shrink-0">
-            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </span>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium flex items-center gap-2 flex-wrap">
@@ -165,7 +190,7 @@ export default function AlertHistoryCard({
         </div>
       </div>
 
-      {isOpen && (
+      {expanded && (
       <>
       {/* Body */}
       {bodyHasHtml ? (
@@ -271,7 +296,7 @@ export default function AlertHistoryCard({
       {canManage && (
         <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
             <>
-              {!isRetracted && (
+              {!isRetracted && !isLatest && (
                 <Button size="sm" variant="outline" className="text-xs" onClick={enterEdit}>
                   <Edit2 className="h-3 w-3 mr-1" />
                   Edit
