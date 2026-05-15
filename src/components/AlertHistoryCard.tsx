@@ -2,10 +2,11 @@ import { useState, useRef } from 'react';
 import { Message, Attachment } from '@/types/bond';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import LinkifiedText from '@/components/LinkifiedText';
+import RichTextEditor from '@/components/RichTextEditor';
+import { isHtml } from '@/lib/htmlText';
 import { format } from 'date-fns';
 import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users } from 'lucide-react';
 
@@ -53,7 +54,6 @@ export default function AlertHistoryCard({
   };
 
   const enterEdit = () => {
-    setIsOpen(true);
     setMode('edit');
   };
 
@@ -116,37 +116,29 @@ export default function AlertHistoryCard({
   const isSent = message.status === 'sent';
   const isDraft = message.status === 'draft';
   const editing = mode !== 'view';
+  const bodyHasHtml = isHtml(message.body);
 
   return (
+    <>
     <div className={`rounded-lg border border-border bg-card/60 p-4 space-y-3 ${isRetracted ? 'opacity-50' : ''}`}>
       {/* Header row */}
       <div
-        className={`flex items-start justify-between gap-4 ${!editing ? 'cursor-pointer hover:bg-card/80 rounded -m-1 p-1 transition-colors' : ''}`}
-        onClick={() => { if (!editing) setIsOpen(o => !o); }}
-        role={!editing ? 'button' : undefined}
-        tabIndex={!editing ? 0 : undefined}
+        className="flex items-start justify-between gap-4 cursor-pointer hover:bg-card/80 rounded -m-1 p-1 transition-colors"
+        onClick={() => setIsOpen(o => !o)}
+        role="button"
+        tabIndex={0}
         onKeyDown={(e) => {
-          if (!editing && (e.key === 'Enter' || e.key === ' ')) {
+          if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             setIsOpen(o => !o);
           }
         }}
       >
         <div className="flex items-start gap-2 flex-1 min-w-0">
-          {!editing && (
-            <span className="mt-0.5 text-muted-foreground shrink-0">
-              {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            </span>
-          )}
+          <span className="mt-0.5 text-muted-foreground shrink-0">
+            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </span>
           <div className="flex-1 min-w-0">
-          {editing ? (
-            <input
-              value={editSubject}
-              onChange={e => setEditSubject(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full bg-background border border-border rounded px-3 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          ) : (
             <div className="text-sm font-medium flex items-center gap-2 flex-wrap">
               {versionLabel && (
                 <span className="text-[10px] font-semibold uppercase text-accent bg-accent/10 px-1.5 py-0.5 rounded">
@@ -155,7 +147,6 @@ export default function AlertHistoryCard({
               )}
               <span className="truncate">{message.subject}</span>
             </div>
-          )}
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
             <span>{senderName}</span>
           </div>
@@ -174,14 +165,13 @@ export default function AlertHistoryCard({
         </div>
       </div>
 
-      {(isOpen || editing) && (
+      {isOpen && (
       <>
       {/* Body */}
-      {editing ? (
-        <Textarea
-          value={editBody}
-          onChange={e => setEditBody(e.target.value)}
-          className="min-h-[100px] text-sm bg-background"
+      {bodyHasHtml ? (
+        <div
+          className="tiptap prose prose-sm dark:prose-invert max-w-none text-sm text-muted-foreground"
+          dangerouslySetInnerHTML={{ __html: message.body }}
         />
       ) : (
         <div className="text-sm text-muted-foreground whitespace-pre-wrap"><LinkifiedText text={message.body} /></div>
@@ -280,23 +270,6 @@ export default function AlertHistoryCard({
       {/* Action buttons */}
       {canManage && (
         <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
-          {editing ? (
-            <>
-              <Button size="sm" variant="outline" className="text-xs" onClick={handleSave}>
-                <Save className="h-3 w-3 mr-1" />
-                Save
-              </Button>
-              {isSent && !isRetracted && (
-                <Button size="sm" className="text-xs" onClick={handleSaveAndSend}>
-                  <Send className="h-3 w-3 mr-1" />
-                  Save & Send
-                </Button>
-              )}
-              <Button size="sm" variant="ghost" className="text-xs" onClick={handleCancel}>
-                Cancel
-              </Button>
-            </>
-          ) : (
             <>
               {!isRetracted && (
                 <Button size="sm" variant="outline" className="text-xs" onClick={enterEdit}>
@@ -323,11 +296,52 @@ export default function AlertHistoryCard({
                 Delete
               </Button>
             </>
-          )}
         </div>
       )}
       </>
       )}
     </div>
+
+    {/* Full-screen edit modal */}
+    <Dialog
+      open={editing}
+      onOpenChange={(o) => { if (!o) handleCancel(); }}
+    >
+      <DialogContent
+        className="max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg p-0 gap-0 flex flex-col"
+      >
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-border shrink-0">
+          <DialogTitle className="text-base">Edit alert</DialogTitle>
+          <input
+            value={editSubject}
+            onChange={e => setEditSubject(e.target.value)}
+            placeholder="Subject"
+            className="mt-3 w-full bg-background border border-border rounded px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </DialogHeader>
+
+        <div className="flex-1 min-h-0 px-5 py-4">
+          <RichTextEditor
+            value={editBody}
+            onChange={setEditBody}
+            placeholder="Write the alert body…"
+            className="h-full"
+          />
+        </div>
+
+        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border shrink-0 bg-card/40">
+          <Button variant="ghost" onClick={handleCancel}>Cancel</Button>
+          <Button variant="outline" onClick={handleSave}>
+            <Save className="h-4 w-4 mr-1" /> Save
+          </Button>
+          {isSent && !isRetracted && (
+            <Button onClick={handleSaveAndSend}>
+              <Send className="h-4 w-4 mr-1" /> Save &amp; Send
+            </Button>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
