@@ -245,7 +245,7 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
           </div>
           {newestLast && (
             <div className="text-xs text-muted-foreground mt-1 truncate">
-              <span className="font-medium">{newestLast.senderName}:</span> {newestLast.body}
+              <span className="font-medium">{newestLast.senderName}:</span> {stripHtml(newestLast.body)}
             </div>
           )}
           <div className="text-[10px] text-muted-foreground mt-1">{tsLabel}</div>
@@ -277,7 +277,7 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
                         <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 ml-auto capitalize">{m.status}</Badge>
                       </div>
                       <div className="text-xs font-medium mt-1">{m.subject}</div>
-                      <div className="text-[11px] text-muted-foreground whitespace-pre-wrap mt-0.5 line-clamp-3">{m.body}</div>
+                      <div className="text-[11px] text-muted-foreground whitespace-pre-wrap mt-0.5 line-clamp-3">{stripHtml(m.body)}</div>
                     </div>
                   );
                 })}
