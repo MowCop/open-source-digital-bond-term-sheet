@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History, Edit2 } from 'lucide-react';
 import SecureChat from '@/components/SecureChat';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
@@ -48,6 +48,7 @@ export default function MessagesPage() {
   const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteDeal } = useScopedApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'history' | 'data' | null>('history');
+  const [editSignals, setEditSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
