@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import LinkifiedText from '@/components/LinkifiedText';
-import { stripHtml, isHtml } from '@/lib/htmlText';
+import { stripHtml } from '@/lib/htmlText';
 import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History } from 'lucide-react';
 import { format } from 'date-fns';
 import type { ChatChannel, ChatMessage, Deal, DealStage } from '@/types/bond';
