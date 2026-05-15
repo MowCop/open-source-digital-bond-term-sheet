@@ -2,7 +2,6 @@ import { useState, useRef } from 'react';
 import { Message, Attachment } from '@/types/bond';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import LinkifiedText from '@/components/LinkifiedText';
