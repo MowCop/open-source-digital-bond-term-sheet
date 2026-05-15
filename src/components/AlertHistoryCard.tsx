@@ -138,19 +138,20 @@ export default function AlertHistoryCard({
     <div
       className={`rounded-lg border bg-card/60 p-4 space-y-3 ${isLatest ? 'border-2 border-white shadow-[0_0_0_1px_hsl(var(--background))]' : 'border-border'} ${isRetracted ? 'opacity-50' : ''} ${latestEditable ? 'cursor-pointer hover:bg-card/80 transition-colors' : ''}`}
       onClick={latestEditable ? (e) => {
-        // Ignore clicks originating from interactive controls inside the card.
+        // Any click inside the latest panel opens the full-screen editor,
+        // except clicks on real interactive controls (action buttons, links, inputs).
         const target = e.target as HTMLElement;
-        if (target.closest('button, a, input, [role="button"]')) return;
+        if (target.closest('button, a, input')) return;
         enterEdit();
       } : undefined}
     >
       {/* Header row */}
       <div
-        className="flex items-start justify-between gap-4 cursor-pointer hover:bg-card/80 rounded -m-1 p-1 transition-colors"
-        onClick={() => setIsOpen(o => !o)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
+        className={`flex items-start justify-between gap-4 rounded -m-1 p-1 transition-colors ${latestEditable ? '' : 'cursor-pointer hover:bg-card/80'}`}
+        onClick={latestEditable ? undefined : () => setIsOpen(o => !o)}
+        role={latestEditable ? undefined : 'button'}
+        tabIndex={latestEditable ? undefined : 0}
+        onKeyDown={latestEditable ? undefined : (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             setIsOpen(o => !o);
