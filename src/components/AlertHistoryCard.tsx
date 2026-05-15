@@ -41,6 +41,7 @@ export default function AlertHistoryCard({
 }: AlertHistoryCardProps) {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [isOpen, setIsOpen] = useState(false);
+  const expanded = isOpen || isLatest;
   const [editSubject, setEditSubject] = useState(message.subject);
   const [editBody, setEditBody] = useState(message.body);
   const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
@@ -160,7 +161,7 @@ export default function AlertHistoryCard({
       >
         <div className="flex items-start gap-2 flex-1 min-w-0">
           <span className="mt-0.5 text-muted-foreground shrink-0">
-            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </span>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium flex items-center gap-2 flex-wrap">
@@ -189,7 +190,7 @@ export default function AlertHistoryCard({
         </div>
       </div>
 
-      {isOpen && (
+      {expanded && (
       <>
       {/* Body */}
       {bodyHasHtml ? (
