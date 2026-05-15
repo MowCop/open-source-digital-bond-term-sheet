@@ -11,6 +11,7 @@ import SecureChat from '@/components/SecureChat';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction } from '@/lib/alertParsing';
+import { stripHtml } from '@/lib/htmlText';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -151,7 +152,7 @@ export default function MessagesPage() {
   const getRecipientNames = (ids: string[]) => ids.map(id => getUserName(id)).join(', ');
 
   const buildSuggestions = (msg: Message): string[] => {
-    const ai = simulateAIExtraction(`${msg.subject}\n${msg.body}`);
+    const ai = simulateAIExtraction(`${msg.subject}\n${stripHtml(msg.body)}`);
     const deal = msg.dealIds.length ? deals.find(d => d.id === msg.dealIds[0]) : undefined;
     const borrower = ai.borrowerDetails || deal?.issuerName || 'Issuer';
     const ccy = ai.keyTerms.Currency || deal?.currency || '';
@@ -216,7 +217,7 @@ export default function MessagesPage() {
     for (const dealId of original.dealIds) {
       const deal = deals.find(d => d.id === dealId);
       if (!deal) continue;
-      const { patch, detectedStage } = mergeDealFromText(deal, `${edits.subject}\n${edits.body}`);
+      const { patch, detectedStage } = mergeDealFromText(deal, `${edits.subject}\n${stripHtml(edits.body)}`);
       if (Object.keys(patch).length > 0) updateDeal(dealId, patch);
       if (detectedStage && isStageForward(deal.stage, detectedStage)) {
         updateDealStage(dealId, detectedStage, 'Auto-detected from alert update');
