@@ -508,6 +508,8 @@ export default function MessagesPage() {
                                 recipientNames={getRecipientNames(msg.recipients)}
                                 canManage={canManageMessages}
                                 versionLabel={versionLabel}
+                                isLatest={idx === 0}
+                                editSignal={editSignals[msg.id] || 0}
                                 onUpdate={updateMessage}
                                 onRetract={(id) => {
                                   retractMessage(id);
