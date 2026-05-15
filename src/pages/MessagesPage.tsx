@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History, Edit2 } from 'lucide-react';
 import SecureChat from '@/components/SecureChat';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
@@ -48,6 +48,7 @@ export default function MessagesPage() {
   const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteDeal } = useScopedApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'history' | 'data' | null>('history');
+  const [editSignals, setEditSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
@@ -460,6 +461,23 @@ export default function MessagesPage() {
                           <History className="h-3 w-3 mr-1" />
                           Update History ({group.messages.length})
                         </Button>
+                        {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            title="Edit the latest update"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const id = group.latestMessage.id;
+                              setActivePanel('history');
+                              setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+                            }}
+                          >
+                            <Edit2 className="h-3 w-3 mr-1" />
+                            Edit Latest
+                          </Button>
+                        )}
                         {canManageMessages && (
                           <Button
                             size="sm"
@@ -490,6 +508,8 @@ export default function MessagesPage() {
                                 recipientNames={getRecipientNames(msg.recipients)}
                                 canManage={canManageMessages}
                                 versionLabel={versionLabel}
+                                isLatest={idx === 0}
+                                editSignal={editSignals[msg.id] || 0}
                                 onUpdate={updateMessage}
                                 onRetract={(id) => {
                                   retractMessage(id);
