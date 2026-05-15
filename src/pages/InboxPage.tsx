@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import LinkifiedText from '@/components/LinkifiedText';
+import { stripHtml } from '@/lib/htmlText';
 import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History } from 'lucide-react';
 import { format } from 'date-fns';
 import type { ChatChannel, ChatMessage, Deal, DealStage } from '@/types/bond';
@@ -44,7 +45,7 @@ function ChannelThread({ channel, search, lastSeen, onSeen }: ChannelThreadProps
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return channelMsgs;
-    return channelMsgs.filter(m => m.body.toLowerCase().includes(q) || m.senderName.toLowerCase().includes(q));
+    return channelMsgs.filter(m => stripHtml(m.body).toLowerCase().includes(q) || m.senderName.toLowerCase().includes(q));
   }, [channelMsgs, search]);
 
   const linkedFor = (id: string) => messages.find(m => m.id === id);
@@ -244,7 +245,7 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
           </div>
           {newestLast && (
             <div className="text-xs text-muted-foreground mt-1 truncate">
-              <span className="font-medium">{newestLast.senderName}:</span> {newestLast.body}
+              <span className="font-medium">{newestLast.senderName}:</span> {stripHtml(newestLast.body)}
             </div>
           )}
           <div className="text-[10px] text-muted-foreground mt-1">{tsLabel}</div>
@@ -276,7 +277,7 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
                         <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 ml-auto capitalize">{m.status}</Badge>
                       </div>
                       <div className="text-xs font-medium mt-1">{m.subject}</div>
-                      <div className="text-[11px] text-muted-foreground whitespace-pre-wrap mt-0.5 line-clamp-3">{m.body}</div>
+                      <div className="text-[11px] text-muted-foreground whitespace-pre-wrap mt-0.5 line-clamp-3">{stripHtml(m.body)}</div>
                     </div>
                   );
                 })}
