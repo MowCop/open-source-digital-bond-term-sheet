@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import LinkifiedText from '@/components/LinkifiedText';
+import { stripHtml, isHtml } from '@/lib/htmlText';
 import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History } from 'lucide-react';
 import { format } from 'date-fns';
 import type { ChatChannel, ChatMessage, Deal, DealStage } from '@/types/bond';
@@ -44,7 +45,7 @@ function ChannelThread({ channel, search, lastSeen, onSeen }: ChannelThreadProps
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return channelMsgs;
-    return channelMsgs.filter(m => m.body.toLowerCase().includes(q) || m.senderName.toLowerCase().includes(q));
+    return channelMsgs.filter(m => stripHtml(m.body).toLowerCase().includes(q) || m.senderName.toLowerCase().includes(q));
   }, [channelMsgs, search]);
 
   const linkedFor = (id: string) => messages.find(m => m.id === id);
