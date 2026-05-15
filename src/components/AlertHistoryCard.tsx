@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Message, Attachment } from '@/types/bond';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,8 @@ interface AlertHistoryCardProps {
   recipientNames: string;
   canManage: boolean;
   versionLabel?: string;
+  isLatest?: boolean;
+  editSignal?: number;
   onUpdate: (id: string, updates: Partial<Message>) => void;
   onRetract: (id: string) => void;
   onSend: (id: string) => void;
@@ -29,6 +31,8 @@ export default function AlertHistoryCard({
   recipientNames,
   canManage,
   versionLabel,
+  isLatest = false,
+  editSignal = 0,
   onUpdate,
   onRetract,
   onSend,
@@ -56,6 +60,16 @@ export default function AlertHistoryCard({
   const enterEdit = () => {
     setMode('edit');
   };
+
+  // Open the editor when the parent fires an external edit signal (latest card only).
+  useEffect(() => {
+    if (editSignal && editSignal > 0 && canManage && message.status !== 'retracted') {
+      setEditSubject(message.subject);
+      setEditBody(message.body);
+      setMode('edit');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editSignal]);
 
   const handleCancel = () => {
     setEditSubject(message.subject);
@@ -117,10 +131,19 @@ export default function AlertHistoryCard({
   const isDraft = message.status === 'draft';
   const editing = mode !== 'view';
   const bodyHasHtml = isHtml(message.body);
+  const latestEditable = isLatest && canManage && !isRetracted;
 
   return (
     <>
-    <div className={`rounded-lg border border-border bg-card/60 p-4 space-y-3 ${isRetracted ? 'opacity-50' : ''}`}>
+    <div
+      className={`rounded-lg border bg-card/60 p-4 space-y-3 ${isLatest ? 'border-2 border-white shadow-[0_0_0_1px_hsl(var(--background))]' : 'border-border'} ${isRetracted ? 'opacity-50' : ''} ${latestEditable ? 'cursor-pointer hover:bg-card/80 transition-colors' : ''}`}
+      onClick={latestEditable ? (e) => {
+        // Ignore clicks originating from interactive controls inside the card.
+        const target = e.target as HTMLElement;
+        if (target.closest('button, a, input, [role="button"]')) return;
+        enterEdit();
+      } : undefined}
+    >
       {/* Header row */}
       <div
         className="flex items-start justify-between gap-4 cursor-pointer hover:bg-card/80 rounded -m-1 p-1 transition-colors"
