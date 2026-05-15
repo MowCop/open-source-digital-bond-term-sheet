@@ -427,7 +427,46 @@ export default function MessagesPage() {
                   {/* Expanded content */}
                   {isExpanded && (
                     <div className="bg-card/40 border-t border-border px-8 py-4 space-y-4">
-                      <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                      {activePanel === 'history' && (
+                        <div className="space-y-4">
+                          {group.messages.map((msg, idx) => {
+                            const total = group.messages.length;
+                            const versionNum = total - idx;
+                            const versionLabel = total > 1
+                              ? (versionNum === 1 ? 'Original' : `Update #${versionNum - 1}`)
+                              : undefined;
+                            return (
+                              <AlertHistoryCard
+                                key={msg.id}
+                                message={msg}
+                                senderName={getUserName(msg.senderId)}
+                                recipientNames={getRecipientNames(msg.recipients)}
+                                canManage={canManageMessages}
+                                versionLabel={versionLabel}
+                                isLatest={idx === 0}
+                                editSignal={editSignals[msg.id] || 0}
+                                onUpdate={updateMessage}
+                                onRetract={(id) => {
+                                  retractMessage(id);
+                                  toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+                                }}
+                                onSend={(id) => {
+                                  sendMessage(id);
+                                  const m = messages.find(x => x.id === id);
+                                  toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
+                                }}
+                                onPostUpdate={handlePostUpdate}
+                                onDelete={(id) => {
+                                  deleteMessage(id);
+                                  toast({ title: 'Alert Deleted', description: 'The alert has been removed.' });
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 pt-2 border-t border-border/50">
                         <Button
                           size="sm"
                           variant="outline"
@@ -491,46 +530,6 @@ export default function MessagesPage() {
                           </Button>
                         )}
                       </div>
-
-                      {activePanel === 'history' && (
-                        <div className="space-y-4 mt-4">
-                          {group.messages.map((msg, idx) => {
-                            const total = group.messages.length;
-                            const versionNum = total - idx;
-                            const versionLabel = total > 1
-                              ? (versionNum === 1 ? 'Original' : `Update #${versionNum - 1}`)
-                              : undefined;
-                            return (
-                              <AlertHistoryCard
-                                key={msg.id}
-                                message={msg}
-                                senderName={getUserName(msg.senderId)}
-                                recipientNames={getRecipientNames(msg.recipients)}
-                                canManage={canManageMessages}
-                                versionLabel={versionLabel}
-                                isLatest={idx === 0}
-                                editSignal={editSignals[msg.id] || 0}
-                                onUpdate={updateMessage}
-                                onRetract={(id) => {
-                                  retractMessage(id);
-                                  toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
-                                }}
-                                onSend={(id) => {
-                                  sendMessage(id);
-                                  const m = messages.find(x => x.id === id);
-                                  toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
-                                }}
-                                onPostUpdate={handlePostUpdate}
-                                onDelete={(id) => {
-                                  deleteMessage(id);
-                                  toast({ title: 'Alert Deleted', description: 'The alert has been removed.' });
-                                }}
-                              />
-                            );
-                          })}
-                        </div>
-                      )}
-
                     </div>
                   )}
                 </div>
