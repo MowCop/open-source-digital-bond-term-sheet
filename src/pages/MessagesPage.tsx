@@ -569,7 +569,7 @@ export default function MessagesPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className={`text-xs ${activePanel === 'history' ? 'bg-accent text-accent-foreground' : ''} ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
+                          className={`text-xs ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
                           onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
                         >
                           <History className="h-3 w-3 mr-1" />
