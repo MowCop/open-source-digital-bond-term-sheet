@@ -296,7 +296,7 @@ export default function AlertHistoryCard({
       {canManage && (
         <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
             <>
-              {!isRetracted && (
+              {!isRetracted && !isLatest && (
                 <Button size="sm" variant="outline" className="text-xs" onClick={enterEdit}>
                   <Edit2 className="h-3 w-3 mr-1" />
                   Edit
