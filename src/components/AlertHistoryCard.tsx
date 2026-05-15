@@ -164,14 +164,13 @@ export default function AlertHistoryCard({
             {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </span>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium flex items-center gap-2 flex-wrap">
-              {versionLabel && (
+            {versionLabel && (
+              <div className="text-sm font-medium flex items-center gap-2 flex-wrap">
                 <span className="text-[10px] font-semibold uppercase text-accent bg-accent/10 px-1.5 py-0.5 rounded">
                   {versionLabel}
                 </span>
-              )}
-              <span className="truncate">{message.subject}</span>
-            </div>
+              </div>
+            )}
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
             <span>{senderName}</span>
           </div>
