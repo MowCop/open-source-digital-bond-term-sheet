@@ -72,6 +72,17 @@ export default function AlertHistoryCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editSignal]);
 
+  // Esc collapses an expanded (user-opened) alert card. Skip when the
+  // edit modal is open — Radix Dialog owns Esc in that case.
+  useEffect(() => {
+    if (!isOpen || mode === 'edit') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, mode]);
+
   const handleCancel = () => {
     setEditSubject(message.subject);
     setEditBody(message.body);
