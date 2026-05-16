@@ -177,6 +177,7 @@ export default function AlertHistoryCard({
   return (
     <>
     <div
+      data-alert-card-expanded={expanded ? 'true' : undefined}
       className={`rounded-lg border bg-card/60 p-4 space-y-3 ${isLatest ? 'border-2 border-white shadow-[0_0_0_1px_hsl(var(--background))]' : 'border-border'} ${isRetracted ? 'opacity-50' : ''} ${latestEditable ? 'cursor-pointer hover:bg-card/80 transition-colors' : ''}`}
       onClick={latestEditable && expanded ? (e) => {
         // Any click inside the latest panel opens the full-screen editor,
