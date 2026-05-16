@@ -1,29 +1,15 @@
-# Friendly exits from Edit alert modal
+# Esc collapses expanded alert panel
 
-Make it easy to return to the Main Issue Board from the Edit alert panel without saving, while protecting unsaved work.
+In the Issue Board, pressing **Esc** while an alert history card is expanded should collapse it back to its header-only state (matching the attached screenshot of the expanded "Update #4" panel).
 
-## Changes (src/components/AlertHistoryCard.tsx)
+## Change (src/components/AlertHistoryCard.tsx)
 
-1. **Track dirty state**
-   - Compute `isDirty = editSubject !== message.subject || editBody !== message.body`.
-   - Wrap close logic in `attemptClose()` that returns early via `window.confirm("You have unsaved changes. Discard and return to the Issue Board?")` when `isDirty`; otherwise calls `handleCancel()`.
-
-2. **Click outside the modal closes it**
-   - Already wired via `Dialog onOpenChange` (overlay click + X button both fire it). Replace the current `if (!o) handleCancel()` with `if (!o) attemptClose()` so the confirm prompt runs.
-
-3. **Esc key closes it**
-   - Radix Dialog already closes on Esc through the same `onOpenChange` path, so the change in step 2 covers it automatically. No extra key handler needed.
-
-4. **"Back to Issue Board" link in the header**
-   - In `DialogHeader`, add a small left-aligned button above the title: `← Back to Issue Board` (ghost variant, `text-xs text-muted-foreground hover:text-foreground`).
-   - `onClick={attemptClose}`.
-
-5. **Cancel button**
-   - Route through `attemptClose` as well, so all four exit paths (X, overlay, Esc, Cancel, Back link) behave consistently.
+- Add a `useEffect` that, when the card is expanded (`isOpen === true`), attaches a `keydown` listener on `window` for `key === 'Escape'` and calls `setIsOpen(false)`. Clean up on unmount / when collapsed.
+- Guard: do nothing if the edit modal is open (`mode === 'edit'`) — Radix Dialog already owns Esc in that case and we don't want a double-close.
+- Latest-version cards force-expand via `isLatest` and are not user-collapsible today; leave that behavior unchanged. Esc only collapses cards the user opened themselves.
 
 ## Verification
 
-- Open an alert → Edit alert modal opens.
-- With no edits: click overlay / press Esc / click X / Cancel / Back link → modal closes immediately, returns to Issue Board.
-- With edits to subject or body: each of the five exit paths shows the confirm prompt; Cancel keeps the modal open, OK discards and returns.
-- Save and Save & Send still work and bypass the prompt (they explicitly close after persisting).
+- Open a non-latest alert card → press Esc → card collapses to header row.
+- Open the Edit alert modal → press Esc → only the modal closes (existing confirm-on-dirty still runs); the underlying card stays as it was.
+- Latest card stays expanded on Esc (unchanged).
