@@ -96,6 +96,16 @@
   pointer-events: none;
 }
 .tiptap:focus { outline: none; }
+.tiptap,
+.tiptap p,
+.tiptap li,
+.tiptap strong,
+.tiptap em,
+.tiptap h1,
+.tiptap h2,
+.tiptap h3 {
+  color: hsl(var(--foreground));
+}
 .tiptap a { color: hsl(var(--primary)); text-decoration: underline; text-underline-offset: 2px; }
 .tiptap blockquote { border-left: 3px solid hsl(var(--border)); padding-left: 0.75rem; color: hsl(var(--muted-foreground)); }
 .tiptap code { background: hsl(var(--muted)); padding: 0 0.25rem; border-radius: 0.25rem; font-size: 0.85em; }
