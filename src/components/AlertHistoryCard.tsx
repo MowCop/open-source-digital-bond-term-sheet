@@ -8,7 +8,7 @@ import LinkifiedText from '@/components/LinkifiedText';
 import RichTextEditor from '@/components/RichTextEditor';
 import { isHtml } from '@/lib/htmlText';
 import { format } from 'date-fns';
-import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users } from 'lucide-react';
+import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft } from 'lucide-react';
 
 interface AlertHistoryCardProps {
   message: Message;
@@ -76,6 +76,15 @@ export default function AlertHistoryCard({
     setEditSubject(message.subject);
     setEditBody(message.body);
     setMode('view');
+  };
+
+  const isDirty = editSubject !== message.subject || editBody !== message.body;
+
+  const attemptClose = () => {
+    if (isDirty && !window.confirm('You have unsaved changes. Discard and return to the Issue Board?')) {
+      return;
+    }
+    handleCancel();
   };
 
   const inferType = (name: string): Attachment['type'] => {
@@ -329,12 +338,19 @@ export default function AlertHistoryCard({
     {/* Full-screen edit modal */}
     <Dialog
       open={editing}
-      onOpenChange={(o) => { if (!o) handleCancel(); }}
+      onOpenChange={(o) => { if (!o) attemptClose(); }}
     >
       <DialogContent
         className="max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg p-0 gap-0 flex flex-col"
       >
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border shrink-0">
+          <button
+            type="button"
+            onClick={attemptClose}
+            className="self-start inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-3 w-3" /> Back to Issue Board
+          </button>
           <DialogTitle className="text-base">Edit alert</DialogTitle>
           <input
             value={editSubject}
@@ -400,7 +416,7 @@ export default function AlertHistoryCard({
         </div>
 
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border shrink-0 bg-card/40">
-          <Button variant="ghost" onClick={handleCancel}>Cancel</Button>
+          <Button variant="ghost" onClick={attemptClose}>Cancel</Button>
           <Button variant="outline" onClick={handleSave}>
             <Save className="h-4 w-4 mr-1" /> Save
           </Button>

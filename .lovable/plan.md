@@ -1,28 +1,29 @@
-## Goal
+# Friendly exits from Edit alert modal
 
-Make the Attachments / Add files / Drop-zone functionality available inside the **Edit alert** modal (currently only available in the collapsed read view), and ensure attachments carry through every iteration of an alert's history.
+Make it easy to return to the Main Issue Board from the Edit alert panel without saving, while protecting unsaved work.
 
-## Changes
+## Changes (src/components/AlertHistoryCard.tsx)
 
-### 1. `src/components/AlertHistoryCard.tsx` — Edit alert dialog
+1. **Track dirty state**
+   - Compute `isDirty = editSubject !== message.subject || editBody !== message.body`.
+   - Wrap close logic in `attemptClose()` that returns early via `window.confirm("You have unsaved changes. Discard and return to the Issue Board?")` when `isDirty`; otherwise calls `handleCancel()`.
 
-Add an attachments panel into the modal, between the editor body and the Cancel/Save/Save & Send footer.
+2. **Click outside the modal closes it**
+   - Already wired via `Dialog onOpenChange` (overlay click + X button both fire it). Replace the current `if (!o) handleCancel()` with `if (!o) attemptClose()` so the confirm prompt runs.
 
-The panel will reuse the existing handlers already in the component (`handleFiles`, `removeAttachment`, `downloadAttachment`, `setPreviewAttachment`, `fileInputRef`, `dragOver`) — no new state needed. Layout mirrors the read-view panel:
+3. **Esc key closes it**
+   - Radix Dialog already closes on Esc through the same `onOpenChange` path, so the change in step 2 covers it automatically. No extra key handler needed.
 
-- Header row: "ATTACHMENTS (n)" label + "Add files" button (opens the same hidden file input).
-- Drop zone: "Drop PDF, DOCX, or PPTX here" with the same drag highlight.
-- File list: each attachment shown with name, size, Preview, Download, and Remove buttons.
+4. **"Back to Issue Board" link in the header**
+   - In `DialogHeader`, add a small left-aligned button above the title: `← Back to Issue Board` (ghost variant, `text-xs text-muted-foreground hover:text-foreground`).
+   - `onClick={attemptClose}`.
 
-Because `handleFiles` / `removeAttachment` call `onUpdate(message.id, { attachments: ... })`, attachment changes save immediately to the message and are independent of the modal's Cancel button (matching today's behavior in the read view). The existing preview Dialog already renders alongside.
-
-### 2. Cross-version persistence — verify only, no change needed
-
-`MessagesPage.handlePostUpdate` (line 203) already passes `attachments: original.attachments` when creating the new draft version via "Save & Send", so attachments are inherited by each new iteration. No code change required here; this satisfies the "stay attached throughout every iteration" requirement.
+5. **Cancel button**
+   - Route through `attemptClose` as well, so all four exit paths (X, overlay, Esc, Cancel, Back link) behave consistently.
 
 ## Verification
 
-- Open Issue Board → click the latest update panel → Edit alert modal opens.
-- New Attachments section visible above the footer with existing files listed.
-- "Add files" and drag-and-drop add files; Remove deletes them; Preview/Download work.
-- Click Save & Send → new version is created and carries the attachments forward (already-working behavior, re-confirm).
+- Open an alert → Edit alert modal opens.
+- With no edits: click overlay / press Esc / click X / Cancel / Back link → modal closes immediately, returns to Issue Board.
+- With edits to subject or body: each of the five exit paths shows the confirm prompt; Cancel keeps the modal open, OK discards and returns.
+- Save and Save & Send still work and bypass the prompt (they explicitly close after persisting).
