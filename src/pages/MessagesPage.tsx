@@ -68,6 +68,20 @@ export default function MessagesPage() {
   const canManageMessages = currentUser.role === 'syndicate_admin' || currentUser.role === 'master_admin';
   const isReadOnly = currentUser.role === 'syndicate_readonly' || currentUser.role === 'sales_readonly' || currentUser.role === 'vendor_user';
 
+  // Esc cascade: if a deal row is expanded but no inner alert card is open
+  // (and no modal owns Esc), collapse the deal row back to the Issue Board list.
+  useEffect(() => {
+    if (!expandedAlertId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+      if (document.querySelector('[data-alert-card-expanded="true"]')) return;
+      setExpandedAlertId(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expandedAlertId]);
+
   // Group messages by their primary deal (first dealId) to create alert groups
   const alertGroups: AlertGroup[] = [];
   const dealGroupMap = new Map<string, Message[]>();
