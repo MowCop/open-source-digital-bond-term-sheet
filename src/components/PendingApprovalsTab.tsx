@@ -58,7 +58,20 @@ export default function PendingApprovalsTab() {
       .select('user_id, email, name, organization, status, created_at')
       .order('created_at', { ascending: false });
     if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
-    setRows((data as any) ?? []);
+    const profiles = (data as any[]) ?? [];
+    setRows(profiles as any);
+    const ids = profiles.map(p => p.user_id);
+    if (ids.length) {
+      const { data: roleRows } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', ids);
+      const map: Record<string, string> = {};
+      (roleRows ?? []).forEach((r: any) => { map[r.user_id] = r.role; });
+      setRoleByUser(map);
+    } else {
+      setRoleByUser({});
+    }
     setLoading(false);
   };
 
@@ -133,6 +146,22 @@ export default function PendingApprovalsTab() {
     load();
   };
 
+  const persistRole = async (p: PendingProfile, newRole: string) => {
+    const { error: eDel } = await supabase.from('user_roles').delete().eq('user_id', p.user_id);
+    if (eDel) return toast({ title: 'Failed', description: eDel.message, variant: 'destructive' });
+    const { error: eIns } = await supabase.from('user_roles').insert({ user_id: p.user_id, role: newRole as any });
+    if (eIns) return toast({ title: 'Failed', description: eIns.message, variant: 'destructive' });
+    await supabase.from('audit_log').insert({
+      id: crypto.randomUUID(),
+      action: 'USER_ROLE_CHANGED',
+      entity_type: 'user',
+      entity_id: p.user_id,
+      user_id: 'admin',
+      details: `Role changed to ${newRole} for ${p.email}`,
+    });
+    toast({ title: 'Role updated', description: `${p.email} → ${newRole}` });
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -169,7 +198,13 @@ export default function PendingApprovalsTab() {
                 {status === 'disabled' ? (
                   <span className="text-xs text-muted-foreground">—</span>
                 ) : (
-                  <Select value={roleByUser[p.user_id] || 'syndicate_readonly'} onValueChange={(v) => setRoleByUser(prev => ({ ...prev, [p.user_id]: v }))}>
+                  <Select
+                    value={roleByUser[p.user_id] || 'syndicate_readonly'}
+                    onValueChange={(v) => {
+                      setRoleByUser(prev => ({ ...prev, [p.user_id]: v }));
+                      if (p.status === 'approved') persistRole(p, v);
+                    }}
+                  >
                     <SelectTrigger className="w-44 h-8"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
