@@ -41,7 +41,8 @@ export default function AlertHistoryCard({
 }: AlertHistoryCardProps) {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [isOpen, setIsOpen] = useState(false);
-  const expanded = isOpen || isLatest;
+  const [collapsedOverride, setCollapsedOverride] = useState(false);
+  const expanded = collapsedOverride ? false : (isOpen || isLatest);
   const [editSubject, setEditSubject] = useState(message.subject);
   const [editBody, setEditBody] = useState(message.body);
   const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
@@ -72,16 +73,25 @@ export default function AlertHistoryCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editSignal]);
 
-  // Esc collapses an expanded (user-opened) alert card. Skip when the
-  // edit modal is open — Radix Dialog owns Esc in that case.
+  // Esc collapses any expanded alert card (including the force-expanded
+  // latest one). Skip when the edit modal is open — Radix Dialog owns Esc.
   useEffect(() => {
-    if (!isOpen || mode === 'edit') return;
+    if (!expanded || mode === 'edit') return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        setCollapsedOverride(true);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, mode]);
+  }, [expanded, mode]);
+
+  // Reset collapse override when the underlying message changes (e.g. a new
+  // latest version is created), so the new latest expands by default.
+  useEffect(() => {
+    setCollapsedOverride(false);
+  }, [message.id]);
 
   const handleCancel = () => {
     setEditSubject(message.subject);
@@ -147,6 +157,16 @@ export default function AlertHistoryCard({
 
   const formatBytes = (b: number) => b < 1024 ? `${b} B` : b < 1048576 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1048576).toFixed(2)} MB`;
 
+  const toggleExpanded = () => {
+    if (expanded) {
+      setIsOpen(false);
+      setCollapsedOverride(true);
+    } else {
+      setIsOpen(true);
+      setCollapsedOverride(false);
+    }
+  };
+
   const isRetracted = message.status === 'retracted';
   const isSent = message.status === 'sent';
   const isDraft = message.status === 'draft';
@@ -158,7 +178,7 @@ export default function AlertHistoryCard({
     <>
     <div
       className={`rounded-lg border bg-card/60 p-4 space-y-3 ${isLatest ? 'border-2 border-white shadow-[0_0_0_1px_hsl(var(--background))]' : 'border-border'} ${isRetracted ? 'opacity-50' : ''} ${latestEditable ? 'cursor-pointer hover:bg-card/80 transition-colors' : ''}`}
-      onClick={latestEditable ? (e) => {
+      onClick={latestEditable && expanded ? (e) => {
         // Any click inside the latest panel opens the full-screen editor,
         // except clicks on real interactive controls (action buttons, links, inputs).
         const target = e.target as HTMLElement;
@@ -168,14 +188,14 @@ export default function AlertHistoryCard({
     >
       {/* Header row */}
       <div
-        className={`flex items-start justify-between gap-4 rounded -m-1 p-1 transition-colors ${latestEditable ? '' : 'cursor-pointer hover:bg-card/80'}`}
-        onClick={latestEditable ? undefined : () => setIsOpen(o => !o)}
-        role={latestEditable ? undefined : 'button'}
-        tabIndex={latestEditable ? undefined : 0}
-        onKeyDown={latestEditable ? undefined : (e) => {
+        className={`flex items-start justify-between gap-4 rounded -m-1 p-1 transition-colors ${latestEditable && expanded ? '' : 'cursor-pointer hover:bg-card/80'}`}
+        onClick={latestEditable && expanded ? undefined : (e) => { e.stopPropagation(); toggleExpanded(); }}
+        role={latestEditable && expanded ? undefined : 'button'}
+        tabIndex={latestEditable && expanded ? undefined : 0}
+        onKeyDown={latestEditable && expanded ? undefined : (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            setIsOpen(o => !o);
+            toggleExpanded();
           }
         }}
       >
