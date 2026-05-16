@@ -1,34 +1,28 @@
 ## Goal
-Make the text inside the "Edit alert" dialog (subject input + rich-text body) render in the same white as the "Edit alert" headline, instead of the faded light-blue it currently inherits from Tailwind's `prose dark:prose-invert` palette.
 
-## Root cause
-- The body uses `RichTextEditor`, whose editor area is styled with `prose prose-sm dark:prose-invert`. Tailwind's `prose-invert` overrides text color via `--tw-prose-invert-body` (a desaturated blue-gray), which is what makes the body look light blue.
-- `.tiptap` rules in `src/index.css` don't set a base color, so prose wins.
-- The subject `<input>` already uses `text-foreground`, but visually reads cooler because the surrounding prose body is dimmer. Once the body is brightened, both will match.
+Make the Attachments / Add files / Drop-zone functionality available inside the **Edit alert** modal (currently only available in the collapsed read view), and ensure attachments carry through every iteration of an alert's history.
 
-## Change
-Edit `src/index.css` only — add explicit color overrides scoped to `.tiptap` so the editor body (and the read-only `.tiptap` blocks used by `AlertHistoryCard`) inherit `hsl(var(--foreground))`:
+## Changes
 
-```css
-.tiptap,
-.tiptap p,
-.tiptap li,
-.tiptap strong,
-.tiptap em,
-.tiptap h1,
-.tiptap h2,
-.tiptap h3 {
-  color: hsl(var(--foreground));
-}
-```
+### 1. `src/components/AlertHistoryCard.tsx` — Edit alert dialog
 
-This matches the `DialogTitle` ("Edit alert") which also resolves to `text-foreground`.
+Add an attachments panel into the modal, between the editor body and the Cancel/Save/Save & Send footer.
 
-## Out of scope
-- No component-level changes to `RichTextEditor.tsx` or `AlertHistoryCard.tsx`.
-- Placeholder, blockquote, link, and inline-code colors stay as-is (intentional muted/primary styling).
-- No changes to the design tokens themselves.
+The panel will reuse the existing handlers already in the component (`handleFiles`, `removeAttachment`, `downloadAttachment`, `setPreviewAttachment`, `fileInputRef`, `dragOver`) — no new state needed. Layout mirrors the read-view panel:
+
+- Header row: "ATTACHMENTS (n)" label + "Add files" button (opens the same hidden file input).
+- Drop zone: "Drop PDF, DOCX, or PPTX here" with the same drag highlight.
+- File list: each attachment shown with name, size, Preview, Download, and Remove buttons.
+
+Because `handleFiles` / `removeAttachment` call `onUpdate(message.id, { attachments: ... })`, attachment changes save immediately to the message and are independent of the modal's Cancel button (matching today's behavior in the read view). The existing preview Dialog already renders alongside.
+
+### 2. Cross-version persistence — verify only, no change needed
+
+`MessagesPage.handlePostUpdate` (line 203) already passes `attachments: original.attachments` when creating the new draft version via "Save & Send", so attachments are inherited by each new iteration. No code change required here; this satisfies the "stay attached throughout every iteration" requirement.
 
 ## Verification
-- Open an alert on the Issue Board → click into the latest update → confirm subject text and body text render in the same bright white as the "Edit alert" title.
-- Confirm read-only message bodies (which also use `.tiptap prose`) brighten consistently across the Issue Board.
+
+- Open Issue Board → click the latest update panel → Edit alert modal opens.
+- New Attachments section visible above the footer with existing files listed.
+- "Add files" and drag-and-drop add files; Remove deletes them; Preview/Download work.
+- Click Save & Send → new version is created and carries the attachments forward (already-working behavior, re-confirm).

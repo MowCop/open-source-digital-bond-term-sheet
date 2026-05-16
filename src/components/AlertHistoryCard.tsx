@@ -353,6 +353,52 @@ export default function AlertHistoryCard({
           />
         </div>
 
+        {/* Attachments panel */}
+        <div className="px-5 pb-3 space-y-2 border-t border-border shrink-0">
+          <div className="flex items-center justify-between pt-3">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Attachments ({message.attachments.length})
+            </div>
+            {!isRetracted && (
+              <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="h-3 w-3 mr-1" /> Add files
+              </Button>
+            )}
+          </div>
+          {!isRetracted && (
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
+              className={`border border-dashed rounded p-2 text-center text-xs text-muted-foreground transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-border'}`}
+            >
+              Drop PDF, DOCX, or PPTX here
+            </div>
+          )}
+          {message.attachments.length > 0 && (
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {message.attachments.map(a => (
+                <div key={a.id} className="flex items-center gap-2 text-xs bg-background border border-border rounded px-2 py-1.5">
+                  <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <span className="flex-1 truncate">{a.name}</span>
+                  <span className="text-muted-foreground">{formatBytes(a.size)}</span>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewAttachment(a)} title="Preview">
+                    <Eye className="h-3 w-3" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => downloadAttachment(a)} title="Download">
+                    <Download className="h-3 w-3" />
+                  </Button>
+                  {!isRetracted && (
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeAttachment(a.id)} title="Remove">
+                      <X className="h-3 w-3 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border shrink-0 bg-card/40">
           <Button variant="ghost" onClick={handleCancel}>Cancel</Button>
           <Button variant="outline" onClick={handleSave}>
