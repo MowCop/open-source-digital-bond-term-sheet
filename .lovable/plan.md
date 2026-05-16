@@ -1,27 +1,34 @@
-## Problem
+## Goal
+Make the text inside the "Edit alert" dialog (subject input + rich-text body) render in the same white as the "Edit alert" headline, instead of the faded light-blue it currently inherits from Tailwind's `prose dark:prose-invert` palette.
 
-In Address Book & User Admin → Approvals, the Role dropdown is backed only by local component state (`roleByUser`). Two bugs result:
+## Root cause
+- The body uses `RichTextEditor`, whose editor area is styled with `prose prose-sm dark:prose-invert`. Tailwind's `prose-invert` overrides text color via `--tw-prose-invert-body` (a desaturated blue-gray), which is what makes the body look light blue.
+- `.tiptap` rules in `src/index.css` don't set a base color, so prose wins.
+- The subject `<input>` already uses `text-foreground`, but visually reads cooler because the surrounding prose body is dimmer. Once the body is brightened, both will match.
 
-1. For **approved** users, changing the Role dropdown does nothing — there is no save handler. Navigating away and back re-mounts the component, which re-loads profiles but never reads existing roles, so the dropdown falls back to the default `'syndicate_readonly'` regardless of what was previously chosen.
-2. The dropdown is never seeded from the `user_roles` table, so it doesn't reflect the user's actual current role on load.
+## Change
+Edit `src/index.css` only — add explicit color overrides scoped to `.tiptap` so the editor body (and the read-only `.tiptap` blocks used by `AlertHistoryCard`) inherit `hsl(var(--foreground))`:
 
-## Fix
+```css
+.tiptap,
+.tiptap p,
+.tiptap li,
+.tiptap strong,
+.tiptap em,
+.tiptap h1,
+.tiptap h2,
+.tiptap h3 {
+  color: hsl(var(--foreground));
+}
+```
 
-In `src/components/PendingApprovalsTab.tsx`:
+This matches the `DialogTitle` ("Edit alert") which also resolves to `text-foreground`.
 
-1. **Load existing roles** alongside profiles in `load()`:
-   - Query `user_roles` for all `user_id`s in the result set.
-   - Seed `roleByUser` with `{ [user_id]: role }` so the dropdown shows each user's current role on mount.
+## Out of scope
+- No component-level changes to `RichTextEditor.tsx` or `AlertHistoryCard.tsx`.
+- Placeholder, blockquote, link, and inline-code colors stay as-is (intentional muted/primary styling).
+- No changes to the design tokens themselves.
 
-2. **Persist role changes immediately** for already-approved users:
-   - Add `persistRole(userId, newRole)`: delete existing rows in `user_roles` for that `user_id`, then insert the new role (the table has a `unique (user_id, role)` constraint, so a plain upsert on `user_id` alone won't replace a different role — delete + insert is the simplest correct path).
-   - In the Select's `onValueChange`, update local state as today; if the user's status is `approved`, also call `persistRole` and toast on success/failure, and write an `audit_log` entry (`USER_ROLE_CHANGED`).
-   - For `pending` / `rejected` / `disabled` users, keep current behaviour — the role only gets written when Approve / Re-approve is clicked.
-
-3. After mutations that change roles (approve, revoke, persistRole), `load()` already re-syncs everything from the DB, so the dropdown will always reflect the persisted truth on return to the page.
-
-No schema or RLS changes needed — existing `admins manage roles` policy on `user_roles` covers admin upserts and deletes.
-
-## Files touched
-
-- `src/components/PendingApprovalsTab.tsx` — only file edited.
+## Verification
+- Open an alert on the Issue Board → click into the latest update → confirm subject text and body text render in the same bright white as the "Edit alert" title.
+- Confirm read-only message bodies (which also use `.tiptap prose`) brighten consistently across the Issue Board.
