@@ -41,7 +41,8 @@ export default function AlertHistoryCard({
 }: AlertHistoryCardProps) {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [isOpen, setIsOpen] = useState(false);
-  const expanded = isOpen || isLatest;
+  const [collapsedOverride, setCollapsedOverride] = useState(false);
+  const expanded = collapsedOverride ? false : (isOpen || isLatest);
   const [editSubject, setEditSubject] = useState(message.subject);
   const [editBody, setEditBody] = useState(message.body);
   const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
@@ -72,16 +73,25 @@ export default function AlertHistoryCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editSignal]);
 
-  // Esc collapses an expanded (user-opened) alert card. Skip when the
-  // edit modal is open — Radix Dialog owns Esc in that case.
+  // Esc collapses any expanded alert card (including the force-expanded
+  // latest one). Skip when the edit modal is open — Radix Dialog owns Esc.
   useEffect(() => {
-    if (!isOpen || mode === 'edit') return;
+    if (!expanded || mode === 'edit') return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        setCollapsedOverride(true);
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, mode]);
+  }, [expanded, mode]);
+
+  // Reset collapse override when the underlying message changes (e.g. a new
+  // latest version is created), so the new latest expands by default.
+  useEffect(() => {
+    setCollapsedOverride(false);
+  }, [message.id]);
 
   const handleCancel = () => {
     setEditSubject(message.subject);
