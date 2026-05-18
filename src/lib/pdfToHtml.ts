@@ -76,7 +76,7 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     pageWidths.push(viewport.width);
 
     const items: Item[] = (content.items as any[])
-      .filter(it => typeof it.str === 'string' && it.str.length > 0)
+      .filter(it => typeof it.str === 'string' && it.str.trim().length > 0)
       .map(it => {
         const tr = it.transform as number[];
         const h = Math.abs(tr[3] || tr[0] || 10);
