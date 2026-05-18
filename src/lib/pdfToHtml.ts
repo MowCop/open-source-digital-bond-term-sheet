@@ -356,6 +356,8 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     k++;
     // Track the value-column X (left edge of the value group of the first row).
     let valueColX = getValueColX(lines[start]);
+    // Track median font size of the seed line to detect heading breaks.
+    const seedMaxSize = Math.max(...lines[start].items.map(it => it.h));
     while (k < lines.length) {
       const line = lines[k];
       if (looksLikeKV(line)) {
@@ -373,9 +375,20 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
         k++;
         continue;
       }
-      // Continuation line: every item starts at or after the value column.
+      if (line.items.length === 0) break;
       const minX = Math.min(...line.items.map(it => it.x));
-      if (line.items.length > 0 && Math.abs(minX - valueColX) < 8) {
+      const maxX = Math.max(...line.items.map(it => it.x));
+      const lineMaxSize = Math.max(...line.items.map(it => it.h));
+      // Don't swallow a real heading.
+      if (lineMaxSize > seedMaxSize * 1.2) break;
+      // Value-column continuation: every item starts at or after the value column.
+      if (Math.abs(minX - valueColX) < 8) {
+        block.push(line);
+        k++;
+        continue;
+      }
+      // Label-column continuation: every item is left of the value column.
+      if (maxX < valueColX - 8) {
         block.push(line);
         k++;
         continue;
@@ -406,25 +419,34 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     valueXs.sort((a, b) => a - b);
     const valueColX = valueXs[Math.floor(valueXs.length / 2)] ?? 0;
 
-    type Row = { label: string; valueLines: Line[] };
+    type Row = { label: string; labelExtra: string[]; valueLines: Line[] };
     const rows: Row[] = [];
     for (const line of block) {
+      if (line.items.length === 0) continue;
       const minX = Math.min(...line.items.map(it => it.x));
-      const isContinuation = rows.length > 0 && Math.abs(minX - valueColX) < 8 && !line.items.some(it => it.x < valueColX - 8);
-      if (isContinuation) {
+      const maxX = Math.max(...line.items.map(it => it.x));
+      const isValueCont = rows.length > 0 && Math.abs(minX - valueColX) < 8 && !line.items.some(it => it.x < valueColX - 8);
+      const isLabelCont = rows.length > 0 && maxX < valueColX - 8;
+      if (isValueCont) {
         rows[rows.length - 1].valueLines.push(line);
+        continue;
+      }
+      if (isLabelCont) {
+        const txt = line.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
+        if (txt) rows[rows.length - 1].labelExtra.push(txt);
         continue;
       }
       // Split label / value at the value column.
       const leftItems = line.items.filter(it => it.x < valueColX - 4);
       const rightItems = line.items.filter(it => it.x >= valueColX - 4);
       const labelText = leftItems.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim().replace(/:\s*$/, '');
-      rows.push({ label: labelText, valueLines: [{ ...line, items: rightItems }] });
+      rows.push({ label: labelText, labelExtra: [], valueLines: [{ ...line, items: rightItems }] });
     }
 
     const rendered = rows.map(r => {
       const valueHtml = r.valueLines.map(l => renderInline(l)).join('<br/>');
-      return `<tr><td>${escapeHtml(r.label)}</td><td>${valueHtml}</td></tr>`;
+      const fullLabel = [r.label, ...r.labelExtra].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+      return `<tr><td>${escapeHtml(fullLabel)}</td><td>${valueHtml}</td></tr>`;
     });
     return `<table class="pdf-kv">${rendered.join('')}</table>`;
   }
