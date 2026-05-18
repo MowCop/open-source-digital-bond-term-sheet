@@ -1,92 +1,81 @@
-## Goal
+## Short answer
 
-In the Create New Issue screen's attachment strip, each attached file should support three actions:
+Yes — we can get PDFs much closer to the Slovak Republic (DOCX) look, but not 1:1. DOCX carries real semantics (Heading 1, lists, tables, bold runs), so mammoth maps it cleanly to HTML. A PDF only contains positioned glyphs and drawing ops — there are no "paragraphs", "headings" or "tables" in the file, just text at coordinates. Everything has to be reconstructed by heuristics.
 
-1. **Download** — get the original file back exactly as uploaded.
-2. **Delete** — remove the attachment (already works as a bare ✕, will be relabelled).
-3. **Replace** — swap the file for a newly uploaded one in the same slot, optionally re-running AI extraction on the new file.
+Our current `pdfToHtml.ts` already does a first pass (line grouping, heading-by-font-size, bold detection, naive tables, optional rasterized logo). It works on simple PDFs but loses fidelity on bank term sheets like Aldar, where layout is dense and multi-column.
 
-## Why this needs a small data change
+## What "matching the Slovak look" means for PDF input
 
-The current `Attachment` is metadata-only: `{ id, name, type, size, url }` with `url` left blank. The actual `File` bytes are dropped after extraction, so there's nothing to download or replace from. We need to keep the bytes around until the draft is sent.
+The Slovak DOCX output preserves:
+1. Centered title block with logos
+2. Bold section headings (ISSUER, GUARANTOR, …) in their own line
+3. Two-column "label : value" rows
+4. Bullet lists
+5. Inline bold inside paragraphs
+6. Tables with borders
 
-For the prototype (no Storage round-trip yet), the simplest approach is to keep the `File` in-memory and create an object URL on demand. No DB migration needed.
+To reach that from PDF we need a stronger reconstruction pipeline, not a different library.
 
-## Approach
+## Proposed upgrade to `src/lib/pdfToHtml.ts`
 
-### 1. Extend the Attachment type (non-breaking)
+### 1. Better line + block grouping
+- Cluster by Y with a tolerance proportional to font size (not a flat 3pt) so 10pt body and 18pt headings both group correctly.
+- Detect blank-line gaps (>1.5× median line height) and emit paragraph breaks instead of joining everything.
 
-`src/types/bond.ts` — add two optional fields:
-
-```ts
-export interface Attachment {
-  id: string;
-  name: string;
-  type: 'pdf' | 'docx' | 'pptx';
-  size: number;
-  url: string;
-  file?: File;      // in-memory blob for download / replace (not persisted)
-  mimeType?: string;
-}
-```
-
-Existing message records continue to work because both fields are optional.
-
-### 2. Persist the File in `handleFiles`
-
-In `src/pages/AIDraftPage.tsx`:
-
-- `toAttachment(file)` stores the live `File` and its `mimeType` alongside the metadata.
-- Keep the same array; nothing else upstream changes.
-
-### 3. New row UI in the attachment strip
-
-Replace the current chip row with a single line per attachment:
+### 2. Two-column "label : value" detection (the big win for term sheets)
+Aldar's term sheet — like most DCM docs — is laid out as:
 
 ```
-📎 aldar_term_sheet.pdf  · 184 KB        [Download] [Replace] [Remove]
+Issuer:              Aldar Investment Properties Sole Proprietorship LLC
+Guarantor:           Aldar Properties PJSC
+Issue Size:          USD 500,000,000
 ```
 
-- **Download** — creates a Blob URL from `attachment.file`, triggers an `<a download={name}>` click, then revokes the URL.
-- **Replace** — opens a hidden `<input type="file">` scoped to that attachment id; on change, swaps the entry in-place (keeping the same `id` and array position) and re-runs the existing PDF/DOCX extractor on the new file so headline/body/AI fields refresh from the replacement.
-- **Remove** — the existing delete behaviour, just relabelled with a trash icon for clarity.
+Heuristic: within a page, find the dominant X position of the second token group across many lines. If ≥4 lines share roughly the same "left column ends here / right column starts here" boundary, render those lines as a 2-column borderless table (or a `<dl>`). This is what makes the output *look* like the source instead of a wall of text.
 
-Compact layout that still fits the 642px viewport: filename truncates with `truncate`, action buttons stay right-aligned with `text-[11px]`.
+### 3. Bullet detection
+Lines starting with `•`, `·`, `-`, `–`, `o`, `▪` or `(i)/(ii)/(a)` → wrap into `<ul>`/`<ol>` with the bullet stripped. Indented continuation lines join the previous `<li>`.
 
-### 4. Helper to trigger a browser download
+### 4. Table detection — upgrade
+Current code only triggers on >30pt gaps. Add:
+- Use ruling lines from `getOperatorList` (stroke ops) when present — gives exact column/row boundaries.
+- Fall back to X-cluster method already in place, but cluster across the whole page first, then assign rows.
 
-Small inline util in the page (or `src/lib/download.ts` if reused elsewhere):
+### 5. Heading detection — upgrade
+- Compare against per-page median font size, not document median (cover pages skew it).
+- Treat ALL-CAPS short lines (<60 chars) as `<h2>` even without size jump — matches "ISSUER", "RISK FACTORS" style.
+- Centered + bold + large = `<h1>`, used once per page max.
 
-```ts
-function downloadFile(file: File) {
-  const url = URL.createObjectURL(file);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = file.name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-```
+### 6. Inline bold runs
+Today a line is "all bold or not". Change to per-item: build the line as a sequence of `<strong>`/plain `<span>` runs so "Issuer: **Aldar…**" keeps the bold on the value only.
 
-If an attachment has no `file` (e.g. came back from a saved draft after refresh), the Download and Replace buttons render disabled with a tooltip ("Original file no longer available — re-attach to download").
+### 7. Logo / image preservation
+Already rasterizing the whole page when an image op is detected. Improve by:
+- Extracting just the image XObject (via `commonObjs`/`objs` resolution) instead of rasterizing the whole page, so the logo isn't surrounded by faint background text.
+- Only inline images >32×32 px to skip decorative rules.
 
-### 5. Replace flow details
+### 8. Hyphenation & soft wraps
+Join lines that end with `-` followed by lowercase on the next line; otherwise keep paragraph wrapping as soft breaks within one `<p>`.
 
-- A single hidden `<input type="file">` is shared; clicking Replace stores the target attachment id in a ref, then `.click()`s the input.
-- On change, `handleReplace(id, newFile)`:
-  - swaps the array entry (same index, new metadata + new `file`),
-  - calls `handleFiles([newFile])` minus the append step — refactor extraction into a `extractFromFile(file)` helper used by both initial drop and replace, so AI fields update.
-  - shows a toast: "Replaced *old.pdf* with *new.pdf*".
+## What still won't be perfect (be honest with the user)
+
+- **Exact fonts & colors** — we render in the editor's theme, not the PDF's typeface. Slovak DOCX has the same limitation; mammoth strips fonts too, so output looks consistent with current behavior.
+- **Complex multi-column prospectuses** (e.g. 2-column body with footnotes) — reading order can break. We can detect column count from X histogram and process columns separately.
+- **Scanned / image-only PDFs** — no text layer to extract. We already fall back to a page image; OCR (tesseract.js) could be added later behind a "scanned PDF detected" toggle, but it's heavy (~10MB worker) and slow.
+- **Footers, page numbers, running headers** — will appear inline unless we filter. Add a pass that drops text repeated at the same Y on ≥50% of pages.
 
 ## Files touched
 
-- `src/types/bond.ts` — add optional `file?: File; mimeType?: string` to `Attachment`.
-- `src/pages/AIDraftPage.tsx` — store `File` in attachments, refactor extraction into a reusable helper, add Download / Replace / Remove row UI, hidden replace input.
+- `src/lib/pdfToHtml.ts` — rewrite the reconstruction pipeline (sections 1–8 above). No new dependencies; pdf.js already exposes everything we need.
+- `src/index.css` — minor: add styling for `.pdf-kv` (the borderless 2-col label/value table) so it matches the Slovak look in the editor.
+- No changes to `RichTextEditor.tsx`, `AIDraftPage.tsx`, or the DOCX path.
 
-## Out of scope (call out if needed)
+## Out of scope for this pass
 
-- No backend upload — files live in the browser session only. After sending or page refresh, downloads from the inbox side won't work yet. If you want recipients to be able to download the original file too, the next step is a Cloud Storage bucket (`message-attachments`) plus a small upload-on-send step.
+- OCR for scanned PDFs (separate follow-up if needed).
+- PPTX import (still listed in the Attachment type but not wired).
+- Server-side conversion via LibreOffice — would give pixel-perfect fidelity but requires an edge function with a LibreOffice binary; only worth it if heuristic approach proves insufficient on real documents.
 
-Let me know if you want me to include the Storage backend now or keep this as a session-only prototype.
+## Suggested validation
+
+After implementing, drop both attached files into Create New Issue and compare side-by-side with the originals. If Aldar's key-value block renders as a clean two-column layout with bold values, we've hit the target.
