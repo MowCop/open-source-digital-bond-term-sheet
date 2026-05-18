@@ -352,13 +352,44 @@ export default function AIDraftPage() {
                         Extracting headline, body, and deal fields from attachment…
                       </div>
                     )}
-                    {attachments.map((f, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-foreground">
-                        <Paperclip className="h-3 w-3" />
-                        <span>{f.name}</span>
-                        <button onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))} className="text-destructive ml-auto text-[10px]">✕</button>
-                      </div>
-                    ))}
+                    {attachments.map((f, i) => {
+                      const sizeKb = f.size ? `${(f.size / 1024).toFixed(0)} KB` : '';
+                      const hasFile = !!f.file;
+                      return (
+                        <div key={f.id} className="flex items-center gap-2 text-xs text-foreground">
+                          <Paperclip className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{f.name}</span>
+                          {sizeKb && <span className="text-muted-foreground text-[10px] shrink-0">· {sizeKb}</span>}
+                          <div className="ml-auto flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => downloadAttachment(f)}
+                              disabled={!hasFile}
+                              title={hasFile ? 'Download original file' : 'Original file no longer available — re-attach to download'}
+                              className="p-1 rounded hover:bg-accent/20 text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => requestReplace(f.id)}
+                              title="Replace with a new file"
+                              className="p-1 rounded hover:bg-accent/20 text-muted-foreground hover:text-foreground"
+                            >
+                              <Replace className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setAttachments(prev => prev.filter((_, j) => j !== i))}
+                              title="Remove attachment"
+                              className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
