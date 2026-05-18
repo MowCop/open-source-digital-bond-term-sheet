@@ -115,7 +115,23 @@
 .tiptap h2 { font-size: 1.2rem; font-weight: 700; margin: 0.5rem 0; }
 .tiptap h3 { font-size: 1.05rem; font-weight: 600; margin: 0.5rem 0; }
 
-/* PDF import — borderless 2-column label/value list */
-.tiptap table.pdf-kv { border-collapse: collapse; width: 100%; margin: 0.5rem 0; }
-.tiptap table.pdf-kv td { border: none; padding: 2px 8px 2px 0; vertical-align: top; }
-.tiptap table.pdf-kv td:first-child { white-space: nowrap; font-weight: 600; width: 1%; color: hsl(var(--muted-foreground)); }
+/* PDF import — bordered 2-column label/value table (matches Slovak Republic style) */
+.tiptap table.pdf-kv {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.75rem 0;
+  table-layout: fixed;
+}
+.tiptap table.pdf-kv td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.75rem 1rem;
+  vertical-align: top;
+  color: hsl(var(--foreground));
+  line-height: 1.5;
+}
+.tiptap table.pdf-kv td:first-child {
+  width: 28%;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  background: hsl(var(--card) / 0.4);
+}
