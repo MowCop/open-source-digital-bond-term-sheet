@@ -542,14 +542,15 @@ export function validateDeal(
 
   // ── 2. Maturity date: weekend / holiday ──────────────────────────────────────
   if (deal.maturityDate && deal.maturityDate !== 'TBA') {
-    if (!isBusinessDay(deal.maturityDate, cal)) {
+    const isoMat = normalizeISO(deal.maturityDate);
+    if (isoMat && !isBusinessDay(isoMat, cal)) {
       const adjusted = modifiedFollowing(deal.maturityDate, cal);
       push({
         id: 'maturity-non-business',
         severity: 'error',
         field: 'maturityDate',
         title: 'Maturity on non-business day',
-        detail: `Maturity date ${deal.maturityDate} is not a ${cal} business day. Adjusted date would be ${adjusted}.`,
+        detail: `Maturity date ${deal.maturityDate} (${isoMat}) is not a ${cal} business day. Adjusted date would be ${adjusted}.`,
         icmaRef: 'ICMA Rule 251.2',
       });
     }
@@ -557,7 +558,8 @@ export function validateDeal(
 
   // ── FIX-4: Issue date: weekend / holiday ─────────────────────────────────────
   if (deal.issueDate && deal.issueDate !== 'TBA') {
-    if (!isBusinessDay(deal.issueDate, cal)) {
+    const isoIssue = normalizeISO(deal.issueDate);
+    if (isoIssue && !isBusinessDay(isoIssue, cal)) {
       const adjusted = modifiedFollowing(deal.issueDate, cal);
       push({
         id: 'issue-non-business',
@@ -572,7 +574,8 @@ export function validateDeal(
 
   // ── 3. Pricing date: weekend / holiday ───────────────────────────────────────
   if (deal.pricingDate && deal.pricingDate !== 'TBA') {
-    if (!isBusinessDay(deal.pricingDate, cal)) {
+    const isoPrice = normalizeISO(deal.pricingDate);
+    if (isoPrice && !isBusinessDay(isoPrice, cal)) {
       push({
         id: 'pricing-non-business',
         severity: 'warning',
