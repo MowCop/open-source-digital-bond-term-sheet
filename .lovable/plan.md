@@ -1,37 +1,38 @@
-# Make scanned PDFs (like Aldar Properties) render like the Slovak Republic doc
+## Diagnosis
+- The Aldar PDF is not image-only: it contains a text layer with ~141 text items on page 1.
+- Because of that, the scanned-PDF OCR fallback is not triggered; the `pdf-ocr-to-html` function has no logs and no network call was made.
+- The current text-layer parser only treats a row as label/value when it sees a large gap between adjacent text items. In this PDF, `pdf.js` emits a giant whitespace item between the label and value, so the gap test is missed and all rows collapse into normal paragraphs.
+- Some values span multiple lines; the current key/value block collector does not attach continuation lines to the preceding label row.
+- Styling also differs from the Slovak Republic example because `.pdf-kv` is currently borderless, while the desired output uses visible table borders, padding, and label/value indentation.
 
-## Why the last change didn't appear to do anything
+## Plan
+1. **Fix PDF key/value detection for Aldar-style text layers**
+   - Update `src/lib/pdfToHtml.ts` so whitespace-only PDF items are ignored for layout decisions.
+   - Detect two-column rows by absolute column positions as well as gaps, not only by adjacent-item spacing.
+   - For Aldar-like term sheets, identify the repeated label column around the left side and the value column around the right side.
 
-The new `pdfToHtml.ts` heuristics only run when pdf.js can extract a text layer. The Aldar Properties PDF is a **scanned / image-based PDF** — pdf.js returns zero text items, so the code drops straight into the existing image-of-the-page fallback. That's why nothing visibly changed.
+2. **Preserve multi-line values inside the same labelled row**
+   - When a labelled row is followed by indented continuation lines in the value column, merge those continuation lines into the same table cell.
+   - This will keep rows like `Subordination`, `Interest Rate`, and `Optional Redemption` as one bordered row with wrapped value text instead of separate paragraphs.
 
-PDFs with a real text layer (e.g. exports from Word) already benefit from the new headings / KV-table / bullet detection. Scanned PDFs need a different pipeline: **OCR + layout reconstruction**.
+3. **Render the output like the Slovak Republic example**
+   - Keep the imported content as semantic HTML tables (`<table class="pdf-kv">`).
+   - Update `src/index.css` so `.pdf-kv` has visible borders, full width, row padding, a stable label column, and readable indentation matching the Slovak Republic screen.
 
-## Approach: vision-model OCR via Lovable AI Gateway
+4. **Keep OCR fallback, but reserve it for true image/scanned PDFs**
+   - Leave the existing vision OCR path in place for PDFs with no usable text layer.
+   - The Aldar PDF should use the improved fast text-layer reconstruction instead of expensive OCR.
 
-Add a fallback that triggers only when pdf.js returns no text. We rasterise each page in the browser (already working), send the page images to a new edge function, which calls Lovable AI (`google/gemini-2.5-pro` — strong at visual + text reconstruction) and asks it to return clean, structured HTML matching the document's visual layout (h1/h2, paragraphs, bullets, two-column "label: value" tables, simple grid tables).
+5. **Validate with the attached Aldar PDF**
+   - Run the parser against the attached file and inspect the generated HTML shape.
+   - Confirm the Create New Issue editor receives a bordered label/value table instead of one long paragraph.
 
-The result feeds back through the same `appendHtmlToBody` + `applyExtractedText` path, so headline / AI fields / bookrunner extraction continue to work.
+## Expected result
+Dropping the Aldar Properties PDF should produce a title plus a bordered two-column table with rows such as:
+- Issuer | Aldar Properties PJSC
+- Issuer LEI | 98450048CD8AEF13B480
+- Company Rating (Moody’s) | Baa2 (Stable)
+- Notes | Resettable Subordinated Notes due 2056
+- Subordination | Direct, unsecured... [wrapped within the same value cell]
 
-No API key needed from the user — Lovable AI Gateway is already wired in.
-
-## Scope
-
-1. **Edge function `pdf-ocr-to-html`** — POST `{ pages: [{ pageNumber, imageBase64 }] }`, returns `{ html, text }`. Streams page-by-page to Lovable AI with a strict prompt: reconstruct the original layout as semantic HTML, prefer `<table class="pdf-kv">` for label/value blocks, no `<style>`/scripts, no commentary. Concatenates per-page HTML.
-2. **`src/lib/pdfToHtml.ts`** — when a page yields no text items (or the whole doc yields almost no text), rasterise the page(s) to JPEG (reusing the existing `renderPageImage` helper at scale 2.0 for OCR quality), call the edge function, and return that HTML/text instead of the image fallback.
-3. **`src/pages/AIDraftPage.tsx`** — show a clearer "Reading scanned PDF with AI…" toast while the OCR path runs (it's slower than the text-layer path). No other UI changes.
-
-## Out of scope
-
-- PPTX / image uploads (not requested)
-- Re-OCRing PDFs that already have a text layer
-- Caching OCR results across sessions
-
-## Validation
-
-Re-upload Aldar Properties. Expect: bank/term-sheet style two-column rows for Issuer / Issuer Rating / Format / Pricing Date etc., section headings preserved, the indicative terms table rendered as a real `<table>` — visually comparable to the Slovak Republic output. Re-upload a text-layer PDF and confirm the existing fast path still runs (no edge-function call).
-
-## Files touched
-
-- `supabase/functions/pdf-ocr-to-html/index.ts` (new)
-- `src/lib/pdfToHtml.ts` (add OCR fallback branch)
-- `src/pages/AIDraftPage.tsx` (toast wording only)
+This should visually match the Slovak Republic output style much more closely.
