@@ -159,7 +159,15 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     return totalPages > 1 && (repeatCounts.get(key) || 0) / totalPages >= 0.5;
   };
 
-  const htmlPages: string[] = [];
+  const htmlPages: string[][] = [];
+  type KVRow = { label: string; labelExtra: string[]; valueLines: Line[] };
+  let lastKv: {
+    rows: KVRow[];
+    valueColX: number;
+    bodySize: number;
+    pageIdx: number;
+    outIdx: number;
+  } | null = null;
 
   for (let p = 0; p < pagesLines.length; p++) {
     const page = await doc.getPage(p + 1);
@@ -186,12 +194,43 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     }
 
     if (allLines.length === 0) {
-      if (pageImageFallback) htmlPages.push(pageImageFallback);
+      if (pageImageFallback) htmlPages.push([pageImageFallback]);
+      lastKv = null;
       continue;
     }
 
     // Filter headers/footers.
-    const lines = allLines.filter(l => !isRepeating(l));
+    let lines = allLines.filter(l => !isRepeating(l));
+    if (lines.length === 0) continue;
+
+    // Cross-page KV value continuation: if the previous page ended with a KV
+    // table and the first lines of this page align with that table's value
+    // column, append them to the last row of that table.
+    if (lastKv) {
+      const kv = lastKv;
+      let consumed = 0;
+      while (consumed < lines.length) {
+        const line = lines[consumed];
+        if (line.items.length === 0) { consumed++; continue; }
+        const minX = Math.min(...line.items.map(it => it.x));
+        const maxX = Math.max(...line.items.map(it => it.x));
+        const lineMaxSize = Math.max(...line.items.map(it => it.h));
+        const inValueCol = Math.abs(minX - kv.valueColX) < 10 && maxX >= kv.valueColX - 4;
+        const sizeOk = lineMaxSize <= kv.bodySize * 1.2;
+        if (inValueCol && sizeOk) { consumed++; continue; }
+        break;
+      }
+      if (consumed > 0) {
+        const contLines = lines.slice(0, consumed);
+        const lastRow = kv.rows[kv.rows.length - 1];
+        if (lastRow) {
+          lastRow.valueLines.push(...contLines);
+          htmlPages[kv.pageIdx][kv.outIdx] = renderKVRows(kv.rows);
+        }
+        lines = lines.slice(consumed);
+      }
+      lastKv = null;
+    }
     if (lines.length === 0) continue;
 
     // Per-page median font size for heading heuristic.
@@ -216,7 +255,12 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
       const kvBlock = collectKVBlock(lines, i);
       if (kvBlock.length >= 3) {
         flushBullets();
-        out.push(renderKVTable(kvBlock));
+        const { html, rows, valueColX, bodySize } = renderKVTable(kvBlock);
+        out.push(html);
+        const reachedEnd = i + kvBlock.length >= lines.length;
+        if (reachedEnd) {
+          lastKv = { rows, valueColX, bodySize, pageIdx: htmlPages.length, outIdx: out.length - 1 };
+        }
         i += kvBlock.length;
         continue;
       }
@@ -294,10 +338,10 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     }
     flushBullets();
 
-    htmlPages.push(out.join('\n'));
+    htmlPages.push(out);
   }
 
-  const html = htmlPages.join('\n');
+  const html = htmlPages.map(parts => parts.join('\n')).join('\n');
   return { html, text: stripHtml(html) };
 
   // --- helpers ---
@@ -410,7 +454,16 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     return line.items[splitIdx]?.x ?? 0;
   }
 
-  function renderKVTable(block: Line[]): string {
+  function renderKVRows(rows: KVRow[]): string {
+    const rendered = rows.map(r => {
+      const valueHtml = r.valueLines.map(l => renderInline(l)).join('<br/>');
+      const fullLabel = [r.label, ...r.labelExtra].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+      return `<tr><td>${escapeHtml(fullLabel)}</td><td>${valueHtml}</td></tr>`;
+    });
+    return `<table class="pdf-kv">${rendered.join('')}</table>`;
+  }
+
+  function renderKVTable(block: Line[]): { html: string; rows: KVRow[]; valueColX: number; bodySize: number } {
     // Identify dominant value column from labelled rows.
     const valueXs: number[] = [];
     for (const line of block) {
@@ -419,8 +472,7 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     valueXs.sort((a, b) => a - b);
     const valueColX = valueXs[Math.floor(valueXs.length / 2)] ?? 0;
 
-    type Row = { label: string; labelExtra: string[]; valueLines: Line[] };
-    const rows: Row[] = [];
+    const rows: KVRow[] = [];
     for (const line of block) {
       if (line.items.length === 0) continue;
       const minX = Math.min(...line.items.map(it => it.x));
@@ -442,13 +494,10 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
       const labelText = leftItems.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim().replace(/:\s*$/, '');
       rows.push({ label: labelText, labelExtra: [], valueLines: [{ ...line, items: rightItems }] });
     }
-
-    const rendered = rows.map(r => {
-      const valueHtml = r.valueLines.map(l => renderInline(l)).join('<br/>');
-      const fullLabel = [r.label, ...r.labelExtra].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
-      return `<tr><td>${escapeHtml(fullLabel)}</td><td>${valueHtml}</td></tr>`;
-    });
-    return `<table class="pdf-kv">${rendered.join('')}</table>`;
+    // Median body font size across the block (used to gate cross-page merges).
+    const allSizes = block.flatMap(l => l.items.map(it => it.h)).sort((a, b) => a - b);
+    const bodySize = allSizes[Math.floor(allSizes.length / 2)] || 10;
+    return { html: renderKVRows(rows), rows, valueColX, bodySize };
   }
 
   function isTableLine(line: Line): boolean {
