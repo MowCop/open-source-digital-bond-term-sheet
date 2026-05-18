@@ -252,7 +252,49 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
 
     while (i < lines.length) {
       // 1) Key/value block detection (≥3 consecutive lines that look like "Label: value" or two-column).
-      const kvBlock = collectKVBlock(lines, i);
+      let kvBlock = collectKVBlock(lines, i);
+
+      // Lookahead: if the current line doesn't seed a KV block, peek ahead up to
+      // 3 lines for a real KV block and check if the intervening lines align to
+      // its value column (handles cases where pdf.js item widths underestimate
+      // the column gap on the first row).
+      if (kvBlock.length < 3) {
+        for (let la = 1; la <= 3 && i + la < lines.length; la++) {
+          const future = collectKVBlock(lines, i + la);
+          if (future.length < 3) continue;
+          const futureValueColX = (() => {
+            const xs: number[] = [];
+            for (const ln of future) {
+              if (looksLikeKV(ln)) xs.push(getValueColX(ln));
+            }
+            xs.sort((a, b) => a - b);
+            return xs[Math.floor(xs.length / 2)] ?? 0;
+          })();
+          if (!futureValueColX) break;
+          const between = lines.slice(i, i + la);
+          const allAlign = between.every(line => {
+            if (line.items.length === 0) return false;
+            const minX = Math.min(...line.items.map(it => it.x));
+            const maxX = Math.max(...line.items.map(it => it.x));
+            // Pure label-only (whole line left of value column)
+            if (maxX < futureValueColX - 4) return true;
+            // Pure value-only (whole line at/after value column)
+            if (minX >= futureValueColX - 8) return true;
+            // Two-column row: need items on both sides with a real gap between them.
+            const leftItems = line.items.filter(it => it.x < futureValueColX - 4);
+            const rightItems = line.items.filter(it => it.x >= futureValueColX - 4);
+            if (leftItems.length === 0 || rightItems.length === 0) return false;
+            const leftMaxEnd = Math.max(...leftItems.map(it => it.x + (it.w || 0)));
+            const rightMinX = Math.min(...rightItems.map(it => it.x));
+            return rightMinX - leftMaxEnd >= 6;
+          });
+          if (allAlign) {
+            kvBlock = [...between, ...future];
+          }
+          break;
+        }
+      }
+
       if (kvBlock.length >= 3) {
         flushBullets();
         const { html, rows, valueColX, bodySize } = renderKVTable(kvBlock);
@@ -373,12 +415,7 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
   }
 
   function looksLikeKV(line: Line): boolean {
-    const dbgText = line.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
-    const isTarget = /EU MiFID/i.test(dbgText);
-    if (line.items.length < 2) {
-      if (isTarget) console.log('[pdfToHtml] looksLikeKV reject (single item)', { text: dbgText, items: line.items.length });
-      return false;
-    }
+    if (line.items.length < 2) return false;
     // Find a large internal gap (>= 25pt) splitting line into left/right groups.
     let splitIdx = -1;
     let bestGap = 0;
@@ -387,26 +424,15 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
       const gap = line.items[k].x - (prev.x + (prev.w || 0));
       if (gap > bestGap) { bestGap = gap; splitIdx = k; }
     }
-    if (bestGap < 20 || splitIdx < 1) {
-      if (isTarget) console.log('[pdfToHtml] looksLikeKV reject (small gap)', { text: dbgText, bestGap, items: line.items.length });
-      return false;
-    }
+    if (bestGap < 20 || splitIdx < 1) return false;
     const leftText = line.items.slice(0, splitIdx).map(i => i.str).join(' ').trim();
     const rightText = line.items.slice(splitIdx).map(i => i.str).join(' ').trim();
-    if (!leftText || !rightText) {
-      if (isTarget) console.log('[pdfToHtml] looksLikeKV reject (empty side)', { leftText, rightText });
-      return false;
-    }
+    if (!leftText || !rightText) return false;
     // Left side should look like a label.
-    if (leftText.length > 80) {
-      if (isTarget) console.log('[pdfToHtml] looksLikeKV reject (label too long)', { leftText, len: leftText.length, bestGap });
-      return false;
-    }
+    if (leftText.length > 80) return false;
     // Very wide gap (>= 40pt) is an unambiguous two-column layout — accept.
     if (bestGap >= 40) return true;
-    const result = /:\s*$/.test(leftText) || leftText.split(/\s+/).length <= 10;
-    if (isTarget) console.log('[pdfToHtml] looksLikeKV result', { leftText, rightText, bestGap, result });
-    return result;
+    return /:\s*$/.test(leftText) || leftText.split(/\s+/).length <= 10;
   }
 
   function collectKVBlock(lines: Line[], start: number): Line[] {
