@@ -373,12 +373,7 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
   }
 
   function looksLikeKV(line: Line): boolean {
-    const dbgText = line.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
-    const isTarget = /EU MiFID/i.test(dbgText);
-    if (line.items.length < 2) {
-      if (isTarget) console.log('[pdfToHtml] looksLikeKV reject (single item)', { text: dbgText, items: line.items.length });
-      return false;
-    }
+    if (line.items.length < 2) return false;
     // Find a large internal gap (>= 25pt) splitting line into left/right groups.
     let splitIdx = -1;
     let bestGap = 0;
@@ -387,26 +382,15 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
       const gap = line.items[k].x - (prev.x + (prev.w || 0));
       if (gap > bestGap) { bestGap = gap; splitIdx = k; }
     }
-    if (bestGap < 20 || splitIdx < 1) {
-      if (isTarget) console.log('[pdfToHtml] looksLikeKV reject (small gap)', { text: dbgText, bestGap, items: line.items.length });
-      return false;
-    }
+    if (bestGap < 20 || splitIdx < 1) return false;
     const leftText = line.items.slice(0, splitIdx).map(i => i.str).join(' ').trim();
     const rightText = line.items.slice(splitIdx).map(i => i.str).join(' ').trim();
-    if (!leftText || !rightText) {
-      if (isTarget) console.log('[pdfToHtml] looksLikeKV reject (empty side)', { leftText, rightText });
-      return false;
-    }
+    if (!leftText || !rightText) return false;
     // Left side should look like a label.
-    if (leftText.length > 80) {
-      if (isTarget) console.log('[pdfToHtml] looksLikeKV reject (label too long)', { leftText, len: leftText.length, bestGap });
-      return false;
-    }
+    if (leftText.length > 80) return false;
     // Very wide gap (>= 40pt) is an unambiguous two-column layout — accept.
     if (bestGap >= 40) return true;
-    const result = /:\s*$/.test(leftText) || leftText.split(/\s+/).length <= 10;
-    if (isTarget) console.log('[pdfToHtml] looksLikeKV result', { leftText, rightText, bestGap, result });
-    return result;
+    return /:\s*$/.test(leftText) || leftText.split(/\s+/).length <= 10;
   }
 
   function collectKVBlock(lines: Line[], start: number): Line[] {
