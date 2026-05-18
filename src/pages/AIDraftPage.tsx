@@ -28,7 +28,6 @@ export default function AIDraftPage() {
 
   const [headline, setHeadline] = useState('');
   const [body, setBody] = useState('');
-  const [bodyMode, setBodyMode] = useState<'write' | 'preview'>('write');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
   const [aiFields, setAiFields] = useState<Record<string, string> | null>(null);
