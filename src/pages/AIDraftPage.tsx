@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Bookrunner } from '@/types/bond';
 import { extractBookrunners, simulateAIExtraction } from '@/lib/alertParsing';
 import DealChecker from '@/components/DealChecker';
-import { Sparkles, Paperclip, Send, Save, ChevronDown, MessageSquare, X } from 'lucide-react';
+import { Sparkles, Paperclip, Send, Save, ChevronDown, MessageSquare, X, Download, Replace, Trash2 } from 'lucide-react';
 import RichTextEditor from '@/components/RichTextEditor';
 import { stripHtml } from '@/lib/htmlText';
 import { docxFileToHtml } from '@/lib/docxToHtml';
@@ -40,6 +40,8 @@ export default function AIDraftPage() {
   const [scpIds, setScpIds] = useState<string[]>([]);
   const [scpQuery, setScpQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
+  const replaceTargetIdRef = useRef<string | null>(null);
   const editorRef = useRef<Editor | null>(null);
 
   // Vendor/distribution recipients
@@ -85,6 +87,8 @@ export default function AIDraftPage() {
     type: file.name.endsWith('.pdf') ? 'pdf' : file.name.endsWith('.docx') ? 'docx' : 'pptx',
     size: file.size,
     url: '',
+    file,
+    mimeType: file.type || undefined,
   });
 
   const applyExtractedText = (text: string, fileName: string) => {
@@ -111,13 +115,35 @@ export default function AIDraftPage() {
     }
   };
 
+  const extractFromFile = async (file: File): Promise<boolean> => {
+    const name = file.name.toLowerCase();
+    try {
+      if (name.endsWith('.docx')) {
+        const { html, text } = await docxFileToHtml(file);
+        if (!html) return false;
+        appendHtmlToBody(html);
+        applyExtractedText(text, file.name);
+        return true;
+      }
+      if (name.endsWith('.pdf')) {
+        const { html, text } = await pdfFileToHtml(file);
+        if (!html) return false;
+        appendHtmlToBody(html);
+        applyExtractedText(text, file.name);
+        return true;
+      }
+    } catch (err) {
+      console.error('extraction failed', file.name, err);
+    }
+    return false;
+  };
+
   const handleFiles = async (files: File[]) => {
     if (files.length === 0) return;
     setAttachments(prev => [...prev, ...files.map(toAttachment)]);
 
-    const docxFiles = files.filter(file => file.name.toLowerCase().endsWith('.docx'));
-    const pdfFiles = files.filter(file => file.name.toLowerCase().endsWith('.pdf'));
-    if (docxFiles.length === 0 && pdfFiles.length === 0) {
+    const extractable = files.filter(f => /\.(pdf|docx)$/i.test(f.name));
+    if (extractable.length === 0) {
       toast({ title: 'Files attached', description: `${files.length} file(s) added` });
       return;
     }
@@ -126,35 +152,10 @@ export default function AIDraftPage() {
     let extractedCount = 0;
     const failures: string[] = [];
     try {
-      for (const file of docxFiles) {
-        try {
-          const { html, text } = await docxFileToHtml(file);
-          if (html) {
-            appendHtmlToBody(html);
-            applyExtractedText(text, file.name);
-            extractedCount++;
-          } else {
-            failures.push(file.name);
-          }
-        } catch (err) {
-          console.error('docx extraction failed', file.name, err);
-          failures.push(file.name);
-        }
-      }
-      for (const file of pdfFiles) {
-        try {
-          const { html, text } = await pdfFileToHtml(file);
-          if (html) {
-            appendHtmlToBody(html);
-            applyExtractedText(text, file.name);
-            extractedCount++;
-          } else {
-            failures.push(file.name);
-          }
-        } catch (err) {
-          console.error('pdf extraction failed', file.name, err);
-          failures.push(file.name);
-        }
+      for (const file of extractable) {
+        const ok = await extractFromFile(file);
+        if (ok) extractedCount++;
+        else failures.push(file.name);
       }
       if (extractedCount > 0) {
         toast({ title: 'AI extraction complete', description: `Extracted terms from ${extractedCount} attachment(s).` });
@@ -168,6 +169,43 @@ export default function AIDraftPage() {
     } finally {
       setIsExtractingAttachment(false);
     }
+  };
+
+  const downloadAttachment = (a: Attachment) => {
+    if (!a.file) {
+      toast({ title: 'File unavailable', description: 'Re-attach to enable download.', variant: 'destructive' });
+      return;
+    }
+    const url = URL.createObjectURL(a.file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = a.name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const requestReplace = (id: string) => {
+    replaceTargetIdRef.current = id;
+    replaceInputRef.current?.click();
+  };
+
+  const handleReplaceSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    const targetId = replaceTargetIdRef.current;
+    replaceTargetIdRef.current = null;
+    if (!file || !targetId) return;
+    const oldName = attachments.find(a => a.id === targetId)?.name;
+    const replacement: Attachment = { ...toAttachment(file), id: targetId };
+    setAttachments(prev => prev.map(a => (a.id === targetId ? replacement : a)));
+    if (/\.(pdf|docx)$/i.test(file.name)) {
+      setIsExtractingAttachment(true);
+      await extractFromFile(file);
+      setIsExtractingAttachment(false);
+    }
+    toast({ title: 'Attachment replaced', description: oldName ? `Replaced ${oldName} with ${file.name}` : `Replaced with ${file.name}` });
   };
 
   const handleDrop = (e: React.DragEvent) => {
