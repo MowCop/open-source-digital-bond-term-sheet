@@ -3,14 +3,17 @@ import { useApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Attachment } from '@/types/bond';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Bookrunner } from '@/types/bond';
 import { extractBookrunners, simulateAIExtraction } from '@/lib/alertParsing';
 import DealChecker from '@/components/DealChecker';
 import { Sparkles, Paperclip, Send, Save, ChevronDown, MessageSquare, X } from 'lucide-react';
-import LinkifiedText from '@/components/LinkifiedText';
+import RichTextEditor from '@/components/RichTextEditor';
+import { stripHtml } from '@/lib/htmlText';
+import { docxFileToHtml } from '@/lib/docxToHtml';
+import { pdfFileToHtml } from '@/lib/pdfToHtml';
+import type { Editor } from '@tiptap/react';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -38,6 +41,7 @@ export default function AIDraftPage() {
   const [scpIds, setScpIds] = useState<string[]>([]);
   const [scpQuery, setScpQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<Editor | null>(null);
 
   // Vendor/distribution recipients
   const vendorUsers = users.filter(u => u.organizationType === 'vendor');
@@ -57,7 +61,7 @@ export default function AIDraftPage() {
 
   // Auto-extract AI fields when headline or body changes
   useEffect(() => {
-    const combined = `${headline} ${body}`.trim();
+    const combined = `${headline} ${stripHtml(body)}`.trim();
     if (combined.length < 10) {
       setAiFields(null);
       setAiBookrunners([]);
@@ -93,10 +97,19 @@ export default function AIDraftPage() {
       : fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
 
     setHeadline(prev => prev.trim() ? prev : subjectLine);
-    setBody(prev => prev.trim() ? `${prev.trim()}\n\n${clean}` : clean);
     setAiFields(result.keyTerms);
     setAiConfidence(result.confidence);
     setAiBookrunners(extractBookrunners(clean));
+  };
+
+  const appendHtmlToBody = (html: string) => {
+    if (!html) return;
+    const editor = editorRef.current;
+    if (editor) {
+      editor.chain().focus('end').insertContent(html).run();
+    } else {
+      setBody(prev => (prev ? `${prev}<hr/>${html}` : html));
+    }
   };
 
   const handleFiles = async (files: File[]) => {
@@ -114,46 +127,34 @@ export default function AIDraftPage() {
     let extractedCount = 0;
     const failures: string[] = [];
     try {
-      if (docxFiles.length > 0) {
-        const mammoth = (await import('mammoth/mammoth.browser')).default;
-        for (const file of docxFiles) {
-          try {
-            const { value } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
-            applyExtractedText(value, file.name);
+      for (const file of docxFiles) {
+        try {
+          const { html, text } = await docxFileToHtml(file);
+          if (html) {
+            appendHtmlToBody(html);
+            applyExtractedText(text, file.name);
             extractedCount++;
-          } catch (err) {
-            console.error('docx extraction failed', file.name, err);
+          } else {
             failures.push(file.name);
           }
+        } catch (err) {
+          console.error('docx extraction failed', file.name, err);
+          failures.push(file.name);
         }
       }
-      if (pdfFiles.length > 0) {
-        const pdfjs = await import('pdfjs-dist');
-        const workerSrc = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
-        (pdfjs as any).GlobalWorkerOptions.workerSrc = workerSrc;
-        for (const file of pdfFiles) {
-          try {
-            const buf = await file.arrayBuffer();
-            const doc = await (pdfjs as any).getDocument({ data: buf }).promise;
-            let text = '';
-            for (let i = 1; i <= doc.numPages; i++) {
-              const page = await doc.getPage(i);
-              const content = await page.getTextContent();
-              const pageText = content.items
-                .map((it: any) => ('str' in it ? it.str : ''))
-                .join(' ');
-              text += pageText + '\n\n';
-            }
-            if (text.trim()) {
-              applyExtractedText(text, file.name);
-              extractedCount++;
-            } else {
-              failures.push(file.name);
-            }
-          } catch (err) {
-            console.error('pdf extraction failed', file.name, err);
+      for (const file of pdfFiles) {
+        try {
+          const { html, text } = await pdfFileToHtml(file);
+          if (html) {
+            appendHtmlToBody(html);
+            applyExtractedText(text, file.name);
+            extractedCount++;
+          } else {
             failures.push(file.name);
           }
+        } catch (err) {
+          console.error('pdf extraction failed', file.name, err);
+          failures.push(file.name);
         }
       }
       if (extractedCount > 0) {
