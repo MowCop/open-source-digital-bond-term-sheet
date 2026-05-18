@@ -389,6 +389,7 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
   // --- helpers ---
 
   function renderInline(line: Line): string {
+    if (!line.items || line.items.length === 0) return '';
     // Build runs, merging adjacent items with the same bold state.
     const parts: string[] = [];
     let curBold = line.items[0].bold;
@@ -500,7 +501,10 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
 
   function renderKVRows(rows: KVRow[]): string {
     const rendered = rows.map(r => {
-      const valueHtml = r.valueLines.map(l => renderInline(l)).join('<br/>');
+      const valueHtml = r.valueLines
+        .filter(l => l.items && l.items.length > 0)
+        .map(l => renderInline(l))
+        .join('<br/>');
       const fullLabel = [r.label, ...r.labelExtra].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
       return `<tr><td>${escapeHtml(fullLabel)}</td><td>${valueHtml}</td></tr>`;
     });
