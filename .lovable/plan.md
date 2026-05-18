@@ -1,33 +1,46 @@
-# Fix: Issuer mis-extracted as "United Arab Emirates" on Aldar PDF
+## Problem
 
-## Root cause
+Creating a new issue from "Create New Issue" silently fails on both **Save Draft** and **Save & Send**. The console shows:
 
-When a PDF term-sheet's Issuer row is rendered as an HTML KV table and then stripped to plain text, the result is `… Issuer Aldar Properties PJSC Issuer LEI 98450048… …` — label and value separated only by whitespace, no colon.
+```
+[Cloud] insertMessage failed
+code: "42501"
+message: new row violates row-level security policy for table "messages"
+```
 
-`extractByLabel()` in `src/lib/alertParsing.ts` only accepts `Issuer\s*[:\-–]\s*…`, so the labelled value is missed. Extraction falls through to the sovereign-pattern layer, which matches **"United Arab Emirates"** inside the boilerplate "(a public joint stock company incorporated in the United Arab Emirates)".
+### Root cause
 
-The KV-table heading "Issuer" is the strongest possible signal — it must always win over generic sovereign / connector patterns.
+The `messages` table RLS insert policy is:
 
-## Changes
+```sql
+sender_id = auth.uid()::text
+```
 
-### `src/lib/alertParsing.ts`
+But in `AIDraftPage.tsx` we pass `senderId: currentUser.id`, where `currentUser` comes from the legacy mock-user store (`bondvdr.currentUser` in localStorage, seeded from `mockUsers[0]`). Its `id` is something like `"u1"` — not the Supabase auth UUID — so the RLS check fails and the row is rejected. The optimistic local state shows the draft briefly, but it is never persisted, and on reload it disappears. "Save & Send" hits the same insert and fails the same way.
 
-1. Loosen `extractByLabel()` to accept whitespace-only separators (typical of table flattening), in addition to `:`, `-`, `–`:
-   - Match `Issuer` (and `Borrower`, `Obligor`) followed by 1+ spaces OR a colon/dash, then capture up to the next known field label.
-   - Disambiguate from sibling labels: do **not** match when the next word is `LEI`, `Rating`, `Name`, `Type`, `Group`, or any of the existing follow-on field labels already used in the split regex.
-   - Keep the existing terminator-split so the value stops at the next labelled field on the same line.
+Audit-log inserts succeed because that policy has an `OR is_admin(auth.uid())` branch; the `messages` policy does not.
 
-2. Reject obviously-wrong matches:
-   - If the captured value is empty, a known bank, or matches a sovereign-only phrase like "United Arab Emirates" / "Republic of …" / "Kingdom of …", treat the label match as not-found and continue (lets the fallback still help in genuinely sovereign PDFs that happen to have an `Issuer:` line elsewhere).
+## Fix
 
-3. No changes to the sovereign / corporate / connector fallback layers — they remain the safety net for non-term-sheet alerts (e.g. press wires that don't carry an "Issuer" label).
+Use the real Supabase auth user id as `sender_id` on insert.
 
-### No other files changed
+### Changes
 
-`simulateAIExtraction`, `AIDraftPage`, and the PDF→HTML pipeline are untouched. The fix is purely in the regex / disambiguation logic.
+1. **`src/context/AppContext.tsx`** — in `createMessage`, resolve the effective sender id from the Supabase session (via `useAuth().authUser?.id`) and use it for both the persisted `senderId` and the audit entry. Fall back to `currentUser.id` only when no auth user exists (keeps mock-mode unit tests working).
 
-## Validation
+2. **`src/pages/AIDraftPage.tsx`** — no longer pass `senderId: currentUser.id`; let `createMessage` set it, OR pass `authUser?.id ?? currentUser.id`. Pick whichever keeps the type contract cleanest (likely: keep the prop but source it from `authUser`).
 
-1. Re-upload the Aldar Properties PJSC Pricing Term Sheet — Issuer Name should be `Aldar Properties PJSC`, headline should start with it, and the AI Field Extraction panel should show the same.
-2. Re-upload the Slovak Republic term sheet previously tested — Issuer must still resolve to `Slovak Republic` (sovereign fallback when no `Issuer` row exists, or the labelled row when it does).
-3. Paste a free-text alert ("Republic of Italy mandated JPMorgan…") with no Issuer label — must still resolve to `Republic of Italy`.
+3. **Toast on failure** — `insertMessage(...).catch(...)` currently only `console.error`s, so the UI shows "Draft Saved" even when the DB insert was rejected. Surface a destructive toast ("Could not save draft — please retry") so the user is not misled. Same treatment for `sendMessage`.
+
+4. **Apply the same `auth.uid()` fix to other inserts blocked by analogous policies**, specifically `sendChatMessage` (chat_messages policy: `sender_id = auth.uid()::text`). Audit, deals, notifications, etc. all have admin-OR branches and are unaffected.
+
+### Not changing
+
+- RLS policies remain as-is — they are correct; the bug is on the client.
+- The mock-user concept stays for display (name, organization, role badges); only the persisted `sender_id` switches to the auth UUID.
+
+### Verification
+
+- Drop the Aldar PDF, click **Save Draft** → no RLS error in console, row appears in `messages` table with `sender_id = <auth uid>`.
+- Click **Save & Send** → row updates to `status='sent'`, recipients populated, no console error.
+- Reload the page → the new draft/sent message is still in the Messages list (proves it persisted, not just local optimistic state).
