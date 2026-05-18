@@ -15,6 +15,7 @@ import { docxFileToHtml } from '@/lib/docxToHtml';
 import { pdfFileToHtml } from '@/lib/pdfToHtml';
 import type { Editor } from '@tiptap/react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -267,6 +268,7 @@ export default function AIDraftPage() {
       return;
     }
     const deal = createDealFromFields();
+    const uploaded = await uploadPendingAttachments();
     createMessage({
       dealIds: [deal.id],
       subject: headline,
@@ -274,13 +276,13 @@ export default function AIDraftPage() {
       status: 'draft',
       senderId: currentUser.id,
       recipients: selectedRecipients,
-      attachments,
+      attachments: uploaded,
       aiSuggestions: aiFields ? { headline, borrowerDetails: '', dealSummary: '', keyTerms: aiFields, confidence: aiConfidence } : undefined,
     });
     toast({ title: 'Draft Saved', description: 'Issue saved as draft in New Issue Board.' });
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!headline.trim()) {
       toast({ title: 'Missing headline', description: 'Please enter a deal headline', variant: 'destructive' });
       return;
@@ -290,6 +292,7 @@ export default function AIDraftPage() {
       return;
     }
     const deal = createDealFromFields();
+    const uploaded = await uploadPendingAttachments();
     createMessage({
       dealIds: [deal.id],
       subject: headline,
@@ -297,7 +300,7 @@ export default function AIDraftPage() {
       status: 'sent',
       senderId: currentUser.id,
       recipients: selectedRecipients,
-      attachments,
+      attachments: uploaded,
       aiSuggestions: aiFields ? { headline, borrowerDetails: '', dealSummary: '', keyTerms: aiFields, confidence: aiConfidence } : undefined,
     });
     toast({ title: 'Alert Sent', description: `Sent to ${selectedRecipients.length} recipient(s)` });
