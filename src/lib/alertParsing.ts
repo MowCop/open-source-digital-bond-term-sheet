@@ -193,9 +193,22 @@ export function extractBorrowerName(rawText: string): string {
 export function simulateAIExtraction(rawText: string): AISuggestion {
   const borrower = extractBorrowerName(rawText);
   const compactText = rawText.replace(/\s+/g, ' ');
-  const hasAmount = /(?:\b(?:EUR|USD|GBP|CHF)\s*)?(\d[\d,.]+\s*(?:bn|mm|m|million|billion)?)/i.exec(compactText);
-  const hasCurrency = /(EUR|USD|GBP|CHF)/g.exec(rawText);
+  const hasAmount = /(?:\b(?:EUR|USD|GBP|CHF|U\.?S\.?\$?)\s*\$?)(\d[\d,.]+\s*(?:bn|mm|m|million|billion)?)/i.exec(compactText);
+  const hasCurrencyMatch = /\b(EUR|USD|GBP|CHF)\b|U\.?S\.?\$/i.exec(rawText);
+  const currency = hasCurrencyMatch ? (hasCurrencyMatch[1] ? hasCurrencyMatch[1].toUpperCase() : 'USD') : '';
   const hasTenor = /(\d+\s*Y|\d+\s*-\s*year|due\s+\d{4})/gi.exec(rawText);
+  const formatAmount = (raw: string | undefined): string => {
+    if (!raw) return '';
+    const cleaned = raw.replace(/[, ]/g, '').toLowerCase();
+    if (/bn|billion/.test(cleaned)) return cleaned.replace(/(billion|bn)/, 'bn');
+    if (/mm|million/.test(cleaned)) return cleaned.replace(/(million|mm)/, 'm');
+    const n = parseFloat(cleaned);
+    if (!isFinite(n)) return raw.trim();
+    if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toString().replace(/\.0+$/, '')}bn`;
+    if (n >= 1_000_000) return `${(n / 1_000_000).toString().replace(/\.0+$/, '')}m`;
+    return raw.trim();
+  };
+  const amountShort = formatAmount(hasAmount?.[1]);
   const hasSpread = /(MS[+\-]\d+(?:bps)?|[Ss]waps?\s*[+\-]\s*\d+)/g.exec(rawText);
   const hasISIN = /([A-Z]{2}[A-Z0-9]{9}\d)/g.exec(rawText);
   const hasLEI = /([A-Z0-9]{20})/g.exec(rawText);
@@ -212,15 +225,23 @@ export function simulateAIExtraction(rawText: string): AISuggestion {
   const hasListing = /listing\s*[:\-]?\s*([^.;\n]+)/i.exec(rawText);
   const hasLaw = /(English Law|New York Law|German Law|French Law|Swiss Law)/i.exec(compactText);
 
+  const stage = detectStage(rawText);
+  const dueMatch = /due\s+(\d{4})/i.exec(rawText);
+  const tenorPart = dueMatch ? `Due ${dueMatch[1]}` : (hasTenor?.[1] || '');
+  const sizePart = [currency, amountShort].filter(Boolean).join(' ');
+  const headlineSuffix = stage === 'Priced' ? 'Priced' : 'New Issue Alert';
+  const headline = `${borrower || 'Issuer'} ${sizePart} ${tenorPart} — ${headlineSuffix}`
+    .replace(/\s+/g, ' ').replace(/\s+—/, ' —').trim();
+
   return {
-    headline: `${borrower || 'Issuer'} ${hasCurrency?.[1] || ''} ${hasTenor?.[1] || ''} — New Issue Alert`.replace(/\s+/g, ' ').trim(),
+    headline,
     borrowerDetails: borrower,
-    dealSummary: `${hasCurrency?.[1] || ''} ${hasAmount?.[1] || ''} ${hasTenor?.[1] || ''} at ${hasSpread?.[1] || ''}`.trim(),
+    dealSummary: `${currency} ${amountShort} ${tenorPart} at ${hasSpread?.[1] || ''}`.replace(/\s+/g, ' ').trim(),
     keyTerms: {
       'Issuer Name': borrower,
-      Currency: hasCurrency?.[1] || '',
-      Size: hasAmount?.[1] || '',
-      Tenor: hasTenor?.[1] || '',
+      Currency: currency,
+      Size: amountShort,
+      Tenor: tenorPart,
       'Reoffer Spread': hasSpread?.[1] || '',
       'Issuer Rating': hasRating?.[1] || '',
       ISIN: hasISIN?.[1] || '',
@@ -244,7 +265,7 @@ export function simulateAIExtraction(rawText: string): AISuggestion {
 export function detectStage(rawText: string): DealStage | null {
   const t = rawText.toLowerCase();
   if (/\bsettled\b/.test(t)) return 'Settled';
-  if (/\bpriced (at|today)\b|\bfinal (terms|pricing)\b/.test(t)) return 'Priced';
+  if (/\bpricing term sheet\b|\bpriced (at|today)\b|\bfinal (terms|pricing)\b/.test(t)) return 'Priced';
   if (/\bbooks (are )?closed\b/.test(t)) return 'Books Closed';
   if (/\bbooks (are )?open\b|\bbooks open\b/.test(t)) return 'Books Open';
   if (/\blaunched\b|\blaunch\b/.test(t)) return 'Launched';
