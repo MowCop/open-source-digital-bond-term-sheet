@@ -207,6 +207,7 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     // table and the first lines of this page align with that table's value
     // column, append them to the last row of that table.
     if (lastKv) {
+      const kv = lastKv;
       let consumed = 0;
       while (consumed < lines.length) {
         const line = lines[consumed];
@@ -214,17 +215,17 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
         const minX = Math.min(...line.items.map(it => it.x));
         const maxX = Math.max(...line.items.map(it => it.x));
         const lineMaxSize = Math.max(...line.items.map(it => it.h));
-        const inValueCol = Math.abs(minX - lastKv.valueColX) < 10 && maxX >= lastKv.valueColX - 4;
-        const sizeOk = lineMaxSize <= lastKv.bodySize * 1.2;
+        const inValueCol = Math.abs(minX - kv.valueColX) < 10 && maxX >= kv.valueColX - 4;
+        const sizeOk = lineMaxSize <= kv.bodySize * 1.2;
         if (inValueCol && sizeOk) { consumed++; continue; }
         break;
       }
       if (consumed > 0) {
         const contLines = lines.slice(0, consumed);
-        const lastRow = lastKv.rows[lastKv.rows.length - 1];
+        const lastRow = kv.rows[kv.rows.length - 1];
         if (lastRow) {
           lastRow.valueLines.push(...contLines);
-          htmlPages[lastKv.pageIdx][lastKv.outIdx] = renderKVRows(lastKv.rows);
+          htmlPages[kv.pageIdx][kv.outIdx] = renderKVRows(kv.rows);
         }
         lines = lines.slice(consumed);
       }
