@@ -196,7 +196,6 @@ export function simulateAIExtraction(rawText: string): AISuggestion {
   const hasAmount = /(?:\b(?:EUR|USD|GBP|CHF|U\.?S\.?\$?)\s*\$?)(\d[\d,.]+\s*(?:bn|mm|m|million|billion)?)/i.exec(compactText);
   const hasCurrencyMatch = /\b(EUR|USD|GBP|CHF)\b|U\.?S\.?\$/i.exec(rawText);
   const currency = hasCurrencyMatch ? (hasCurrencyMatch[1] ? hasCurrencyMatch[1].toUpperCase() : 'USD') : '';
-  const hasCurrency: RegExpExecArray | null = currency ? ([currency, currency] as unknown as RegExpExecArray) : null;
   const hasTenor = /(\d+\s*Y|\d+\s*-\s*year|due\s+\d{4})/gi.exec(rawText);
   const formatAmount = (raw: string | undefined): string => {
     if (!raw) return '';
