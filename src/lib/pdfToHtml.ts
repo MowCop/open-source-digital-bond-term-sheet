@@ -502,7 +502,19 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     valueXs.sort((a, b) => a - b);
     const valueColX = valueXs[Math.floor(valueXs.length / 2)] ?? 0;
 
+    // Median line gap within the block; used to detect whether a later
+    // KV-looking line is a wrapped continuation of the previous row
+    // (tight gap) or a genuine new row (separator-sized gap).
+    const blockGaps: number[] = [];
+    for (let k = 1; k < block.length; k++) {
+      const g = block[k - 1].y - block[k].y;
+      if (g > 0 && g < 100) blockGaps.push(g);
+    }
+    blockGaps.sort((a, b) => a - b);
+    const blockMedianGap = blockGaps[Math.floor(blockGaps.length / 2)] || 14;
+
     const rows: KVRow[] = [];
+    let prevY: number | null = null;
     for (const line of block) {
       if (line.items.length === 0) continue;
       const minX = Math.min(...line.items.map(it => it.x));
@@ -511,11 +523,27 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
       const isLabelCont = rows.length > 0 && maxX < valueColX - 8;
       if (isValueCont) {
         rows[rows.length - 1].valueLines.push(line);
+        prevY = line.y;
         continue;
       }
       if (isLabelCont) {
         const txt = line.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
         if (txt) rows[rows.length - 1].labelExtra.push(txt);
+        prevY = line.y;
+        continue;
+      }
+      // Tight-gap merge: a KV-looking line whose Y gap to the previous line
+      // is normal body line spacing belongs to the same logical row (the
+      // previous row's label and value both wrapped onto this baseline).
+      if (rows.length > 0 && prevY !== null && prevY - line.y <= blockMedianGap * 1.4) {
+        const leftItems = line.items.filter(it => it.x < valueColX - 4);
+        const rightItems = line.items.filter(it => it.x >= valueColX - 4);
+        const leftTxt = leftItems.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
+        if (leftTxt) rows[rows.length - 1].labelExtra.push(leftTxt);
+        if (rightItems.length > 0) {
+          rows[rows.length - 1].valueLines.push({ ...line, items: rightItems });
+        }
+        prevY = line.y;
         continue;
       }
       // Split label / value at the value column.
@@ -523,6 +551,7 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
       const rightItems = line.items.filter(it => it.x >= valueColX - 4);
       const labelText = leftItems.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim().replace(/:\s*$/, '');
       rows.push({ label: labelText, labelExtra: [], valueLines: [{ ...line, items: rightItems }] });
+      prevY = line.y;
     }
     // Median body font size across the block (used to gate cross-page merges).
     const allSizes = block.flatMap(l => l.items.map(it => it.h)).sort((a, b) => a - b);
