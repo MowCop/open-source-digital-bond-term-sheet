@@ -276,7 +276,16 @@ export default function AIDraftPage() {
       <div className="grid grid-cols-3 gap-4">
         {/* Left: Main compose area */}
         <div className="col-span-2 flex flex-col">
-          <div className="bg-card border border-border rounded-lg flex-1 flex flex-col">
+          <div
+            onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+            onDragLeave={e => {
+              // Only clear when leaving the card itself, not child elements
+              if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+              setIsDragOver(false);
+            }}
+            onDrop={handleDrop}
+            className={`relative bg-card border rounded-lg flex-1 flex flex-col transition-colors ${isDragOver ? 'border-accent border-dashed bg-accent/5' : 'border-border'}`}
+          >
             {/* Headline */}
             <Input
               value={headline}
@@ -284,9 +293,9 @@ export default function AIDraftPage() {
               placeholder="Enter deal headline (e.g. Republic of Italy EUR 1.5bn 10Y BTP Syndication)"
               className="border-0 border-b border-border rounded-none text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
             />
-            <div className="grid flex-1 grid-rows-2 min-h-[400px]">
+            <div className="flex flex-1 flex-col min-h-[400px]">
               {/* Body with Write / Preview toggle */}
-              <div className="flex flex-col min-h-0">
+              <div className="flex flex-1 flex-col min-h-0">
                 <div className="flex items-center gap-1 px-2 py-1 border-b border-border text-xs">
                   <button
                     type="button"
@@ -320,13 +329,8 @@ export default function AIDraftPage() {
                   </div>
                 )}
               </div>
-              {/* Drop zone */}
-              <div
-                onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
-                onDragLeave={() => setIsDragOver(false)}
-                onDrop={handleDrop}
-                className={`flex min-h-0 items-start overflow-y-auto px-4 py-4 border-t border-border text-sm text-muted-foreground/50 transition-colors ${isDragOver ? 'bg-accent/10' : ''}`}
-              >
+              {/* Slim attachment strip */}
+              <div className="max-h-28 overflow-y-auto px-4 py-2 border-t border-border text-xs text-muted-foreground/60">
                 {attachments.length > 0 ? (
                   <div className="w-full space-y-1">
                     {isExtractingAttachment && (
@@ -344,10 +348,20 @@ export default function AIDraftPage() {
                     ))}
                   </div>
                 ) : (
-                  'Drag and drop PDF, Word, or PPT files here to attach them.'
+                  <div className="flex items-center gap-2">
+                    <Paperclip className="h-3 w-3" />
+                    <span>Drag PDF, Word, or PPT files anywhere on this pane — or click Attach.</span>
+                  </div>
                 )}
               </div>
             </div>
+            {isDragOver && (
+              <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-accent/10">
+                <div className="rounded-md border border-dashed border-accent bg-background/80 px-4 py-2 text-sm font-medium text-accent">
+                  Drop files to attach
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Bottom action bar */}
