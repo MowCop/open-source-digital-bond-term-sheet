@@ -120,6 +120,8 @@ export interface Attachment {
   type: 'pdf' | 'docx' | 'pptx';
   size: number;
   url: string;
+  file?: File;       // in-memory blob for download / replace (not persisted)
+  mimeType?: string;
 }
 
 export interface AISuggestion {
