@@ -1,42 +1,58 @@
 /**
- * DealChecker.tsx
+ * DealChecker.tsx  ·  v2.0
  * ─────────────────────────────────────────────────────────────────────────────
  * Drop into: src/components/DealChecker.tsx
  *
- * A self-contained validation panel designed to slot into the right column of
- * AIDraftPage.tsx, directly below the "AI Field Extraction" card.
- *
- * Usage in AIDraftPage.tsx:
- *   import DealChecker from '@/components/DealChecker';
- *   // inside JSX, in the right column <div className="space-y-4">:
- *   <DealChecker aiFields={aiFields} aiBookrunners={aiBookrunners} />
- *
- * Props:
- *   aiFields      — the keyTerms object from simulateAIExtraction()
- *   aiBookrunners — the Bookrunner[] from extractBookrunners()
- *
- * The component maps those raw strings onto a partial Deal object and runs
- * validateDeal() from bondValidator.ts, re-running on every prop change with
- * a 400ms debounce so it doesn't flicker while the user types.
+ * CHANGES FROM v1.0
+ * ─────────────────
+ * • validateDeal() now returns { results, auditEntries } — component handles both.
+ * • Master-Admin override modal: when a Master Admin clicks an Error badge they
+ *   get a dialog to enter a reason; confirming calls validateDeal() with the
+ *   OverrideContext, which downgrades the error, annotates it, and emits audit
+ *   entries that are passed back to the parent via onAuditEntries().
+ * • New field mappings for referenceRate (FIX-6) and governingLaw (FIX-7).
+ * • DealCheckerProps gains: userRole, currentUserId, currentUserName,
+ *   onAuditEntries callback.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Shield, ChevronDown, ChevronUp, AlertTriangle, XCircle, Info, CheckCircle2, ExternalLink } from 'lucide-react';
+import {
+  Shield, ChevronDown, ChevronUp, AlertTriangle, XCircle,
+  Info, CheckCircle2, ExternalLink, ShieldAlert,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Bookrunner, Deal, DayCountFraction, InterestType, BusinessDayConvention } from '@/types/bond';
-import { validateDeal, countBySeverity, isReadyToPublish, ValidationResult, Severity } from '@/lib/bondValidator';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Bookrunner, Deal, DayCountFraction, InterestType, BusinessDayConvention,
+} from '@/types/bond';
+import {
+  validateDeal, countBySeverity, isReadyToPublish,
+  ValidationResult, Severity, OverrideContext, DealCheckerAuditEntry,
+} from '@/lib/bondValidator';
+import type { UserRole } from '@/types/bond';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface DealCheckerProps {
   aiFields: Record<string, string> | null;
   aiBookrunners?: Bookrunner[];
+  /** Role of the currently logged-in user */
+  userRole?: UserRole;
+  /** ID used to stamp override audit entries */
+  currentUserId?: string;
+  /** Display name used to stamp override audit entries */
+  currentUserName?: string;
+  /** Called whenever override audit entries are emitted — persist to AuditLog */
+  onAuditEntries?: (entries: DealCheckerAuditEntry[]) => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Map the raw AI-extracted key-terms string to our DayCountFraction enum */
 function mapDayCount(raw: string | undefined): DayCountFraction | undefined {
   if (!raw) return undefined;
   const u = raw.toUpperCase().replace(/[/ ]/g, '_');
@@ -65,28 +81,31 @@ function aiFieldsToPartialDeal(
 ): Partial<Deal> {
   if (!fields) return {};
   return {
-    issuerName:          fields['Issuer Name']      || undefined,
-    issuerLEI:           fields['LEI']              || undefined,
-    issuerRating:        fields['Issuer Rating']    || undefined,
-    currency:            fields['Currency']         || 'EUR',
-    size:                fields['Size']             || undefined,
-    coupon:              fields['Coupon']           || undefined,
-    reofferSpread:       fields['Reoffer Spread']   || undefined,
-    reofferYield:        fields['Reoffer Yield']    || undefined,
-    reofferPrice:        fields['Reoffer Price']    || undefined,
-    issuePrice:          fields['Issue Price']      || undefined,
-    midSwapRate:         fields['Mid-Swap Rate']    || undefined,
-    pricingDate:         fields['Pricing Date']     || undefined,
-    issueDate:           fields['Issue Date']       || undefined,
-    settlementDate:      fields['Settlement Date']  || undefined,
-    maturityDate:        fields['Maturity Date']    || undefined,
-    tenor:               fields['Tenor']            || undefined,
-    isin:                fields['ISIN']             || undefined,
-    specifiedDenomination: fields['Denomination']  || undefined,
-    listingVenue:        fields['Listing']          || undefined,
-    sellingRestrictions: fields['Selling Restrictions'] || undefined,
-    dayCountFraction:    mapDayCount(fields['Day Count']),
-    interestType:        mapInterestType(fields['Interest Type']),
+    issuerName:            fields['Issuer Name']          || undefined,
+    issuerLEI:             fields['LEI']                  || undefined,
+    issuerRating:          fields['Issuer Rating']        || undefined,
+    currency:              fields['Currency']             || 'EUR',
+    size:                  fields['Size']                 || undefined,
+    coupon:                fields['Coupon']               || undefined,
+    reofferSpread:         fields['Reoffer Spread']       || undefined,
+    reofferYield:          fields['Reoffer Yield']        || undefined,
+    reofferPrice:          fields['Reoffer Price']        || undefined,
+    issuePrice:            fields['Issue Price']          || undefined,
+    midSwapRate:           fields['Mid-Swap Rate']        || undefined,
+    pricingDate:           fields['Pricing Date']         || undefined,
+    issueDate:             fields['Issue Date']           || undefined,
+    settlementDate:        fields['Settlement Date']      || undefined,
+    maturityDate:          fields['Maturity Date']        || undefined,
+    tenor:                 fields['Tenor']                || undefined,
+    isin:                  fields['ISIN']                 || undefined,
+    specifiedDenomination: fields['Denomination']         || undefined,
+    listingVenue:          fields['Listing']              || undefined,
+    sellingRestrictions:   fields['Selling Restrictions'] || undefined,
+    governingLaw:          (fields['Governing Law'] as any) || undefined,
+    // FIX-6: reference rate mapped from "Reference Rate" or "Interest Rate" field
+    interestRate:          fields['Reference Rate'] || fields['Interest Rate'] || undefined,
+    dayCountFraction:      mapDayCount(fields['Day Count']),
+    interestType:          mapInterestType(fields['Interest Type']),
     bookrunners,
   };
 }
@@ -125,23 +144,41 @@ const SEVERITY_CONFIG: Record<Severity, {
 
 // ─── Single validation row ────────────────────────────────────────────────────
 
-function ValidationRow({ result }: { result: ValidationResult }) {
+function ValidationRow({
+  result,
+  canOverride,
+  onRequestOverride,
+}: {
+  result: ValidationResult;
+  canOverride: boolean;
+  onRequestOverride?: (result: ValidationResult) => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   const cfg = SEVERITY_CONFIG[result.severity];
+  const isOverridden = Boolean(result.overriddenBy);
 
   return (
     <div
-      className={`rounded border px-3 py-2 text-xs cursor-pointer transition-colors ${cfg.rowClass}`}
-      onClick={() => setExpanded(p => !p)}
+      className={`rounded border px-3 py-2 text-xs transition-colors ${cfg.rowClass} ${isOverridden ? 'opacity-70 border-dashed' : ''}`}
     >
       <div className="flex items-start gap-2">
-        <span className={cfg.labelClass}>{cfg.icon}</span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+        <span
+          className={`${cfg.labelClass} cursor-pointer`}
+          onClick={() => setExpanded(p => !p)}
+        >
+          {cfg.icon}
+        </span>
+        <div className="flex-1 min-w-0" onClick={() => setExpanded(p => !p)}>
+          <div className="flex items-center gap-2 flex-wrap cursor-pointer">
             <span className={`font-medium ${cfg.labelClass}`}>{result.title}</span>
             <Badge variant="outline" className={`text-[9px] h-4 px-1.5 border ${cfg.badgeClass}`}>
               {result.field}
             </Badge>
+            {isOverridden && (
+              <Badge variant="outline" className="text-[9px] h-4 px-1.5 border border-violet-800/60 bg-violet-900/30 text-violet-400">
+                overridden
+              </Badge>
+            )}
           </div>
           {expanded && (
             <div className="mt-1.5 text-muted-foreground leading-relaxed">
@@ -151,12 +188,32 @@ function ValidationRow({ result }: { result: ValidationResult }) {
                   Ref: {result.icmaRef}
                 </span>
               )}
+              {isOverridden && (
+                <span className="block mt-1 text-[10px] text-violet-400">
+                  Overridden by {result.overriddenBy} at {result.overriddenAt}
+                </span>
+              )}
             </div>
           )}
         </div>
-        <span className="text-muted-foreground shrink-0 mt-0.5">
-          {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-        </span>
+        <div className="flex items-center gap-1 shrink-0 mt-0.5">
+          {/* Master Admin override button — only shown on non-overridden errors */}
+          {canOverride && result.severity === 'error' && !isOverridden && (
+            <button
+              title="Override this error (Master Admin)"
+              onClick={() => onRequestOverride?.(result)}
+              className="text-violet-400 hover:text-violet-300 transition-colors"
+            >
+              <ShieldAlert className="h-3.5 w-3.5" />
+            </button>
+          )}
+          <span
+            className="text-muted-foreground cursor-pointer"
+            onClick={() => setExpanded(p => !p)}
+          >
+            {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -174,7 +231,6 @@ function SummaryBar({
   fieldCount: number;
 }) {
   if (fieldCount === 0) return null;
-
   if (ready) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded border border-green-800/50 bg-green-950/20 text-xs text-green-400">
@@ -183,7 +239,6 @@ function SummaryBar({
       </div>
     );
   }
-
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {counts.error > 0 && (
@@ -205,22 +260,103 @@ function SummaryBar({
   );
 }
 
+// ─── Master Admin Override Modal ──────────────────────────────────────────────
+
+interface OverrideModalProps {
+  result: ValidationResult | null;
+  onConfirm: (ruleId: string, reason: string) => void;
+  onCancel: () => void;
+}
+
+function OverrideModal({ result, onConfirm, onCancel }: OverrideModalProps) {
+  const [reason, setReason] = useState('');
+  if (!result) return null;
+  return (
+    <Dialog open onOpenChange={onCancel}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-sm">
+            <ShieldAlert className="h-4 w-4 text-violet-400" />
+            Override validation error
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 text-xs">
+          <div className="rounded border border-red-900/40 bg-red-950/20 px-3 py-2">
+            <p className="font-medium text-red-400">{result.title}</p>
+            <p className="mt-1 text-muted-foreground">{result.detail}</p>
+          </div>
+          <p className="text-muted-foreground">
+            As Master Admin you may override this blocking error. The override will be logged
+            in the audit trail with your identity, reason and a snapshot of the current deal fields.
+          </p>
+          <div>
+            <label className="block mb-1 font-medium text-foreground">
+              Reason for override <span className="text-red-400">*</span>
+            </label>
+            <Textarea
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              placeholder="e.g. Settlement calendar exception confirmed with operations desk on 12 May 2025."
+              className="text-xs min-h-[80px]"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            disabled={!reason.trim()}
+            className="bg-violet-700 hover:bg-violet-600 text-white"
+            onClick={() => { onConfirm(result.id, reason.trim()); setReason(''); }}
+          >
+            Confirm override
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function DealChecker({ aiFields, aiBookrunners = [] }: DealCheckerProps) {
-  // Debounced results so we don't re-validate on every keystroke
-  const [results, setResults] = useState<ValidationResult[]>([]);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [filterSev, setFilterSev] = useState<Severity | 'all'>('all');
+export default function DealChecker({
+  aiFields,
+  aiBookrunners = [],
+  userRole,
+  currentUserId = 'unknown',
+  currentUserName = 'Unknown Admin',
+  onAuditEntries,
+}: DealCheckerProps) {
+  const [results, setResults]         = useState<ValidationResult[]>([]);
+  const timerRef                       = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [filterSev, setFilterSev]     = useState<Severity | 'all'>('all');
+  const [overrideModal, setOverrideModal] = useState<ValidationResult | null>(null);
+  const [overrides, setOverrides]     = useState<OverrideContext['overriddenRuleIds']>([]);
+  const [overrideReasons, setOverrideReasons] = useState<Record<string, string>>({});
 
+  const isMasterAdmin = userRole === 'master_admin';
+
+  // Re-run validation whenever fields, bookrunners, or active overrides change
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       const partial = aiFieldsToPartialDeal(aiFields, aiBookrunners);
-      setResults(validateDeal(partial));
+      const ctx: OverrideContext | undefined = overrides.length > 0 && isMasterAdmin
+        ? {
+            adminUserId: currentUserId,
+            adminName: currentUserName,
+            reason: overrides.map(id => overrideReasons[id] ?? '').join('; '),
+            overriddenRuleIds: overrides,
+          }
+        : undefined;
+      const { results: r, auditEntries } = validateDeal(partial, ctx);
+      setResults(r);
+      if (auditEntries.length > 0) onAuditEntries?.(auditEntries);
     }, 400);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [aiFields, aiBookrunners]);
+  }, [aiFields, aiBookrunners, overrides, overrideReasons, isMasterAdmin, currentUserId, currentUserName, onAuditEntries]);
 
   const counts = useMemo(() => countBySeverity(results), [results]);
   const ready  = useMemo(() => isReadyToPublish(results), [results]);
@@ -231,99 +367,127 @@ export default function DealChecker({ aiFields, aiBookrunners = [] }: DealChecke
 
   const filtered = filterSev === 'all' ? results : results.filter(r => r.severity === filterSev);
 
-  // Determine header accent colour based on worst severity
   const headerAccent =
     counts.error > 0   ? 'text-red-400' :
     counts.warning > 0 ? 'text-amber-400' :
     results.length > 0 ? 'text-green-400' :
     'text-muted-foreground';
 
+  function handleOverrideConfirm(ruleId: string, reason: string) {
+    setOverrides(prev => [...prev, ruleId]);
+    setOverrideReasons(prev => ({ ...prev, [ruleId]: reason }));
+    setOverrideModal(null);
+  }
+
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-        <Shield className={`h-4 w-4 shrink-0 ${headerAccent}`} />
-        <span className="font-semibold text-sm uppercase tracking-wider text-foreground">
-          Deal Checker
-        </span>
-        {results.length > 0 && (
-          <Badge
-            variant="outline"
-            className={`ml-auto text-[10px] border ${
-              counts.error > 0
-                ? 'bg-red-900/30 text-red-400 border-red-800/60'
-                : counts.warning > 0
-                ? 'bg-amber-900/30 text-amber-400 border-amber-800/60'
-                : 'bg-green-900/30 text-green-400 border-green-800/60'
-            }`}
-          >
-            {results.length} check{results.length !== 1 ? 's' : ''}
-          </Badge>
-        )}
-      </div>
+    <>
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+          <Shield className={`h-4 w-4 shrink-0 ${headerAccent}`} />
+          <span className="font-semibold text-sm uppercase tracking-wider text-foreground">
+            Deal Checker
+          </span>
+          {overrides.length > 0 && (
+            <Badge variant="outline" className="ml-1 text-[9px] bg-violet-900/30 text-violet-400 border-violet-800/60">
+              {overrides.length} override{overrides.length > 1 ? 's' : ''} active
+            </Badge>
+          )}
+          {results.length > 0 && (
+            <Badge
+              variant="outline"
+              className={`ml-auto text-[10px] border ${
+                counts.error > 0
+                  ? 'bg-red-900/30 text-red-400 border-red-800/60'
+                  : counts.warning > 0
+                  ? 'bg-amber-900/30 text-amber-400 border-amber-800/60'
+                  : 'bg-green-900/30 text-green-400 border-green-800/60'
+              }`}
+            >
+              {results.length} check{results.length !== 1 ? 's' : ''}
+            </Badge>
+          )}
+        </div>
 
-      <div className="p-3 space-y-2.5">
-        {fieldCount === 0 ? (
-          /* Empty state */
-          <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
-            <Shield className="h-8 w-8 mb-2 opacity-20" />
-            <p className="text-xs text-center">
-              Start typing or drop a document — deal terms will be validated automatically.
-            </p>
-          </div>
-        ) : results.length === 0 ? (
-          /* Loading / no issues */
-          <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-            <CheckCircle2 className="h-4 w-4 text-green-400" />
-            Analysing {fieldCount} extracted field{fieldCount > 1 ? 's' : ''}…
-          </div>
-        ) : (
-          <>
-            {/* Summary + filter tabs */}
-            <SummaryBar counts={counts} ready={ready} fieldCount={fieldCount} />
-
-            {!ready && (
-              <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                {(['all', 'error', 'warning', 'info'] as const).map(sev => {
-                  const active = filterSev === sev;
-                  const count = sev === 'all' ? results.length : counts[sev];
-                  if (sev !== 'all' && count === 0) return null;
-                  return (
-                    <button
-                      key={sev}
-                      onClick={() => setFilterSev(sev)}
-                      className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
-                        active
-                          ? 'border-primary/60 bg-primary/10 text-primary'
-                          : 'border-border text-muted-foreground hover:border-muted-foreground'
-                      }`}
-                    >
-                      {sev === 'all' ? `All (${count})` : `${sev.charAt(0).toUpperCase() + sev.slice(1)} (${count})`}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Results list */}
-            {!ready && (
-              <div className="space-y-1.5 max-h-[340px] overflow-y-auto pr-0.5">
-                {filtered.map(r => (
-                  <ValidationRow key={r.id} result={r} />
-                ))}
-              </div>
-            )}
-
-            {/* ICMA reference footnote */}
-            {results.some(r => r.icmaRef) && (
-              <p className="text-[10px] text-muted-foreground/50 pt-1 flex items-center gap-1">
-                <ExternalLink className="h-2.5 w-2.5" />
-                References: ICMA Bond Data Taxonomy, ISO 6166, GLEIF, CSDR
+        <div className="p-3 space-y-2.5">
+          {fieldCount === 0 ? (
+            <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
+              <Shield className="h-8 w-8 mb-2 opacity-20" />
+              <p className="text-xs text-center">
+                Start typing or drop a document — deal terms will be validated automatically.
               </p>
-            )}
-          </>
-        )}
+            </div>
+          ) : results.length === 0 ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+              <CheckCircle2 className="h-4 w-4 text-green-400" />
+              Analysing {fieldCount} extracted field{fieldCount > 1 ? 's' : ''}…
+            </div>
+          ) : (
+            <>
+              <SummaryBar counts={counts} ready={ready} fieldCount={fieldCount} />
+
+              {!ready && (
+                <div className="flex items-center gap-1 flex-wrap pt-0.5">
+                  {(['all', 'error', 'warning', 'info'] as const).map(sev => {
+                    const active = filterSev === sev;
+                    const count = sev === 'all' ? results.length : counts[sev];
+                    if (sev !== 'all' && count === 0) return null;
+                    return (
+                      <button
+                        key={sev}
+                        onClick={() => setFilterSev(sev)}
+                        className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                          active
+                            ? 'border-primary/60 bg-primary/10 text-primary'
+                            : 'border-border text-muted-foreground hover:border-muted-foreground'
+                        }`}
+                      >
+                        {sev === 'all' ? `All (${count})` : `${sev.charAt(0).toUpperCase() + sev.slice(1)} (${count})`}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {!ready && (
+                <div className="space-y-1.5 max-h-[340px] overflow-y-auto pr-0.5">
+                  {filtered.map(r => (
+                    <ValidationRow
+                      key={r.id}
+                      result={r}
+                      canOverride={isMasterAdmin}
+                      onRequestOverride={setOverrideModal}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {isMasterAdmin && overrides.length > 0 && (
+                <p className="text-[10px] text-violet-400/70 pt-1 flex items-center gap-1">
+                  <ShieldAlert className="h-2.5 w-2.5" />
+                  {overrides.length} error{overrides.length > 1 ? 's' : ''} overridden — all activity logged to audit trail.
+                </p>
+              )}
+
+              {results.some(r => r.icmaRef) && (
+                <p className="text-[10px] text-muted-foreground/50 pt-1 flex items-center gap-1">
+                  <ExternalLink className="h-2.5 w-2.5" />
+                  References: ICMA BDT, ISO 6166, ISO 17442, GLEIF, CSDR
+                </p>
+              )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Override modal — only rendered when isMasterAdmin clicks a red error */}
+      {isMasterAdmin && (
+        <OverrideModal
+          result={overrideModal}
+          onConfirm={handleOverrideConfirm}
+          onCancel={() => setOverrideModal(null)}
+        />
+      )}
+    </>
   );
 }
