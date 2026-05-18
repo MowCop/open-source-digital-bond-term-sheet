@@ -292,8 +292,9 @@ function parseSize(raw: string): number | null {
 // ─── Date utilities ───────────────────────────────────────────────────────────
 
 function parseDate(s: string | undefined): Date | null {
-  if (!s || s === 'TBA' || s === 'TBD') return null;
-  const d = new Date(s);
+  const iso = normalizeISO(s);
+  if (!iso) return null;
+  const d = new Date(iso + 'T12:00:00Z');
   return isNaN(d.getTime()) ? null : d;
 }
 
