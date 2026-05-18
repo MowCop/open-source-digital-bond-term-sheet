@@ -210,8 +210,33 @@ export function simulateAIExtraction(rawText: string): AISuggestion {
   };
   const amountShort = formatAmount(hasAmount?.[1]);
   const hasSpread = /(MS[+\-]\d+(?:bps)?|[Ss]waps?\s*[+\-]\s*\d+)/g.exec(rawText);
-  const hasISIN = /([A-Z]{2}[A-Z0-9]{9}\d)/g.exec(rawText);
-  const hasLEI = /([A-Z0-9]{20})/g.exec(rawText);
+  // ISIN: enforce word-like boundaries so we don't slice a 12-char window out
+  // of a longer alphanumeric token (e.g. a 20-char LEI like
+  // "98450048CD8AEF13B480" was previously matched as "CD8AEF13B480").
+  // Then prefer the first candidate that passes the ISO 6166 Luhn mod-10
+  // check-digit test; fall back to the first candidate if none validate.
+  const isinCandidates = Array.from(
+    rawText.matchAll(/(?<![A-Z0-9])([A-Z]{2}[A-Z0-9]{9}\d)(?![A-Z0-9])/g),
+  ).map(m => m[1]);
+  const isinChecksumOK = (isin: string): boolean => {
+    const digits = isin
+      .split('')
+      .map(c => (c >= 'A' ? (c.charCodeAt(0) - 55).toString() : c))
+      .join('');
+    let sum = 0;
+    let alt = false;
+    for (let i = digits.length - 1; i >= 0; i--) {
+      let n = parseInt(digits[i], 10);
+      if (alt) { n *= 2; if (n > 9) n -= 9; }
+      sum += n;
+      alt = !alt;
+    }
+    return sum % 10 === 0;
+  };
+  const isinValue =
+    isinCandidates.find(isinChecksumOK) || isinCandidates[0] || '';
+  // LEI: 20-char alnum run with boundaries so it is not a sub-slice.
+  const hasLEI = /(?<![A-Z0-9])([A-Z0-9]{20})(?![A-Z0-9])/g.exec(rawText);
   const hasRating = /((?:AAA|AA\+|AA|AA-|A\+|A|A-|BBB\+|BBB|BBB-)(?:\/(?:Aaa|Aa[123]|A[123]|Baa[123]))?)/g.exec(rawText);
   const hasCoupon = /(?:coupon|cpn)\s*[:\-]?\s*([\d.]+\s*%|[\d.]+\s*per cent|TBD)/i.exec(compactText);
   const hasIssuePrice = /issue\s+price\s*[:\-]?\s*([\d.]+)/i.exec(compactText);
@@ -244,7 +269,7 @@ export function simulateAIExtraction(rawText: string): AISuggestion {
       Tenor: tenorPart,
       'Reoffer Spread': hasSpread?.[1] || '',
       'Issuer Rating': hasRating?.[1] || '',
-      ISIN: hasISIN?.[1] || '',
+      ISIN: isinValue,
       LEI: hasLEI?.[1] || '',
       Coupon: hasCoupon?.[1] || '',
       'Issue Price': hasIssuePrice?.[1] || '',
