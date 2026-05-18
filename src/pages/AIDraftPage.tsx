@@ -196,9 +196,11 @@ export default function AIDraftPage() {
     }
   };
 
-  type ExtractOutcome =
-    | { ok: true }
-    | { ok: false; reason: 'empty' | 'unsupported' | 'parse_error'; message: string };
+  type ExtractOutcome = {
+    ok: boolean;
+    reason?: 'empty' | 'unsupported' | 'parse_error';
+    message?: string;
+  };
 
   const extractFromFile = async (file: File): Promise<ExtractOutcome> => {
     const name = file.name.toLowerCase();
@@ -265,7 +267,7 @@ export default function AIDraftPage() {
       for (const file of extractable) {
         const outcome = await extractFromFile(file);
         if (outcome.ok) extractedCount++;
-        else failures.push({ name: file.name, message: outcome.message });
+        else failures.push({ name: file.name, message: outcome.message || 'Unknown error' });
       }
       if (extractedCount > 0) {
         toast({ title: 'Document read', description: `Parsed text from ${extractedCount} attachment(s). AI extracting deal terms…` });
@@ -320,7 +322,7 @@ export default function AIDraftPage() {
       const outcome = await extractFromFile(file);
       setIsExtractingAttachment(false);
       if (!outcome.ok) {
-        toast({ title: `Couldn't read "${file.name}"`, description: outcome.message, variant: 'destructive' });
+        toast({ title: `Couldn't read "${file.name}"`, description: outcome.message || 'Unknown error', variant: 'destructive' });
       }
     }
     toast({ title: 'Attachment replaced', description: oldName ? `Replaced ${oldName} with ${file.name}` : `Replaced with ${file.name}` });
