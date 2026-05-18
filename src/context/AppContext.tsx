@@ -4,6 +4,7 @@ import { mockUsers } from '@/data/mockData';
 import { extractBorrowerName } from '@/lib/alertParsing';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 import { scopeDeals, scopeUsers, scopeDistributionLists, scopeMessages, scopeAuditLog } from '@/lib/scoping';
 import {
   fetchUsers, fetchDeals, insertUser, updateUserRow, deleteUserRow,
@@ -119,7 +120,12 @@ const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = usePersistedState<User>('bondvdr.currentUser', mockUsers[0]);
-  const { profileOrg } = useAuth();
+  const { profileOrg, authUser } = useAuth();
+  // Effective sender id for RLS-protected inserts (messages, chat_messages):
+  // these policies require sender_id = auth.uid()::text, so we must use the
+  // Supabase auth UUID, not the legacy mock-user id. Falls back to mock id
+  // when there is no auth session (tests / unauth flows).
+  const effectiveSenderId = authUser?.id ?? currentUser.id;
   // Effective owning-org used to tag newly created deals/users/lists for tenant isolation.
   const ownerOrg = (profileOrg ?? currentUser?.organization ?? '').trim() || undefined;
   const [users, setUsers] = useState<User[]>([]);
@@ -390,23 +396,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [currentUser.id, addAuditEntry]);
 
   const createMessage = useCallback((msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newMsg: Message = { ...msg, id: `m${Date.now()}`, createdAt: new Date(), updatedAt: new Date() };
+    const newMsg: Message = {
+      ...msg,
+      senderId: effectiveSenderId,
+      id: `m${Date.now()}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
     setMessages(prev => [newMsg, ...prev]);
-    insertMessage(newMsg).catch(e => console.error('[Cloud] insertMessage failed', e));
+    insertMessage(newMsg).catch(e => {
+      console.error('[Cloud] insertMessage failed', e);
+      setMessages(prev => prev.filter(m => m.id !== newMsg.id));
+      toast.error('Could not save message', { description: e?.message ?? 'Please retry.' });
+    });
     addAuditEntry({ action: 'MESSAGE_CREATED', entityType: 'message', entityId: newMsg.id, userId: currentUser.id, details: `Draft created: ${msg.subject}` });
     return newMsg;
-  }, [currentUser.id, addAuditEntry]);
+  }, [currentUser.id, effectiveSenderId, addAuditEntry]);
 
   const updateMessage = useCallback((id: string, updates: Partial<Message>) => {
     setMessages(prev => prev.map(m => m.id === id ? { ...m, ...updates, updatedAt: new Date() } : m));
-    updateMessageRow(id, { ...updates, updatedAt: new Date() }).catch(e => console.error('[Cloud] updateMessage failed', e));
+    updateMessageRow(id, { ...updates, updatedAt: new Date() }).catch(e => {
+      console.error('[Cloud] updateMessage failed', e);
+      toast.error('Could not update message', { description: e?.message ?? 'Please retry.' });
+    });
   }, []);
 
   const sendMessageAction = useCallback((id: string) => {
     const now = new Date();
     const msg = messages.find(m => m.id === id);
     setMessages(prev => prev.map(m => m.id === id ? { ...m, status: 'sent' as MessageStatus, sentAt: now, updatedAt: now } : m));
-    updateMessageRow(id, { status: 'sent', sentAt: now, updatedAt: now }).catch(e => console.error('[Cloud] sendMessage failed', e));
+    updateMessageRow(id, { status: 'sent', sentAt: now, updatedAt: now }).catch(e => {
+      console.error('[Cloud] sendMessage failed', e);
+      toast.error('Could not send message', { description: e?.message ?? 'Please retry.' });
+    });
     addAuditEntry({ action: 'MESSAGE_SENT', entityType: 'message', entityId: id, userId: currentUser.id, details: `Message sent` });
     if (msg) {
       for (const dealId of msg.dealIds) {
@@ -494,7 +516,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const newMsg: ChatMessage = {
       id: `cm${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
       channelId,
-      senderId: currentUser.id,
+      senderId: effectiveSenderId,
       senderName: currentUser.name,
       senderType: currentUser.organizationType,
       body,
@@ -503,9 +525,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       timestamp: new Date(),
     };
     setChatMessages(prev => [...prev, newMsg]);
-    insertChatMessage(newMsg).catch(e => console.error('[Cloud] sendChatMessage failed', e));
+    insertChatMessage(newMsg).catch(e => {
+      console.error('[Cloud] sendChatMessage failed', e);
+      setChatMessages(prev => prev.filter(m => m.id !== newMsg.id));
+      toast.error('Could not send chat message', { description: e?.message ?? 'Please retry.' });
+    });
     addAuditEntry({ action: 'CHAT_MESSAGE_SENT', entityType: 'message', entityId: newMsg.id, userId: currentUser.id, details: `Secure chat message in channel ${channelId}` });
-  }, [currentUser.id, currentUser.name, currentUser.organizationType, addAuditEntry]);
+  }, [currentUser.id, currentUser.name, currentUser.organizationType, effectiveSenderId, addAuditEntry]);
 
   const addUser = useCallback((user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => {
     const newUser: User = {
