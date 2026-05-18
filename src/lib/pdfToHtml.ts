@@ -533,15 +533,18 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
         continue;
       }
       // Tight-gap merge: a KV-looking line whose Y gap to the previous line
-      // is normal body line spacing belongs to the same logical row (the
-      // previous row's label and value both wrapped onto this baseline).
-      if (rows.length > 0 && prevY !== null && prevY - line.y <= blockMedianGap * 1.4) {
+      // is normal body line spacing belongs to the same logical row when
+      // the previous row is clearly a wrapping row (already has label or
+      // value continuations). Avoids merging single-line KV rows.
+      const prevRow = rows[rows.length - 1];
+      const prevIsWrapping = !!prevRow && (prevRow.labelExtra.length > 0 || prevRow.valueLines.length > 1);
+      if (prevIsWrapping && prevY !== null && prevY - line.y <= blockMedianGap * 1.4) {
         const leftItems = line.items.filter(it => it.x < valueColX - 4);
         const rightItems = line.items.filter(it => it.x >= valueColX - 4);
         const leftTxt = leftItems.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
-        if (leftTxt) rows[rows.length - 1].labelExtra.push(leftTxt);
+        if (leftTxt) prevRow.labelExtra.push(leftTxt);
         if (rightItems.length > 0) {
-          rows[rows.length - 1].valueLines.push({ ...line, items: rightItems });
+          prevRow.valueLines.push({ ...line, items: rightItems });
         }
         prevY = line.y;
         continue;
