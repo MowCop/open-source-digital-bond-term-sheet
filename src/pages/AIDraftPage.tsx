@@ -316,7 +316,7 @@ export default function AIDraftPage() {
                   <Textarea
                     value={body}
                     onChange={e => setBody(e.target.value)}
-                    placeholder="Enter message body..."
+                    placeholder="Start typing or drag and drop files to extract, parse and check..."
                     className="flex-1 min-h-0 border-0 rounded-none px-4 py-3 bg-transparent focus-visible:ring-0 resize-none placeholder:text-muted-foreground/50"
                   />
                 ) : (
