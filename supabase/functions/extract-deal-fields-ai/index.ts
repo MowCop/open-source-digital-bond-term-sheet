@@ -76,11 +76,35 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) throw new Error('LOVABLE_API_KEY is not configured');
 
-    const { text } = (await req.json()) as { text?: string };
-    if (!text || typeof text !== 'string' || text.trim().length < 20) {
-      return new Response(JSON.stringify({ error: 'text (min 20 chars) required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // ── Server-side input validation ──────────────────────────────────────
+    let payload: unknown;
+    try {
+      payload = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'invalid_json', message: 'Body must be valid JSON.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const text = (payload as { text?: unknown })?.text;
+    if (typeof text !== 'string') {
+      return new Response(JSON.stringify({ error: 'invalid_input', message: '`text` must be a string.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const trimmed = text.trim();
+    if (trimmed.length < 20) {
+      return new Response(JSON.stringify({ error: 'text_too_short', message: '`text` must be at least 20 characters.' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    // Hard cap on raw payload — protects gateway from runaway uploads.
+    const HARD_MAX_CHARS = 200_000;
+    if (text.length > HARD_MAX_CHARS) {
+      return new Response(JSON.stringify({
+        error: 'text_too_long',
+        message: `\`text\` exceeds ${HARD_MAX_CHARS.toLocaleString()} characters (got ${text.length.toLocaleString()}).`,
+      }), {
+        status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 

@@ -82,6 +82,34 @@ export default function AIDraftPage() {
     return () => clearTimeout(timer);
   }, [headline, body]);
 
+  // ── File validation ────────────────────────────────────────────────────────
+  const ALLOWED_EXT = ['pdf', 'docx', 'pptx'] as const;
+  const ALLOWED_MIME = new Set([
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/msword', // legacy .doc shows up as .docx sometimes
+    '', // some browsers don't set a mime — fall back to extension check
+  ]);
+  const MAX_FILE_BYTES = 20 * 1024 * 1024; // 20 MB
+
+  /** Returns null if valid, otherwise a human-readable reason. */
+  const validateAttachment = (file: File): string | null => {
+    if (file.size === 0) return 'File is empty';
+    if (file.size > MAX_FILE_BYTES) {
+      const mb = (file.size / (1024 * 1024)).toFixed(1);
+      return `File is ${mb} MB — maximum is 20 MB`;
+    }
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!ALLOWED_EXT.includes(ext as any)) {
+      return `Unsupported file type ".${ext}" — allowed: PDF, DOCX, PPTX`;
+    }
+    if (file.type && !ALLOWED_MIME.has(file.type)) {
+      return `Unexpected MIME type "${file.type}" for .${ext}`;
+    }
+    return null;
+  };
+
   const toAttachment = (file: File): Attachment => ({
     id: `att-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     name: file.name,
@@ -168,36 +196,63 @@ export default function AIDraftPage() {
     }
   };
 
-  const extractFromFile = async (file: File): Promise<boolean> => {
+  type ExtractOutcome = {
+    ok: boolean;
+    reason?: 'empty' | 'unsupported' | 'parse_error';
+    message?: string;
+  };
+
+  const extractFromFile = async (file: File): Promise<ExtractOutcome> => {
     const name = file.name.toLowerCase();
+    const isDocx = name.endsWith('.docx');
+    const isPdf  = name.endsWith('.pdf');
+    if (!isDocx && !isPdf) {
+      return { ok: false, reason: 'unsupported', message: 'Only PDF and DOCX can be auto-read.' };
+    }
     try {
-      if (name.endsWith('.docx')) {
-        const { html, text } = await docxFileToHtml(file);
-        if (!html) return false;
-        appendHtmlToBody(html);
-        applyExtractedText(text, file.name);
-        return true;
+      const { html, text } = isDocx
+        ? await docxFileToHtml(file)
+        : await pdfFileToHtml(file);
+
+      if (!html || !text || text.trim().length < 20) {
+        return {
+          ok: false,
+          reason: 'empty',
+          message: isPdf
+            ? 'No readable text found — the PDF may be image-only or password-protected.'
+            : 'No readable text found in the document.',
+        };
       }
-      if (name.endsWith('.pdf')) {
-        const { html, text } = await pdfFileToHtml(file);
-        if (!html) return false;
-        appendHtmlToBody(html);
-        applyExtractedText(text, file.name);
-        return true;
-      }
+      appendHtmlToBody(html);
+      void applyExtractedText(text, file.name);
+      return { ok: true };
     } catch (err) {
       console.error('extraction failed', file.name, err);
+      const msg = err instanceof Error ? err.message : 'Parser error';
+      return { ok: false, reason: 'parse_error', message: msg };
     }
-    return false;
   };
 
   const handleFiles = async (files: File[]) => {
     if (files.length === 0) return;
-    setAttachments(prev => [...prev, ...files.map(toAttachment)]);
 
-    const extractable = files.filter(f => /\.(pdf|docx)$/i.test(f.name));
+    // 1) Validate up-front — accept the good, reject the bad with a clear toast.
+    const accepted: File[] = [];
+    for (const f of files) {
+      const err = validateAttachment(f);
+      if (err) {
+        toast({ title: `Rejected "${f.name}"`, description: err, variant: 'destructive' });
+      } else {
+        accepted.push(f);
+      }
+    }
+    if (accepted.length === 0) return;
+
+    setAttachments(prev => [...prev, ...accepted.map(toAttachment)]);
+
+    const extractable = accepted.filter(f => /\.(pdf|docx)$/i.test(f.name));
     if (extractable.length === 0) {
-      toast({ title: 'Files attached', description: `${files.length} file(s) added` });
+      toast({ title: 'Files attached', description: `${accepted.length} file(s) added` });
       return;
     }
 
@@ -207,18 +262,18 @@ export default function AIDraftPage() {
       toast({ title: 'Reading document…', description: 'Scanned PDFs are processed with AI OCR and may take 30–60s.' });
     }
     let extractedCount = 0;
-    const failures: string[] = [];
+    const failures: Array<{ name: string; message: string }> = [];
     try {
       for (const file of extractable) {
-        const ok = await extractFromFile(file);
-        if (ok) extractedCount++;
-        else failures.push(file.name);
+        const outcome = await extractFromFile(file);
+        if (outcome.ok) extractedCount++;
+        else failures.push({ name: file.name, message: outcome.message || 'Unknown error' });
       }
       if (extractedCount > 0) {
-        toast({ title: 'AI extraction complete', description: `Extracted terms from ${extractedCount} attachment(s).` });
+        toast({ title: 'Document read', description: `Parsed text from ${extractedCount} attachment(s). AI extracting deal terms…` });
       }
-      if (failures.length > 0) {
-        toast({ title: 'Extraction failed', description: `Could not read: ${failures.join(', ')}`, variant: 'destructive' });
+      for (const f of failures) {
+        toast({ title: `Couldn't read "${f.name}"`, description: f.message, variant: 'destructive' });
       }
     } catch (error) {
       console.error('Attachment extraction failed', error);
@@ -254,13 +309,21 @@ export default function AIDraftPage() {
     const targetId = replaceTargetIdRef.current;
     replaceTargetIdRef.current = null;
     if (!file || !targetId) return;
+    const validationError = validateAttachment(file);
+    if (validationError) {
+      toast({ title: `Rejected "${file.name}"`, description: validationError, variant: 'destructive' });
+      return;
+    }
     const oldName = attachments.find(a => a.id === targetId)?.name;
     const replacement: Attachment = { ...toAttachment(file), id: targetId };
     setAttachments(prev => prev.map(a => (a.id === targetId ? replacement : a)));
     if (/\.(pdf|docx)$/i.test(file.name)) {
       setIsExtractingAttachment(true);
-      await extractFromFile(file);
+      const outcome = await extractFromFile(file);
       setIsExtractingAttachment(false);
+      if (!outcome.ok) {
+        toast({ title: `Couldn't read "${file.name}"`, description: outcome.message || 'Unknown error', variant: 'destructive' });
+      }
     }
     toast({ title: 'Attachment replaced', description: oldName ? `Replaced ${oldName} with ${file.name}` : `Replaced with ${file.name}` });
   };
