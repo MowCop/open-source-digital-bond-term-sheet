@@ -411,6 +411,7 @@ export default function AIDraftPage() {
           {/* Bottom action bar */}
           <div className="flex items-center gap-3 mt-3 px-1">
             <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
+            <input ref={replaceInputRef} type="file" className="hidden" onChange={handleReplaceSelect} />
             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
               <Paperclip className="h-4 w-4 mr-1" /> Attach
             </Button>
