@@ -262,7 +262,32 @@ export default function AIDraftPage() {
     }, scpIds);
   };
 
-  const handleSave = () => {
+  const uploadPendingAttachments = async (): Promise<Attachment[]> => {
+    const out: Attachment[] = [];
+    for (const a of attachments) {
+      if (a.url || !a.file) {
+        out.push(a);
+        continue;
+      }
+      try {
+        const safe = a.name.replace(/[^a-zA-Z0-9._-]+/g, '_');
+        const path = `${currentUser.id}/${a.id}-${safe}`;
+        const { error } = await supabase.storage
+          .from('message-attachments')
+          .upload(path, a.file, { contentType: a.mimeType || a.file.type || undefined, upsert: true });
+        if (error) throw error;
+        const { data } = supabase.storage.from('message-attachments').getPublicUrl(path);
+        out.push({ ...a, url: data.publicUrl });
+      } catch (err) {
+        console.error('attachment upload failed', a.name, err);
+        toast({ title: 'Upload failed', description: `Could not upload ${a.name}`, variant: 'destructive' });
+        out.push(a);
+      }
+    }
+    return out;
+  };
+
+  const handleSave = async () => {
     if (!headline.trim()) {
       toast({ title: 'Missing headline', description: 'Please enter a deal headline', variant: 'destructive' });
       return;
