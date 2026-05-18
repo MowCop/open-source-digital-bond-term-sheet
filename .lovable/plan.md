@@ -1,70 +1,92 @@
 ## Goal
 
-When users drag PDF / Word files onto the Create New Issue compose pane, the body should mirror the original document's formatting — headings, bold/italic, paragraph breaks, tables, and embedded logos/images — instead of the current flat plain-text dump.
+In the Create New Issue screen's attachment strip, each attached file should support three actions:
 
-The Aldar Properties term sheet screenshot is a representative example: bordered two-column table of terms, centred title in bold, italic sub-line, embedded logo. All of that should appear in the body pane after drop.
+1. **Download** — get the original file back exactly as uploaded.
+2. **Delete** — remove the attachment (already works as a bare ✕, will be relabelled).
+3. **Replace** — swap the file for a newly uploaded one in the same slot, optionally re-running AI extraction on the new file.
+
+## Why this needs a small data change
+
+The current `Attachment` is metadata-only: `{ id, name, type, size, url }` with `url` left blank. The actual `File` bytes are dropped after extraction, so there's nothing to download or replace from. We need to keep the bytes around until the draft is sent.
+
+For the prototype (no Storage round-trip yet), the simplest approach is to keep the `File` in-memory and create an object URL on demand. No DB migration needed.
 
 ## Approach
 
-### 1. Swap the body editor for a rich-text editor
+### 1. Extend the Attachment type (non-breaking)
 
-Replace the `Textarea` in `src/pages/AIDraftPage.tsx` (write mode) with the existing `RichTextEditor` (TipTap). Body state moves from plain text to HTML.
+`src/types/bond.ts` — add two optional fields:
 
-Add Tiptap table + image support so dropped-in content can render:
-- `@tiptap/extension-table`, `table-row`, `table-cell`, `table-header`
-- `@tiptap/extension-image` (inline base64 images for logos)
+```ts
+export interface Attachment {
+  id: string;
+  name: string;
+  type: 'pdf' | 'docx' | 'pptx';
+  size: number;
+  url: string;
+  file?: File;      // in-memory blob for download / replace (not persisted)
+  mimeType?: string;
+}
+```
 
-Extend `RichTextEditor` to register these extensions and accept an optional `onReady(editor)` callback so the page can call `editor.commands.insertContent(html)` when a file is dropped.
+Existing message records continue to work because both fields are optional.
 
-Preview mode renders the HTML via `dangerouslySetInnerHTML` (already have `htmlText.ts` `isHtml` helper) wrapped in the same `prose` classes used by the editor, so it looks identical.
+### 2. Persist the File in `handleFiles`
 
-### 2. Word (.docx) → HTML with mammoth
+In `src/pages/AIDraftPage.tsx`:
 
-`mammoth` is already installed. Switch from `extractRawText` to `convertToHtml`, which preserves:
-- headings, paragraphs, bold/italic, lists
-- tables (rendered as real `<table>`)
-- embedded images (we convert them to inline base64 data URIs via mammoth's `convertImage` option)
+- `toAttachment(file)` stores the live `File` and its `mimeType` alongside the metadata.
+- Keep the same array; nothing else upstream changes.
 
-The returned HTML is inserted into the editor; the AI extraction continues to run on a plain-text version (`stripHtml`) so deal-field parsing keeps working unchanged.
+### 3. New row UI in the attachment strip
 
-### 3. PDF → HTML via pdf.js
+Replace the current chip row with a single line per attachment:
 
-Two complementary techniques, picked per file:
+```
+📎 aldar_term_sheet.pdf  · 184 KB        [Download] [Replace] [Remove]
+```
 
-a) **Text + layout reconstruction** (default). Use `pdf.js`'s `getTextContent()` plus item transforms to:
-   - group items by Y position into lines and by X gaps into columns
-   - detect simple tables (≥2 consistent column gaps across consecutive lines) and emit `<table><tr><td>` instead of plain runs
-   - infer headings/bold from `fontName` containing `Bold` and from font size above the page median
-   - emit a `<h2>` for centred large-font lines, `<strong>` for bold runs, `<p>` for body lines
+- **Download** — creates a Blob URL from `attachment.file`, triggers an `<a download={name}>` click, then revokes the URL.
+- **Replace** — opens a hidden `<input type="file">` scoped to that attachment id; on change, swaps the entry in-place (keeping the same `id` and array position) and re-runs the existing PDF/DOCX extractor on the new file so headline/body/AI fields refresh from the replacement.
+- **Remove** — the existing delete behaviour, just relabelled with a trash icon for clarity.
 
-b) **Image fallback for pages with significant graphics** (e.g. the Aldar logo page). For each page, also render a low-DPI canvas snapshot and detect non-text regions; if the page contains an embedded image element (via `page.getOperatorList()` with `OPS.paintImageXObject`), render that page as a single `<img>` data URI prepended above the reconstructed text. This keeps the logo visible without trying to vectorise it.
+Compact layout that still fits the 642px viewport: filename truncates with `truncate`, action buttons stay right-aligned with `text-[11px]`.
 
-Both routes produce one HTML blob per file, joined with `<hr>` between files, and inserted at the current editor caret.
+### 4. Helper to trigger a browser download
 
-### 4. Drop pipeline changes in AIDraftPage.tsx
+Small inline util in the page (or `src/lib/download.ts` if reused elsewhere):
 
-- `handleFiles` builds `htmlChunks: string[]`; after extraction it calls `editor.commands.insertContent(htmlChunks.join('<hr>'))` instead of appending to a plain-text body.
-- A plain-text mirror is still computed (`stripHtml(html)`) and fed into `simulateAIExtraction` so the right-hand AI Field Extraction panel keeps populating.
-- Headline auto-fill logic is unchanged (still uses extracted plain text + filename).
-- The attachment chip strip and drop overlay stay as they are.
+```ts
+function downloadFile(file: File) {
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+```
 
-### 5. Saving / sending
+If an attachment has no `file` (e.g. came back from a saved draft after refresh), the Download and Replace buttons render disabled with a tooltip ("Original file no longer available — re-attach to download").
 
-`createMessage({ body })` already accepts a string; downstream renderers in the inbox use `LinkifiedText` on plain text. We update message rendering paths that show the body (inbox / preview / alert history card) to detect HTML via `isHtml()` and render with `dangerouslySetInnerHTML` inside a `prose prose-sm` wrapper, falling back to `LinkifiedText` for legacy plain-text messages. No DB shape change.
+### 5. Replace flow details
+
+- A single hidden `<input type="file">` is shared; clicking Replace stores the target attachment id in a ref, then `.click()`s the input.
+- On change, `handleReplace(id, newFile)`:
+  - swaps the array entry (same index, new metadata + new `file`),
+  - calls `handleFiles([newFile])` minus the append step — refactor extraction into a `extractFromFile(file)` helper used by both initial drop and replace, so AI fields update.
+  - shows a toast: "Replaced *old.pdf* with *new.pdf*".
 
 ## Files touched
 
-- `src/pages/AIDraftPage.tsx` — swap Textarea for RichTextEditor; HTML body state; new drop pipeline that inserts HTML.
-- `src/components/RichTextEditor.tsx` — register Table + Image extensions; expose `onReady(editor)`.
-- `src/lib/docxToHtml.ts` *(new)* — thin wrapper over `mammoth.convertToHtml` with inline-image conversion.
-- `src/lib/pdfToHtml.ts` *(new)* — pdf.js → HTML reconstruction (lines, bold/heading inference, table detection, embedded-image fallback).
-- `src/components/AlertHistoryCard.tsx`, `src/pages/InboxPage.tsx`, `src/pages/MessagesPage.tsx` — render HTML bodies through `isHtml()` + `prose` wrapper; keep plain-text fallback.
-- `package.json` — add `@tiptap/extension-table`, `@tiptap/extension-table-row`, `@tiptap/extension-table-cell`, `@tiptap/extension-table-header`, `@tiptap/extension-image`.
+- `src/types/bond.ts` — add optional `file?: File; mimeType?: string` to `Attachment`.
+- `src/pages/AIDraftPage.tsx` — store `File` in attachments, refactor extraction into a reusable helper, add Download / Replace / Remove row UI, hidden replace input.
 
-## Limits worth flagging up front
+## Out of scope (call out if needed)
 
-- PDF reconstruction is heuristic. Simple term-sheet tables and headed pages (like Aldar) will look very close to the original; multi-column marketing PDFs with complex layout will still come out approximate.
-- Fonts default to the app's stack — exact typefaces from the source PDF aren't preserved, only weight/size hierarchy.
-- Scanned (image-only) PDFs have no extractable text; we'll fall back to embedding each page as an image.
+- No backend upload — files live in the browser session only. After sending or page refresh, downloads from the inbox side won't work yet. If you want recipients to be able to download the original file too, the next step is a Cloud Storage bucket (`message-attachments`) plus a small upload-on-send step.
 
-Let me know if you'd rather always embed PDFs as page images (perfect fidelity, but not editable / searchable) instead of the reconstruction route.
+Let me know if you want me to include the Storage backend now or keep this as a session-only prototype.
