@@ -2,6 +2,11 @@ import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import Image from '@tiptap/extension-image';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useEffect } from 'react';
@@ -15,6 +20,7 @@ interface RichTextEditorProps {
   onChange: (html: string) => void;
   placeholder?: string;
   className?: string;
+  onReady?: (editor: Editor) => void;
 }
 
 function ToolbarButton({
@@ -95,12 +101,17 @@ function Toolbar({ editor }: { editor: Editor }) {
   );
 }
 
-export default function RichTextEditor({ value, onChange, placeholder, className }: RichTextEditorProps) {
+export default function RichTextEditor({ value, onChange, placeholder, className, onReady }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { class: 'text-primary underline underline-offset-2' } }),
       Placeholder.configure({ placeholder: placeholder || 'Write here…' }),
+      Image.configure({ inline: false, allowBase64: true, HTMLAttributes: { class: 'max-w-full h-auto rounded' } }),
+      Table.configure({ resizable: false, HTMLAttributes: { class: 'border-collapse w-full my-2' } }),
+      TableRow,
+      TableHeader.configure({ HTMLAttributes: { class: 'border border-border bg-muted px-2 py-1 text-left font-semibold' } }),
+      TableCell.configure({ HTMLAttributes: { class: 'border border-border px-2 py-1 align-top' } }),
     ],
     content: value || '',
     editorProps: {
@@ -114,6 +125,11 @@ export default function RichTextEditor({ value, onChange, placeholder, className
       onChange(html === '<p></p>' ? '' : html);
     },
   });
+
+  useEffect(() => {
+    if (editor && onReady) onReady(editor);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor]);
 
   // Sync external value changes (e.g. when reopening with different content).
   useEffect(() => {
