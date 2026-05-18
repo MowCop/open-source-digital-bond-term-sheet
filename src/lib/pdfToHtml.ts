@@ -252,7 +252,35 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
 
     while (i < lines.length) {
       // 1) Key/value block detection (≥3 consecutive lines that look like "Label: value" or two-column).
-      const kvBlock = collectKVBlock(lines, i);
+      // First, try to seed at i; if not, look ahead up to 3 lines for a KV seed
+      // and check whether the intervening lines align as label/value
+      // continuations of that seed (handles labels/values whose first line
+      // appears alone because its counterpart wraps to a different baseline).
+      let seedOffset = 0;
+      if (!looksLikeKV(lines[i])) {
+        for (let s = i + 1; s < Math.min(i + 4, lines.length); s++) {
+          if (looksLikeKV(lines[s])) {
+            const vcx = getValueColX(lines[s]);
+            let ok = true;
+            for (let q = i; q < s; q++) {
+              const ln = lines[q];
+              if (ln.items.length === 0) { ok = false; break; }
+              const minX = Math.min(...ln.items.map(it => it.x));
+              const maxX = Math.max(...ln.items.map(it => it.x));
+              const labelCont = maxX < vcx - 8;
+              const valueCont = Math.abs(minX - vcx) < 10;
+              if (!labelCont && !valueCont) { ok = false; break; }
+            }
+            if (ok) { seedOffset = s - i; }
+            break;
+          }
+        }
+      }
+      const kvStart = i + seedOffset;
+      const kvCore = collectKVBlock(lines, kvStart);
+      const kvBlock = seedOffset > 0 && kvCore.length >= 1
+        ? [...lines.slice(i, kvStart), ...kvCore]
+        : kvCore;
       if (kvBlock.length >= 3) {
         flushBullets();
         const { html, rows, valueColX, bodySize } = renderKVTable(kvBlock);
