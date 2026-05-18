@@ -120,8 +120,10 @@ function isWeekend(d: Date): boolean {
 }
 
 function isBusinessDay(dateStr: string, calendar: CalendarKey): boolean {
-  const d = new Date(dateStr + 'T12:00:00Z');
-  if (isNaN(d.getTime())) return false;
+  const iso = normalizeISO(dateStr);
+  if (!iso) return true; // Unparseable: skip check to avoid false positives
+  const d = new Date(iso + 'T12:00:00Z');
+  if (isNaN(d.getTime())) return true;
   if (isWeekend(d)) return false;
   return !holidaySet(calendar).has(toISO(d));
 }
@@ -135,7 +137,9 @@ function calendarForCurrency(currency: string): CalendarKey {
 // Modified Following: advance to next business day unless it crosses a month boundary,
 // in which case roll back to the preceding business day (ICMA Rule 251.2).
 function modifiedFollowing(dateStr: string, calendar: CalendarKey): string {
-  const d = new Date(dateStr + 'T12:00:00Z');
+  const iso = normalizeISO(dateStr);
+  if (!iso) return dateStr;
+  const d = new Date(iso + 'T12:00:00Z');
   if (isNaN(d.getTime())) return dateStr;
   const origMonth = d.getUTCMonth();
   let candidate = new Date(d);
@@ -149,6 +153,26 @@ function modifiedFollowing(dateStr: string, calendar: CalendarKey): string {
     }
   }
   return toISO(candidate);
+}
+
+// Normalize a free-form date string ("14 January 2026", "14/01/2026", "2026-01-14",
+// "Jan 14, 2026") to ISO yyyy-mm-dd. Returns null if unparseable.
+function normalizeISO(s: string | undefined): string | null {
+  if (!s) return null;
+  const trimmed = s.trim();
+  if (!trimmed || trimmed === 'TBA' || trimmed === 'TBD') return null;
+  // Already ISO?
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  // dd/mm/yyyy or dd-mm-yyyy (European)
+  const eu = trimmed.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+  if (eu) {
+    const [, dd, mm, yyyy] = eu;
+    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+  }
+  // Fall back to JS Date (handles "14 January 2026", "Jan 14, 2026", etc.)
+  const d = new Date(trimmed);
+  if (isNaN(d.getTime())) return null;
+  return toISO(d);
 }
 
 // ─── ISIN check-digit  ·  ISO 6166 / Luhn mod-10 ────────────────────────────
