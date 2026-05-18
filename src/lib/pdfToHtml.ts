@@ -386,9 +386,11 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     const leftText = line.items.slice(0, splitIdx).map(i => i.str).join(' ').trim();
     const rightText = line.items.slice(splitIdx).map(i => i.str).join(' ').trim();
     if (!leftText || !rightText) return false;
-    // Left side should look like a label: short, often ends with ':'.
-    if (leftText.length > 60) return false;
-    return /:\s*$/.test(leftText) || leftText.split(/\s+/).length <= 6;
+    // Left side should look like a label.
+    if (leftText.length > 80) return false;
+    // Very wide gap (>= 40pt) is an unambiguous two-column layout — accept.
+    if (bestGap >= 40) return true;
+    return /:\s*$/.test(leftText) || leftText.split(/\s+/).length <= 10;
   }
 
   function collectKVBlock(lines: Line[], start: number): Line[] {
