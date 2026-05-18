@@ -92,25 +92,70 @@ export default function AIDraftPage() {
     mimeType: file.type || undefined,
   });
 
-  const applyExtractedText = (text: string, fileName: string) => {
+  const applyExtractedText = async (text: string, fileName: string) => {
     const clean = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n').trim();
     if (!clean) return;
-    const result = simulateAIExtraction(clean);
-    const subjectLine = result.headline && !result.headline.startsWith('Issuer ')
-      ? result.headline
+
+    // 1) Fast regex baseline so the Deal Checker shows something immediately.
+    const baseline = simulateAIExtraction(clean);
+    const baselineBookrunners = extractBookrunners(clean);
+    const subjectLine = baseline.headline && !baseline.headline.startsWith('Issuer ')
+      ? baseline.headline
       : fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
 
-    // Always overwrite a previously auto-extracted headline so re-uploads pick up the new issuer.
     setHeadline(prev => {
       const trimmed = prev.trim();
       if (!trimmed) return subjectLine;
-      // If the existing headline looks auto-generated (ends with "New Issue Alert"), replace it.
       if (/(New Issue Alert|Priced|Settled|Books (Open|Closed)|Launched|Announced|Mandate)\s*$/i.test(trimmed)) return subjectLine;
       return trimmed;
     });
-    setAiFields(result.keyTerms);
-    setAiConfidence(result.confidence);
-    setAiBookrunners(extractBookrunners(clean));
+    setAiFields(baseline.keyTerms);
+    setAiConfidence(baseline.confidence);
+    setAiBookrunners(baselineBookrunners);
+
+    // 2) Call Lovable AI for a richer, more accurate extraction; merge over the baseline.
+    try {
+      const { data, error } = await supabase.functions.invoke('extract-deal-fields-ai', {
+        body: { text: clean },
+      });
+      if (error) throw error;
+      if (data && typeof data === 'object' && 'keyTerms' in data) {
+        const aiKeyTerms = (data as any).keyTerms as Record<string, string>;
+        const aiBks = (data as any).bookrunners as Bookrunner[] | undefined;
+
+        // Merge: AI value wins when non-empty, otherwise keep regex baseline.
+        const merged: Record<string, string> = { ...baseline.keyTerms };
+        for (const [k, v] of Object.entries(aiKeyTerms || {})) {
+          if (typeof v === 'string' && v.trim()) merged[k] = v.trim();
+        }
+        setAiFields(merged);
+        if (Array.isArray(aiBks) && aiBks.length > 0) setAiBookrunners(aiBks);
+
+        // If AI gave us a stronger issuer, refresh the auto-headline.
+        const aiIssuer = (aiKeyTerms?.['Issuer Name'] || '').trim();
+        if (aiIssuer) {
+          setHeadline(prev => {
+            const trimmed = prev.trim();
+            if (!trimmed) return `${aiIssuer} — New Issue Alert`;
+            if (/(New Issue Alert|Priced|Settled|Books (Open|Closed)|Launched|Announced|Mandate)\s*$/i.test(trimmed)
+                && !trimmed.toLowerCase().includes(aiIssuer.toLowerCase())) {
+              return `${aiIssuer} — New Issue Alert`;
+            }
+            return trimmed;
+          });
+        }
+        toast({ title: 'AI extraction complete', description: 'Deal terms parsed from attachment.' });
+      }
+    } catch (err: any) {
+      const status = err?.context?.status;
+      if (status === 429) {
+        toast({ title: 'AI rate limit', description: 'Too many requests — try again shortly.', variant: 'destructive' });
+      } else if (status === 402) {
+        toast({ title: 'AI credits exhausted', description: 'Add credits in workspace settings.', variant: 'destructive' });
+      } else {
+        console.error('AI extraction failed; using regex baseline', err);
+      }
+    }
   };
 
   const appendHtmlToBody = (html: string) => {
