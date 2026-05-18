@@ -114,3 +114,8 @@
 .tiptap h1 { font-size: 1.4rem; font-weight: 700; margin: 0.5rem 0; }
 .tiptap h2 { font-size: 1.2rem; font-weight: 700; margin: 0.5rem 0; }
 .tiptap h3 { font-size: 1.05rem; font-weight: 600; margin: 0.5rem 0; }
+
+/* PDF import — borderless 2-column label/value list */
+.tiptap table.pdf-kv { border-collapse: collapse; width: 100%; margin: 0.5rem 0; }
+.tiptap table.pdf-kv td { border: none; padding: 2px 8px 2px 0; vertical-align: top; }
+.tiptap table.pdf-kv td:first-child { white-space: nowrap; font-weight: 600; width: 1%; color: hsl(var(--muted-foreground)); }
