@@ -295,40 +295,15 @@ export default function AIDraftPage() {
               className="border-0 border-b border-border rounded-none text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
             />
             <div className="flex flex-1 flex-col min-h-[400px]">
-              {/* Body with Write / Preview toggle */}
+              {/* Rich-text body editor — preserves formatting from dropped Word / PDF files */}
               <div className="flex flex-1 flex-col min-h-0">
-                <div className="flex items-center gap-1 px-2 py-1 border-b border-border text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setBodyMode('write')}
-                    className={`px-2 py-1 rounded ${bodyMode === 'write' ? 'bg-accent/20 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                  >
-                    Write
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBodyMode('preview')}
-                    className={`px-2 py-1 rounded ${bodyMode === 'preview' ? 'bg-accent/20 text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                  >
-                    Preview
-                  </button>
-                </div>
-                {bodyMode === 'write' ? (
-                  <Textarea
-                    value={body}
-                    onChange={e => setBody(e.target.value)}
-                    placeholder="Start typing or drag and drop files to extract, parse and check..."
-                    className="flex-1 min-h-0 border-0 rounded-none px-4 py-3 bg-transparent focus-visible:ring-0 resize-none placeholder:text-muted-foreground/50"
-                  />
-                ) : (
-                  <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 text-sm whitespace-pre-wrap">
-                    {body.trim() ? (
-                      <LinkifiedText text={body} />
-                    ) : (
-                      <span className="text-muted-foreground/50">Nothing to preview yet.</span>
-                    )}
-                  </div>
-                )}
+                <RichTextEditor
+                  value={body}
+                  onChange={setBody}
+                  placeholder="Start typing or drag and drop files to extract, parse and check..."
+                  className="flex-1 min-h-0 border-0 rounded-none bg-transparent"
+                  onReady={editor => { editorRef.current = editor; }}
+                />
               </div>
               {/* Slim attachment strip */}
               <div className="max-h-28 overflow-y-auto px-4 py-2 border-t border-border text-xs text-muted-foreground/60">
