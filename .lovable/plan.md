@@ -1,31 +1,30 @@
 ## Problem
 
-In the Aldar PDF, the "Interest" row's value wraps across a page break. Page 1 ends with "...the court declaring the Issuer insolvent or" and page 2 starts with "appointing an administrator... customary carve-outs" at x≈217.7 (the value column).
+The label "EU MiFID II and UK MiFIR Target Market / PRIIPS" wraps to two lines in the PDF, with the value ("Eligible counterparties...") starting alongside the first label line. In the current output:
 
-Because `pdfFileToHtml` runs KV/table/paragraph detection **per page**, the continuation at the top of page 2 has no preceding KV row on its own page, so it gets rendered as a plain `<p>` outside any table.
+- The first line is rendered as a paragraph **outside** any table ("EU MiFID II and UK MiFIR Target Eligible counterparties and professional clients only...").
+- A second small table contains only `Market / PRIIPS` | `No EU PRIIPs...`.
+
+## Root cause
+
+In `src/lib/pdfToHtml.ts`, `looksLikeKV()` requires the label text to be either ≤ 60 chars ending in `:` OR ≤ 6 whitespace-separated words.
+
+The seed line label "EU MiFID II and UK MiFIR Target" is **7 words** and does not end with `:`, so `looksLikeKV` returns false. The line is therefore treated as a normal paragraph, its value half gets merged into the paragraph, and the wrapped label "Market / PRIIPS" on the next line becomes the start of a separate KV table.
 
 ## Fix (single file: `src/lib/pdfToHtml.ts`)
 
-Make KV continuation detection cross page boundaries:
+Relax the `looksLikeKV` label heuristic so realistic financial-term-sheet labels (which often run 7–10 words) are detected:
 
-1. After per-page rendering, when a page's first non-repeating lines all sit at a value-column X that matches the **last KV table emitted on the previous page**, treat them as a continuation:
-   - Strip them from the current page's lines before running the normal per-page pass.
-   - Append their inline-rendered text to the last `<td>` of the previous page's trailing `<table class="pdf-kv">` (joined with `<br/>` or a space).
+1. Accept a label of up to **10 words** (was 6) and up to **80 chars** (was 60), provided the internal gap is large (≥ 25–30 pt).
+2. As a stronger signal, also accept any line where the largest internal gap is **≥ 40 pt** and the left text is ≤ 80 chars, regardless of word count — a 40-pt gap is unambiguous two-column layout.
+3. Keep all existing guards (must have a non-empty left and right text; gap must split the line into clear left/right groups).
 
-2. Implementation approach:
-   - Track, per page, the dominant `valueColX` of the last KV block rendered and a reference to the rendered table HTML (or restructure to render after computing all blocks).
-   - At the start of processing page `p+1`, peek at the first N (≤ ~6) lines; collect a leading run where every item's `x` is within ±8 of the previous page's `valueColX` and no item lies in the label column. Skip lines that are repeating headers/footers (already filtered).
-   - Merge those lines into the previous page's last KV row's value cell, then continue normal processing from the first non-continuation line.
-
-3. Guard rails:
-   - Only merge if the previous page's final output element was a `pdf-kv` table (not a heading or paragraph).
-   - Only merge if font size of continuation lines matches the table's body size (don't swallow a new heading at top of page).
-   - Stop the leading run at the first line that breaks the value-column alignment.
+This will let the "EU MiFID II and UK MiFIR Target" line seed the KV block; the existing label-continuation logic (added previously) will then merge "Market / PRIIPS" into the same label cell, and value-column continuations ("No EU PRIIPs...", "as the securities...", "EEA or the United Kingdom") will fold into the same value cell.
 
 ## Validation
 
 Re-upload the Aldar PDF and confirm:
-- The "Interest" row's value cell contains the full wrapped text ending in "...all subject to customary carve-outs" inside the bordered cell.
-- No orphan paragraph appears between the Interest table and the next table on page 2.
-- Single-page KV rows and multi-line values within one page still render correctly.
+- A single bordered row appears with label `EU MiFID II and UK MiFIR Target Market / PRIIPS` and the full value text in one cell.
+- No orphan paragraph above the row.
+- Other rows (Issuer, Coupon, Interest, Structuring Advisor & Global Coordinator (B&D), etc.) still render correctly.
 - No regression on the Slovak Republic PDF.
