@@ -79,20 +79,36 @@ function hasIssuerCueAfter(text: string, end: number): boolean {
 }
 
 function extractByLabel(text: string): string {
+  // Sibling labels in term-sheet tables — "Issuer LEI", "Issuer Rating", etc.
+  // We must NOT capture these as the issuer value when there's no colon.
+  const SIBLING_LABEL = /^(LEI|Rating|Ratings|Name|Type|Group|Code|Country|Legal|Address|Contact|Description|Industry|Sector)\b/i;
+  // Terminators that mark the start of the next field in a flattened KV row.
+  const NEXT_FIELD = /\s+(?:Issuer\s+LEI|Issuer\s+Rating|Company\s+Rating|Guarantor|Currency|Size|Tenor|Coupon|Maturity|ISIN|LEI|Rating|Bookrunner|Joint|Status|Form|Pricing\s+Date|Settlement|Issue\s+Price|Reoffer|Mid-?Swap|Denomination|Listing|Law|Notes?|Format|Ranking|Use\s+of\s+Proceeds)\s*[:\-–]?/i;
+  // Boilerplate phrases that mean we caught the wrong thing (e.g. country in incorporation note).
+  const BOILERPLATE = /^(United Arab Emirates|United States|United Kingdom|Republic of |Kingdom of |State of |Sultanate of |Principality of |Grand Duchy of )/i;
+
   const labels = [
-    /\b(?:Name\s+of\s+)?Issuer\s*[:\-–]\s*([^\n;]{2,120})/i,
-    /\bBorrower\s*[:\-–]\s*([^\n;]{2,120})/i,
-    /\bObligor\s*[:\-–]\s*([^\n;]{2,120})/i,
+    // Allow colon/dash OR whitespace-only separator (table cells flattened by stripHtml).
+    /\b(?:Name\s+of\s+)?Issuer(?:\s*[:\-–]\s*|\s+)([^\n;]{2,160})/i,
+    /\bBorrower(?:\s*[:\-–]\s*|\s+)([^\n;]{2,160})/i,
+    /\bObligor(?:\s*[:\-–]\s*|\s+)([^\n;]{2,160})/i,
   ];
   for (const re of labels) {
     const m = re.exec(text);
-    if (m && m[1]) {
-      let v = m[1].trim();
-      // Stop at common follow-on field labels
-      v = v.split(/\s{2,}|\s*\|\s*|\s+(?:Guarantor|Currency|Size|Tenor|Coupon|Maturity|ISIN|LEI|Rating|Bookrunner|Joint|Status|Form)\s*[:\-–]/i)[0];
-      v = trimBorrower(v);
-      if (v && !isKnownBank(v)) return v;
-    }
+    if (!m || !m[1]) continue;
+    let v = m[1].trim();
+    // Reject sibling labels like "LEI 9845…", "Rating Baa2".
+    if (SIBLING_LABEL.test(v)) continue;
+    // Stop at the next field label in the flattened row.
+    v = v.split(NEXT_FIELD)[0];
+    v = v.split(/\s{2,}|\s*\|\s*/)[0];
+    v = trimBorrower(v);
+    if (!v) continue;
+    if (isKnownBank(v)) continue;
+    if (BOILERPLATE.test(v)) continue;
+    // Require at least one capitalised word — avoids lower-case noise.
+    if (!/[A-Z]/.test(v)) continue;
+    return v;
   }
   return '';
 }
