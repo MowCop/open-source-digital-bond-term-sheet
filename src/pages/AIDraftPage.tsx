@@ -150,6 +150,10 @@ export default function AIDraftPage() {
     }
 
     setIsExtractingAttachment(true);
+    const hasPdf = extractable.some(f => /\.pdf$/i.test(f.name));
+    if (hasPdf) {
+      toast({ title: 'Reading document…', description: 'Scanned PDFs are processed with AI OCR and may take 30–60s.' });
+    }
     let extractedCount = 0;
     const failures: string[] = [];
     try {
