@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export default function AIDraftPage() {
-  const { distributionLists, createMessage, createDeal, currentUser, users } = useApp();
+  const { distributionLists, createMessage, createDeal, currentUser, users, addAuditEntry } = useApp();
   const { toast } = useToast();
 
   const [headline, setHeadline] = useState('');
@@ -527,7 +527,24 @@ export default function AIDraftPage() {
             </div>
           </div>
 
-          <DealChecker aiFields={aiFields} aiBookrunners={aiBookrunners} />
+          <DealChecker
+            aiFields={aiFields}
+            aiBookrunners={aiBookrunners}
+            userRole={currentUser?.role}
+            currentUserId={currentUser?.id}
+            currentUserName={currentUser?.name}
+            onAuditEntries={(entries) =>
+              entries.forEach((e) =>
+                addAuditEntry({
+                  action: 'deal_checker_override',
+                  entityType: 'deal_checker_override',
+                  entityId: 'draft',
+                  userId: e.adminUserId,
+                  details: JSON.stringify(e),
+                })
+              )
+            }
+          />
 
           {/* Distribution */}
           <div className="bg-card border border-border rounded-lg">
