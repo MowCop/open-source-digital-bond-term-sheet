@@ -1,3 +1,16 @@
+/**
+ * bond.ts  ·  v2.0
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Drop into: src/types/bond.ts
+ *
+ * CHANGES FROM v1.0
+ * ─────────────────
+ * • Deal.referenceRate added (FIX-6: FRN reference rate field).
+ * • DealCheckerOverride interface added for audit-trail persistence.
+ * • AuditLogEntry.action now covers 'deal_checker_override' events.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
 export type DealStage = 'Mandate' | 'Announced' | 'Launched' | 'Books Open' | 'Books Closed' | 'Priced' | 'Settled';
 
 export type UserRole = 'master_admin' | 'syndicate_admin' | 'vendor_user' | 'syndicate_readonly' | 'sales_readonly' | 'guest_readonly';
@@ -45,17 +58,17 @@ export interface Deal {
   stageHistory: StageTransition[];
   createdByOrg?: string;
 
-  // Party / Issuer (5 fields)
-  issuerName: string;        // borrower / PartyName ISSUER
+  // Party / Issuer
+  issuerName: string;
   issuerLEI?: string;
-  issuerRating?: string;     // e.g. "BBB/Baa3/BBB Fitch"
-  ratingOutlook?: string;    // STABLE / POSITIVE / NEGATIVE
+  issuerRating?: string;
+  ratingOutlook?: string;
   bookrunners: Bookrunner[];
 
-  // Issuance (16 fields)
+  // Issuance
   issuanceType?: IssuanceType;
   currency: string;
-  size: string;              // AggregateNominalAmount
+  size: string;
   specifiedDenomination?: string;
   pricingDate?: string;
   issueDate?: string;
@@ -70,7 +83,7 @@ export interface Deal {
   sellingRestrictions?: string;
   listingVenue?: string;
 
-  // Product (14 fields)
+  // Product
   isin?: string;
   cusip?: string;
   commonCode?: string;
@@ -80,11 +93,17 @@ export interface Deal {
   maturityDate?: string;
   interestType?: InterestType;
   interestRate?: string;
+  /**
+   * FIX-6: Reference rate for floating rate notes.
+   * Examples: "EURIBOR", "SOFR", "SONIA", "ESTR", "3M EURIBOR".
+   * If populated, interestRate may hold the all-in rate or spread notation.
+   */
+  referenceRate?: string;
   interestPaymentFrequency?: InterestPaymentFrequency;
   dayCountFraction?: DayCountFraction;
   businessDayConvention?: BusinessDayConvention;
-  optionality?: string;      // CALL / PUT / NONE
-  taxonomy?: string;         // ESG/Green/Social label
+  optionality?: string;
+  taxonomy?: string;
 }
 
 export interface StageTransition {
@@ -93,6 +112,42 @@ export interface StageTransition {
   timestamp: Date;
   userId: string;
   note?: string;
+}
+
+// ─── Deal Checker Override audit record ──────────────────────────────────────
+/**
+ * Persisted whenever a Master Admin overrides a blocking Deal Checker error.
+ * Store in your audit log collection, tagged with entityType: 'deal_checker_override'.
+ *
+ * Usage in AIDraftPage or wherever DealChecker is mounted:
+ *
+ *   <DealChecker
+ *     ...
+ *     userRole={currentUser.role}
+ *     currentUserId={currentUser.id}
+ *     currentUserName={currentUser.name}
+ *     onAuditEntries={(entries) => {
+ *       entries.forEach(e => auditLogStore.create({
+ *         id: crypto.randomUUID(),
+ *         action: 'deal_checker_override',
+ *         entityType: 'deal_checker_override',
+ *         entityId: dealId,
+ *         userId: e.adminUserId,
+ *         timestamp: new Date(e.timestamp),
+ *         details: JSON.stringify(e),
+ *       }));
+ *     }}
+ *   />
+ */
+export interface DealCheckerOverride {
+  ruleId: string;
+  ruleTitle: string;
+  field: string;
+  adminUserId: string;
+  adminName: string;
+  reason: string;
+  dealSnapshot: Partial<Deal>;
+  timestamp: string;
 }
 
 export interface Message {
@@ -120,7 +175,7 @@ export interface Attachment {
   type: 'pdf' | 'docx' | 'pptx';
   size: number;
   url: string;
-  file?: File;       // in-memory blob for download / replace (not persisted)
+  file?: File;
   mimeType?: string;
 }
 
@@ -134,8 +189,9 @@ export interface AISuggestion {
 
 export interface AuditLogEntry {
   id: string;
+  /** Extended with 'deal_checker_override' to capture Master Admin bypasses */
   action: string;
-  entityType: 'deal' | 'message' | 'user' | 'permission';
+  entityType: 'deal' | 'message' | 'user' | 'permission' | 'deal_checker_override';
   entityId: string;
   userId: string;
   timestamp: Date;
