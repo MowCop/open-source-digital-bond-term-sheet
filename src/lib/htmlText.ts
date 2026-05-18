@@ -12,6 +12,14 @@ export function stripHtml(html: string): string {
       doc.querySelectorAll('p, div, li, h1, h2, h3, h4, h5, h6').forEach(el => {
         el.append('\n');
       });
+      // Table cells need explicit separators or "<td>Issuer</td><td>Aldar</td>"
+      // collapses to "IssuerAldar" and label-based extraction breaks.
+      doc.querySelectorAll('td, th').forEach(el => {
+        el.append('\t');
+      });
+      doc.querySelectorAll('tr').forEach(el => {
+        el.append('\n');
+      });
       return (doc.body.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
     } catch {
       /* fall through */
@@ -19,7 +27,8 @@ export function stripHtml(html: string): string {
   }
   return html
     .replace(/<\s*br\s*\/?>/gi, '\n')
-    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|tr)>/gi, '\n')
+    .replace(/<\/(td|th)>/gi, '\t')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
