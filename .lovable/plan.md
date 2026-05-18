@@ -1,81 +1,37 @@
-## Short answer
+# Make scanned PDFs (like Aldar Properties) render like the Slovak Republic doc
 
-Yes — we can get PDFs much closer to the Slovak Republic (DOCX) look, but not 1:1. DOCX carries real semantics (Heading 1, lists, tables, bold runs), so mammoth maps it cleanly to HTML. A PDF only contains positioned glyphs and drawing ops — there are no "paragraphs", "headings" or "tables" in the file, just text at coordinates. Everything has to be reconstructed by heuristics.
+## Why the last change didn't appear to do anything
 
-Our current `pdfToHtml.ts` already does a first pass (line grouping, heading-by-font-size, bold detection, naive tables, optional rasterized logo). It works on simple PDFs but loses fidelity on bank term sheets like Aldar, where layout is dense and multi-column.
+The new `pdfToHtml.ts` heuristics only run when pdf.js can extract a text layer. The Aldar Properties PDF is a **scanned / image-based PDF** — pdf.js returns zero text items, so the code drops straight into the existing image-of-the-page fallback. That's why nothing visibly changed.
 
-## What "matching the Slovak look" means for PDF input
+PDFs with a real text layer (e.g. exports from Word) already benefit from the new headings / KV-table / bullet detection. Scanned PDFs need a different pipeline: **OCR + layout reconstruction**.
 
-The Slovak DOCX output preserves:
-1. Centered title block with logos
-2. Bold section headings (ISSUER, GUARANTOR, …) in their own line
-3. Two-column "label : value" rows
-4. Bullet lists
-5. Inline bold inside paragraphs
-6. Tables with borders
+## Approach: vision-model OCR via Lovable AI Gateway
 
-To reach that from PDF we need a stronger reconstruction pipeline, not a different library.
+Add a fallback that triggers only when pdf.js returns no text. We rasterise each page in the browser (already working), send the page images to a new edge function, which calls Lovable AI (`google/gemini-2.5-pro` — strong at visual + text reconstruction) and asks it to return clean, structured HTML matching the document's visual layout (h1/h2, paragraphs, bullets, two-column "label: value" tables, simple grid tables).
 
-## Proposed upgrade to `src/lib/pdfToHtml.ts`
+The result feeds back through the same `appendHtmlToBody` + `applyExtractedText` path, so headline / AI fields / bookrunner extraction continue to work.
 
-### 1. Better line + block grouping
-- Cluster by Y with a tolerance proportional to font size (not a flat 3pt) so 10pt body and 18pt headings both group correctly.
-- Detect blank-line gaps (>1.5× median line height) and emit paragraph breaks instead of joining everything.
+No API key needed from the user — Lovable AI Gateway is already wired in.
 
-### 2. Two-column "label : value" detection (the big win for term sheets)
-Aldar's term sheet — like most DCM docs — is laid out as:
+## Scope
 
-```
-Issuer:              Aldar Investment Properties Sole Proprietorship LLC
-Guarantor:           Aldar Properties PJSC
-Issue Size:          USD 500,000,000
-```
+1. **Edge function `pdf-ocr-to-html`** — POST `{ pages: [{ pageNumber, imageBase64 }] }`, returns `{ html, text }`. Streams page-by-page to Lovable AI with a strict prompt: reconstruct the original layout as semantic HTML, prefer `<table class="pdf-kv">` for label/value blocks, no `<style>`/scripts, no commentary. Concatenates per-page HTML.
+2. **`src/lib/pdfToHtml.ts`** — when a page yields no text items (or the whole doc yields almost no text), rasterise the page(s) to JPEG (reusing the existing `renderPageImage` helper at scale 2.0 for OCR quality), call the edge function, and return that HTML/text instead of the image fallback.
+3. **`src/pages/AIDraftPage.tsx`** — show a clearer "Reading scanned PDF with AI…" toast while the OCR path runs (it's slower than the text-layer path). No other UI changes.
 
-Heuristic: within a page, find the dominant X position of the second token group across many lines. If ≥4 lines share roughly the same "left column ends here / right column starts here" boundary, render those lines as a 2-column borderless table (or a `<dl>`). This is what makes the output *look* like the source instead of a wall of text.
+## Out of scope
 
-### 3. Bullet detection
-Lines starting with `•`, `·`, `-`, `–`, `o`, `▪` or `(i)/(ii)/(a)` → wrap into `<ul>`/`<ol>` with the bullet stripped. Indented continuation lines join the previous `<li>`.
+- PPTX / image uploads (not requested)
+- Re-OCRing PDFs that already have a text layer
+- Caching OCR results across sessions
 
-### 4. Table detection — upgrade
-Current code only triggers on >30pt gaps. Add:
-- Use ruling lines from `getOperatorList` (stroke ops) when present — gives exact column/row boundaries.
-- Fall back to X-cluster method already in place, but cluster across the whole page first, then assign rows.
+## Validation
 
-### 5. Heading detection — upgrade
-- Compare against per-page median font size, not document median (cover pages skew it).
-- Treat ALL-CAPS short lines (<60 chars) as `<h2>` even without size jump — matches "ISSUER", "RISK FACTORS" style.
-- Centered + bold + large = `<h1>`, used once per page max.
-
-### 6. Inline bold runs
-Today a line is "all bold or not". Change to per-item: build the line as a sequence of `<strong>`/plain `<span>` runs so "Issuer: **Aldar…**" keeps the bold on the value only.
-
-### 7. Logo / image preservation
-Already rasterizing the whole page when an image op is detected. Improve by:
-- Extracting just the image XObject (via `commonObjs`/`objs` resolution) instead of rasterizing the whole page, so the logo isn't surrounded by faint background text.
-- Only inline images >32×32 px to skip decorative rules.
-
-### 8. Hyphenation & soft wraps
-Join lines that end with `-` followed by lowercase on the next line; otherwise keep paragraph wrapping as soft breaks within one `<p>`.
-
-## What still won't be perfect (be honest with the user)
-
-- **Exact fonts & colors** — we render in the editor's theme, not the PDF's typeface. Slovak DOCX has the same limitation; mammoth strips fonts too, so output looks consistent with current behavior.
-- **Complex multi-column prospectuses** (e.g. 2-column body with footnotes) — reading order can break. We can detect column count from X histogram and process columns separately.
-- **Scanned / image-only PDFs** — no text layer to extract. We already fall back to a page image; OCR (tesseract.js) could be added later behind a "scanned PDF detected" toggle, but it's heavy (~10MB worker) and slow.
-- **Footers, page numbers, running headers** — will appear inline unless we filter. Add a pass that drops text repeated at the same Y on ≥50% of pages.
+Re-upload Aldar Properties. Expect: bank/term-sheet style two-column rows for Issuer / Issuer Rating / Format / Pricing Date etc., section headings preserved, the indicative terms table rendered as a real `<table>` — visually comparable to the Slovak Republic output. Re-upload a text-layer PDF and confirm the existing fast path still runs (no edge-function call).
 
 ## Files touched
 
-- `src/lib/pdfToHtml.ts` — rewrite the reconstruction pipeline (sections 1–8 above). No new dependencies; pdf.js already exposes everything we need.
-- `src/index.css` — minor: add styling for `.pdf-kv` (the borderless 2-col label/value table) so it matches the Slovak look in the editor.
-- No changes to `RichTextEditor.tsx`, `AIDraftPage.tsx`, or the DOCX path.
-
-## Out of scope for this pass
-
-- OCR for scanned PDFs (separate follow-up if needed).
-- PPTX import (still listed in the Attachment type but not wired).
-- Server-side conversion via LibreOffice — would give pixel-perfect fidelity but requires an edge function with a LibreOffice binary; only worth it if heuristic approach proves insufficient on real documents.
-
-## Suggested validation
-
-After implementing, drop both attached files into Create New Issue and compare side-by-side with the originals. If Aldar's key-value block renders as a clean two-column layout with bold values, we've hit the target.
+- `supabase/functions/pdf-ocr-to-html/index.ts` (new)
+- `src/lib/pdfToHtml.ts` (add OCR fallback branch)
+- `src/pages/AIDraftPage.tsx` (toast wording only)
