@@ -526,14 +526,15 @@ export function validateDeal(
 
   // ── 1. Settlement date: weekend / holiday ────────────────────────────────────
   if (deal.settlementDate && deal.settlementDate !== 'TBA') {
-    if (!isBusinessDay(deal.settlementDate, cal)) {
+    const isoSettle = normalizeISO(deal.settlementDate);
+    if (isoSettle && !isBusinessDay(isoSettle, cal)) {
       const adjusted = modifiedFollowing(deal.settlementDate, cal);
       push({
         id: 'settlement-non-business',
         severity: 'error',
         field: 'settlementDate',
         title: 'Settlement on non-business day',
-        detail: `Settlement date ${deal.settlementDate} falls on a weekend or ${cal} holiday. Modified Following convention suggests ${adjusted}.`,
+        detail: `Settlement date ${deal.settlementDate} (${isoSettle}) falls on a weekend or ${cal} holiday. Modified Following convention suggests ${adjusted}.`,
         icmaRef: 'ICMA Rule 251.2 / Business Day Convention',
       });
     }
