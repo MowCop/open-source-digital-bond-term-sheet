@@ -1,30 +1,33 @@
-## Problem
-
-The label "EU MiFID II and UK MiFIR Target Market / PRIIPS" wraps to two lines in the PDF, with the value ("Eligible counterparties...") starting alongside the first label line. In the current output:
-
-- The first line is rendered as a paragraph **outside** any table ("EU MiFID II and UK MiFIR Target Eligible counterparties and professional clients only...").
-- A second small table contains only `Market / PRIIPS` | `No EU PRIIPs...`.
+# Fix: Issuer mis-extracted as "United Arab Emirates" on Aldar PDF
 
 ## Root cause
 
-In `src/lib/pdfToHtml.ts`, `looksLikeKV()` requires the label text to be either ≤ 60 chars ending in `:` OR ≤ 6 whitespace-separated words.
+When a PDF term-sheet's Issuer row is rendered as an HTML KV table and then stripped to plain text, the result is `… Issuer Aldar Properties PJSC Issuer LEI 98450048… …` — label and value separated only by whitespace, no colon.
 
-The seed line label "EU MiFID II and UK MiFIR Target" is **7 words** and does not end with `:`, so `looksLikeKV` returns false. The line is therefore treated as a normal paragraph, its value half gets merged into the paragraph, and the wrapped label "Market / PRIIPS" on the next line becomes the start of a separate KV table.
+`extractByLabel()` in `src/lib/alertParsing.ts` only accepts `Issuer\s*[:\-–]\s*…`, so the labelled value is missed. Extraction falls through to the sovereign-pattern layer, which matches **"United Arab Emirates"** inside the boilerplate "(a public joint stock company incorporated in the United Arab Emirates)".
 
-## Fix (single file: `src/lib/pdfToHtml.ts`)
+The KV-table heading "Issuer" is the strongest possible signal — it must always win over generic sovereign / connector patterns.
 
-Relax the `looksLikeKV` label heuristic so realistic financial-term-sheet labels (which often run 7–10 words) are detected:
+## Changes
 
-1. Accept a label of up to **10 words** (was 6) and up to **80 chars** (was 60), provided the internal gap is large (≥ 25–30 pt).
-2. As a stronger signal, also accept any line where the largest internal gap is **≥ 40 pt** and the left text is ≤ 80 chars, regardless of word count — a 40-pt gap is unambiguous two-column layout.
-3. Keep all existing guards (must have a non-empty left and right text; gap must split the line into clear left/right groups).
+### `src/lib/alertParsing.ts`
 
-This will let the "EU MiFID II and UK MiFIR Target" line seed the KV block; the existing label-continuation logic (added previously) will then merge "Market / PRIIPS" into the same label cell, and value-column continuations ("No EU PRIIPs...", "as the securities...", "EEA or the United Kingdom") will fold into the same value cell.
+1. Loosen `extractByLabel()` to accept whitespace-only separators (typical of table flattening), in addition to `:`, `-`, `–`:
+   - Match `Issuer` (and `Borrower`, `Obligor`) followed by 1+ spaces OR a colon/dash, then capture up to the next known field label.
+   - Disambiguate from sibling labels: do **not** match when the next word is `LEI`, `Rating`, `Name`, `Type`, `Group`, or any of the existing follow-on field labels already used in the split regex.
+   - Keep the existing terminator-split so the value stops at the next labelled field on the same line.
+
+2. Reject obviously-wrong matches:
+   - If the captured value is empty, a known bank, or matches a sovereign-only phrase like "United Arab Emirates" / "Republic of …" / "Kingdom of …", treat the label match as not-found and continue (lets the fallback still help in genuinely sovereign PDFs that happen to have an `Issuer:` line elsewhere).
+
+3. No changes to the sovereign / corporate / connector fallback layers — they remain the safety net for non-term-sheet alerts (e.g. press wires that don't carry an "Issuer" label).
+
+### No other files changed
+
+`simulateAIExtraction`, `AIDraftPage`, and the PDF→HTML pipeline are untouched. The fix is purely in the regex / disambiguation logic.
 
 ## Validation
 
-Re-upload the Aldar PDF and confirm:
-- A single bordered row appears with label `EU MiFID II and UK MiFIR Target Market / PRIIPS` and the full value text in one cell.
-- No orphan paragraph above the row.
-- Other rows (Issuer, Coupon, Interest, Structuring Advisor & Global Coordinator (B&D), etc.) still render correctly.
-- No regression on the Slovak Republic PDF.
+1. Re-upload the Aldar Properties PJSC Pricing Term Sheet — Issuer Name should be `Aldar Properties PJSC`, headline should start with it, and the AI Field Extraction panel should show the same.
+2. Re-upload the Slovak Republic term sheet previously tested — Issuer must still resolve to `Slovak Republic` (sovereign fallback when no `Issuer` row exists, or the labelled row when it does).
+3. Paste a free-text alert ("Republic of Italy mandated JPMorgan…") with no Issuer label — must still resolve to `Republic of Italy`.
