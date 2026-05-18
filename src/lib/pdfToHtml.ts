@@ -1,4 +1,5 @@
 import { stripHtml } from './htmlText';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Convert a PDF to formatted HTML by reconstructing layout from pdf.js text
@@ -68,6 +69,16 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
       line.right = lastIt.x + (lastIt.w || 0);
     }
     pagesLines.push(lines);
+  }
+
+  // If the PDF has essentially no extractable text (scanned / image-based),
+  // OCR every page via the vision-model edge function.
+  const totalItems = pagesLines.reduce((n, l) => n + l.reduce((m, ln) => m + ln.items.length, 0), 0);
+  const avgItemsPerPage = totalItems / Math.max(1, pagesLines.length);
+  if (totalItems === 0 || avgItemsPerPage < 5) {
+    const ocr = await ocrAllPages(doc);
+    if (ocr && ocr.html) return ocr;
+    // fall through to normal pipeline (which will produce image fallback)
   }
 
   // Detect repeating headers/footers: same text at similar Y on >= 50% of pages.
@@ -363,6 +374,29 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
     if (!gaps.length) return 14;
     gaps.sort((a, b) => a - b);
     return gaps[Math.floor(gaps.length / 2)];
+  }
+}
+
+async function ocrAllPages(doc: any): Promise<{ html: string; text: string } | null> {
+  try {
+    const pages: Array<{ pageNumber: number; imageBase64: string }> = [];
+    const maxPages = Math.min(doc.numPages, 25);
+    for (let p = 1; p <= maxPages; p++) {
+      const page = await doc.getPage(p);
+      const dataUrl = await renderPageImage(page, 2.0);
+      if (dataUrl) pages.push({ pageNumber: p, imageBase64: dataUrl });
+    }
+    if (pages.length === 0) return null;
+    const { data, error } = await supabase.functions.invoke('pdf-ocr-to-html', { body: { pages } });
+    if (error) {
+      console.error('OCR edge function error', error);
+      return null;
+    }
+    if (!data || typeof data.html !== 'string') return null;
+    return { html: data.html, text: data.text || stripHtml(data.html) };
+  } catch (err) {
+    console.error('ocrAllPages failed', err);
+    return null;
   }
 }
 
