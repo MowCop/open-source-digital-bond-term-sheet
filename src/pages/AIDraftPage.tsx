@@ -105,7 +105,7 @@ export default function AIDraftPage() {
       const trimmed = prev.trim();
       if (!trimmed) return subjectLine;
       // If the existing headline looks auto-generated (ends with "New Issue Alert"), replace it.
-      if (/New Issue Alert\s*$/i.test(trimmed)) return subjectLine;
+      if (/(New Issue Alert|Priced|Settled|Books (Open|Closed)|Launched|Announced|Mandate)\s*$/i.test(trimmed)) return subjectLine;
       return trimmed;
     });
     setAiFields(result.keyTerms);
