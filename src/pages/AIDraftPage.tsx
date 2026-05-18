@@ -15,6 +15,7 @@ import { docxFileToHtml } from '@/lib/docxToHtml';
 import { pdfFileToHtml } from '@/lib/pdfToHtml';
 import type { Editor } from '@tiptap/react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -261,12 +262,38 @@ export default function AIDraftPage() {
     }, scpIds);
   };
 
-  const handleSave = () => {
+  const uploadPendingAttachments = async (): Promise<Attachment[]> => {
+    const out: Attachment[] = [];
+    for (const a of attachments) {
+      if (a.url || !a.file) {
+        out.push(a);
+        continue;
+      }
+      try {
+        const safe = a.name.replace(/[^a-zA-Z0-9._-]+/g, '_');
+        const path = `${currentUser.id}/${a.id}-${safe}`;
+        const { error } = await supabase.storage
+          .from('message-attachments')
+          .upload(path, a.file, { contentType: a.mimeType || a.file.type || undefined, upsert: true });
+        if (error) throw error;
+        const { data } = supabase.storage.from('message-attachments').getPublicUrl(path);
+        out.push({ ...a, url: data.publicUrl });
+      } catch (err) {
+        console.error('attachment upload failed', a.name, err);
+        toast({ title: 'Upload failed', description: `Could not upload ${a.name}`, variant: 'destructive' });
+        out.push(a);
+      }
+    }
+    return out;
+  };
+
+  const handleSave = async () => {
     if (!headline.trim()) {
       toast({ title: 'Missing headline', description: 'Please enter a deal headline', variant: 'destructive' });
       return;
     }
     const deal = createDealFromFields();
+    const uploaded = await uploadPendingAttachments();
     createMessage({
       dealIds: [deal.id],
       subject: headline,
@@ -274,13 +301,13 @@ export default function AIDraftPage() {
       status: 'draft',
       senderId: currentUser.id,
       recipients: selectedRecipients,
-      attachments,
+      attachments: uploaded,
       aiSuggestions: aiFields ? { headline, borrowerDetails: '', dealSummary: '', keyTerms: aiFields, confidence: aiConfidence } : undefined,
     });
     toast({ title: 'Draft Saved', description: 'Issue saved as draft in New Issue Board.' });
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!headline.trim()) {
       toast({ title: 'Missing headline', description: 'Please enter a deal headline', variant: 'destructive' });
       return;
@@ -290,6 +317,7 @@ export default function AIDraftPage() {
       return;
     }
     const deal = createDealFromFields();
+    const uploaded = await uploadPendingAttachments();
     createMessage({
       dealIds: [deal.id],
       subject: headline,
@@ -297,7 +325,7 @@ export default function AIDraftPage() {
       status: 'sent',
       senderId: currentUser.id,
       recipients: selectedRecipients,
-      attachments,
+      attachments: uploaded,
       aiSuggestions: aiFields ? { headline, borrowerDetails: '', dealSummary: '', keyTerms: aiFields, confidence: aiConfidence } : undefined,
     });
     toast({ title: 'Alert Sent', description: `Sent to ${selectedRecipients.length} recipient(s)` });
