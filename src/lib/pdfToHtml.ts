@@ -1,6 +1,52 @@
 import { stripHtml } from './htmlText';
 import { supabase } from '@/integrations/supabase/client';
 
+const OCR_CACHE_PREFIX = 'pdfOcrCache:v1:';
+const OCR_CACHE_MAX_ENTRIES = 20;
+
+async function hashBuffer(buf: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(digest))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function readOcrCache(key: string): { html: string; text: string } | null {
+  try {
+    const raw = localStorage.getItem(OCR_CACHE_PREFIX + key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.html === 'string' && typeof parsed.text === 'string') {
+      // Bump recency
+      localStorage.setItem(OCR_CACHE_PREFIX + key, JSON.stringify({ ...parsed, ts: Date.now() }));
+      return { html: parsed.html, text: parsed.text };
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function writeOcrCache(key: string, value: { html: string; text: string }) {
+  try {
+    // Evict oldest entries if we exceed the cap.
+    const keys = Object.keys(localStorage).filter(k => k.startsWith(OCR_CACHE_PREFIX));
+    if (keys.length >= OCR_CACHE_MAX_ENTRIES) {
+      const entries = keys.map(k => {
+        let ts = 0;
+        try { ts = JSON.parse(localStorage.getItem(k) || '{}').ts || 0; } catch { /* ignore */ }
+        return { k, ts };
+      }).sort((a, b) => a.ts - b.ts);
+      for (let i = 0; i <= keys.length - OCR_CACHE_MAX_ENTRIES; i++) {
+        localStorage.removeItem(entries[i].k);
+      }
+    }
+    localStorage.setItem(OCR_CACHE_PREFIX + key, JSON.stringify({ ...value, ts: Date.now() }));
+  } catch {
+    /* quota or disabled — silently skip */
+  }
+}
+
 /**
  * Convert a PDF to formatted HTML by reconstructing layout from pdf.js text
  * items. Detects headings, bullets, two-column "label: value" rows (typical of
@@ -13,6 +59,7 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
   pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
   const buf = await file.arrayBuffer();
+  const fileHash = await hashBuffer(buf.slice(0));
   const doc = await pdfjs.getDocument({ data: buf }).promise;
 
   type Item = { str: string; x: number; y: number; w: number; h: number; bold: boolean };
@@ -76,8 +123,13 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
   const totalItems = pagesLines.reduce((n, l) => n + l.reduce((m, ln) => m + ln.items.length, 0), 0);
   const avgItemsPerPage = totalItems / Math.max(1, pagesLines.length);
   if (totalItems === 0 || avgItemsPerPage < 5) {
+    const cached = readOcrCache(fileHash);
+    if (cached) return cached;
     const ocr = await ocrAllPages(doc);
-    if (ocr && ocr.html) return ocr;
+    if (ocr && ocr.html) {
+      writeOcrCache(fileHash, ocr);
+      return ocr;
+    }
     // fall through to normal pipeline (which will produce image fallback)
   }
 
