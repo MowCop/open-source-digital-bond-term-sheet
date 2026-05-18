@@ -350,29 +350,83 @@ export async function pdfFileToHtml(file: File): Promise<{ html: string; text: s
   function collectKVBlock(lines: Line[], start: number): Line[] {
     const block: Line[] = [];
     let k = start;
-    while (k < lines.length && looksLikeKV(lines[k])) {
-      block.push(lines[k]);
-      k++;
+    // Seed with first KV line.
+    if (!looksLikeKV(lines[k])) return block;
+    block.push(lines[k]);
+    k++;
+    // Track the value-column X (left edge of the value group of the first row).
+    let valueColX = getValueColX(lines[start]);
+    while (k < lines.length) {
+      const line = lines[k];
+      if (looksLikeKV(line)) {
+        // Update running value column from latest KV row (median-like behaviour).
+        const vcx = getValueColX(line);
+        if (Math.abs(vcx - valueColX) < 6) {
+          // consistent column — definitely the same block
+          block.push(line);
+          k++;
+          continue;
+        }
+        // Different value column — still treat as KV but start of new alignment.
+        block.push(line);
+        valueColX = vcx;
+        k++;
+        continue;
+      }
+      // Continuation line: every item starts at or after the value column.
+      const minX = Math.min(...line.items.map(it => it.x));
+      if (line.items.length > 0 && Math.abs(minX - valueColX) < 8) {
+        block.push(line);
+        k++;
+        continue;
+      }
+      break;
     }
     return block;
   }
 
+  function getValueColX(line: Line): number {
+    // Split at largest gap, return x of first right-group item.
+    let splitIdx = 1;
+    let bestGap = 0;
+    for (let k = 1; k < line.items.length; k++) {
+      const prev = line.items[k - 1];
+      const gap = line.items[k].x - (prev.x + (prev.w || 0));
+      if (gap > bestGap) { bestGap = gap; splitIdx = k; }
+    }
+    return line.items[splitIdx]?.x ?? 0;
+  }
+
   function renderKVTable(block: Line[]): string {
-    const rows = block.map(line => {
-      // Re-detect split point per line.
-      let splitIdx = 1;
-      let bestGap = 0;
-      for (let k = 1; k < line.items.length; k++) {
-        const prev = line.items[k - 1];
-        const gap = line.items[k].x - (prev.x + (prev.w || 0));
-        if (gap > bestGap) { bestGap = gap; splitIdx = k; }
+    // Identify dominant value column from labelled rows.
+    const valueXs: number[] = [];
+    for (const line of block) {
+      if (looksLikeKV(line)) valueXs.push(getValueColX(line));
+    }
+    valueXs.sort((a, b) => a - b);
+    const valueColX = valueXs[Math.floor(valueXs.length / 2)] ?? 0;
+
+    type Row = { label: string; valueLines: Line[] };
+    const rows: Row[] = [];
+    for (const line of block) {
+      const minX = Math.min(...line.items.map(it => it.x));
+      const isContinuation = rows.length > 0 && Math.abs(minX - valueColX) < 8 && !line.items.some(it => it.x < valueColX - 8);
+      if (isContinuation) {
+        rows[rows.length - 1].valueLines.push(line);
+        continue;
       }
-      const leftLine: Line = { ...line, items: line.items.slice(0, splitIdx) };
-      const rightLine: Line = { ...line, items: line.items.slice(splitIdx) };
-      const leftText = leftLine.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim().replace(/:\s*$/, '');
-      return `<tr><td>${escapeHtml(leftText)}</td><td>${renderInline(rightLine)}</td></tr>`;
+      // Split label / value at the value column.
+      const leftItems = line.items.filter(it => it.x < valueColX - 4);
+      const rightItems = line.items.filter(it => it.x >= valueColX - 4);
+      const labelText = leftItems.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim().replace(/:\s*$/, '');
+      rows.push({ label: labelText, valueLines: [{ ...line, items: rightItems }] });
+    }
+
+    const rendered = rows.map(r => {
+      const valueHtml = r.valueLines.map(l => renderInline(l)).join('<br/>');
+      return `<tr><td>${escapeHtml(r.label)}</td><td>${valueHtml}</td></tr>`;
     });
-    return `<table class="pdf-kv">${rows.join('')}</table>`;
+    return `<table class="pdf-kv">${rendered.join('')}</table>`;
   }
 
   function isTableLine(line: Line): boolean {
