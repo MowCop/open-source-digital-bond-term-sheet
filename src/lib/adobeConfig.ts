@@ -7,6 +7,7 @@
  * The key is domain-locked, so it is safe to commit to the codebase.
  * Register for these allowed domains:
  *   - id-preview--15a55c38-d908-458f-b4b6-1a35e223ab92.lovable.app
+ *   - 15a55c38-d908-458f-b4b6-1a35e223ab92.lovableproject.com
  *   - newissuevault.lovable.app
  *   - eurobondmarkets.com
  *   - localhost (for local dev)
