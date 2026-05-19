@@ -483,7 +483,16 @@ export default function MessagesPage() {
 
                   {/* Expanded content */}
                   {isExpanded && (
-                    <div className="bg-card/40 border-t border-border px-8 py-4 space-y-4">
+                    <div
+                      className="bg-card/40 border-t border-border px-8 py-4 space-y-4"
+                      title="Double-click empty area to close"
+                      onDoubleClick={(e) => {
+                        const t = e.target as HTMLElement;
+                        // Ignore double-clicks on interactive / editable controls
+                        if (t.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap, [role="dialog"]')) return;
+                        setExpandedAlertId(null);
+                      }}
+                    >
                       {activePanel === 'history' && (
                         <div className="space-y-4">
                           {(() => {
