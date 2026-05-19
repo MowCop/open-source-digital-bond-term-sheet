@@ -78,8 +78,13 @@ export default function MessagesPage() {
       if (document.querySelector('[data-alert-card-expanded="true"]')) return;
       setExpandedAlertId(null);
     };
+    const onEditorClosed = () => setExpandedAlertId(null);
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('alert-editor-closed', onEditorClosed);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('alert-editor-closed', onEditorClosed);
+    };
   }, [expandedAlertId]);
 
 
