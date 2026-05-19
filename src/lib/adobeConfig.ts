@@ -25,6 +25,7 @@ const LOVABLEPROJECT_CLIENT_ID = '947267933a2a46479090213fd219cb25';
 
 const CLIENT_IDS_BY_HOST: Record<string, string> = {
   'id-preview--15a55c38-d908-458f-b4b6-1a35e223ab92.lovable.app': PREVIEW_CLIENT_ID,
+  '15a55c38-d908-458f-b4b6-1a35e223ab92.lovableproject.com': LOVABLEPROJECT_CLIENT_ID,
   'newissuevault.lovable.app': NEWISSUEVAULT_CLIENT_ID,
   'eurobondmarkets.com': EUROBONDMARKETS_CLIENT_ID,
   'www.eurobondmarkets.com': EUROBONDMARKETS_CLIENT_ID,
