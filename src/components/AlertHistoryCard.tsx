@@ -58,7 +58,17 @@ export default function AlertHistoryCard({
   const [editBody, setEditBody] = useState(message.body);
   const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const clickEditTimerRef = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState(false);
+
+  const clearClickEditTimer = () => {
+    if (clickEditTimerRef.current) {
+      window.clearTimeout(clickEditTimerRef.current);
+      clickEditTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => clearClickEditTimer, []);
 
   const handleSave = () => {
     onUpdate(message.id, { subject: editSubject, body: editBody });
@@ -199,17 +209,22 @@ export default function AlertHistoryCard({
       }
       title={latestEditable ? 'Click anywhere to edit — Esc to close' : undefined}
       onClick={latestEditable && expanded ? (e) => {
-        // Single click opens the full-screen editor.
-        // Double-click is reserved for closing the panel (handled below),
-        // so ignore multi-click events here.
-        if (e.detail !== 1) return;
+        // Trackpads emit the first tap as a normal click before the browser
+        // knows whether a double-click is coming. Delay edit mode briefly so
+        // the second tap can cancel it and close the panel instead.
+        clearClickEditTimer();
         const target = e.target as HTMLElement;
-        if (target.closest('button, a, input')) return;
-        enterEdit();
+        if (target.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap')) return;
+        if (e.detail > 1) return;
+        clickEditTimerRef.current = window.setTimeout(() => {
+          clickEditTimerRef.current = null;
+          enterEdit();
+        }, 450);
       } : undefined}
       onDoubleClick={(e) => {
         const target = e.target as HTMLElement;
         if (target.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap')) return;
+        clearClickEditTimer();
         e.stopPropagation();
         window.dispatchEvent(new CustomEvent('alert-editor-closed'));
       }}

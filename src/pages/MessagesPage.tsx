@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type MouseEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp, useScopedApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +61,7 @@ export default function MessagesPage() {
   const [borrowerDraft, setBorrowerDraft] = useState('');
   const [editingBookrunnersKey, setEditingBookrunnersKey] = useState<string | null>(null);
   const [bookrunnersDraft, setBookrunnersDraft] = useState('');
+  const panelTapRef = useRef<{ key: string; time: number; x: number; y: number } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -188,6 +189,28 @@ export default function MessagesPage() {
   const handleOpenChat = (dealIds: string[]) => {
     setActiveDealId(dealIds[0]);
     setShowChat(true);
+  };
+
+  const shouldIgnorePanelCloseGesture = (target: HTMLElement) =>
+    !!target.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap, [role="dialog"], [data-headline-editor], [data-borrower-editor]');
+
+  const handlePanelTapClose = (groupKey: string, e: MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (shouldIgnorePanelCloseGesture(target)) {
+      panelTapRef.current = null;
+      return;
+    }
+
+    const now = window.performance.now();
+    const last = panelTapRef.current;
+    const x = e.clientX;
+    const y = e.clientY;
+    if (last && last.key === groupKey && now - last.time < 550 && Math.hypot(x - last.x, y - last.y) < 32) {
+      panelTapRef.current = null;
+      setExpandedAlertId(null);
+      return;
+    }
+    panelTapRef.current = { key: groupKey, time: now, x, y };
   };
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
@@ -485,11 +508,13 @@ export default function MessagesPage() {
                   {isExpanded && (
                     <div
                       className="bg-card/40 border-t border-border px-8 py-4 space-y-4"
-                      title="Double-click empty area to close"
+                      title="Double-click or double-tap empty area to close"
+                      onClick={(e) => handlePanelTapClose(groupKey, e)}
                       onDoubleClick={(e) => {
                         const t = e.target as HTMLElement;
                         // Ignore double-clicks on interactive / editable controls
-                        if (t.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap, [role="dialog"]')) return;
+                        if (shouldIgnorePanelCloseGesture(t)) return;
+                        panelTapRef.current = null;
                         setExpandedAlertId(null);
                       }}
                     >
