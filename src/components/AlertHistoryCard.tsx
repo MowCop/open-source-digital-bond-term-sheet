@@ -228,6 +228,11 @@ export default function AlertHistoryCard({
                 </span>
               </div>
             )}
+            {message.subject && (
+              <div className="mt-1 text-sm font-medium text-foreground truncate">
+                {message.subject}
+              </div>
+            )}
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
             <span>{senderName}</span>
           </div>
