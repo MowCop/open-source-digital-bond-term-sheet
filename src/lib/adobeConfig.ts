@@ -50,6 +50,11 @@ function resolveClientId(): string {
     return PREVIEW_CLIENT_ID;
   }
 
+  // Other *.lovableproject.com hosts share the lovableproject client ID.
+  if (host.endsWith('.lovableproject.com')) {
+    return LOVABLEPROJECT_CLIENT_ID;
+  }
+
   // Local dev
   if (host === 'localhost' || host === '127.0.0.1') {
     return PREVIEW_CLIENT_ID;
