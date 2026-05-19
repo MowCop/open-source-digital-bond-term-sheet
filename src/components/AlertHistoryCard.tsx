@@ -191,9 +191,10 @@ export default function AlertHistoryCard({
       data-alert-card-expanded={expanded ? 'true' : undefined}
       className={
         embedded
-          ? `space-y-3 ${isRetracted ? 'opacity-50' : ''} ${latestEditable ? 'cursor-pointer rounded hover:bg-card/40 -mx-2 px-2 py-1 transition-colors' : ''}`
+          ? `space-y-3 ${isRetracted ? 'opacity-50' : ''} ${latestEditable ? 'cursor-pointer rounded-md border border-dashed border-primary/40 hover:border-primary hover:bg-primary/5 hover:ring-1 hover:ring-primary/20 -mx-2 px-3 py-2 transition-colors' : ''}`
           : `rounded-lg border bg-card/60 p-4 space-y-3 ${isLatest ? 'border-2 border-white shadow-[0_0_0_1px_hsl(var(--background))]' : 'border-border'} ${isRetracted ? 'opacity-50' : ''} ${latestEditable ? 'cursor-pointer hover:bg-card/80 transition-colors' : ''}`
       }
+      title={latestEditable ? 'Click anywhere to edit — Esc to close' : undefined}
       onClick={latestEditable && expanded ? (e) => {
         // Any click inside the latest panel opens the full-screen editor,
         // except clicks on real interactive controls (action buttons, links, inputs).

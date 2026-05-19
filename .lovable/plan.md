@@ -1,34 +1,63 @@
-## Problem
+## Goal
 
-In the Issue Board, historical updates (Update #1, Original, etc.) render as collapsed `AlertHistoryCard`s under "Update History". Their collapsed header currently shows only: version chip, sender, timestamp, status — but **not** the alert's own subject (e.g. "Republic of Italy EUR 10yr Books Open"). Each historical update has a unique headline that should be visible without expanding the card.
+Improve the expanded latest-update panel on the Messages / Issue Board:
 
-The latest update is unaffected — it renders `embedded={true}` and inherits the merged headline row above it.
+1. Remove the duplicate Delete button.
+2. Make the "click anywhere to edit" affordance discoverable via a highlighted, hoverable border.
+3. Make `Esc` always cascade fully back to the closed Issue Board row in one keystroke.
 
-## Change
+## Scope
 
-Single-file edit in `src/components/AlertHistoryCard.tsx`, header block (the `{!embedded && (...)}` section).
+Single page + single component. No data / business logic changes.
 
-Display `message.subject` in the collapsed/expanded card header, directly under the version chip row:
+- `src/components/AlertHistoryCard.tsx`
+- `src/pages/MessagesPage.tsx`
 
-```text
-┌─────────────────────────────────────────────────────────┐
-│ ▸ [UPDATE #1]                                           │
-│   Republic of Italy EUR 10yr Books Open      ← NEW LINE │
-│   Jane Smith · syndicate                                │
-│                          May 19, 10:14 AM   [sent]      │
-└─────────────────────────────────────────────────────────┘
-```
+## Problem analysis
 
-Details:
-- Insert subject between the version-chip line and the sender meta line.
-- Use `text-sm text-foreground font-medium`, truncate with `truncate` so long subjects don't push layout.
-- Only render when `message.subject` is non-empty.
-- Applies to both collapsed and expanded states (header is always visible in non-embedded mode).
-- No change to embedded latest card (already shown via merged headline row).
-- No change to `MessagesPage.tsx`, data model, or edit flow.
+In the screenshot the expanded panel shows **Delete** twice:
+
+- Top row inside the alert card (`AlertHistoryCard.tsx` action bar, line ~381) — deletes only this one update/alert message.
+- Bottom action bar in `MessagesPage.tsx` (line ~683) — deletes the entire deal thread (all updates + chat + data). Styled red.
+
+Both say just "Delete" with the same icon → users cannot tell them apart, and on the latest-update card the per-update Delete is largely redundant because Retract already exists for sent messages and the deal-level Delete already removes everything.
+
+The "click body to open full editor" affordance is invisible — there is only a faint hover background.
+
+`Esc` already cascades (line ~73 effect), but only when no inner alert card is expanded. For the latest update (embedded mode) there is no expand/collapse, so this works; we just need to make sure pressing Esc inside the full-screen editor closes the editor AND the deal row in one press from the user's perspective.
+
+## Changes
+
+### 1. Remove duplicate Delete from the latest update card
+
+In `AlertHistoryCard.tsx` action buttons block (lines ~360–388):
+
+- When `isLatest && embedded` → hide the per-message Delete button entirely. The deal-level Delete in the parent row covers it, and Retract remains for sent messages.
+- Keep per-message Delete for historical (non-latest) updates in Update History, since those need individual removal.
+
+### 2. Edit affordance — highlighted clickable border
+
+In `AlertHistoryCard.tsx`, the embedded latest container (line ~194):
+
+- Replace the subtle `hover:bg-card/40` with a persistent dashed/soft accent border that brightens on hover, plus a small "Click to edit" hint (icon + text, `text-xs text-muted-foreground`) in the top-right of the body region.
+- Tokens only (`border-primary/40`, `hover:border-primary`, `hover:bg-primary/5`, `ring-1 ring-primary/20` on hover). No raw colors.
+- Keep the existing click-to-open-editor handler; interactive children (`button, a, input`) still stop propagation.
+- Add `title="Click anywhere to edit — Esc to close"` on the container for tooltip discoverability.
+
+### 3. Esc cascade from full-screen editor → closed Issue Board row
+
+In `MessagesPage.tsx` Esc effect (line ~73):
+
+- Currently bails out if a `[role="dialog"][data-state="open"]` exists. Change to: when the editor dialog closes (detected by transitioning from open→closed), also clear `expandedAlertId` on the next tick so a single Esc press from inside the editor returns the user all the way to the collapsed Issue Board row.
+- Implementation: track a ref `wasEditorOpenRef`; in a `useEffect` watching `document` for the dialog state (or simpler: in `AlertHistoryCard`'s `attemptClose`, after closing the editor, dispatch a `CustomEvent('alert-editor-closed')` that `MessagesPage` listens for and uses to `setExpandedAlertId(null)`).
+- Net behavior:
+  - Esc inside editor → closes editor AND collapses deal row (one press).
+  - Esc on expanded row (no editor) → collapses row (already works).
+  - Esc on closed row → no-op.
 
 ## Out of scope
 
-- Latest update card (already merged into headline row).
-- Edit/inline-rename of historical subjects.
-- Body, attachments, distribution, or action buttons.
+- Restyling Retract / Send / chat buttons.
+- Changing the deal-level Delete confirmation flow.
+- Update History panel layout.
+- Any backend or data model changes.
