@@ -41,9 +41,9 @@ function resolveClientId(): string {
 
   if (CLIENT_IDS_BY_HOST[host]) return CLIENT_IDS_BY_HOST[host];
 
-  // Any Lovable preview host (id-preview--*, preview--*, *.lovableproject.com, etc.)
-  // shares the preview client ID.
-  if (host.endsWith('.lovable.app') || host.endsWith('.lovableproject.com')) {
+  // Other *.lovable.app hosts (preview--*, etc.) share the preview client ID,
+  // which is registered against id-preview--…lovable.app.
+  if (host.endsWith('.lovable.app')) {
     return PREVIEW_CLIENT_ID;
   }
 
