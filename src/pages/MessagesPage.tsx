@@ -82,6 +82,7 @@ export default function MessagesPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [expandedAlertId]);
 
+
   // Group messages by their primary deal (first dealId) to create alert groups
   const alertGroups: AlertGroup[] = [];
   const dealGroupMap = new Map<string, Message[]>();
@@ -144,6 +145,27 @@ export default function MessagesPage() {
       setActivePanel('history');
     }
   }, [searchParams, alertGroups]);
+
+  // "E" keyboard shortcut: when a deal row is expanded and no modal/input is
+  // focused, open the full-screen editor for the latest update.
+  useEffect(() => {
+    if (!expandedAlertId || !canManageMessages) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'e' && e.key !== 'E') return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+      const t = e.target as HTMLElement;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      const group = alertGroups.find(g => g.dealIds.join(',') === expandedAlertId);
+      if (!group || group.latestMessage.status === 'retracted') return;
+      e.preventDefault();
+      const id = group.latestMessage.id;
+      setActivePanel('history');
+      setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expandedAlertId, canManageMessages, alertGroups]);
 
   const toggleExpand = (id: string) => {
     setExpandedAlertId(prev => {
@@ -435,6 +457,22 @@ export default function MessagesPage() {
                       <Badge className={`text-[10px] border ${badge.className}`}>
                         {badge.label}
                       </Badge>
+                      {isExpanded && canManageMessages && group.latestMessage.status !== 'retracted' && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 ml-auto"
+                          title="Edit latest update (E)"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const id = group.latestMessage.id;
+                            setActivePanel('history');
+                            setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+                          }}
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -482,7 +520,43 @@ export default function MessagesPage() {
                             const rest = group.messages.slice(1);
                             return (
                               <>
-                                {latest && renderCard(latest, 0)}
+                                {latest && (
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      {group.messages.length > 1 && (
+                                        <span className="text-[10px] font-semibold uppercase text-accent bg-accent/10 px-1.5 py-0.5 rounded">
+                                          Update #{group.messages.length - 1}
+                                        </span>
+                                      )}
+                                      <span>{getUserName(latest.senderId)}</span>
+                                    </div>
+                                    <AlertHistoryCard
+                                      key={latest.id}
+                                      message={latest}
+                                      senderName={getUserName(latest.senderId)}
+                                      recipientNames={getRecipientNames(latest.recipients)}
+                                      canManage={canManageMessages}
+                                      isLatest
+                                      embedded
+                                      editSignal={editSignals[latest.id] || 0}
+                                      onUpdate={updateMessage}
+                                      onRetract={(id) => {
+                                        retractMessage(id);
+                                        toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+                                      }}
+                                      onSend={(id) => {
+                                        sendMessage(id);
+                                        const m = messages.find(x => x.id === id);
+                                        toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
+                                      }}
+                                      onPostUpdate={handlePostUpdate}
+                                      onDelete={(id) => {
+                                        deleteMessage(id);
+                                        toast({ title: 'Alert Deleted', description: 'The alert has been removed.' });
+                                      }}
+                                    />
+                                  </div>
+                                )}
                                 <div className="flex items-center gap-2 py-2 border-y border-border/50 flex-wrap">
                                   <Button
                                     size="sm"

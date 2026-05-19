@@ -19,6 +19,15 @@ interface AlertHistoryCardProps {
   versionLabel?: string;
   isLatest?: boolean;
   editSignal?: number;
+  /**
+   * When true, render the card without its own header chrome (chevron,
+   * version chip, sender, timestamp, status badge) and skip the outer
+   * border/padding. Used when the parent row already shows that metadata
+   * (e.g. the merged headline row on the Issue Board) so we don't duplicate.
+   * Body, attachments, and action buttons render inline; the card is always
+   * expanded.
+   */
+  embedded?: boolean;
   onUpdate: (id: string, updates: Partial<Message>) => void;
   onRetract: (id: string) => void;
   onSend: (id: string) => void;
@@ -34,6 +43,7 @@ export default function AlertHistoryCard({
   versionLabel,
   isLatest = false,
   editSignal = 0,
+  embedded = false,
   onUpdate,
   onRetract,
   onSend,
@@ -43,7 +53,7 @@ export default function AlertHistoryCard({
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [isOpen, setIsOpen] = useState(false);
   const [collapsedOverride, setCollapsedOverride] = useState(false);
-  const expanded = collapsedOverride ? false : (isOpen || isLatest);
+  const expanded = embedded ? true : (collapsedOverride ? false : (isOpen || isLatest));
   const [editSubject, setEditSubject] = useState(message.subject);
   const [editBody, setEditBody] = useState(message.body);
   const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
@@ -179,7 +189,11 @@ export default function AlertHistoryCard({
     <>
     <div
       data-alert-card-expanded={expanded ? 'true' : undefined}
-      className={`rounded-lg border bg-card/60 p-4 space-y-3 ${isLatest ? 'border-2 border-white shadow-[0_0_0_1px_hsl(var(--background))]' : 'border-border'} ${isRetracted ? 'opacity-50' : ''} ${latestEditable ? 'cursor-pointer hover:bg-card/80 transition-colors' : ''}`}
+      className={
+        embedded
+          ? `space-y-3 ${isRetracted ? 'opacity-50' : ''} ${latestEditable ? 'cursor-pointer rounded hover:bg-card/40 -mx-2 px-2 py-1 transition-colors' : ''}`
+          : `rounded-lg border bg-card/60 p-4 space-y-3 ${isLatest ? 'border-2 border-white shadow-[0_0_0_1px_hsl(var(--background))]' : 'border-border'} ${isRetracted ? 'opacity-50' : ''} ${latestEditable ? 'cursor-pointer hover:bg-card/80 transition-colors' : ''}`
+      }
       onClick={latestEditable && expanded ? (e) => {
         // Any click inside the latest panel opens the full-screen editor,
         // except clicks on real interactive controls (action buttons, links, inputs).
@@ -188,7 +202,8 @@ export default function AlertHistoryCard({
         enterEdit();
       } : undefined}
     >
-      {/* Header row */}
+      {/* Header row — hidden when embedded (parent renders this metadata) */}
+      {!embedded && (
       <div
         className={`flex items-start justify-between gap-4 rounded -m-1 p-1 transition-colors ${latestEditable && expanded ? '' : 'cursor-pointer hover:bg-card/80'}`}
         onClick={latestEditable && expanded ? undefined : (e) => { e.stopPropagation(); toggleExpanded(); }}
@@ -230,6 +245,7 @@ export default function AlertHistoryCard({
           </Badge>
         </div>
       </div>
+      )}
 
       {expanded && (
       <>
