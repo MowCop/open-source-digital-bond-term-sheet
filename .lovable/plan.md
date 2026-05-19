@@ -1,46 +1,99 @@
-## Problem
+## Goal
 
-Creating a new issue from "Create New Issue" silently fails on both **Save Draft** and **Save & Send**. The console shows:
+Replace the current basic PDF `<iframe>` preview with the **Adobe PDF Embed API** so Syndicate Admins and Vendor Users can view, annotate, comment, and (where supported) fill forms on deal attachments — with edits saved back to Lovable Cloud and recorded in the audit log.
 
+Redaction and e-signature are explicitly **out of scope** for this round (Adobe Embed does not support them).
+
+---
+
+## What the user will see
+
+1. Open any PDF attachment on an alert, deal document, or Issue Board.
+2. A full Adobe viewer opens in a modal (replacing today's iframe) with a toolbar for:
+   - Highlight, strikethrough, underline
+   - Sticky-note comments
+   - Freehand drawing
+   - Form-field fill (for PDFs that contain AcroForm fields)
+3. A **Save** button persists annotations.
+4. A version history shows: annotation layers (per user) + flattened PDF snapshots.
+5. Every save writes an entry to the audit log (`user`, `action`, `attachment_id`, `deal_id`, timestamp).
+
+---
+
+## Architecture
+
+```text
+┌────────────────────────┐   load PDF   ┌─────────────────────┐
+│  React <PdfEditor>     │ ───────────► │ Lovable Cloud       │
+│  (Adobe Embed SDK)     │              │ Storage: pdf-docs/  │
+│                        │ ◄─────────── │                     │
+└──────────┬─────────────┘   save XFDF  └─────────────────────┘
+           │  + flattened
+           ▼
+┌────────────────────────┐              ┌─────────────────────┐
+│ pdf_annotations table  │              │ audit_log table     │
+│ pdf_versions table     │              │                     │
+└────────────────────────┘              └─────────────────────┘
 ```
-[Cloud] insertMessage failed
-code: "42501"
-message: new row violates row-level security policy for table "messages"
-```
 
-### Root cause
+---
 
-The `messages` table RLS insert policy is:
+## Implementation steps
 
-```sql
-sender_id = auth.uid()::text
-```
+### 1. Adobe credentials
+- User registers a free Adobe PDF Embed API client ID at `https://acrobatservices.adobe.com/dc-integration-creation-app-cdn/main.html` for the BondVDR preview domain + custom domain (`eurobondmarkets.com`).
+- Store as a **public** env var `VITE_ADOBE_EMBED_CLIENT_ID` (Adobe Embed keys are domain-locked, so the publishable key in code is fine).
 
-But in `AIDraftPage.tsx` we pass `senderId: currentUser.id`, where `currentUser` comes from the legacy mock-user store (`bondvdr.currentUser` in localStorage, seeded from `mockUsers[0]`). Its `id` is something like `"u1"` — not the Supabase auth UUID — so the RLS check fails and the row is rejected. The optimistic local state shows the draft briefly, but it is never persisted, and on reload it disappears. "Save & Send" hits the same insert and fails the same way.
+### 2. Storage
+- Reuse the existing `message-attachments` bucket; add a sibling private bucket `pdf-versions` for flattened snapshots.
+- Migrate existing localStorage/base64 attachments to cloud storage on first open (lazy upload).
 
-Audit-log inserts succeed because that policy has an `OR is_admin(auth.uid())` branch; the `messages` policy does not.
+### 3. Database (new tables)
+- `pdf_annotations` — `id`, `attachment_id`, `user_id`, `xfdf` (text), `created_at`
+- `pdf_versions` — `id`, `attachment_id`, `version_no`, `storage_path`, `created_by`, `created_at`, `note`
+- RLS: a user can read/write annotations on attachments they can see (reuse the existing visibility rules via `has_role` + deal membership).
 
-## Fix
+### 4. React component
+- New file `src/components/PdfEditor.tsx`:
+  - Loads Adobe View SDK from CDN once (`https://acrobatservices.adobe.com/view-sdk/viewer.js`).
+  - Initializes with `clientId`, file URL (signed Supabase storage URL), embed mode `FULL_WINDOW`, and `showAnnotationTools: true`.
+  - Registers callbacks: `ANNOTATION_ADDED`, `ANNOTATION_UPDATED`, `ANNOTATION_DELETED` → debounced save to `pdf_annotations`.
+  - "Save flattened version" button → uses Adobe's `getPDFBlob()` (or server-side merge of XFDF via `pdf-lib`) → upload to `pdf-versions` bucket → insert `pdf_versions` row.
+- Replace the iframe in `AlertHistoryCard.tsx` preview dialog with `<PdfEditor>` when `attachment.type === 'pdf'`.
+- Add the same editor as a button on Deal Checker / `AIDraftPage` attachments.
 
-Use the real Supabase auth user id as `sender_id` on insert.
+### 5. Audit log
+- Each save fires `logAudit({ action: 'pdf_annotated' | 'pdf_version_saved', ... })` via the existing audit pipeline.
 
-### Changes
+### 6. Permissions
+- **Syndicate Admin**: can annotate and save versions on deals they own.
+- **Vendor User**: can annotate and save (their annotations only).
+- **Master Admin**: read-only on others' annotations + can delete.
 
-1. **`src/context/AppContext.tsx`** — in `createMessage`, resolve the effective sender id from the Supabase session (via `useAuth().authUser?.id`) and use it for both the persisted `senderId` and the audit entry. Fall back to `currentUser.id` only when no auth user exists (keeps mock-mode unit tests working).
+### 7. QA checklist
+- Open a small PDF, large PDF (>10 MB), and a malformed PDF.
+- Confirm annotations round-trip across sessions and users.
+- Confirm Adobe key works on both `*.lovable.app` and `eurobondmarkets.com`.
+- Confirm audit log entries appear.
 
-2. **`src/pages/AIDraftPage.tsx`** — no longer pass `senderId: currentUser.id`; let `createMessage` set it, OR pass `authUser?.id ?? currentUser.id`. Pick whichever keeps the type contract cleanest (likely: keep the prop but source it from `authUser`).
+---
 
-3. **Toast on failure** — `insertMessage(...).catch(...)` currently only `console.error`s, so the UI shows "Draft Saved" even when the DB insert was rejected. Surface a destructive toast ("Could not save draft — please retry") so the user is not misled. Same treatment for `sendMessage`.
+## Files touched
 
-4. **Apply the same `auth.uid()` fix to other inserts blocked by analogous policies**, specifically `sendChatMessage` (chat_messages policy: `sender_id = auth.uid()::text`). Audit, deals, notifications, etc. all have admin-OR branches and are unaffected.
+- **New**: `src/components/PdfEditor.tsx`, `src/lib/adobeViewer.ts`, migration for `pdf_annotations` + `pdf_versions` + new bucket.
+- **Edited**: `src/components/AlertHistoryCard.tsx` (replace iframe preview), `src/pages/AIDraftPage.tsx` (use editor for PDF attachments), `index.html` (Adobe SDK script tag), `.env` (Adobe client ID).
 
-### Not changing
+---
 
-- RLS policies remain as-is — they are correct; the bug is on the client.
-- The mock-user concept stays for display (name, organization, role badges); only the persisted `sender_id` switches to the auth UUID.
+## Out of scope (for later if needed)
 
-### Verification
+- **Redaction** — would need server-side `pdf-lib` or a paid SDK (Nutrient/Apryse).
+- **E-signature** — would need Adobe Sign or DocuSign integration.
+- **Real-time multi-user co-annotation** — Adobe Embed doesn't ship with this; would require building a CRDT layer on top of XFDF.
+- **DOCX / PPTX editing** — Adobe Embed is PDF-only. We'd need to convert via the existing `docxToHtml` flow or add Office.js.
 
-- Drop the Aldar PDF, click **Save Draft** → no RLS error in console, row appears in `messages` table with `sender_id = <auth uid>`.
-- Click **Save & Send** → row updates to `status='sent'`, recipients populated, no console error.
-- Reload the page → the new draft/sent message is still in the Messages list (proves it persisted, not just local optimistic state).
+---
+
+## Open question
+
+Adobe PDF Embed API is **free but requires an Adobe Developer account** (no credit card). You'll need to create the client ID yourself and paste it once. Confirm you're happy to do that, then I'll build it.
