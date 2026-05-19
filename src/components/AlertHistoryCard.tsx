@@ -387,12 +387,14 @@ export default function AlertHistoryCard({
                   Send
                 </Button>
               )}
-              <Button size="sm" variant="outline" className="text-xs ml-auto" onClick={() => {
-                if (confirm(`Delete this alert "${message.subject}"? This cannot be undone.`)) onDelete(message.id);
-              }}>
-                <Trash2 className="h-3 w-3 mr-1 text-destructive" />
-                Delete
-              </Button>
+              {!(isLatest && embedded) && (
+                <Button size="sm" variant="outline" className="text-xs ml-auto" onClick={() => {
+                  if (confirm(`Delete this alert "${message.subject}"? This cannot be undone.`)) onDelete(message.id);
+                }}>
+                  <Trash2 className="h-3 w-3 mr-1 text-destructive" />
+                  Delete
+                </Button>
+              )}
             </>
         </div>
       )}
