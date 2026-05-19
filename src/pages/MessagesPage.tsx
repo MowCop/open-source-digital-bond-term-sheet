@@ -508,11 +508,13 @@ export default function MessagesPage() {
                   {isExpanded && (
                     <div
                       className="bg-card/40 border-t border-border px-8 py-4 space-y-4"
-                      title="Double-click empty area to close"
+                      title="Double-click or double-tap empty area to close"
+                      onClick={(e) => handlePanelTapClose(groupKey, e)}
                       onDoubleClick={(e) => {
                         const t = e.target as HTMLElement;
                         // Ignore double-clicks on interactive / editable controls
-                        if (t.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap, [role="dialog"]')) return;
+                        if (shouldIgnorePanelCloseGesture(t)) return;
+                        panelTapRef.current = null;
                         setExpandedAlertId(null);
                       }}
                     >
