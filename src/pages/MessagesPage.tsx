@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type MouseEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp, useScopedApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
@@ -194,7 +194,7 @@ export default function MessagesPage() {
   const shouldIgnorePanelCloseGesture = (target: HTMLElement) =>
     !!target.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap, [role="dialog"], [data-headline-editor], [data-borrower-editor]');
 
-  const handlePanelTapClose = (groupKey: string, e: React.MouseEvent<HTMLDivElement>) => {
+  const handlePanelTapClose = (groupKey: string, e: MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     if (shouldIgnorePanelCloseGesture(target)) {
       panelTapRef.current = null;
