@@ -255,6 +255,14 @@ export default function AlertHistoryCard({
 
       {expanded && (
       <>
+      {latestEditable && embedded && (
+        <div className="flex items-center justify-end -mt-1">
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <Edit2 className="h-3 w-3" />
+            Click anywhere to edit
+          </span>
+        </div>
+      )}
       {/* Body */}
       {bodyHasHtml ? (
         <div
