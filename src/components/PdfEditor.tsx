@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Save, Download, AlertCircle, Loader2 } from 'lucide-react';
 import { Attachment } from '@/types/bond';
-import { ADOBE_EMBED_CLIENT_ID, isAdobeEmbedConfigured } from '@/lib/adobeConfig';
+import { ADOBE_EMBED_CLIENT_ID, CURRENT_HOSTNAME, isAdobeEmbedConfigured } from '@/lib/adobeConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useApp } from '@/context/AppContext';
@@ -86,7 +86,8 @@ export default function PdfEditor({ attachment, canEdit = true }: PdfEditorProps
     if (!isAdobeEmbedConfigured()) {
       setStatus('error');
       setErrorMsg(
-        'Adobe PDF Embed client ID is not configured. Register a free key at acrobatservices.adobe.com and set VITE_ADOBE_EMBED_CLIENT_ID.',
+        `No Adobe PDF Embed client ID is registered for this host ("${CURRENT_HOSTNAME || 'unknown'}"). ` +
+          `Register a free key at acrobatservices.adobe.com for this exact domain, then add it to src/lib/adobeConfig.ts.`,
       );
       return;
     }
