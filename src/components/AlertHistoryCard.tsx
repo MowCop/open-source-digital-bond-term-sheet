@@ -117,6 +117,9 @@ export default function AlertHistoryCard({
       return;
     }
     handleCancel();
+    // Signal parent (MessagesPage) to also collapse the deal row so a single
+    // Esc inside the editor returns the user all the way to the Issue Board.
+    window.dispatchEvent(new CustomEvent('alert-editor-closed'));
   };
 
   const inferType = (name: string): Attachment['type'] => {
