@@ -58,7 +58,7 @@ export default function AlertHistoryCard({
   const [editBody, setEditBody] = useState(message.body);
   const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const clickEditTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const clickEditTimerRef = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
   const clearClickEditTimer = () => {
