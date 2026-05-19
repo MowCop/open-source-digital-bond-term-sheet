@@ -7,6 +7,7 @@
  * The key is domain-locked, so it is safe to commit to the codebase.
  * Register for these allowed domains:
  *   - id-preview--15a55c38-d908-458f-b4b6-1a35e223ab92.lovable.app
+ *   - 15a55c38-d908-458f-b4b6-1a35e223ab92.lovableproject.com
  *   - newissuevault.lovable.app
  *   - eurobondmarkets.com
  *   - localhost (for local dev)
@@ -21,9 +22,11 @@
 const PREVIEW_CLIENT_ID = '480511be7dd940b6b512278b413699e2';
 const NEWISSUEVAULT_CLIENT_ID = '6c4ecfa46b6a419d9a682b7fb1c0dbb6';
 const EUROBONDMARKETS_CLIENT_ID = '7dab418524924e81b9015020bfa990e6';
+const LOVABLEPROJECT_CLIENT_ID = '947267933a2a46479090213fd219cb25';
 
 const CLIENT_IDS_BY_HOST: Record<string, string> = {
   'id-preview--15a55c38-d908-458f-b4b6-1a35e223ab92.lovable.app': PREVIEW_CLIENT_ID,
+  '15a55c38-d908-458f-b4b6-1a35e223ab92.lovableproject.com': LOVABLEPROJECT_CLIENT_ID,
   'newissuevault.lovable.app': NEWISSUEVAULT_CLIENT_ID,
   'eurobondmarkets.com': EUROBONDMARKETS_CLIENT_ID,
   'www.eurobondmarkets.com': EUROBONDMARKETS_CLIENT_ID,
@@ -45,6 +48,11 @@ function resolveClientId(): string {
   // which is registered against id-preview--…lovable.app.
   if (host.endsWith('.lovable.app')) {
     return PREVIEW_CLIENT_ID;
+  }
+
+  // Other *.lovableproject.com hosts share the lovableproject client ID.
+  if (host.endsWith('.lovableproject.com')) {
+    return LOVABLEPROJECT_CLIENT_ID;
   }
 
   // Local dev
