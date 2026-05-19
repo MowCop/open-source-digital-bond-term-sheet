@@ -199,12 +199,20 @@ export default function AlertHistoryCard({
       }
       title={latestEditable ? 'Click anywhere to edit — Esc to close' : undefined}
       onClick={latestEditable && expanded ? (e) => {
-        // Any click inside the latest panel opens the full-screen editor,
-        // except clicks on real interactive controls (action buttons, links, inputs).
+        // Single click opens the full-screen editor.
+        // Double-click is reserved for closing the panel (handled below),
+        // so ignore multi-click events here.
+        if (e.detail !== 1) return;
         const target = e.target as HTMLElement;
         if (target.closest('button, a, input')) return;
         enterEdit();
       } : undefined}
+      onDoubleClick={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap')) return;
+        e.stopPropagation();
+        window.dispatchEvent(new CustomEvent('alert-editor-closed'));
+      }}
     >
       {/* Header row — hidden when embedded (parent renders this metadata) */}
       {!embedded && (
