@@ -1,26 +1,34 @@
-The screenshot shows Adobe is rejecting the **runtime editor host**:
+## Problem
 
-`15a55c38-d908-458f-b4b6-1a35e223ab92.lovableproject.com`
+In the Issue Board, historical updates (Update #1, Original, etc.) render as collapsed `AlertHistoryCard`s under "Update History". Their collapsed header currently shows only: version chip, sender, timestamp, status — but **not** the alert's own subject (e.g. "Republic of Italy EUR 10yr Books Open"). Each historical update has a unique headline that should be visible without expanding the card.
 
-The app is currently falling back to the preview Adobe client ID for `*.lovableproject.com`, but Adobe client IDs are domain-locked and that preview key is not authorized for this exact host.
+The latest update is unaffected — it renders `embedded={true}` and inherits the merged headline row above it.
 
-Plan:
+## Change
 
-1. **Add a dedicated Adobe client ID mapping for the editor host**
-   - Add `15a55c38-d908-458f-b4b6-1a35e223ab92.lovableproject.com` to `src/lib/adobeConfig.ts`.
-   - Use the same client ID only if you register this exact domain in Adobe.
+Single-file edit in `src/components/AlertHistoryCard.tsx`, header block (the `{!embedded && (...)}` section).
 
-2. **Remove the unsafe `*.lovableproject.com` fallback**
-   - Adobe does not accept arbitrary fallback hosts unless the key is authorized for that specific domain.
-   - Keeping the wildcard-style fallback causes the current “not authorized” Adobe modal instead of a helpful in-app error.
+Display `message.subject` in the collapsed/expanded card header, directly under the version chip row:
 
-3. **Improve the in-app error for unregistered domains**
-   - If the app runs on an unregistered hostname, show a clear message naming the exact host to add in Adobe.
-   - Keep the download fallback available so users can still access the PDF.
+```text
+┌─────────────────────────────────────────────────────────┐
+│ ▸ [UPDATE #1]                                           │
+│   Republic of Italy EUR 10yr Books Open      ← NEW LINE │
+│   Jane Smith · syndicate                                │
+│                          May 19, 10:14 AM   [sent]      │
+└─────────────────────────────────────────────────────────┘
+```
 
-Required Adobe action:
+Details:
+- Insert subject between the version-chip line and the sender meta line.
+- Use `text-sm text-foreground font-medium`, truncate with `truncate` so long subjects don't push layout.
+- Only render when `message.subject` is non-empty.
+- Applies to both collapsed and expanded states (header is always visible in non-embedded mode).
+- No change to embedded latest card (already shown via merged headline row).
+- No change to `MessagesPage.tsx`, data model, or edit flow.
 
-- In Adobe PDF Embed API settings, create/register a client ID for:
-  - `15a55c38-d908-458f-b4b6-1a35e223ab92.lovableproject.com`
+## Out of scope
 
-Once you provide that client ID, I’ll wire it in so the eye-icon PDF viewer works inside the Lovable editor as well as on the published/custom domains.
+- Latest update card (already merged into headline row).
+- Edit/inline-rename of historical subjects.
+- Body, attachments, distribution, or action buttons.
