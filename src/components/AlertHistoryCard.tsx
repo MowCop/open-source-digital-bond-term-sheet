@@ -9,6 +9,7 @@ import RichTextEditor from '@/components/RichTextEditor';
 import { isHtml } from '@/lib/htmlText';
 import { format } from 'date-fns';
 import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft } from 'lucide-react';
+import PdfEditor from '@/components/PdfEditor';
 
 interface AlertHistoryCardProps {
   message: Message;
@@ -312,14 +313,16 @@ export default function AlertHistoryCard({
 
       {/* Preview dialog */}
       <Dialog open={!!previewAttachment} onOpenChange={(o) => !o && setPreviewAttachment(null)}>
-        <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-[95vw] w-[95vw] h-[92vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-5 pt-4 pb-3 border-b border-border shrink-0">
             <DialogTitle>{previewAttachment?.name}</DialogTitle>
           </DialogHeader>
           {previewAttachment?.type === 'pdf' ? (
-            <iframe src={previewAttachment.url} className="flex-1 w-full border border-border rounded" title={previewAttachment.name} />
+            <div className="flex-1 min-h-0 relative">
+              <PdfEditor attachment={previewAttachment} canEdit={canManage && !isRetracted} />
+            </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center text-sm text-muted-foreground">
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center text-sm text-muted-foreground p-6">
               <FileText className="h-12 w-12" />
               <div>Inline preview unavailable for this file type.</div>
               {previewAttachment && (
