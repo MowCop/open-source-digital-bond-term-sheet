@@ -82,26 +82,6 @@ export default function MessagesPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [expandedAlertId]);
 
-  // "E" keyboard shortcut: when a deal row is expanded and no modal/input is
-  // focused, open the full-screen editor for the latest update.
-  useEffect(() => {
-    if (!expandedAlertId || !canManageMessages) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'e' && e.key !== 'E') return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
-      const t = e.target as HTMLElement;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-      const group = alertGroups.find(g => g.dealIds.join(',') === expandedAlertId);
-      if (!group || group.latestMessage.status === 'retracted') return;
-      e.preventDefault();
-      const id = group.latestMessage.id;
-      setActivePanel('history');
-      setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [expandedAlertId, canManageMessages, alertGroups]);
 
   // Group messages by their primary deal (first dealId) to create alert groups
   const alertGroups: AlertGroup[] = [];
