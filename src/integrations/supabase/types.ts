@@ -491,6 +491,33 @@ export type Database = {
         }
         Relationships: []
       }
+      pdf_annotations: {
+        Row: {
+          attachment_id: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          xfdf: string
+        }
+        Insert: {
+          attachment_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          xfdf: string
+        }
+        Update: {
+          attachment_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          xfdf?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
