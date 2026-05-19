@@ -22,7 +22,8 @@ const CLIENT_IDS_BY_HOST: Record<string, string> = {
   'id-preview--15a55c38-d908-458f-b4b6-1a35e223ab92.lovable.app':
     '480511be7dd940b6b512278b413699e2',
   'newissuevault.lovable.app': '6c4ecfa46b6a419d9a682b7fb1c0dbb6',
-  // 'eurobondmarkets.com': '<register & paste>',
+  'eurobondmarkets.com': '7dab418524924e81b9015020bfa990e6',
+  'www.eurobondmarkets.com': '7dab418524924e81b9015020bfa990e6',
 };
 
 function resolveClientId(): string {
