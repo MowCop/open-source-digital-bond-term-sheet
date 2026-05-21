@@ -1,94 +1,68 @@
 ## Goal
 
-Replace the right-column grid that squeezes the Issue Board with a chat surface that:
-1. By default, **floats** over the board, anchored to the originating row, non-modal.
-2. Can be **expanded into a full Modal Dialog** for focused conversations.
-3. Closes via multiple easy affordances.
+Make the floating Deal Chat panel movable across the screen so it never permanently covers a row the user wants to read. Modal "Expand" mode is unchanged.
 
-## Why change current behaviour
+## Options considered
 
-Today, clicking the row's chat box flips `showChat = true` and `MessagesPage.tsx` (L330) switches the layout from `grid-cols-1` to `grid-cols-3`, mounting `SecureChat` in the right 2 columns. On the user's 792 px viewport this crushes the Issue Board (Headline/Bookrunners truncate, the open row scrolls partially off) and the only close affordance is a small "Close Chat ✕" text link.
+### A. Dedicated drag handle in the header (recommended)
 
-## Three view modes for the chat
+A clearly draggable strip at the top of the panel ("≡ Deal Chat — Lithuania" with `cursor: grab`/`grabbing`). Press & hold anywhere on the header, drag to reposition. Buttons inside the header (Expand, Close) still work normally because they stop propagation.
 
-The same `SecureChat` content is rendered in one of three shells. The mode is a session preference toggled from the panel header.
+**Pros**
+- Predictable: matches every desktop floating-window pattern users already know (Slack huddles, Figma comments, Mac windows).
+- Zero conflict with chat interactions — clicking a message, scrolling, selecting text, typing, and pressing Send never accidentally drags the panel.
+- Touch-friendly on the < 900 px bottom-sheet fallback (the handle becomes a grab bar at the top).
 
-### A. Floating panel (default)
+**Cons**
+- Smaller drag surface than "anywhere in the panel".
 
-- `position: fixed`, `z-50`, 380 px × 70 vh, anchored to the right edge of the viewport, vertically aligned with the originating row when possible. Margin 16 px from edges.
-- Header: borrower · stage badge · channel selector · **[Dock]** · **[Expand to dialog ⛶]** · **[X]**.
-- Small caret/arrow pointing to the originating row's chat box + brief `zoom-in-95 fade-in-0` animation so the user sees where it came from.
-- Non-modal: board remains scrollable and clickable underneath; row's chat box stays in active/filled state.
-- On viewports < 900 px, shell falls back to bottom-sheet (`inset-x-2 bottom-2 h-[70vh]`).
+### B. Press-and-hold anywhere in the panel
 
-### B. Docked right drawer
+Long-press (≈250 ms) anywhere that isn't a button/input/scroll area, then drag.
 
-- Same content but pinned to the right edge as a 380 px-wide persistent panel; board reflows to `pr-[396px]` instead of `grid-cols-3` (so columns don't get re-shaped, just margin-shifted).
-- Toggled from the floating panel's [Dock] button. Session-only preference.
-- Closes via [X] in header (returns to floating) or Esc.
+**Pros**: huge drag surface.
+**Cons**: confusing during normal use — every accidental hold becomes a drag; conflicts with text selection in messages, with the message list's scroll inertia, and with the channel selector. Also slower to grab because of the hold delay.
 
-### C. Modal Dialog (new, per user request)
+### C. Modifier-click drag (Alt/Option + drag)
 
-- Triggered by the [Expand to dialog ⛶] button in the floating or docked panel, **or** by Shift-clicking the row's chat box, **or** by pressing `F` while a deal row is expanded and its chat is open.
-- Uses shadcn `Dialog` (`src/components/ui/dialog.tsx`) — full Radix modal with backdrop dim, focus trap, and built-in Esc-to-close.
-- Sized large: `max-w-3xl w-[min(900px,95vw)] h-[min(80vh,720px)]` so users can hold a longer conversation, see more history, and use the channel selector comfortably.
-- Header mirrors the floating panel header (borrower, stage, channel selector) plus a **[Collapse to panel ⤡]** action that closes the dialog and reopens the floating panel anchored to the same row, preserving channel/scroll state.
-- Closes via [X], Esc, or backdrop click (Dialog defaults).
-- Because it is modal, the underlying board is dimmed/inert; this is the intentional "focus on this conversation" mode.
+Hold Alt and drag anywhere.
 
-### State machine
+**Pros**: doesn't conflict with anything.
+**Cons**: undiscoverable; non-mac users don't expect it.
 
-```
-closed ──open──► floating ──[Dock]──► docked
-   ▲                │                    │
-   │             [Expand]            [Expand]
-   │                ▼                    ▼
-   └──close──── modal-dialog ◄───────────┘
-                   │
-              [Collapse]→ returns to previous (floating | docked)
-```
+### Recommendation
 
-A single `chatView: 'closed' | 'floating' | 'docked' | 'modal'` state in `MessagesPage` drives this, plus `chatPrevView` so [Collapse] knows whether to return to floating or docked.
+**Option A + a small enhancement from B**: a real drag handle, plus the *entire header bar* (logo row + sub-info row) is grabbable, giving a generous ~64 px tall drag strip without touching the chat body. This is the standard floating-window pattern and avoids every interaction conflict.
 
-## Anchoring & deal context (all three modes)
+## How it will work
 
-- Header always shows: borrower (clickable → scrolls underlying row into view + 600 ms border pulse), stage badge, deal currency/size, channel selector when the deal has multiple channels.
-- Originating row's chat box stays in `bg-primary` active state while any of the three views is open.
-- Clicking a different row's chat box swaps the contents of the existing view (single instance, no stacking) and updates the anchor.
-- Auto-close when the user collapses the originating deal row, so chat doesn't dangle for a hidden deal.
+1. The panel's header (logo + title + Secure Channel badge + Expand + Close, plus the deal sub-row) becomes the drag region. `cursor: grab`, `cursor: grabbing` while dragging, `select-none` to prevent text-selection during drag.
+2. `pointerdown` on the header (ignored if the original target is a `button`, `a`, `input`, `select`, `[role="dialog"]`) captures the pointer, records the starting `{ panelX, panelY, pointerX, pointerY }`, and switches the panel's positioning from `bottom-right anchored` to absolute `{ top, left }` in viewport coordinates.
+3. `pointermove` updates `{ top, left }`, clamped to keep at least 80 px of the panel on-screen on every side so the user can't lose it.
+4. `pointerup` / `pointercancel` releases capture.
+5. The panel position persists for the session via a ref on `MessagesPage` (not localStorage — fresh session resets to bottom-right, matching typical floating-window behaviour). Re-opening the panel for any deal restores the last drag position.
+6. **Double-clicking the header** snaps the panel back to its default bottom-right anchor (escape hatch if the user moves it off-screen or wants the default back).
+7. On the < 900 px bottom-sheet fallback, dragging is disabled — the sheet is full-width and dragging makes no sense; the handle is still shown but acts only as a visual grip.
+8. Pointer Events (not mouse events) so trackpad, mouse, pen, and touch all work without separate code paths.
 
-## Close affordances (summary)
+## Visual cues
 
-| Mode | X button | Esc | Click outside | Re-click row box | Backdrop |
-|---|---|---|---|---|---|
-| Floating | ✓ | ✓ | ✓ (configurable, default on) | ✓ toggles closed | n/a |
-| Docked | ✓ | ✓ | n/a (intentionally persistent) | ✓ toggles closed | n/a |
-| Modal | ✓ | ✓ (Dialog default) | n/a | n/a | ✓ (Dialog default) |
-
-Esc never collapses the expanded deal row while chat is open — it only closes the chat surface. Pressing Esc again then runs the existing row-collapse cascade.
-
-## Why also include the Modal Dialog
-
-Floating is great for "glance and reply"; Modal is the right shell for:
-- Long onboarding/legal Q&A threads where the board is a distraction.
-- Screen-share or presentation contexts where the user wants the chat to dominate.
-- Smaller laptop screens where 380 px floating + 412 px of board is cramped.
-
-Giving users **both** modes (with one-click toggle between them) keeps the lightweight default while satisfying the "I just want to focus on this chat" workflow.
+- Tiny `GripHorizontal` icon (lucide) on the left of the header to advertise draggability.
+- `cursor: grab` on the header by default → `grabbing` mid-drag.
+- A subtle shadow bump during drag (`shadow-2xl` → `shadow-[0_30px_80px_-10px_rgba(0,0,0,0.6)]`) so the panel feels lifted.
+- Tooltip on the grip: "Drag to move · double-click to reset".
 
 ## Files that will change
 
-- `src/pages/MessagesPage.tsx` — remove `grid-cols-3` layout split; introduce `chatView` state machine; mount the new shell components at page root; pass `anchorRef` from each row's chat button; wire Esc / click-outside / Shift-click-to-modal / auto-collapse-on-row-collapse; persist a `dockedRight` session preference.
-- `src/components/SecureChat.tsx` — accept `onClose`, `onExpandToModal`, `onDock`, and `variant: 'floating' | 'docked' | 'modal'`; render a header with borrower + stage + channel selector + the matching action buttons; keep existing channel/conversation logic untouched.
-- `src/components/FloatingChatPanel.tsx` *(new)* — fixed-positioned, animated, non-modal shell with anchor caret, Esc handler, optional click-outside detector, and dock/expand buttons. Wraps `SecureChat`.
-- `src/components/ChatModalDialog.tsx` *(new)* — thin wrapper around shadcn `Dialog` rendering `SecureChat variant="modal"` at large size with the [Collapse to panel] action.
+- `src/components/FloatingChatPanel.tsx` — add `useDragPosition` logic (Pointer Events, clamp to viewport, double-click reset, ignore interactive targets), render the grip icon, switch position from `bottom-4 right-4` to controlled `{ top, left }` once moved. Disable drag at viewport < 900 px.
+- *(Optional)* `src/pages/MessagesPage.tsx` — pass/persist a `panelPositionRef` so reopening the panel for another deal keeps the user's chosen position. Not strictly required if state lives inside `FloatingChatPanel` and the component is kept mounted while open.
 
 ## Out of scope
 
-- No changes to chat persistence, channels, or message rendering.
-- No change to the row-level chat box / unread badge / active highlight already shipped.
-- No change to the Inbox page or `SecureChat` business logic.
+- No change to the Modal Dialog (Expand) behaviour — user confirmed it's fine.
+- No change to chat content, channels, persistence, or the row-level chat box.
+- No resize handle (separate request if needed later).
 
 ## Recommendation
 
-Ship the **floating panel as default**, with **one-click expand to Modal Dialog** and an optional **right-edge dock**. This gives the user every close affordance, keeps chat visually tied to the originating row, and provides a fully focused dialog view when they want it.
+Ship **Option A**: header drag with `GripHorizontal` icon, Pointer Events, viewport-clamped position, double-click header to reset, drag disabled on the mobile bottom-sheet fallback.
