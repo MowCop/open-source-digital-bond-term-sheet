@@ -189,6 +189,7 @@ export default function MessagesPage() {
   const handleOpenChat = (dealIds: string[]) => {
     setActiveDealId(dealIds[0]);
     setShowChat(true);
+    chatSeenRef.current[dealIds.join(',')] = Date.now();
   };
 
   // Per-deal unread chat count. Session baseline: messages newer than mount
