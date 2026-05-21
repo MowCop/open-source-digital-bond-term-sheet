@@ -130,11 +130,6 @@ export default function FloatingChatPanel({ activeDealId, onClose, onExpandToMod
           <GripHorizontal className="h-3.5 w-3.5" />
         </div>
       )}
-      <div
-        aria-hidden
-        className={`absolute inset-x-0 top-0 h-[${DRAG_HANDLE_HEIGHT}px] pointer-events-none`}
-        style={{ height: DRAG_HANDLE_HEIGHT, cursor: dragging ? 'grabbing' : 'grab' }}
-      />
       <SecureChat
         activeDealId={activeDealId}
         heightClass="h-full"
