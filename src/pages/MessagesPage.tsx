@@ -360,9 +360,10 @@ export default function MessagesPage() {
           {/* Table header */}
           <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
             <div className="col-span-1"></div>
+            <div className="col-span-1">Chat</div>
             <div className="col-span-2">Last Updated</div>
             <div className="col-span-2">Borrower</div>
-            <div className="col-span-4">Headline</div>
+            <div className="col-span-3">Headline</div>
             <div className="col-span-2">Bookrunners</div>
             <div className="col-span-1">Stage</div>
           </div>
