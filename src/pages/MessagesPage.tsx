@@ -708,15 +708,6 @@ export default function MessagesPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className={`text-xs ${flashingBtn === `${groupKey}:chat` ? 'animate-border-flash' : ''}`}
-                          onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:chat`); handleOpenChat(group.dealIds); }}
-                        >
-                          <MessageSquare className="h-3 w-3 mr-1" />
-                          Deal Chat
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
                           className={`text-xs ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
                           disabled={!group.dealIds[0]}
                           onClick={(e) => {
