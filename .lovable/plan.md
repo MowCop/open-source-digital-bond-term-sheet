@@ -1,63 +1,59 @@
 ## Goal
 
-Improve the expanded latest-update panel on the Messages / Issue Board:
+Move the "Deal Chat" entry point out of the action-button row inside the expanded panel and surface it on every collapsed Issue Board row as a compact, always-visible box sitting immediately next to the expand chevron.
 
-1. Remove the duplicate Delete button.
-2. Make the "click anywhere to edit" affordance discoverable via a highlighted, hoverable border.
-3. Make `Esc` always cascade fully back to the closed Issue Board row in one keystroke.
+## Current behaviour
 
-## Scope
+- The Issue Board row is a 12-column grid: chevron (1) · Last Updated (2) · Borrower (2) · Headline (4) · Bookrunners (2) · Stage (1).
+- To reach the deal's chat, the user must expand the row, then click a "Deal Chat" `Button` (rendered twice — once in the history action bar, once in the default action bar in `MessagesPage.tsx`).
+- This hides chat behind an extra click and duplicates the control.
 
-Single page + single component. No data / business logic changes.
+## Proposed change
 
-- `src/components/AlertHistoryCard.tsx`
-- `src/pages/MessagesPage.tsx`
+### 1. New "Chat" column next to the chevron
 
-## Problem analysis
+Re-balance the 12-column grid so a dedicated chat cell sits at position 2:
 
-In the screenshot the expanded panel shows **Delete** twice:
+| col-span | Content |
+|---|---|
+| 1 | Chevron (▸ / ▾) |
+| 1 | **Chat box (new)** |
+| 2 | Last Updated |
+| 2 | Borrower |
+| 3 | Headline *(reduced from 4)* |
+| 2 | Bookrunners |
+| 1 | Stage |
 
-- Top row inside the alert card (`AlertHistoryCard.tsx` action bar, line ~381) — deletes only this one update/alert message.
-- Bottom action bar in `MessagesPage.tsx` (line ~683) — deletes the entire deal thread (all updates + chat + data). Styled red.
+Headline already truncates, so dropping one column is safe at the current viewport. Add the matching `<div className="col-span-1">Chat</div>` cell in the header row.
 
-Both say just "Delete" with the same icon → users cannot tell them apart, and on the latest-update card the per-update Delete is largely redundant because Retract already exists for sent messages and the deal-level Delete already removes everything.
+### 2. The chat box itself
 
-The "click body to open full editor" affordance is invisible — there is only a faint hover background.
+A small, button-like square (≈28×28) using existing tokens — not a full text button:
 
-`Esc` already cascades (line ~73 effect), but only when no inner alert card is expanded. For the latest update (embedded mode) there is no expand/collapse, so this works; we just need to make sure pressing Esc inside the full-screen editor closes the editor AND the deal row in one press from the user's perspective.
+- Icon: `MessageSquare` from lucide.
+- Visual: rounded border, `bg-card`, `hover:bg-accent` ring; matches Stage badge weight so it reads as a row-level affordance, not a primary CTA.
+- Unread indicator: if the deal has unseen chat messages, overlay a small `bg-destructive` dot (top-right) with the count when >0. Reuse the same unread logic already used on the Inbox page (`chatMessages` newer than a per-channel `lastSeen` timestamp) so badges stay consistent across the app.
+- Tooltip / `title`: "Open Deal Chat" (or "Open Deal Chat — N unread").
+- Click: `e.stopPropagation()` then call the existing `handleOpenChat(group.dealIds)` — so it works whether the row is collapsed or expanded, and it never toggles expand.
+- Keyboard: `tabIndex=0`, Enter/Space activates; focus ring uses `ring-ring`.
 
-## Changes
+### 3. Remove the now-redundant in-panel buttons
 
-### 1. Remove duplicate Delete from the latest update card
+Delete both "Deal Chat" `<Button>` instances inside the expanded panel (the one in the history action bar at ~L600 and the duplicate in the default action bar at ~L672). The new row-level box replaces them, which also resolves the long-standing "Deal Chat appears twice when expanded" duplication.
 
-In `AlertHistoryCard.tsx` action buttons block (lines ~360–388):
+"Deal Alert Data", "Update History", "Edit Latest", and "Delete" stay where they are.
 
-- When `isLatest && embedded` → hide the per-message Delete button entirely. The deal-level Delete in the parent row covers it, and Retract remains for sent messages.
-- Keep per-message Delete for historical (non-latest) updates in Update History, since those need individual removal.
+### 4. Active-chat highlight
 
-### 2. Edit affordance — highlighted clickable border
+When `showChat === true` and `activeDealId` belongs to this group, render the box in the filled/active state (`bg-primary text-primary-foreground`) so the user can see which row the open right-hand chat panel belongs to.
 
-In `AlertHistoryCard.tsx`, the embedded latest container (line ~194):
+## Files touched
 
-- Replace the subtle `hover:bg-card/40` with a persistent dashed/soft accent border that brightens on hover, plus a small "Click to edit" hint (icon + text, `text-xs text-muted-foreground`) in the top-right of the body region.
-- Tokens only (`border-primary/40`, `hover:border-primary`, `hover:bg-primary/5`, `ring-1 ring-primary/20` on hover). No raw colors.
-- Keep the existing click-to-open-editor handler; interactive children (`button, a, input`) still stop propagation.
-- Add `title="Click anywhere to edit — Esc to close"` on the container for tooltip discoverability.
-
-### 3. Esc cascade from full-screen editor → closed Issue Board row
-
-In `MessagesPage.tsx` Esc effect (line ~73):
-
-- Currently bails out if a `[role="dialog"][data-state="open"]` exists. Change to: when the editor dialog closes (detected by transitioning from open→closed), also clear `expandedAlertId` on the next tick so a single Esc press from inside the editor returns the user all the way to the collapsed Issue Board row.
-- Implementation: track a ref `wasEditorOpenRef`; in a `useEffect` watching `document` for the dialog state (or simpler: in `AlertHistoryCard`'s `attemptClose`, after closing the editor, dispatch a `CustomEvent('alert-editor-closed')` that `MessagesPage` listens for and uses to `setExpandedAlertId(null)`).
-- Net behavior:
-  - Esc inside editor → closes editor AND collapses deal row (one press).
-  - Esc on expanded row (no editor) → collapses row (already works).
-  - Esc on closed row → no-op.
+- `src/pages/MessagesPage.tsx` — grid header + row layout, new ChatCell, remove duplicate buttons, wire active-state styling.
+- (Optional, only if needed for unread counts) small selector helper near the existing `chatMessages` access; no schema or context changes.
 
 ## Out of scope
 
-- Restyling Retract / Send / chat buttons.
-- Changing the deal-level Delete confirmation flow.
-- Update History panel layout.
-- Any backend or data model changes.
+- No change to `SecureChat`, channel model, or chat persistence.
+- No change to Esc / double-click panel-close behaviour.
+- No change to InboxPage (it already has its own unread treatment).

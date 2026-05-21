@@ -45,7 +45,7 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteDeal } = useScopedApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteDeal, chatChannels, chatMessages } = useScopedApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'history' | 'data' | null>('history');
   const [editSignals, setEditSignals] = useState<Record<string, number>>({});
@@ -189,6 +189,24 @@ export default function MessagesPage() {
   const handleOpenChat = (dealIds: string[]) => {
     setActiveDealId(dealIds[0]);
     setShowChat(true);
+    chatSeenRef.current[dealIds.join(',')] = Date.now();
+  };
+
+  // Per-deal unread chat count. Session baseline: messages newer than mount
+  // count as unread until the user opens the deal chat panel for that deal.
+  const chatSeenRef = useRef<Record<string, number>>({});
+  const mountTimeRef = useRef<number>(Date.now());
+  const getUnreadChatCount = (dealIds: string[]) => {
+    const channelIds = chatChannels.filter(c => c.dealId && dealIds.includes(c.dealId)).map(c => c.id);
+    if (channelIds.length === 0) return 0;
+    const baseline = mountTimeRef.current;
+    const dealKey = dealIds.join(',');
+    const seen = chatSeenRef.current[dealKey] ?? baseline;
+    return chatMessages.filter(m =>
+      channelIds.includes(m.channelId) &&
+      m.senderId !== currentUser.id &&
+      m.timestamp.getTime() > seen,
+    ).length;
   };
 
   const shouldIgnorePanelCloseGesture = (target: HTMLElement) =>
@@ -342,9 +360,10 @@ export default function MessagesPage() {
           {/* Table header */}
           <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
             <div className="col-span-1"></div>
+            <div className="col-span-1">Chat</div>
             <div className="col-span-2">Last Updated</div>
             <div className="col-span-2">Borrower</div>
-            <div className="col-span-4">Headline</div>
+            <div className="col-span-3">Headline</div>
             <div className="col-span-2">Bookrunners</div>
             <div className="col-span-1">Stage</div>
           </div>
@@ -374,6 +393,32 @@ export default function MessagesPage() {
                       ) : (
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       )}
+                    </div>
+                    <div className="col-span-1" onClick={(e) => e.stopPropagation()}>
+                      {(() => {
+                        const unread = getUnreadChatCount(group.dealIds);
+                        const isActive = showChat && activeDealId === group.dealIds[0];
+                        return (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:chat`); handleOpenChat(group.dealIds); }}
+                            title={unread > 0 ? `Open Deal Chat — ${unread} unread` : 'Open Deal Chat'}
+                            aria-label="Open Deal Chat"
+                            className={`relative inline-flex h-7 w-7 items-center justify-center rounded-md border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                              isActive
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground'
+                            } ${flashingBtn === `${groupKey}:chat` ? 'animate-border-flash' : ''}`}
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            {unread > 0 && (
+                              <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold leading-[14px] text-center">
+                                {unread > 9 ? '9+' : unread}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })()}
                     </div>
                     <div className="col-span-2 text-timestamp text-sm">
                       {format(group.latestMessage.updatedAt, 'MMM d, hh:mm a')}
@@ -405,7 +450,7 @@ export default function MessagesPage() {
                         </span>
                       )}
                     </div>
-                    <div className="col-span-4 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
+                    <div className="col-span-3 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
                         <div className="relative">
                           <Input
@@ -600,15 +645,6 @@ export default function MessagesPage() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className={`text-xs ${flashingBtn === `${groupKey}:chat` ? 'animate-border-flash' : ''}`}
-                                    onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:chat`); handleOpenChat(group.dealIds); }}
-                                  >
-                                    <MessageSquare className="h-3 w-3 mr-1" />
-                                    Deal Chat
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
                                     className={`text-xs ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
                                     disabled={!group.dealIds[0]}
                                     onClick={(e) => {
@@ -669,15 +705,6 @@ export default function MessagesPage() {
 
                       {activePanel !== 'history' && (
                         <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className={`text-xs ${flashingBtn === `${groupKey}:chat` ? 'animate-border-flash' : ''}`}
-                          onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:chat`); handleOpenChat(group.dealIds); }}
-                        >
-                          <MessageSquare className="h-3 w-3 mr-1" />
-                          Deal Chat
-                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
