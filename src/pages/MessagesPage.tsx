@@ -45,7 +45,7 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteDeal } = useScopedApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteDeal, chatChannels, chatMessages } = useScopedApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'history' | 'data' | null>('history');
   const [editSignals, setEditSignals] = useState<Record<string, number>>({});
@@ -189,6 +189,23 @@ export default function MessagesPage() {
   const handleOpenChat = (dealIds: string[]) => {
     setActiveDealId(dealIds[0]);
     setShowChat(true);
+  };
+
+  // Per-deal unread chat count. Session baseline: messages newer than mount
+  // count as unread until the user opens the deal chat panel for that deal.
+  const chatSeenRef = useRef<Record<string, number>>({});
+  const mountTimeRef = useRef<number>(Date.now());
+  const getUnreadChatCount = (dealIds: string[]) => {
+    const channelIds = chatChannels.filter(c => c.dealId && dealIds.includes(c.dealId)).map(c => c.id);
+    if (channelIds.length === 0) return 0;
+    const baseline = mountTimeRef.current;
+    const dealKey = dealIds.join(',');
+    const seen = chatSeenRef.current[dealKey] ?? baseline;
+    return chatMessages.filter(m =>
+      channelIds.includes(m.channelId) &&
+      m.senderId !== currentUser.id &&
+      m.timestamp.getTime() > seen,
+    ).length;
   };
 
   const shouldIgnorePanelCloseGesture = (target: HTMLElement) =>
