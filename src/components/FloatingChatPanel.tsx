@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, Maximize2, Minus } from 'lucide-react';
+import { X, Maximize2 } from 'lucide-react';
 import SecureChat from '@/components/SecureChat';
 
 interface FloatingChatPanelProps {
