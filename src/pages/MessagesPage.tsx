@@ -786,18 +786,24 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        {/* Chat panel */}
-        {showChat && (
-          <div className="col-span-1">
-            <div className="flex justify-end mb-2">
-              <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowChat(false)}>
-                Close Chat ✕
-              </Button>
-            </div>
-            <SecureChat activeDealId={activeDealId} />
-          </div>
-        )}
       </div>
+
+      {/* Floating chat panel (default) */}
+      {chatView === 'floating' && (
+        <FloatingChatPanel
+          activeDealId={activeDealId}
+          onClose={() => setChatView('closed')}
+          onExpandToModal={() => setChatView('modal')}
+        />
+      )}
+
+      {/* Modal chat dialog */}
+      <ChatModalDialog
+        open={chatView === 'modal'}
+        activeDealId={activeDealId}
+        onClose={() => setChatView('closed')}
+        onCollapseToPanel={() => setChatView('floating')}
+      />
 
       <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open) setPendingDelete(null); }}>
         <AlertDialogContent>
