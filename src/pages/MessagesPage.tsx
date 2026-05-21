@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Message, DealStage } from '@/types/bond';
 import { format } from 'date-fns';
 import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History, Edit2 } from 'lucide-react';
-import SecureChat from '@/components/SecureChat';
+import FloatingChatPanel from '@/components/FloatingChatPanel';
+import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction } from '@/lib/alertParsing';
@@ -53,7 +54,8 @@ export default function MessagesPage() {
   const [pendingDelete, setPendingDelete] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
-  const [showChat, setShowChat] = useState(false);
+  const [chatView, setChatView] = useState<'closed' | 'floating' | 'modal'>('closed');
+  const showChat = chatView !== 'closed';
   const [editingHeadlineId, setEditingHeadlineId] = useState<string | null>(null);
   const [headlineDraft, setHeadlineDraft] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -186,9 +188,15 @@ export default function MessagesPage() {
     setTimeout(() => setFlashingBtn(prev => (prev === key ? null : prev)), 500);
   };
 
-  const handleOpenChat = (dealIds: string[]) => {
-    setActiveDealId(dealIds[0]);
-    setShowChat(true);
+  const handleOpenChat = (dealIds: string[], opts?: { modal?: boolean; toggle?: boolean }) => {
+    const dealId = dealIds[0];
+    // Re-click the same deal box → close
+    if (opts?.toggle && chatView !== 'closed' && activeDealId === dealId && !opts.modal) {
+      setChatView('closed');
+      return;
+    }
+    setActiveDealId(dealId);
+    setChatView(opts?.modal ? 'modal' : (chatView === 'modal' ? 'modal' : 'floating'));
     chatSeenRef.current[dealIds.join(',')] = Date.now();
   };
 
