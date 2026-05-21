@@ -200,6 +200,18 @@ export default function MessagesPage() {
     chatSeenRef.current[dealIds.join(',')] = Date.now();
   };
 
+  // If the deal row whose chat is open gets collapsed, close the chat too.
+  useEffect(() => {
+    if (chatView === 'closed' || !activeDealId) return;
+    if (!expandedAlertId) {
+      setChatView('closed');
+      return;
+    }
+    if (!expandedAlertId.split(',').includes(activeDealId)) {
+      setChatView('closed');
+    }
+  }, [expandedAlertId, activeDealId, chatView]);
+
   // Per-deal unread chat count. Session baseline: messages newer than mount
   // count as unread until the user opens the deal chat panel for that deal.
   const chatSeenRef = useRef<Record<string, number>>({});
