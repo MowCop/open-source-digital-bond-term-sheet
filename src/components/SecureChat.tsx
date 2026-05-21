@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,9 +24,11 @@ const stageColor: Record<DealStage, string> = {
 
 interface SecureChatProps {
   activeDealId?: string | null;
+  headerActions?: ReactNode;
+  heightClass?: string;
 }
 
-export default function SecureChat({ activeDealId }: SecureChatProps) {
+export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]' }: SecureChatProps) {
   const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage } = useApp();
   const [activeChannel, setActiveChannel] = useState<ChatChannel | null>(null);
   const [inputText, setInputText] = useState('');
@@ -91,12 +93,13 @@ export default function SecureChat({ activeDealId }: SecureChatProps) {
   };
 
   return (
-    <Card className="flex flex-col h-[600px]">
+    <Card className={`flex flex-col ${heightClass}`}>
       <CardHeader className="pb-2 shrink-0">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-primary" />
           <CardTitle className="text-sm">Secure Communications</CardTitle>
           <Badge variant="outline" className="text-[10px] ml-auto">Secure Channel</Badge>
+          {headerActions && <div className="flex items-center gap-1">{headerActions}</div>}
         </div>
         {activeDeal && (
           <div className="flex items-center gap-2 mt-1">

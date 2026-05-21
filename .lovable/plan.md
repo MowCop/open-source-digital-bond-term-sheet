@@ -1,59 +1,94 @@
 ## Goal
 
-Move the "Deal Chat" entry point out of the action-button row inside the expanded panel and surface it on every collapsed Issue Board row as a compact, always-visible box sitting immediately next to the expand chevron.
+Replace the right-column grid that squeezes the Issue Board with a chat surface that:
+1. By default, **floats** over the board, anchored to the originating row, non-modal.
+2. Can be **expanded into a full Modal Dialog** for focused conversations.
+3. Closes via multiple easy affordances.
 
-## Current behaviour
+## Why change current behaviour
 
-- The Issue Board row is a 12-column grid: chevron (1) · Last Updated (2) · Borrower (2) · Headline (4) · Bookrunners (2) · Stage (1).
-- To reach the deal's chat, the user must expand the row, then click a "Deal Chat" `Button` (rendered twice — once in the history action bar, once in the default action bar in `MessagesPage.tsx`).
-- This hides chat behind an extra click and duplicates the control.
+Today, clicking the row's chat box flips `showChat = true` and `MessagesPage.tsx` (L330) switches the layout from `grid-cols-1` to `grid-cols-3`, mounting `SecureChat` in the right 2 columns. On the user's 792 px viewport this crushes the Issue Board (Headline/Bookrunners truncate, the open row scrolls partially off) and the only close affordance is a small "Close Chat ✕" text link.
 
-## Proposed change
+## Three view modes for the chat
 
-### 1. New "Chat" column next to the chevron
+The same `SecureChat` content is rendered in one of three shells. The mode is a session preference toggled from the panel header.
 
-Re-balance the 12-column grid so a dedicated chat cell sits at position 2:
+### A. Floating panel (default)
 
-| col-span | Content |
-|---|---|
-| 1 | Chevron (▸ / ▾) |
-| 1 | **Chat box (new)** |
-| 2 | Last Updated |
-| 2 | Borrower |
-| 3 | Headline *(reduced from 4)* |
-| 2 | Bookrunners |
-| 1 | Stage |
+- `position: fixed`, `z-50`, 380 px × 70 vh, anchored to the right edge of the viewport, vertically aligned with the originating row when possible. Margin 16 px from edges.
+- Header: borrower · stage badge · channel selector · **[Dock]** · **[Expand to dialog ⛶]** · **[X]**.
+- Small caret/arrow pointing to the originating row's chat box + brief `zoom-in-95 fade-in-0` animation so the user sees where it came from.
+- Non-modal: board remains scrollable and clickable underneath; row's chat box stays in active/filled state.
+- On viewports < 900 px, shell falls back to bottom-sheet (`inset-x-2 bottom-2 h-[70vh]`).
 
-Headline already truncates, so dropping one column is safe at the current viewport. Add the matching `<div className="col-span-1">Chat</div>` cell in the header row.
+### B. Docked right drawer
 
-### 2. The chat box itself
+- Same content but pinned to the right edge as a 380 px-wide persistent panel; board reflows to `pr-[396px]` instead of `grid-cols-3` (so columns don't get re-shaped, just margin-shifted).
+- Toggled from the floating panel's [Dock] button. Session-only preference.
+- Closes via [X] in header (returns to floating) or Esc.
 
-A small, button-like square (≈28×28) using existing tokens — not a full text button:
+### C. Modal Dialog (new, per user request)
 
-- Icon: `MessageSquare` from lucide.
-- Visual: rounded border, `bg-card`, `hover:bg-accent` ring; matches Stage badge weight so it reads as a row-level affordance, not a primary CTA.
-- Unread indicator: if the deal has unseen chat messages, overlay a small `bg-destructive` dot (top-right) with the count when >0. Reuse the same unread logic already used on the Inbox page (`chatMessages` newer than a per-channel `lastSeen` timestamp) so badges stay consistent across the app.
-- Tooltip / `title`: "Open Deal Chat" (or "Open Deal Chat — N unread").
-- Click: `e.stopPropagation()` then call the existing `handleOpenChat(group.dealIds)` — so it works whether the row is collapsed or expanded, and it never toggles expand.
-- Keyboard: `tabIndex=0`, Enter/Space activates; focus ring uses `ring-ring`.
+- Triggered by the [Expand to dialog ⛶] button in the floating or docked panel, **or** by Shift-clicking the row's chat box, **or** by pressing `F` while a deal row is expanded and its chat is open.
+- Uses shadcn `Dialog` (`src/components/ui/dialog.tsx`) — full Radix modal with backdrop dim, focus trap, and built-in Esc-to-close.
+- Sized large: `max-w-3xl w-[min(900px,95vw)] h-[min(80vh,720px)]` so users can hold a longer conversation, see more history, and use the channel selector comfortably.
+- Header mirrors the floating panel header (borrower, stage, channel selector) plus a **[Collapse to panel ⤡]** action that closes the dialog and reopens the floating panel anchored to the same row, preserving channel/scroll state.
+- Closes via [X], Esc, or backdrop click (Dialog defaults).
+- Because it is modal, the underlying board is dimmed/inert; this is the intentional "focus on this conversation" mode.
 
-### 3. Remove the now-redundant in-panel buttons
+### State machine
 
-Delete both "Deal Chat" `<Button>` instances inside the expanded panel (the one in the history action bar at ~L600 and the duplicate in the default action bar at ~L672). The new row-level box replaces them, which also resolves the long-standing "Deal Chat appears twice when expanded" duplication.
+```
+closed ──open──► floating ──[Dock]──► docked
+   ▲                │                    │
+   │             [Expand]            [Expand]
+   │                ▼                    ▼
+   └──close──── modal-dialog ◄───────────┘
+                   │
+              [Collapse]→ returns to previous (floating | docked)
+```
 
-"Deal Alert Data", "Update History", "Edit Latest", and "Delete" stay where they are.
+A single `chatView: 'closed' | 'floating' | 'docked' | 'modal'` state in `MessagesPage` drives this, plus `chatPrevView` so [Collapse] knows whether to return to floating or docked.
 
-### 4. Active-chat highlight
+## Anchoring & deal context (all three modes)
 
-When `showChat === true` and `activeDealId` belongs to this group, render the box in the filled/active state (`bg-primary text-primary-foreground`) so the user can see which row the open right-hand chat panel belongs to.
+- Header always shows: borrower (clickable → scrolls underlying row into view + 600 ms border pulse), stage badge, deal currency/size, channel selector when the deal has multiple channels.
+- Originating row's chat box stays in `bg-primary` active state while any of the three views is open.
+- Clicking a different row's chat box swaps the contents of the existing view (single instance, no stacking) and updates the anchor.
+- Auto-close when the user collapses the originating deal row, so chat doesn't dangle for a hidden deal.
 
-## Files touched
+## Close affordances (summary)
 
-- `src/pages/MessagesPage.tsx` — grid header + row layout, new ChatCell, remove duplicate buttons, wire active-state styling.
-- (Optional, only if needed for unread counts) small selector helper near the existing `chatMessages` access; no schema or context changes.
+| Mode | X button | Esc | Click outside | Re-click row box | Backdrop |
+|---|---|---|---|---|---|
+| Floating | ✓ | ✓ | ✓ (configurable, default on) | ✓ toggles closed | n/a |
+| Docked | ✓ | ✓ | n/a (intentionally persistent) | ✓ toggles closed | n/a |
+| Modal | ✓ | ✓ (Dialog default) | n/a | n/a | ✓ (Dialog default) |
+
+Esc never collapses the expanded deal row while chat is open — it only closes the chat surface. Pressing Esc again then runs the existing row-collapse cascade.
+
+## Why also include the Modal Dialog
+
+Floating is great for "glance and reply"; Modal is the right shell for:
+- Long onboarding/legal Q&A threads where the board is a distraction.
+- Screen-share or presentation contexts where the user wants the chat to dominate.
+- Smaller laptop screens where 380 px floating + 412 px of board is cramped.
+
+Giving users **both** modes (with one-click toggle between them) keeps the lightweight default while satisfying the "I just want to focus on this chat" workflow.
+
+## Files that will change
+
+- `src/pages/MessagesPage.tsx` — remove `grid-cols-3` layout split; introduce `chatView` state machine; mount the new shell components at page root; pass `anchorRef` from each row's chat button; wire Esc / click-outside / Shift-click-to-modal / auto-collapse-on-row-collapse; persist a `dockedRight` session preference.
+- `src/components/SecureChat.tsx` — accept `onClose`, `onExpandToModal`, `onDock`, and `variant: 'floating' | 'docked' | 'modal'`; render a header with borrower + stage + channel selector + the matching action buttons; keep existing channel/conversation logic untouched.
+- `src/components/FloatingChatPanel.tsx` *(new)* — fixed-positioned, animated, non-modal shell with anchor caret, Esc handler, optional click-outside detector, and dock/expand buttons. Wraps `SecureChat`.
+- `src/components/ChatModalDialog.tsx` *(new)* — thin wrapper around shadcn `Dialog` rendering `SecureChat variant="modal"` at large size with the [Collapse to panel] action.
 
 ## Out of scope
 
-- No change to `SecureChat`, channel model, or chat persistence.
-- No change to Esc / double-click panel-close behaviour.
-- No change to InboxPage (it already has its own unread treatment).
+- No changes to chat persistence, channels, or message rendering.
+- No change to the row-level chat box / unread badge / active highlight already shipped.
+- No change to the Inbox page or `SecureChat` business logic.
+
+## Recommendation
+
+Ship the **floating panel as default**, with **one-click expand to Modal Dialog** and an optional **right-edge dock**. This gives the user every close affordance, keeps chat visually tied to the originating row, and provides a fully focused dialog view when they want it.

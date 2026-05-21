@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Message, DealStage } from '@/types/bond';
 import { format } from 'date-fns';
 import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History, Edit2 } from 'lucide-react';
-import SecureChat from '@/components/SecureChat';
+import FloatingChatPanel from '@/components/FloatingChatPanel';
+import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction } from '@/lib/alertParsing';
@@ -53,7 +54,8 @@ export default function MessagesPage() {
   const [pendingDelete, setPendingDelete] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
-  const [showChat, setShowChat] = useState(false);
+  const [chatView, setChatView] = useState<'closed' | 'floating' | 'modal'>('closed');
+  const showChat = chatView !== 'closed';
   const [editingHeadlineId, setEditingHeadlineId] = useState<string | null>(null);
   const [headlineDraft, setHeadlineDraft] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -186,11 +188,18 @@ export default function MessagesPage() {
     setTimeout(() => setFlashingBtn(prev => (prev === key ? null : prev)), 500);
   };
 
-  const handleOpenChat = (dealIds: string[]) => {
-    setActiveDealId(dealIds[0]);
-    setShowChat(true);
+  const handleOpenChat = (dealIds: string[], opts?: { modal?: boolean; toggle?: boolean }) => {
+    const dealId = dealIds[0];
+    // Re-click the same deal box → close
+    if (opts?.toggle && chatView !== 'closed' && activeDealId === dealId && !opts.modal) {
+      setChatView('closed');
+      return;
+    }
+    setActiveDealId(dealId);
+    setChatView(opts?.modal ? 'modal' : (chatView === 'modal' ? 'modal' : 'floating'));
     chatSeenRef.current[dealIds.join(',')] = Date.now();
   };
+
 
   // Per-deal unread chat count. Session baseline: messages newer than mount
   // count as unread until the user opens the deal chat panel for that deal.
@@ -345,8 +354,8 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      <div className={`grid gap-4 ${showChat ? 'grid-cols-3' : 'grid-cols-1'}`}>
-        <div className={showChat ? 'col-span-2' : ''}>
+      <div className="grid gap-4 grid-cols-1">
+        <div>
           {/* Create New Issue button */}
           {canManageMessages && (
             <div className="flex justify-center mb-4">
@@ -401,8 +410,12 @@ export default function MessagesPage() {
                         return (
                           <button
                             type="button"
-                            onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:chat`); handleOpenChat(group.dealIds); }}
-                            title={unread > 0 ? `Open Deal Chat — ${unread} unread` : 'Open Deal Chat'}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              flash(`${groupKey}:chat`);
+                              handleOpenChat(group.dealIds, { modal: e.shiftKey, toggle: true });
+                            }}
+                            title={unread > 0 ? `Open Deal Chat — ${unread} unread (Shift-click for dialog)` : 'Open Deal Chat (Shift-click for dialog)'}
                             aria-label="Open Deal Chat"
                             className={`relative inline-flex h-7 w-7 items-center justify-center rounded-md border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                               isActive
@@ -778,18 +791,24 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        {/* Chat panel */}
-        {showChat && (
-          <div className="col-span-1">
-            <div className="flex justify-end mb-2">
-              <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowChat(false)}>
-                Close Chat ✕
-              </Button>
-            </div>
-            <SecureChat activeDealId={activeDealId} />
-          </div>
-        )}
       </div>
+
+      {/* Floating chat panel (default) */}
+      {chatView === 'floating' && (
+        <FloatingChatPanel
+          activeDealId={activeDealId}
+          onClose={() => setChatView('closed')}
+          onExpandToModal={() => setChatView('modal')}
+        />
+      )}
+
+      {/* Modal chat dialog */}
+      <ChatModalDialog
+        open={chatView === 'modal'}
+        activeDealId={activeDealId}
+        onClose={() => setChatView('closed')}
+        onCollapseToPanel={() => setChatView('floating')}
+      />
 
       <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open) setPendingDelete(null); }}>
         <AlertDialogContent>
