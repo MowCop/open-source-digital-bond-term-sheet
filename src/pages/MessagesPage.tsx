@@ -353,8 +353,8 @@ export default function MessagesPage() {
         </div>
       </div>
 
-      <div className={`grid gap-4 ${showChat ? 'grid-cols-3' : 'grid-cols-1'}`}>
-        <div className={showChat ? 'col-span-2' : ''}>
+      <div className="grid gap-4 grid-cols-1">
+        <div>
           {/* Create New Issue button */}
           {canManageMessages && (
             <div className="flex justify-center mb-4">
