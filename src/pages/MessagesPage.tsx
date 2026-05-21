@@ -409,8 +409,12 @@ export default function MessagesPage() {
                         return (
                           <button
                             type="button"
-                            onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:chat`); handleOpenChat(group.dealIds); }}
-                            title={unread > 0 ? `Open Deal Chat — ${unread} unread` : 'Open Deal Chat'}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              flash(`${groupKey}:chat`);
+                              handleOpenChat(group.dealIds, { modal: e.shiftKey, toggle: true });
+                            }}
+                            title={unread > 0 ? `Open Deal Chat — ${unread} unread (Shift-click for dialog)` : 'Open Deal Chat (Shift-click for dialog)'}
                             aria-label="Open Deal Chat"
                             className={`relative inline-flex h-7 w-7 items-center justify-center rounded-md border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                               isActive
