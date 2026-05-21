@@ -394,6 +394,32 @@ export default function MessagesPage() {
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       )}
                     </div>
+                    <div className="col-span-1" onClick={(e) => e.stopPropagation()}>
+                      {(() => {
+                        const unread = getUnreadChatCount(group.dealIds);
+                        const isActive = showChat && activeDealId === group.dealIds[0];
+                        return (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:chat`); handleOpenChat(group.dealIds); }}
+                            title={unread > 0 ? `Open Deal Chat — ${unread} unread` : 'Open Deal Chat'}
+                            aria-label="Open Deal Chat"
+                            className={`relative inline-flex h-7 w-7 items-center justify-center rounded-md border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                              isActive
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'bg-card text-muted-foreground border-border hover:bg-accent hover:text-accent-foreground'
+                            } ${flashingBtn === `${groupKey}:chat` ? 'animate-border-flash' : ''}`}
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            {unread > 0 && (
+                              <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold leading-[14px] text-center">
+                                {unread > 9 ? '9+' : unread}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })()}
+                    </div>
                     <div className="col-span-2 text-timestamp text-sm">
                       {format(group.latestMessage.updatedAt, 'MMM d, hh:mm a')}
                     </div>
