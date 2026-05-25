@@ -35,6 +35,8 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   const [linkingMessageId, setLinkingMessageId] = useState<string | undefined>();
   const [showLinkPicker, setShowLinkPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [highlightChatId, setHighlightChatId] = useState<string | null>(null);
 
   const myChannels = chatChannels.filter(ch => ch.participantIds.includes(currentUser.id));
 
@@ -51,6 +53,27 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   const channelMessages = activeChannel
     ? chatMessages.filter(cm => cm.channelId === activeChannel.id).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
     : [];
+
+  // Participants (excluding self, excluding system bots)
+  const participants = activeChannel
+    ? activeChannel.participantIds
+        .filter(id => id !== currentUser.id)
+        .map(id => users.find(u => u.id === id))
+        .filter((u): u is NonNullable<typeof u> => !!u)
+    : [];
+
+  const handleParticipantClick = (userId: string, userName: string) => {
+    const lastMsg = [...channelMessages].reverse().find(cm => cm.senderId === userId && cm.senderType !== 'system');
+    if (lastMsg) {
+      setHighlightChatId(lastMsg.id);
+      const el = document.getElementById(`chat-msg-${lastMsg.id}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => setHighlightChatId(null), 2000);
+    }
+    const firstName = userName.split(' ')[0];
+    setInputText(prev => (prev.startsWith(`@${firstName} `) ? prev : `@${firstName} ${prev}`));
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
   const getLinkedMessage = (id: string) => messages.find(m => m.id === id);
@@ -98,6 +121,21 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-primary" />
           <CardTitle className="text-sm">Secure Communications</CardTitle>
+          {participants.length > 0 && (
+            <div className="flex items-center gap-1 flex-wrap min-w-0">
+              {participants.map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => handleParticipantClick(p.id, p.name)}
+                  title={`Reply to ${p.name}`}
+                  className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/40 hover:bg-accent text-accent-foreground hover:underline truncate max-w-[120px]"
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          )}
           <Badge variant="outline" className="text-[10px] ml-auto">Secure Channel</Badge>
           {headerActions && <div className="flex items-center gap-1">{headerActions}</div>}
         </div>
@@ -152,7 +190,11 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
                   }
 
                   return (
-                    <div key={cm.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
+                    <div
+                      key={cm.id}
+                      id={`chat-msg-${cm.id}`}
+                      className={`flex gap-2 rounded-md transition-colors ${isMe ? 'flex-row-reverse' : ''} ${highlightChatId === cm.id ? 'ring-2 ring-primary/60 bg-primary/5' : ''}`}
+                    >
                       <Avatar className="h-7 w-7 shrink-0">
                         <AvatarFallback className={`text-[10px] ${cm.senderType === 'bank' ? 'bg-primary/10 text-primary' : 'bg-accent text-accent-foreground'}`}>{cm.senderName.split(' ').map(n => n[0]).join('').slice(0, 2)}</AvatarFallback>
                       </Avatar>
@@ -228,6 +270,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
+                ref={inputRef}
               />
               <Button size="icon" className="h-8 w-8 shrink-0" onClick={handleSend} disabled={!inputText.trim()}>
                 <Send className="h-4 w-4" />
