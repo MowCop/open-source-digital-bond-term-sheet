@@ -11,7 +11,7 @@ import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import { useToast } from '@/hooks/use-toast';
-import { mergeDealFromText, isStageForward, simulateAIExtraction } from '@/lib/alertParsing';
+import { mergeDealFromText, isStageForward, simulateAIExtraction, detectStage } from '@/lib/alertParsing';
 import { stripHtml } from '@/lib/htmlText';
 import {
   AlertDialog,
@@ -153,6 +153,30 @@ export default function MessagesPage() {
       setActivePanel('history');
     }
   }, [searchParams, alertGroups]);
+
+  // Backfill: if an existing deal's stage is behind what its latest message
+  // body says (e.g. subject contains "PRICED" but deal is still at Mandate),
+  // auto-advance the deal stage. Runs once per (deal, message signature).
+  const stageBackfillRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!canManageMessages) return;
+    for (const group of alertGroups) {
+      const dealId = group.dealIds[0];
+      if (!dealId) continue;
+      const deal = deals.find(d => d.id === dealId);
+      if (!deal) continue;
+      const msg = group.latestMessage;
+      const sig = `${dealId}:${msg.id}:${deal.stage}`;
+      if (stageBackfillRef.current.has(sig)) continue;
+      const detected = detectStage(`${msg.subject}\n${stripHtml(msg.body)}`);
+      if (detected && isStageForward(deal.stage, detected)) {
+        stageBackfillRef.current.add(sig);
+        updateDealStage(dealId, detected, 'Auto-detected from latest alert');
+      } else {
+        stageBackfillRef.current.add(sig);
+      }
+    }
+  }, [alertGroups, deals, canManageMessages, updateDealStage]);
 
   // "E" keyboard shortcut: when a deal row is expanded and no modal/input is
   // focused, open the full-screen editor for the latest update.
