@@ -658,12 +658,15 @@ export default function AIDraftPage() {
           <div className="bg-card border border-border rounded-lg">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <span className="font-semibold text-sm uppercase tracking-wider">Distribution</span>
-              <button
-                onClick={selectedRecipients.length === vendorUsers.length ? deselectAll : selectAll}
-                className="text-xs text-accent hover:underline"
-              >
-                {selectedRecipients.length === vendorUsers.length ? 'Deselect All' : 'Select All'}
-              </button>
+              <label className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded border border-border bg-background hover:bg-accent/10 transition-colors">
+                <Checkbox
+                  checked={vendorUsers.length > 0 && selectedRecipients.length === vendorUsers.length}
+                  onCheckedChange={(checked) => (checked ? selectAll() : deselectAll())}
+                />
+                <span className="text-xs font-medium">
+                  {selectedRecipients.length === vendorUsers.length ? 'Deselect All' : 'Select All'}
+                </span>
+              </label>
             </div>
             <div className="px-4 py-2 text-[11px] text-muted-foreground border-b border-border">
               Grants screen + deal data access only. Chat is managed separately below.
