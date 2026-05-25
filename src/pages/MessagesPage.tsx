@@ -396,8 +396,7 @@ export default function MessagesPage() {
             <div className="col-span-1">Chat</div>
             <div className="col-span-2">Last Updated</div>
             <div className="col-span-2">Borrower</div>
-            <div className="col-span-3">Headline</div>
-            <div className="col-span-2">Bookrunners</div>
+            <div className="col-span-5">Headline</div>
             <div className="col-span-1">Stage</div>
           </div>
 
@@ -487,7 +486,7 @@ export default function MessagesPage() {
                         </span>
                       )}
                     </div>
-                    <div className="col-span-3 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
+                    <div className="col-span-5 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
                         <div className="relative">
                           <Input
@@ -532,34 +531,6 @@ export default function MessagesPage() {
                           title={canManageMessages ? 'Click to edit headline' : ''}
                         >
                           {group.headline}
-                        </span>
-                      )}
-                    </div>
-                    <div className="col-span-2 text-sm text-muted-foreground truncate" onClick={(e) => e.stopPropagation()}>
-                      {canManageMessages && editingBookrunnersKey === groupKey ? (
-                        <Input
-                          autoFocus
-                          value={bookrunnersDraft}
-                          onChange={(e) => setBookrunnersDraft(e.target.value)}
-                          onBlur={() => saveBookrunners(group)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') { e.preventDefault(); saveBookrunners(group); }
-                            if (e.key === 'Escape') { setEditingBookrunnersKey(null); }
-                          }}
-                          placeholder="Comma-separated names"
-                          className="h-7 text-sm"
-                        />
-                      ) : (
-                        <span
-                          className={canManageMessages && group.dealIds[0] ? 'cursor-text hover:bg-background/50 rounded px-1 -mx-1 block truncate' : 'block truncate'}
-                          onClick={() => {
-                            if (!canManageMessages || !group.dealIds[0]) return;
-                            setEditingBookrunnersKey(groupKey);
-                            setBookrunnersDraft(group.bookrunnersFull);
-                          }}
-                          title={canManageMessages ? (group.bookrunnersFull || 'Click to add bookrunners') : group.bookrunnersFull}
-                        >
-                          {group.bookrunners || (canManageMessages ? <span className="italic opacity-60">Add bookrunners…</span> : '—')}
                         </span>
                       )}
                     </div>
