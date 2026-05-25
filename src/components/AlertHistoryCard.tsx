@@ -10,6 +10,12 @@ import { isHtml } from '@/lib/htmlText';
 import { format } from 'date-fns';
 import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft } from 'lucide-react';
 import PdfEditor from '@/components/PdfEditor';
+import DOMPurify from 'dompurify';
+
+const ALLOWED_TAGS = ['p','br','strong','em','u','s','h1','h2','h3','h4','ul','ol','li','blockquote','a','img','table','thead','tbody','tr','td','th','code','pre','span','div'];
+const ALLOWED_ATTR = ['href','target','rel','src','alt','title','class','colspan','rowspan'];
+const sanitizeHtml = (html: string) =>
+  DOMPurify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR, FORBID_TAGS: ['script','style','iframe','object','embed'], FORBID_ATTR: ['onerror','onload','onclick','onmouseover','onfocus'] });
 
 interface AlertHistoryCardProps {
   message: Message;
@@ -293,7 +299,7 @@ export default function AlertHistoryCard({
       {bodyHasHtml ? (
         <div
           className="tiptap prose prose-sm dark:prose-invert max-w-none text-sm text-muted-foreground"
-          dangerouslySetInnerHTML={{ __html: message.body }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(message.body) }}
         />
       ) : (
         <div className="text-sm text-muted-foreground whitespace-pre-wrap"><LinkifiedText text={message.body} /></div>
