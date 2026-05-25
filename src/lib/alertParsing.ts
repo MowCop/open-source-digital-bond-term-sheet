@@ -254,7 +254,7 @@ export function simulateAIExtraction(rawText: string): AISuggestion {
   const dueMatch = /due\s+(\d{4})/i.exec(rawText);
   const tenorPart = dueMatch ? `Due ${dueMatch[1]}` : (hasTenor?.[1] || '');
   const sizePart = [currency, amountShort].filter(Boolean).join(' ');
-  const headlineSuffix = stage === 'Priced' ? 'Priced' : 'New Issue Alert';
+  const headlineSuffix = stage ? stage : 'New Issue Alert';
   const headline = `${borrower || 'Issuer'} ${sizePart} ${tenorPart} — ${headlineSuffix}`
     .replace(/\s+/g, ' ').replace(/\s+—/, ' —').trim();
 
@@ -290,11 +290,14 @@ export function simulateAIExtraction(rawText: string): AISuggestion {
 export function detectStage(rawText: string): DealStage | null {
   const t = rawText.toLowerCase();
   if (/\bsettled\b/.test(t)) return 'Settled';
-  if (/\bpricing term sheet\b|\bpriced (at|today)\b|\bfinal (terms|pricing)\b/.test(t)) return 'Priced';
-  if (/\bbooks (are )?closed\b/.test(t)) return 'Books Closed';
-  if (/\bbooks (are )?open\b|\bbooks open\b/.test(t)) return 'Books Open';
+  // Priced: standalone PRICED token (common in subject lines like
+  // "€€€ Issuer – PRICED €€€"), pricing term sheet, "priced at/today",
+  // "final terms/pricing", or an explicit reoffer spread/yield.
+  if (/\bpriced\b|\bpricing term sheet\b|\bfinal (terms|pricing)\b|\breoffer (spread|yield)\b/.test(t)) return 'Priced';
+  if (/\bbooks (are )?closed\b|\border books? closed\b/.test(t)) return 'Books Closed';
+  if (/\bbooks (are )?open\b|\bbooks open\b|\bbookbuilding\b|\bipt(s)?\b|\binitial price (talk|thoughts)\b/.test(t)) return 'Books Open';
   if (/\blaunched\b|\blaunch\b/.test(t)) return 'Launched';
-  if (/\bannounced\b|\bannouncement\b/.test(t)) return 'Announced';
+  if (/\bannounced\b|\bannouncement\b|\bnew issue announcement\b/.test(t)) return 'Announced';
   if (/\bmandated\b|\bappointed\b|\bmandate\b/.test(t)) return 'Mandate';
   return null;
 }
