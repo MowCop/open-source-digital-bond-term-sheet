@@ -396,8 +396,7 @@ export default function MessagesPage() {
             <div className="col-span-1">Chat</div>
             <div className="col-span-2">Last Updated</div>
             <div className="col-span-2">Borrower</div>
-            <div className="col-span-3">Headline</div>
-            <div className="col-span-2">Bookrunners</div>
+            <div className="col-span-5">Headline</div>
             <div className="col-span-1">Stage</div>
           </div>
 
