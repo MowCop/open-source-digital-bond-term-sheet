@@ -7,9 +7,15 @@ const corsHeaders = {
 
 function generatePasscode(): string {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // omit confusing chars
-  let out = '';
-  for (let i = 0; i < 8; i++) out += alphabet[Math.floor(Math.random() * alphabet.length)];
-  return `${out.slice(0, 4)}-${out.slice(4)}`;
+  const max = 256 - (256 % alphabet.length); // rejection sampling to avoid modulo bias
+  const out: string[] = [];
+  const buf = new Uint8Array(1);
+  while (out.length < 8) {
+    crypto.getRandomValues(buf);
+    if (buf[0] < max) out.push(alphabet[buf[0] % alphabet.length]);
+  }
+  const s = out.join('');
+  return `${s.slice(0, 4)}-${s.slice(4)}`;
 }
 
 Deno.serve(async (req) => {
@@ -50,6 +56,23 @@ Deno.serve(async (req) => {
     const { email, name, dealIds, expiresInDays, regeneratePasscodeId } = await req.json();
 
     if (regeneratePasscodeId) {
+      // Ownership check: syndicate admins can only regenerate their own passcodes
+      const isMaster = (roleRows ?? []).some((r: any) => r.role === 'master_admin');
+      const { data: existing, error: existingErr } = await supabase
+        .from('guest_passcodes')
+        .select('created_by')
+        .eq('id', regeneratePasscodeId)
+        .single();
+      if (existingErr || !existing) {
+        return new Response(JSON.stringify({ error: 'Passcode not found' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      if (!isMaster && existing.created_by !== user.id) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       const newCode = generatePasscode();
       const { data, error } = await supabase
         .from('guest_passcodes')
