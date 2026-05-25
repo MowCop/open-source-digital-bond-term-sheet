@@ -190,7 +190,11 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
                   }
 
                   return (
-                    <div key={cm.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
+                    <div
+                      key={cm.id}
+                      id={`chat-msg-${cm.id}`}
+                      className={`flex gap-2 rounded-md transition-colors ${isMe ? 'flex-row-reverse' : ''} ${highlightChatId === cm.id ? 'ring-2 ring-primary/60 bg-primary/5' : ''}`}
+                    >
                       <Avatar className="h-7 w-7 shrink-0">
                         <AvatarFallback className={`text-[10px] ${cm.senderType === 'bank' ? 'bg-primary/10 text-primary' : 'bg-accent text-accent-foreground'}`}>{cm.senderName.split(' ').map(n => n[0]).join('').slice(0, 2)}</AvatarFallback>
                       </Avatar>
@@ -266,6 +270,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
                 onKeyDown={handleKeyDown}
+                ref={inputRef}
               />
               <Button size="icon" className="h-8 w-8 shrink-0" onClick={handleSend} disabled={!inputText.trim()}>
                 <Send className="h-4 w-4" />
