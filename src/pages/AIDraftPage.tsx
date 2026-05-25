@@ -395,8 +395,11 @@ export default function AIDraftPage() {
           .from('message-attachments')
           .upload(path, a.file, { contentType: a.mimeType || a.file.type || undefined, upsert: true });
         if (error) throw error;
-        const { data } = supabase.storage.from('message-attachments').getPublicUrl(path);
-        out.push({ ...a, url: data.publicUrl });
+        const { data: signed, error: signErr } = await supabase.storage
+          .from('message-attachments')
+          .createSignedUrl(path, 60 * 60 * 24 * 365);
+        if (signErr) throw signErr;
+        out.push({ ...a, url: signed.signedUrl });
       } catch (err) {
         console.error('attachment upload failed', a.name, err);
         toast({ title: 'Upload failed', description: `Could not upload ${a.name}`, variant: 'destructive' });
