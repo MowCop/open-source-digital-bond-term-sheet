@@ -17,10 +17,11 @@ function trimUrl(raw: string): string {
 }
 
 interface LinkifiedTextProps {
-  text: string;
+  text: string | null | undefined;
 }
 
 export default function LinkifiedText({ text }: LinkifiedTextProps) {
+  if (!text) return null;
   const parts: Array<string | { url: string }> = [];
   let lastIndex = 0;
 
