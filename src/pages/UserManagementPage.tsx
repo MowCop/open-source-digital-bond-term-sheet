@@ -109,6 +109,26 @@ export default function UserManagementPage() {
     return { label: 'Active', tone: 'active', lastIso: stats.lastSignInAt };
   };
 
+  // Aggregate login metrics across all listed users (master-admin visible tiles).
+  const loginMetrics = (() => {
+    const now = Date.now();
+    const buckets = { d1: 0, d7: 0, d30: 0, never: 0, unconfirmed: 0, total: users.length };
+    for (const u of users) {
+      const s = loginStats[u.email.toLowerCase()];
+      if (!s) { buckets.never++; continue; }
+      if (!s.confirmedAt) buckets.unconfirmed++;
+      if (!s.lastSignInAt) { buckets.never++; continue; }
+      const ageMs = now - new Date(s.lastSignInAt).getTime();
+      if (ageMs <= 86400000) buckets.d1++;
+      if (ageMs <= 7 * 86400000) buckets.d7++;
+      if (ageMs <= 30 * 86400000) buckets.d30++;
+    }
+    return buckets;
+  })();
+
+  const formatFullTimestamp = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never signed in';
+
   // Add User form state
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
