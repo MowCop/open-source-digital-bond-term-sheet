@@ -632,7 +632,10 @@ export default function UserManagementPage() {
                               <span className={`h-2 w-2 rounded-full ${dotClass}`} />
                               <span className="text-xs font-medium">{status.label}</span>
                             </div>
-                            <div className="text-[11px] text-muted-foreground">
+                            <div
+                              className="text-[11px] text-muted-foreground"
+                              title={formatFullTimestamp(status.lastIso)}
+                            >
                               {loginStatsLoading ? '…' : `Last: ${formatRelative(status.lastIso)}`}
                             </div>
                           </div>
