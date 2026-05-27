@@ -1,32 +1,34 @@
 ## Goal
-Surface per-user login metrics (last login, account created, email confirmed) in the Address Book & User Admin section, visible to Master Admins.
+Add a **Last Login** column to the Approvals tab (PendingApprovalsTab) showing when each approved user last signed in, with relative time and full timestamp on hover.
 
-## What already exists
-- DB function `public.get_user_login_stats()` — returns `email`, `last_sign_in_at`, `confirmed_at`, `user_created_at`. Admin-gated via `is_admin(auth.uid())`.
-- `UserManagementPage.tsx` / `AdminPage.tsx` already list bank + vendor users.
+## Why this works
+- The backend already exposes `get_user_login_stats()` RPC returning `last_sign_in_at` per email.
+- The UserManagementPage already fetches and formats this data (relative time + hover tooltip).
+- We reuse the same pattern in PendingApprovalsTab.
 
-## What to build
+## What to change
 
-1. **Fetch login stats** on the User Admin page via `supabase.rpc('get_user_login_stats')` and key results by lowercase email.
+### 1. PendingApprovalsTab.tsx — fetch login stats
+- On mount, call `supabase.rpc('get_user_login_stats')`.
+- Build a lookup map keyed by lowercase email → `{ lastSignInAt, confirmedAt }`.
+- Store in local state (`loginStats`).
 
-2. **Extend user tables** in User Management / Address Book with new columns:
-   - **Last login** — relative time ("2h ago") with full timestamp on hover; "Never" if null.
-   - **Account created** — date.
-   - **Email confirmed** — ✓ date, or "Pending" badge if null.
+### 2. PendingApprovalsTab.tsx — add "Last Login" column
+- Insert a new `<TableHead>Last Login</TableHead>` between **Role** and **Actions**.
+- For each row, look up `loginStats[p.email.toLowerCase()]`.
+- Display:
+  - Relative time (e.g. "2h ago", "3d ago", "Never") using the same `formatRelative` logic.
+  - Full timestamp on hover via `title` attribute (e.g. "May 27, 2026, 2:30 PM").
+  - Color-coded text: green for <24h, amber for <7d, muted for older / never.
+- Show "—" for non-approved statuses (pending/rejected/disabled), since they haven't had app access yet.
 
-3. **Top-of-page summary tiles** (Master Admin only):
-   - Active in last 24h / 7d / 30d
-   - Never logged in
-   - Pending email confirmation
+### 3. Reuse formatting (optional)
+- Either inline the same `formatRelative` / `formatFullTimestamp` helpers, or extract them to a shared utility if desired. Given this is a one-off, inlining keeps the change contained.
 
-4. **Sortable** by Last login (desc default) so dormant accounts surface quickly.
+## Out of scope
+- No DB changes needed.
+- No new RPCs or migrations needed.
+- No changes to UserManagementPage or other pages.
 
-## Metrics available now vs. later
-Available immediately from `auth.users`: last sign-in, account created, email confirmed.
-
-Not tracked yet (would need new audit instrumentation if you want them later): login count, session duration, pages visited, last action timestamp, failed login attempts. The existing `audit_log` table could be extended to capture some of these, but that's a separate piece of work — flag if you want it in scope.
-
-## Questions before I build
-- Add to **UserManagementPage** (Address Book) only, or also the simpler `AdminPage`?
-- Want the summary tiles, or just the per-user columns?
-- Should non-master Syndicate Admins see this too, or Master Admin only?
+## Result
+Master admins viewing the Approvals tab will see at a glance which approved users are actively using the platform and which accounts have gone dormant.
