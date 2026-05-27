@@ -50,6 +50,41 @@ export default function PendingApprovalsTab() {
   const [confirmDelete, setConfirmDelete] = useState<PendingProfile | null>(null);
   const [confirmHardDelete, setConfirmHardDelete] = useState<PendingProfile | null>(null);
   const [hardDeleting, setHardDeleting] = useState(false);
+  const [loginStats, setLoginStats] = useState<Record<string, { lastSignInAt: string | null; confirmedAt: string | null }>>({});
+
+  const formatRelative = (iso: string | null): string => {
+    if (!iso) return 'Never';
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diffMs / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    if (d < 30) return `${d}d ago`;
+    const mo = Math.floor(d / 30);
+    return `${mo}mo ago`;
+  };
+
+  const formatFullTimestamp = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never signed in';
+
+  const lastLoginCell = (p: PendingProfile) => {
+    if (p.status !== 'approved') {
+      return <span className="text-xs text-muted-foreground">—</span>;
+    }
+    const stats = loginStats[p.email.toLowerCase()];
+    const lastIso = stats?.lastSignInAt ?? null;
+    if (!lastIso) {
+      return <span className="text-xs text-muted-foreground" title="Never signed in">Never</span>;
+    }
+    const ageMs = Date.now() - new Date(lastIso).getTime();
+    const tone =
+      ageMs <= 86400000 ? 'text-success' :
+      ageMs <= 7 * 86400000 ? 'text-warning' :
+      'text-muted-foreground';
+    return <span className={`text-xs ${tone}`} title={formatFullTimestamp(lastIso)}>{formatRelative(lastIso)}</span>;
+  };
 
   const load = async () => {
     setLoading(true);
@@ -71,6 +106,19 @@ export default function PendingApprovalsTab() {
       setRoleByUser(map);
     } else {
       setRoleByUser({});
+    }
+    const { data: statsData } = await supabase.rpc('get_user_login_stats');
+    if (Array.isArray(statsData)) {
+      const sMap: Record<string, { lastSignInAt: string | null; confirmedAt: string | null }> = {};
+      for (const row of statsData as any[]) {
+        if (row?.email) {
+          sMap[String(row.email).toLowerCase()] = {
+            lastSignInAt: row.last_sign_in_at ?? null,
+            confirmedAt: row.confirmed_at ?? null,
+          };
+        }
+      }
+      setLoginStats(sMap);
     }
     setLoading(false);
   };
@@ -176,12 +224,13 @@ export default function PendingApprovalsTab() {
             <TableHead>Organization</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Role</TableHead>
+            <TableHead>Last Login</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loading && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Loading…</TableCell></TableRow>}
-          {!loading && rows.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No registered users yet.</TableCell></TableRow>}
+          {loading && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Loading…</TableCell></TableRow>}
+          {!loading && rows.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No registered users yet.</TableCell></TableRow>}
           {rows.map(p => {
             const status = p.status;
             return (
@@ -212,6 +261,7 @@ export default function PendingApprovalsTab() {
                   </Select>
                 )}
               </TableCell>
+              <TableCell>{lastLoginCell(p)}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
                   {status === 'pending' && (
