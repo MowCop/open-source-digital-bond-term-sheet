@@ -74,6 +74,25 @@ Deno.serve(async (req) => {
       console.log('[notify-author-on-signup] transactional email send failed', e);
     }
 
+    // Fallback: send to secondary address so a single bounce can't block all notifications.
+    try {
+      await supabase.functions.invoke('send-transactional-email', {
+        body: {
+          templateName: 'signup-notification',
+          recipientEmail: FALLBACK_EMAIL,
+          idempotencyKey: `signup-fallback-${userId || email}`,
+          templateData: {
+            name,
+            email,
+            organization,
+            signedUpAt: new Date().toISOString(),
+          },
+        },
+      });
+    } catch (e) {
+      console.log('[notify-author-on-signup] fallback transactional email send failed', e);
+    }
+
     // Also send an acknowledgement email to the new user (best effort).
     if (email) {
       try {
