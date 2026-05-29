@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 const AUTHOR_EMAIL = 'karl@eurobondmarkets.com';
+const FALLBACK_EMAIL = 'karl.mallalieu@gmail.com';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
