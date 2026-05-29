@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 const AUTHOR_EMAIL = 'karl@eurobondmarkets.com';
+const FALLBACK_EMAIL = 'karl.mallalieu@gmail.com';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -71,6 +72,25 @@ Deno.serve(async (req) => {
       });
     } catch (e) {
       console.log('[notify-author-on-signup] transactional email send failed', e);
+    }
+
+    // Fallback: send to secondary address so a single bounce can't block all notifications.
+    try {
+      await supabase.functions.invoke('send-transactional-email', {
+        body: {
+          templateName: 'signup-notification',
+          recipientEmail: FALLBACK_EMAIL,
+          idempotencyKey: `signup-fallback-${userId || email}`,
+          templateData: {
+            name,
+            email,
+            organization,
+            signedUpAt: new Date().toISOString(),
+          },
+        },
+      });
+    } catch (e) {
+      console.log('[notify-author-on-signup] fallback transactional email send failed', e);
     }
 
     // Also send an acknowledgement email to the new user (best effort).
