@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import LinkifiedText from '@/components/LinkifiedText';
+import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
 import { Send, Paperclip, Link2, ShieldCheck, FileText, X, Bot } from 'lucide-react';
 import { format } from 'date-fns';
 import { ChatChannel, DealStage } from '@/types/bond';
