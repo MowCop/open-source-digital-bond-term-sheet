@@ -10,6 +10,7 @@ import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, Histo
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
+import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction, detectStage } from '@/lib/alertParsing';
 import { stripHtml } from '@/lib/htmlText';
