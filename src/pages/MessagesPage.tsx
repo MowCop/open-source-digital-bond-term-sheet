@@ -692,6 +692,15 @@ export default function MessagesPage() {
                                       Edit Latest
                                     </Button>
                                   )}
+                                  {canManageMessages && group.messages.length > 0 && (
+                                    <div onClick={(e) => e.stopPropagation()}>
+                                      <ExtractDealFromChatButton
+                                        source="thread"
+                                        messages={group.messages}
+                                        conversationLabel={group.headline || group.borrower}
+                                      />
+                                    </div>
+                                  )}
                                   {canManageMessages && (
                                     <Button
                                       size="sm"
