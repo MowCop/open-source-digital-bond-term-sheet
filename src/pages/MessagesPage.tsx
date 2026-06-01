@@ -10,6 +10,7 @@ import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, Histo
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
+import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction, detectStage } from '@/lib/alertParsing';
 import { stripHtml } from '@/lib/htmlText';
@@ -690,6 +691,15 @@ export default function MessagesPage() {
                                       <Edit2 className="h-3 w-3 mr-1" />
                                       Edit Latest
                                     </Button>
+                                  )}
+                                  {canManageMessages && group.messages.length > 0 && (
+                                    <div onClick={(e) => e.stopPropagation()}>
+                                      <ExtractDealFromChatButton
+                                        source="thread"
+                                        messages={group.messages}
+                                        conversationLabel={group.headline || group.borrower}
+                                      />
+                                    </div>
                                   )}
                                   {canManageMessages && (
                                     <Button
