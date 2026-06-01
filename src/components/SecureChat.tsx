@@ -137,6 +137,13 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
             </div>
           )}
           <Badge variant="outline" className="text-[10px] ml-auto">Secure Channel</Badge>
+          {activeChannel && channelMessages.length > 0 && (
+            <ExtractDealFromChatButton
+              source="channel"
+              chatMessages={channelMessages}
+              conversationLabel={activeChannel.label}
+            />
+          )}
           {headerActions && <div className="flex items-center gap-1">{headerActions}</div>}
         </div>
         {activeDeal && (
