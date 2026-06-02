@@ -182,8 +182,9 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
 }
 
 export default function DealsPage() {
-  const { deals, createDeal, updateDealStage, deleteDeal, currentUser } = useScopedApp();
+  const { deals, messages, createDeal, updateDealStage, deleteDeal, publishBulletinFromDeal, currentUser } = useScopedApp();
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
+  const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newDeal, setNewDeal] = useState({
     issuerName: '', currency: 'EUR', size: '', tenor: '', coupon: 'TBD',
@@ -196,6 +197,16 @@ export default function DealsPage() {
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const canManageDeals = currentUser.role === 'syndicate_admin' || currentUser.role === 'master_admin';
+
+  const bulletinByDeal = useMemo(() => {
+    const m = new Map<string, string>(); // dealId -> messageId
+    for (const msg of messages) {
+      if (msg.bulletinSource === 'deal_data' && msg.status === 'sent') {
+        for (const did of msg.dealIds) if (!m.has(did)) m.set(did, msg.id);
+      }
+    }
+    return m;
+  }, [messages]);
 
   const sortedDeals = useMemo(
     () => [...deals].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
