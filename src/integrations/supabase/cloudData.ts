@@ -183,6 +183,7 @@ function rowToMessage(r: any): Message {
     threadId: r.thread_id ?? undefined,
     parentMessageId: r.parent_message_id ?? undefined,
     aiSuggestions: (r.ai_suggestions ?? undefined) as AISuggestion | undefined,
+    bulletinSource: (r.bulletin_source ?? undefined) as Message['bulletinSource'],
   };
 }
 function messageToRow(m: Message): Record<string, unknown> {
@@ -203,6 +204,7 @@ function messageToRow(m: Message): Record<string, unknown> {
     thread_id: m.threadId ?? null,
     parent_message_id: m.parentMessageId ?? null,
     ai_suggestions: m.aiSuggestions ?? null,
+    bulletin_source: m.bulletinSource ?? null,
   };
 }
 function messageUpdatesToRow(u: Partial<Message>): Record<string, unknown> {
@@ -221,6 +223,7 @@ function messageUpdatesToRow(u: Partial<Message>): Record<string, unknown> {
   if (u.threadId !== undefined) r.thread_id = u.threadId ?? null;
   if (u.parentMessageId !== undefined) r.parent_message_id = u.parentMessageId ?? null;
   if (u.aiSuggestions !== undefined) r.ai_suggestions = u.aiSuggestions ?? null;
+  if (u.bulletinSource !== undefined) r.bulletin_source = u.bulletinSource ?? null;
   return r;
 }
 export async function fetchMessages(): Promise<Message[]> {
