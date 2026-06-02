@@ -218,7 +218,7 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
     : newestLast ? `Last chat: ${format(newestLast.timestamp, 'd MMM, HH:mm')}` : 'Last chat: —';
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={`overflow-hidden transition-colors ${expanded ? 'border-primary ring-1 ring-primary' : ''}`}>
       <button
         onClick={onToggle}
         className="w-full text-left p-3 flex items-start gap-3 hover:bg-accent/40 transition-colors"
