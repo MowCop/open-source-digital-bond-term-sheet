@@ -14,6 +14,7 @@ import DOMPurify from 'dompurify';
 import SecureChat from '@/components/SecureChat';
 import { useApp } from '@/context/AppContext';
 import type { DealStage } from '@/types/bond';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 const editStageColor: Record<DealStage, string> = {
   Mandate: 'bg-blue-100 text-blue-800',
