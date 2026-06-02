@@ -288,6 +288,20 @@ export async function deleteChatMessagesByChannel(channelId: string) {
   if (error) throw error;
 }
 
+/**
+ * Backfill / patch chat_messages rows by channel_id.
+ * Used when an existing chat channel is re-linked to a newly-extracted deal,
+ * so all prior messages inherit the new deal_id and stay bound to the deal
+ * through future deletes / scoping queries.
+ */
+export async function updateChatMessagesByChannel(
+  channelId: string,
+  patch: { deal_id?: string | null },
+) {
+  const { error } = await db.from('chat_messages').update(patch).eq('channel_id', channelId);
+  if (error) throw error;
+}
+
 // ---------- Audit log ----------
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToAudit(r: any): AuditLogEntry {
