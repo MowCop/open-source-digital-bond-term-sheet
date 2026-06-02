@@ -50,20 +50,20 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   const dealChannels = activeDealId
     ? chatChannels.filter(ch => ch.dealId === activeDealId)
     : [];
-  const availableChannels = contextualMode ? dealChannels : myChannels;
+  const myDealChannels = activeDealId
+    ? myChannels.filter(ch => ch.dealId === activeDealId)
+    : [];
+  const availableChannels = activeDealId
+    ? (contextualMode ? dealChannels : myDealChannels)
+    : myChannels;
 
   // When activeDealId changes externally, auto-select matching channel
   useEffect(() => {
     if (!activeDealId) return;
-    if (contextualMode) {
-      // Strict: only show a channel that belongs to THIS deal. Never fall
-      // back to another deal's channel (would mislead AI extraction).
-      const dealChannel = dealChannels[0] || null;
-      setActiveChannel(prev => (prev?.id === dealChannel?.id ? prev : dealChannel));
-      return;
-    }
-    const dealChannel = myChannels.find(ch => ch.dealId === activeDealId);
-    if (dealChannel) setActiveChannel(dealChannel);
+    // Strict: whenever a deal is supplied, only show a channel that belongs
+    // to THIS deal. If none exists, clear any previously selected channel.
+    const dealChannel = availableChannels[0] || null;
+    setActiveChannel(prev => (prev?.id === dealChannel?.id ? prev : dealChannel));
   }, [activeDealId, contextualMode, chatChannels]);
 
   const channelMessages = activeChannel
@@ -97,7 +97,12 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   const sentMessages = messages.filter(m => m.status === 'sent');
 
   // Get deal stage for header badge
-  const activeDeal = activeChannel?.dealId ? deals.find(d => d.id === activeChannel.dealId) : null;
+  const activeDeal = activeDealId
+    ? deals.find(d => d.id === activeDealId) || null
+    : activeChannel?.dealId ? deals.find(d => d.id === activeChannel.dealId) || null : null;
+  const extractionConversationLabel = activeDeal
+    ? `${activeDeal.issuerName} ${activeDeal.currency} ${activeDeal.tenor} — Deal Thread`
+    : activeChannel?.label || 'Deal Thread';
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -154,11 +159,12 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
           )}
           <Badge variant="outline" className="text-[10px] ml-auto">Secure Channel</Badge>
           {activeChannel && channelMessages.length > 0 &&
-            (!contextualMode || activeChannel.dealId === activeDealId) && (
+            (!activeDealId || activeChannel.dealId === activeDealId) && (
             <ExtractDealFromChatButton
               source="channel"
               chatMessages={channelMessages}
-              conversationLabel={activeChannel.label}
+              conversationLabel={extractionConversationLabel}
+              targetDealIds={activeDealId ? [activeDealId] : activeChannel.dealId ? [activeChannel.dealId] : undefined}
             />
           )}
           {headerActions && <div className="flex items-center gap-1">{headerActions}</div>}
@@ -172,7 +178,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-2 overflow-hidden p-3 pt-0">
         {/* Channel selector — hide when only one channel is available in contextual mode */}
-        {!(contextualMode && availableChannels.length <= 1) && (
+        {!(activeDealId && availableChannels.length <= 1) && (
         <Select
           value={activeChannel?.id || ''}
           onValueChange={id => setActiveChannel(availableChannels.find(ch => ch.id === id) || null)}
@@ -306,7 +312,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
             )}
           </>
         ) : (
-          contextualMode && activeDealId && (currentUser.role === 'master_admin' || currentUser.role === 'syndicate_admin') ? (
+          activeDealId && (currentUser.role === 'master_admin' || currentUser.role === 'syndicate_admin') ? (
             (() => {
               const deal = deals.find(d => d.id === activeDealId);
               const defaultLabel = deal
