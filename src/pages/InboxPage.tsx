@@ -28,6 +28,46 @@ const stageColor: Record<DealStage, string> = {
   Settled: 'bg-amber-100 text-amber-800',
 };
 
+interface DeleteChatButtonProps {
+  title: string;
+  description: string;
+  onConfirm: () => void;
+}
+
+function DeleteChatButton({ title, description, onConfirm }: DeleteChatButtonProps) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Delete chat"
+          className="m-2 h-8 w-8 text-muted-foreground hover:text-destructive"
+          onClick={e => e.stopPropagation()}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={onConfirm}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
 interface ChannelThreadProps {
   channel: ChatChannel;
   search: string;
