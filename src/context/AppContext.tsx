@@ -103,6 +103,7 @@ interface AppContextType {
   createMessage: (msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => Message;
   updateMessage: (id: string, updates: Partial<Message>) => void;
   sendMessage: (id: string) => void;
+  publishBulletinFromDeal: (dealId: string, args: { subject: string; body: string }) => Message;
   retractMessage: (id: string) => void;
   deleteMessage: (id: string) => void;
   deleteMessageThread: (dealIds: string[]) => void;
