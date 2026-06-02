@@ -107,6 +107,7 @@ interface AppContextType {
   deleteMessage: (id: string) => void;
   deleteMessageThread: (dealIds: string[]) => void;
   deleteDeal: (dealId: string) => void;
+  deleteChatChannel: (channelId: string) => void;
   markNotificationRead: (id: string) => void;
   addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => void;
   sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string) => void;
