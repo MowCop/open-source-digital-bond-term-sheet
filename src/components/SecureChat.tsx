@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import LinkifiedText from '@/components/LinkifiedText';
@@ -28,9 +27,10 @@ interface SecureChatProps {
   headerActions?: ReactNode;
   heightClass?: string;
   readOnly?: boolean;
+  allowDealAccess?: boolean;
 }
 
-export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]', readOnly = false }: SecureChatProps) {
+export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]', readOnly = false, allowDealAccess = false }: SecureChatProps) {
   const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage, createDealChannel } = useApp();
   const [activeChannel, setActiveChannel] = useState<ChatChannel | null>(null);
   const [inputText, setInputText] = useState('');
@@ -45,9 +45,9 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
 
   const myChannels = chatChannels.filter(ch => ch.participantIds.includes(currentUser.id));
 
-  // In read-only contextual mode (e.g. Edit Alert split-screen), show the
-  // deal's channel(s) regardless of whether the current user is a participant.
-  const contextualMode = readOnly && !!activeDealId;
+  // In contextual deal mode (e.g. Edit Alert), show the deal's channel(s)
+  // even when the viewer is not already listed as a participant.
+  const contextualMode = (readOnly || allowDealAccess) && !!activeDealId;
   const dealChannels = activeDealId
     ? chatChannels.filter(ch => ch.dealId === activeDealId)
     : [];
@@ -139,7 +139,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
 
   return (
     <Card className={`flex flex-col ${heightClass}`}>
-      <CardHeader className="pb-2 shrink-0 space-y-2">
+      <CardHeader className="pb-1 shrink-0 space-y-1.5">
         {/* Title row — deal identifies the chat */}
         <div className="flex items-center gap-2 min-w-0">
           <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
@@ -196,7 +196,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
           </div>
         )}
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-2 overflow-hidden p-3 pt-0">
+      <CardContent className="flex-1 min-h-0 flex flex-col gap-2 overflow-hidden p-3 pt-0">
         {/* Channel selector — hide when only one channel is available in contextual mode */}
         {!(activeDealId && availableChannels.length <= 1) && (
         <Select
@@ -223,7 +223,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
         {activeChannel ? (
           <>
             {/* Messages */}
-            <ScrollArea className="flex-1 pr-2" ref={scrollRef}>
+            <div className="flex-1 min-h-0 overflow-y-auto pr-2" ref={scrollRef}>
               <div className="space-y-3 py-2">
                 {channelMessages.map(cm => {
                   const isMe = cm.senderId === currentUser.id;
@@ -284,7 +284,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
                   <p className="text-xs text-muted-foreground text-center py-6">No messages yet. Start the conversation.</p>
                 )}
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Linked message indicator */}
             {linkingMessageId && (
