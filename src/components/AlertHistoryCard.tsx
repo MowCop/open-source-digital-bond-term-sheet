@@ -451,7 +451,7 @@ export default function AlertHistoryCard({
       <DialogContent
         className="max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg p-0 gap-0 flex flex-col"
       >
-        <DialogHeader className="px-5 pt-5 pb-3 border-b border-border shrink-0">
+        <DialogHeader className="px-5 pt-4 pb-2 border-b border-border shrink-0 space-y-1">
           <button
             type="button"
             onClick={attemptClose}
@@ -464,13 +464,13 @@ export default function AlertHistoryCard({
             value={editSubject}
             onChange={e => setEditSubject(e.target.value)}
             placeholder="Subject"
-            className="mt-3 w-full bg-background border border-border rounded px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="mt-1 w-full bg-background border border-border rounded px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </DialogHeader>
 
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           {/* Bulletin panel — top, full width */}
-          <div className={`px-5 py-4 flex flex-col min-h-0 ${chatOpen ? 'basis-1/2 flex-1' : 'flex-1'}`}>
+          <div className={`px-5 pt-3 pb-2 flex flex-col min-h-0 ${chatOpen ? 'basis-[42%] flex-[0.42]' : 'flex-1'}`}>
             <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
               Bulletin
             </div>
@@ -485,7 +485,7 @@ export default function AlertHistoryCard({
           </div>
 
           {/* Associated Chat Thread — below, full width, expandable (open by default) */}
-          <div className={`border-t border-border bg-muted/20 flex flex-col min-h-0 ${chatOpen ? 'basis-1/2 flex-1' : 'shrink-0'}`}>
+          <div className={`border-t border-border bg-muted/20 flex flex-col min-h-0 ${chatOpen ? 'basis-[58%] flex-[0.58]' : 'shrink-0'}`}>
             <button
               type="button"
               onClick={() => setChatOpen(o => !o)}
@@ -498,12 +498,12 @@ export default function AlertHistoryCard({
                 : <ChevronUp className="h-3.5 w-3.5" />}
             </button>
             {chatOpen && (
-              <div className="flex-1 min-h-0 px-5 pb-4">
+              <div className="flex-1 min-h-0 px-5 pb-3">
                 <SecureChat
                   key={message.dealIds?.[0] ?? 'no-deal'}
                   activeDealId={message.dealIds?.[0] ?? null}
                   heightClass="h-full"
-                  readOnly
+                  allowDealAccess
                 />
               </div>
             )}
@@ -511,8 +511,8 @@ export default function AlertHistoryCard({
         </div>
 
         {/* Attachments panel */}
-        <div className="px-5 pb-3 space-y-2 border-t border-border shrink-0">
-          <div className="flex items-center justify-between pt-3">
+        <div className="px-5 pb-2 space-y-1.5 border-t border-border shrink-0">
+          <div className="flex items-center justify-between pt-2">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Attachments ({message.attachments.length})
             </div>
@@ -527,13 +527,13 @@ export default function AlertHistoryCard({
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
-              className={`border border-dashed rounded p-2 text-center text-xs text-muted-foreground transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-border'}`}
+                className={`border border-dashed rounded px-2 py-1.5 text-center text-xs text-muted-foreground transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-border'}`}
             >
               Drop PDF, DOCX, or PPTX here
             </div>
           )}
           {message.attachments.length > 0 && (
-            <div className="space-y-1 max-h-32 overflow-y-auto">
+            <div className="space-y-1 max-h-20 overflow-y-auto">
               {message.attachments.map(a => (
                 <div key={a.id} className="flex items-center gap-2 text-xs bg-background border border-border rounded px-2 py-1.5">
                   <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -556,7 +556,7 @@ export default function AlertHistoryCard({
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border shrink-0 bg-card/40">
+        <div className="flex items-center justify-end gap-2 px-5 py-2 border-t border-border shrink-0 bg-card/40">
           <Button variant="ghost" onClick={attemptClose}>Cancel</Button>
           <Button variant="outline" onClick={handleSave}>
             <Save className="h-4 w-4 mr-1" /> Save
