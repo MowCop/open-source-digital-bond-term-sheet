@@ -149,7 +149,7 @@ export default function AIDraftPage() {
     mimeType: file.type || undefined,
   });
 
-  const applyExtractedText = async (text: string, fileName: string) => {
+  const applyExtractedText = async (text: string, fileName: string, opts?: { skipAI?: boolean }) => {
     const clean = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n').trim();
     if (!clean) return;
 
@@ -166,9 +166,12 @@ export default function AIDraftPage() {
       if (/(New Issue Alert|Priced|Settled|Books (Open|Closed)|Launched|Announced|Mandate)\s*$/i.test(trimmed)) return subjectLine;
       return trimmed;
     });
-    setAiFields(baseline.keyTerms);
+    // Merge baseline into existing fields with conflict tracking
+    setAiFields(prev => mergeFieldsWithConflicts(prev, baseline.keyTerms));
     setAiConfidence(baseline.confidence);
     setAiBookrunners(baselineBookrunners);
+
+    if (opts?.skipAI) return;
 
     // 2) Call Lovable AI for a richer, more accurate extraction; merge over the baseline.
     try {
@@ -180,12 +183,9 @@ export default function AIDraftPage() {
         const aiKeyTerms = (data as any).keyTerms as Record<string, string>;
         const aiBks = (data as any).bookrunners as Bookrunner[] | undefined;
 
-        // Merge: AI value wins when non-empty, otherwise keep regex baseline.
-        const merged: Record<string, string> = { ...baseline.keyTerms };
-        for (const [k, v] of Object.entries(aiKeyTerms || {})) {
-          if (typeof v === 'string' && v.trim()) merged[k] = v.trim();
-        }
-        setAiFields(merged);
+        // Append-by-default: keep current value, surface differences as
+        // per-field conflicts the user can explicitly replace.
+        setAiFields(prev => mergeFieldsWithConflicts(prev ?? baseline.keyTerms, aiKeyTerms || {}));
         if (Array.isArray(aiBks) && aiBks.length > 0) setAiBookrunners(aiBks);
 
         // If AI gave us a stronger issuer, refresh the auto-headline.
