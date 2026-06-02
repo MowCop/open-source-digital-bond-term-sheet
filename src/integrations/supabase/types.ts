@@ -403,6 +403,7 @@ export type Database = {
           ai_suggestions: Json | null
           attachments: Json
           body: string
+          bulletin_source: string | null
           created_at: string
           deal_ids: Json
           id: string
@@ -421,6 +422,7 @@ export type Database = {
           ai_suggestions?: Json | null
           attachments?: Json
           body: string
+          bulletin_source?: string | null
           created_at?: string
           deal_ids?: Json
           id: string
@@ -439,6 +441,7 @@ export type Database = {
           ai_suggestions?: Json | null
           attachments?: Json
           body?: string
+          bulletin_source?: string | null
           created_at?: string
           deal_ids?: Json
           id?: string
