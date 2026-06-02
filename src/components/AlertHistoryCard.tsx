@@ -11,6 +11,8 @@ import { format } from 'date-fns';
 import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft } from 'lucide-react';
 import PdfEditor from '@/components/PdfEditor';
 import DOMPurify from 'dompurify';
+import SecureChat from '@/components/SecureChat';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 const ALLOWED_TAGS = ['p','br','strong','em','u','s','h1','h2','h3','h4','ul','ol','li','blockquote','a','img','table','thead','tbody','tr','td','th','code','pre','span','div'];
 const ALLOWED_ATTR = ['href','target','rel','src','alt','title','class','colspan','rowspan'];
