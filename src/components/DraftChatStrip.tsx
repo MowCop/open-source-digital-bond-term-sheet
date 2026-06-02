@@ -152,7 +152,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
               className="w-full flex items-center gap-2 px-4 py-1.5 text-[11px] text-muted-foreground hover:bg-muted/40"
             >
               <Users className="h-3 w-3" />
-              <span className="font-medium">Participants ({participantUsers.length})</span>
+              <span className="font-medium">Add participants ({participantUsers.length})</span>
               {participantsOpen
                 ? <ChevronUp className="h-3 w-3 ml-auto" />
                 : <ChevronDown className="h-3 w-3 ml-auto" />}
