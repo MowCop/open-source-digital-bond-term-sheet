@@ -148,7 +148,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
         coupon,
         bookrunners: patch.bookrunners ?? [],
         ...patch,
-      } as any);
+      } as any, undefined, { sourceChannelId });
 
       addAuditEntry({
         action: 'AI_EXTRACT_FROM_CHAT',
