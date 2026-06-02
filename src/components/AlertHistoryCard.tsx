@@ -527,6 +527,7 @@ export default function AlertHistoryCard({
                   activeDealId={message.dealIds?.[0] ?? null}
                   heightClass="h-full"
                   allowDealAccess
+                  hideStageBadge
                 />
               </div>
             )}
