@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,8 +12,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import {
   Settings, User, Plug, Bell, Shield, KeyRound, CreditCard, Globe,
-  Palette, FileDown, Webhook, ScrollText, HelpCircle, CheckCircle2, Circle,
+  Palette, FileDown, Webhook, ScrollText, HelpCircle, CheckCircle2, Circle, Sparkles,
 } from 'lucide-react';
+import { AI_TRIGGER_MODE_KEY, getAITriggerMode, type AITriggerMode } from '@/pages/AIDraftPage';
 
 interface VendorAPI {
   id: string;
@@ -63,6 +64,13 @@ export default function BondConsolePage() {
   const [digest, setDigest] = useState(true);
   const [twoFA, setTwoFA] = useState(true);
   const [ssoEnabled, setSsoEnabled] = useState(false);
+
+  // AI Bulletin Extraction trigger mode — controls how aggressively
+  // AIDraftPage runs AI extraction on the New Issue Bulletin.
+  const [aiTrigger, setAiTrigger] = useState<AITriggerMode>(() => getAITriggerMode());
+  useEffect(() => {
+    try { window.localStorage.setItem(AI_TRIGGER_MODE_KEY, aiTrigger); } catch { /* ignore quota */ }
+  }, [aiTrigger]);
 
   const groupedVendors = VENDOR_APIS.reduce<Record<string, VendorAPI[]>>((acc, v) => {
     (acc[v.category] = acc[v.category] || []).push(v);
@@ -133,6 +141,47 @@ export default function BondConsolePage() {
             <Button variant="ghost">Cancel</Button>
             <Button onClick={() => toast({ title: 'Profile saved (demo)', description: 'No changes were persisted.' })}>Save profile</Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* AI BULLETIN EXTRACTION */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Sparkles className="h-4 w-4" /> AI Bulletin Extraction
+          </CardTitle>
+          <CardDescription>
+            How aggressively the New Issue Bulletin builder runs AI extraction over headline, body and dropped documents.
+            Field-level differences are always surfaced for review — extracted values never silently overwrite existing ones.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {([
+            { id: 'live', label: 'Live (debounced)', desc: 'Re-runs as you type and on every document drop. Highest AI cost.' },
+            { id: 'onSave', label: 'On Save + on document drop', desc: 'Default. Runs on every document drop and when you Save. Balanced cost.' },
+            { id: 'manual', label: 'Manual only', desc: 'Only runs when you click "Run AI" in the Bulletin builder. Cheapest.' },
+          ] as Array<{ id: AITriggerMode; label: string; desc: string }>).map(opt => {
+            const active = aiTrigger === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setAiTrigger(opt.id)}
+                className={`w-full text-left flex items-start gap-3 border rounded-md p-3 transition-colors ${
+                  active ? 'border-primary bg-primary/5' : 'border-border bg-card/40 hover:bg-accent/10'
+                }`}
+              >
+                <div className="mt-0.5">
+                  {active ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium">{opt.label}</div>
+                  <div className="text-xs text-muted-foreground">{opt.desc}</div>
+                </div>
+                {active && <Badge className="text-[9px] h-4 px-1.5 bg-primary/15 text-primary border-0">Active</Badge>}
+              </button>
+            );
+          })}
         </CardContent>
       </Card>
 
