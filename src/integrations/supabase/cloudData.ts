@@ -276,6 +276,15 @@ export async function deleteNotificationsByDeal(dealId: string) {
   if (error) throw error;
 }
 
+export async function deleteChatChannelRow(id: string) {
+  const { error } = await db.from('chat_channels').delete().eq('id', id);
+  if (error) throw error;
+}
+export async function deleteChatMessagesByChannel(channelId: string) {
+  const { error } = await db.from('chat_messages').delete().eq('channel_id', channelId);
+  if (error) throw error;
+}
+
 // ---------- Audit log ----------
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToAudit(r: any): AuditLogEntry {

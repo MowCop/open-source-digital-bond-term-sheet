@@ -5,12 +5,16 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import LinkifiedText from '@/components/LinkifiedText';
 import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
 import { stripHtml } from '@/lib/htmlText';
-import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History } from 'lucide-react';
+import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { ChatChannel, ChatMessage, Deal, DealStage } from '@/types/bond';
 
@@ -23,6 +27,46 @@ const stageColor: Record<DealStage, string> = {
   Priced: 'bg-amber-100 text-amber-800',
   Settled: 'bg-amber-100 text-amber-800',
 };
+
+interface DeleteChatButtonProps {
+  title: string;
+  description: string;
+  onConfirm: () => void;
+}
+
+function DeleteChatButton({ title, description, onConfirm }: DeleteChatButtonProps) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Delete chat"
+          className="m-2 h-8 w-8 text-muted-foreground hover:text-destructive"
+          onClick={e => e.stopPropagation()}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={onConfirm}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 interface ChannelThreadProps {
   channel: ChatChannel;
@@ -191,9 +235,10 @@ interface DealRowProps {
   lastSeen: Record<string, number>;
   onSeen: (channelId: string, ts: number) => void;
   sortBy: 'chat' | 'updated';
+  onDelete: () => void;
 }
 
-function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen, sortBy }: DealRowProps) {
+function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen, sortBy, onDelete }: DealRowProps) {
   const { chatMessages, messages } = useScopedApp();
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -228,14 +273,15 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
 
   return (
     <Card className={`overflow-hidden transition-colors ${expanded ? 'border-primary ring-1 ring-primary' : ''}`}>
-      <button
-        onClick={onToggle}
-        className="w-full text-left p-3 flex items-start gap-3 hover:bg-accent/40 transition-colors"
-      >
-        <div className="mt-0.5 text-muted-foreground">
-          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </div>
-        <div className="flex-1 min-w-0">
+      <div className="flex items-start">
+        <button
+          onClick={onToggle}
+          className="flex-1 min-w-0 text-left p-3 flex items-start gap-3 hover:bg-accent/40 transition-colors"
+        >
+          <div className="mt-0.5 text-muted-foreground">
+            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </div>
+          <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-sm truncate">{deal.issuerName}</span>
             <span className="text-xs text-muted-foreground">
@@ -258,8 +304,14 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
             </div>
           )}
           <div className="text-[10px] text-muted-foreground mt-1">{tsLabel}</div>
-        </div>
-      </button>
+          </div>
+        </button>
+        <DeleteChatButton
+          title="Delete this deal chat?"
+          description={`This will permanently delete the deal "${deal.issuerName}" along with all its chat threads, messages, alerts and notifications. This cannot be undone.`}
+          onConfirm={onDelete}
+        />
+      </div>
 
       {expanded &&
         (alertsNewestFirst.length > 0 && (
@@ -324,9 +376,10 @@ interface PendingDealRowProps {
   onToggle: () => void;
   lastSeen: Record<string, number>;
   onSeen: (channelId: string, ts: number) => void;
+  onDelete: () => void;
 }
 
-function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen }: PendingDealRowProps) {
+function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen, onDelete }: PendingDealRowProps) {
   const { chatMessages } = useScopedApp();
   const msgs = useMemo(
     () => chatMessages.filter(m => m.channelId === channel.id).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()),
@@ -338,14 +391,15 @@ function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen 
 
   return (
     <Card className={`overflow-hidden transition-colors ${expanded ? 'border-primary ring-1 ring-primary' : ''}`}>
-      <button
-        onClick={onToggle}
-        className="w-full text-left p-3 flex items-start gap-3 hover:bg-accent/40 transition-colors"
-      >
-        <div className="mt-0.5 text-muted-foreground">
-          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </div>
-        <div className="flex-1 min-w-0">
+      <div className="flex items-start">
+        <button
+          onClick={onToggle}
+          className="flex-1 min-w-0 text-left p-3 flex items-start gap-3 hover:bg-accent/40 transition-colors"
+        >
+          <div className="mt-0.5 text-muted-foreground">
+            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </div>
+          <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-sm truncate">{channel.label}</span>
             <Badge variant="outline" className="text-[10px]">Pending — no deal yet</Badge>
@@ -366,8 +420,14 @@ function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen 
           <div className="text-[10px] text-muted-foreground mt-1">
             {last ? `Last chat: ${format(last.timestamp, 'd MMM, HH:mm')}` : 'No messages yet'}
           </div>
-        </div>
-      </button>
+          </div>
+        </button>
+        <DeleteChatButton
+          title="Delete this pending chat?"
+          description={`This will permanently delete the chat "${channel.label}" and all its messages. This cannot be undone.`}
+          onConfirm={onDelete}
+        />
+      </div>
       {expanded && (
         <ChannelThread
           channel={channel}
@@ -381,7 +441,7 @@ function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen 
 }
 
 export default function InboxPage() {
-  const { currentUser, deals, chatChannels, chatMessages } = useScopedApp();
+  const { currentUser, deals, chatChannels, chatMessages, deleteDeal, deleteChatChannel } = useScopedApp();
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [searchParams] = useSearchParams();
@@ -586,6 +646,7 @@ export default function InboxPage() {
                 lastSeen={lastSeen}
                 onSeen={onSeen}
                 sortBy={sortBy}
+                onDelete={() => deleteDeal(deal.id)}
               />
             );
           }
@@ -600,6 +661,7 @@ export default function InboxPage() {
               onToggle={() => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))}
               lastSeen={lastSeen}
               onSeen={onSeen}
+              onDelete={() => deleteChatChannel(ch.id)}
             />
           );
         })}

@@ -11,6 +11,7 @@ import {
   insertDeal, updateDealRow, rowToDeal, rowToUser,
   fetchMessages, insertMessage, updateMessageRow, deleteMessageRow, deleteMessagesByDealKey, rowToMessage,
   deleteMessagesContainingDeal, deleteDealRow, deleteChatChannelsByDeal, deleteChatMessagesByDeal, deleteNotificationsByDeal,
+  deleteChatChannelRow, deleteChatMessagesByChannel,
   fetchAuditLog, insertAudit, rowToAudit,
   fetchNotifications, insertNotification, markNotificationReadRow, rowToNotification,
   fetchDistributionLists, insertDistributionList, updateDistributionListRow, deleteDistributionListRow, rowToDistList,
@@ -106,6 +107,7 @@ interface AppContextType {
   deleteMessage: (id: string) => void;
   deleteMessageThread: (dealIds: string[]) => void;
   deleteDeal: (dealId: string) => void;
+  deleteChatChannel: (channelId: string) => void;
   markNotificationRead: (id: string) => void;
   addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => void;
   sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string) => void;
@@ -512,6 +514,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [currentUser.id, addAuditEntry, deals, messages, chatChannels, chatMessages, notifications]);
 
+  const deleteChatChannel = useCallback((channelId: string) => {
+    const ch = chatChannels.find(c => c.id === channelId);
+    const cmCount = chatMessages.filter(c => c.channelId === channelId).length;
+    setChatChannels(prev => prev.filter(c => c.id !== channelId));
+    setChatMessages(prev => prev.filter(c => c.channelId !== channelId));
+    deleteChatMessagesByChannel(channelId).catch(e => console.error('[Cloud] deleteChatChannel msgs failed', e));
+    deleteChatChannelRow(channelId).catch(e => console.error('[Cloud] deleteChatChannel row failed', e));
+    addAuditEntry({
+      action: 'CHAT_CHANNEL_DELETED',
+      entityType: 'message',
+      entityId: channelId,
+      userId: currentUser.id,
+      details: `Deleted chat channel ${ch?.label ?? channelId} (cascaded: ${cmCount} chat message(s))`,
+    });
+  }, [currentUser.id, addAuditEntry, chatChannels, chatMessages]);
+
   const markNotificationRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     markNotificationReadRow(id).catch(e => console.error('[Cloud] markNotifRead failed', e));
@@ -700,6 +718,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ensureDraftChannel, renameChatChannel, updateChatChannelParticipants, createDealChannel,
       deleteMessage, deleteMessageThread,
       deleteDeal,
+      deleteChatChannel,
       addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList,
     }}>
       {children}
