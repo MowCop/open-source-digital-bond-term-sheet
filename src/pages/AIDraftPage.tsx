@@ -109,6 +109,8 @@ export default function AIDraftPage() {
   const [isExtractingAttachment, setIsExtractingAttachment] = useState(false);
   // Syndicate Chat Participants (SCPs) selected for the new deal's chat channel.
   const [scpIds, setScpIds] = useState<string[]>([]);
+  // Stable per-mount draft id used to key the ephemeral chat channel.
+  const draftKey = useMemo(() => `draft-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, []);
   const [scpQuery, setScpQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
