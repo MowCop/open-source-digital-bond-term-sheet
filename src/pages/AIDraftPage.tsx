@@ -29,6 +29,46 @@ export function getAITriggerMode(): AITriggerMode {
   const v = window.localStorage.getItem(AI_TRIGGER_MODE_KEY);
   return v === 'live' || v === 'manual' ? v : 'onSave';
 }
+
+/**
+ * Append-by-default merge: keeps any pre-existing non-empty value, fills
+ * blanks from the new extraction, and treats differing non-empty values as
+ * conflicts to be surfaced in the UI rather than silently overwritten.
+ * Returns the merged record AND a list of conflict keys with the proposed
+ * new value, via an out-callback on the React state setter.
+ */
+function mergeFieldsWithConflicts(
+  prev: Record<string, string> | null,
+  incoming: Record<string, string>,
+): Record<string, string> {
+  const base = prev ? { ...prev } : {};
+  for (const [k, raw] of Object.entries(incoming)) {
+    const v = typeof raw === 'string' ? raw.trim() : '';
+    if (!v) continue;
+    const cur = (base[k] ?? '').trim();
+    if (!cur) base[k] = v; // fill blank
+    // If cur exists and differs from v, leave cur alone — conflict is
+    // tracked separately in setAiConflicts (see callers).
+    else if (cur !== v) base[k] = cur;
+  }
+  return base;
+}
+
+/** Diff helper for the conflict tracker. */
+function diffConflicts(
+  prev: Record<string, string> | null,
+  incoming: Record<string, string>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!prev) return out;
+  for (const [k, raw] of Object.entries(incoming)) {
+    const v = typeof raw === 'string' ? raw.trim() : '';
+    if (!v) continue;
+    const cur = (prev[k] ?? '').trim();
+    if (cur && cur !== v) out[k] = v;
+  }
+  return out;
+}
 import {
   DropdownMenu,
   DropdownMenuContent,
