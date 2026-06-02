@@ -1,59 +1,94 @@
-# AI Deal Extractor for Chat Threads
 
-Add an "Extract deal info" action on any chat thread / message group. The action sends the full conversation to an AI edge function, which returns either (a) a draft for a new deal or (b) suggested field updates for an existing deal, for a Syndicate/Master Admin to review and confirm.
+# NewIssueVault — Pre-Published vs Published + AI Build Pipeline
 
-## User flow
+## 1. Status model (no schema changes)
 
-1. On a thread in `MessagesPage` (alert group) and on a channel in `SecureChat` / `FloatingChatPanel`, show an **"Extract deal info (AI)"** button (Admins only).
-2. Clicking it:
-   - Collects the full ordered message body + attachment filenames for that thread/channel.
-   - Calls a new edge function `extract-deal-from-chat`.
-   - Shows a loading state, then opens a **review modal**.
-3. The review modal shows:
-   - AI's decision: `new_deal` or `update_existing` (with the matched deal + match confidence/reason).
-   - All extracted ICMA fields side-by-side: current value (if update) vs AI-suggested value, each with a checkbox.
-   - Bookrunners list with add/keep/remove toggles.
-   - Free-text "AI notes" (e.g. "Pricing announced, books closed at 1.2bn").
-4. User picks fields to accept, then confirms:
-   - **New deal** → inserts a new row in `deals` with selected fields, stage defaulting to the AI's suggested lifecycle stage.
-   - **Update existing** → patches only the accepted fields on the matched deal; appends a `stage_history` entry if stage changed.
-5. Action written to `audit_log` (`ai_extract_from_chat`, entity = thread/channel id, details = JSON of accepted changes).
+Today's `messages.status` already supports the split — we just need to use it consistently:
 
-## Backend — new edge function `extract-deal-from-chat`
+- `draft` / `pending_review` / `confirmed` → **Pre-Published** (Saved, not Sent)
+- `sent` → **Published** ("Send" = "Publish")
+- `retracted` → **Unpublished** (treated as Pre-Published with a "Retracted" sub-badge)
 
-- Auth: require authenticated admin (mirror `extract-deal-fields-ai`).
-- Input: `{ source: 'thread' | 'channel', sourceId: string }`.
-- Server-side:
-  1. Load messages for that thread/channel ordered by time (RLS-respecting service-role read after admin check).
-  2. Load a lightweight list of existing deals (`id, issuer_name, currency, size, tenor, stage, isin`) to give the model context for matching.
-  3. Call Lovable AI Gateway (`google/gemini-2.5-pro` for accuracy; fall back to `gemini-3-flash-preview`) with a system prompt that extends `extract-deal-fields-ai`'s prompt to also:
-     - Decide `mode: "new_deal" | "update_existing"`.
-     - When `update_existing`, return `matchedDealId` + `matchReason`.
-     - Suggest a `stage` from the existing lifecycle vocabulary.
-     - Return `alerts: string[]` summarising lifecycle events found in chat (pricing, books closing, allocations, settlement) — feeds `AlertHistoryCard` later.
-  4. Use AI SDK `Output.object` (Zod schema) so output is validated, not regex-parsed.
-- Output: `{ mode, matchedDealId?, matchReason?, keyTerms, bookrunners, suggestedStage, alerts }`.
+A bulletin keeps the same `id` across its lifetime: save creates Pre-Published, Send flips it to Published. No duplicate records, no migration.
 
-## Frontend changes
+## 2. New Issue Board UX
 
-- New `src/components/ExtractDealFromChatButton.tsx` — admin-only action button.
-- New `src/components/ExtractDealReviewModal.tsx` — diff/review UI built on existing `ui/dialog` + `ui/checkbox`. Maps AI's `keyTerms` keys to the `deals` columns via the same mapping already used in `extract-deal-fields-ai` consumers (`src/lib/alertParsing.ts`).
-- Wire button into `MessagesPage` (per alert group) and `SecureChat` / `FloatingChatPanel` (per channel header).
-- On confirm: existing `createDeal` / `updateDeal` in `AppContext` (no new client write paths needed).
+A single chronological board with strong visual separation, per your answer:
 
-## No schema changes required
+- **Status badge** on every row: `● Pre-Published` (amber) vs `● Published` (green) vs `○ Retracted` (grey).
+- **Filter chips** above the list: `All` · `Pre-Published` · `Published` · `Retracted`. Default = `All`.
+- **Sort** dropdown: Newest, Oldest, Last edited, Issuer A–Z.
+- **Search** stays as-is.
+- **Row affordance**: Pre-Published rows show a `Continue editing` button (opens AI Draft / Bond Console for that bulletin); Published rows show `View` and `Retract` (admin).
+- **Count pills** on each chip (e.g. `Pre-Published 7`).
+- Same chips re-used on the **Inbox** for vendors so they never see Pre-Published rows (vendors filter to `Published` only; chip hidden).
 
-All extracted output maps onto existing `deals` columns + `bookrunners` JSON. The action is logged via the existing `audit_log` table.
+## 3. Bulletin build pipeline (Create New Issue → AI Draft → Bond Console)
 
-## Technical notes
+A bulletin's Headline + Body + Attachments are populated from up to three sources, in this priority (per your answer):
 
-- Reuses `LOVABLE_API_KEY` (already provisioned). No new secrets.
-- Function uses the shared AI gateway helper pattern (Lovable AI), JSON mode via AI SDK `Output.object`.
-- Long threads: truncate to most recent ~150 messages / ~30k chars before sending, with newest preserved.
-- Rate-limit per user (in-memory map keyed by `auth.uid()` — 1 call per 10s) to avoid runaway costs.
-- Errors (429/402/validation) surfaced as toasts in the review modal.
+1. **Documents dropped into the bulletin** (primary; uses existing `pdf-ocr-to-html` + `extract-deal-fields-ai`).
+2. **Deal Data** (when no documents attached) — pulls live from `deals` row.
+3. **The deal's Chat** — same `extract-deal-from-chat` edge function, but writing into bulletin draft instead of `deals`.
 
-## Out of scope (can follow up)
+Each source has a manual override toggle in the Bond Console panel.
 
-- Automatic background scanning of every new message.
-- Auto-creating `AlertHistory` entries — for now the `alerts[]` array is shown in the review modal as informational only.
+### Trigger modes (Bond Console setting, per bulletin)
+
+Three radio options, default = **On Save**:
+
+- a) Live / debounced (every few seconds)
+- b) On Save + on every document drop ← **default**
+- c) Manual only (`Run AI extraction` button)
+
+Stored on the bulletin record as `ai_suggestions.triggerMode` inside the existing `ai_suggestions` JSONB column — no schema change.
+
+### "Differences" review (replacing override prompt)
+
+Whenever a new source produces a value that differs from what is already in the bulletin:
+
+- The field stays as-is (append-by-default rule).
+- An inline yellow diff chip appears next to the field: `Deal Data says "EUR 500m" → keep / replace`.
+- A summary `Differences (3)` button at the top opens the existing `ExtractDealReviewModal` pattern, side-by-side, per-field accept/replace.
+- No silent overrides, no all-or-nothing confirm.
+
+## 4. Deal Data extraction (unchanged plumbing, more triggers)
+
+`extract-deal-from-chat` already exists and writes to `deals`. We:
+
+- Keep it for ad-hoc admin extraction (existing buttons).
+- Add **real-time mode**: a small worker in `AppContext` debounces newly-arrived `chat_messages` per `deal_id` and calls the function on a 30s rolling window when the chat is "active". Cost cap: 1 call per deal per 60s; respects the existing per-user 10s limit.
+- Reuse the same review modal so admins approve diffs before they hit `deals`.
+
+## 5. Audit + telemetry
+
+Every AI-driven write (bulletin field, deal field) writes an `audit_log` row with:
+
+- `action`: `ai_fill_bulletin_from_document` | `ai_fill_bulletin_from_deal_data` | `ai_fill_bulletin_from_chat` | `ai_update_deal_from_chat`
+- `details`: source, accepted fields, model, confidence.
+
+## 6. Files affected (technical section)
+
+### Frontend
+- `src/pages/MessagesPage.tsx` — add status chips, filter, sort, count pills, Pre-Published vs Published rendering.
+- `src/pages/InboxPage.tsx` — vendor view filters to `status === 'sent'`.
+- `src/pages/AIDraftPage.tsx` — surface trigger-mode radio, hook "Pull from Deal Data" and "Pull from Chat" actions, replace silent auto-fill with diff-chip flow.
+- `src/pages/BondConsolePage.tsx` — bulletin-side controls: trigger mode, source toggles, "Differences (N)" button.
+- `src/components/ExtractDealReviewModal.tsx` — generalize to also accept bulletin field schema (not only deal taxonomy).
+- New `src/components/BulletinDiffChip.tsx` — small inline keep/replace control.
+- New `src/lib/bulletinSources.ts` — helpers that gather candidate values from Documents/Deal Data/Chat and produce a unified diff.
+- `src/context/AppContext.tsx` — debounced chat→deal extractor worker (in-memory).
+
+### Backend
+- New edge function `extract-bulletin-from-chat` — thin variant of `extract-deal-from-chat` that returns bulletin-shaped output (`headline`, `body`, suggested attachments to keep, alerts).
+- Reuse existing `extract-deal-fields-ai` and `pdf-ocr-to-html` for documents (no change).
+
+### Schema
+- **None.** Status flag already exists; trigger mode and source preferences live in the existing `messages.ai_suggestions` JSONB.
+
+## 7. Out of scope (flag for follow-up)
+
+- Auto-promoting Pre-Published → Published without admin click.
+- A separate "Pre-Publish queue" for non-admins to review before Send.
+- Versioning of bulletin content (we keep "last write wins" + audit log for now).
+- Realtime collaborative editing of the same bulletin.
