@@ -789,6 +789,7 @@ export default function MessagesPage() {
                                         source="thread"
                                         messages={group.messages}
                                         conversationLabel={group.headline || group.borrower}
+                                        targetDealIds={group.dealIds}
                                       />
                                     </div>
                                   )}
