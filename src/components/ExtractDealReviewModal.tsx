@@ -55,9 +55,10 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   extraction: AIExtraction | null;
   conversationLabel: string;
+  sourceChannelId?: string;
 }
 
-export default function ExtractDealReviewModal({ open, onOpenChange, extraction, conversationLabel }: Props) {
+export default function ExtractDealReviewModal({ open, onOpenChange, extraction, conversationLabel, sourceChannelId }: Props) {
   const { deals, createDeal, updateDeal, updateDealStage, addAuditEntry, currentUser } = useApp();
   const { toast } = useToast();
 
