@@ -523,7 +523,6 @@ export default function AIDraftPage() {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold">Create New Issue</h1>
-        <p className="text-muted-foreground text-sm">Draft a new message to automatically generate deal records.</p>
       </div>
 
       <DraftChatStrip
