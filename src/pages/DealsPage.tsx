@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Deal, DealStage, BookrunnerRole } from '@/types/bond';
 import { format } from 'date-fns';
-import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2 } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2, Undo2 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -182,7 +182,7 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
 }
 
 export default function DealsPage() {
-  const { deals, messages, createDeal, updateDealStage, deleteDeal, publishBulletinFromDeal, currentUser } = useScopedApp();
+  const { deals, messages, createDeal, updateDealStage, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser } = useScopedApp();
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -395,6 +395,37 @@ export default function DealsPage() {
                         <Megaphone className="h-4 w-4" />
                       </Button>
                     )}
+                  {deal.extractionSnapshot && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Undo AI Extraction"
+                          title="Undo AI Extraction — delete this deal and restore the original chat thread"
+                          className="m-2 h-8 w-8 text-muted-foreground hover:text-amber-600"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <Undo2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Undo AI Extraction?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will delete the extracted deal &ldquo;{deal.issuerName} {deal.currency} {deal.size} · {deal.tenor}&rdquo; and restore the source chat thread to its state before the AI Extraction was run. Bulletins, alerts, and deal-scoped notifications for this deal will be removed. The original chat messages are preserved.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => undoExtraction(deal.id)}>
+                            Undo extraction
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button

@@ -110,6 +110,7 @@ interface AppContextType {
   deleteMessageThread: (dealIds: string[]) => void;
   deleteDeal: (dealId: string) => void;
   deleteChatChannel: (channelId: string) => void;
+  undoExtraction: (dealId: string) => void;
   markNotificationRead: (id: string) => void;
   addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => void;
   sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string) => void;
@@ -355,6 +356,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       : undefined;
     if (sourceCh) {
       const mergedParticipants = Array.from(new Set([...sourceCh.participantIds, ...participantIds]));
+      // Snapshot the channel's pre-extraction state so this extraction can
+      // be fully rolled back via `undoExtraction(dealId)`.
+      newDeal.extractionSnapshot = {
+        sourceChannelId: sourceCh.id,
+        previousLabel: sourceCh.label,
+        previousParticipantIds: [...sourceCh.participantIds],
+        previousDealId: sourceCh.dealId ?? null,
+        extractedAt: new Date().toISOString(),
+        extractedBy: currentUser.id,
+      };
+      // Persist the snapshot on the deal row (insertDeal already ran above
+      // without it — push an update so the column is populated in Cloud).
+      updateDealRow(newDeal.id, { extractionSnapshot: newDeal.extractionSnapshot })
+        .catch(e => console.error('[Cloud] createDeal: persist extractionSnapshot failed', e));
+      setDeals(prev => prev.map(d => d.id === newDeal.id ? { ...d, extractionSnapshot: newDeal.extractionSnapshot } : d));
       setChatChannels(prev => prev.map(c => c.id === sourceCh.id
         ? { ...c, dealId: newDeal.id, label: newChannelLabel, participantIds: mergedParticipants }
         : c));
@@ -595,6 +611,59 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [currentUser.id, addAuditEntry, chatChannels, chatMessages]);
 
+  /**
+   * Undo an AI-extraction: delete the extracted deal and restore the source
+   * chat channel (label, participants, dealId) and its messages back to their
+   * pre-extraction state. Requires `deal.extractionSnapshot` to be set.
+   * Blocks if any sent bulletin/message references the deal (audit integrity).
+   */
+  const undoExtraction = useCallback((dealId: string) => {
+    const deal = deals.find(d => d.id === dealId);
+    if (!deal || !deal.extractionSnapshot) {
+      toast.error('No extraction snapshot — cannot undo.');
+      return;
+    }
+    const sent = messages.some(m => m.dealIds.includes(dealId) && m.status === 'sent');
+    if (sent) {
+      toast.error('Cannot undo: bulletins have been sent from this deal.');
+      return;
+    }
+    const snap = deal.extractionSnapshot;
+
+    // 1. Restore channel local state
+    setChatChannels(prev => prev.map(c => c.id === snap.sourceChannelId
+      ? { ...c, label: snap.previousLabel, participantIds: snap.previousParticipantIds, dealId: snap.previousDealId ?? undefined }
+      : c));
+    // 2. Restore chat_messages.deal_id local state
+    setChatMessages(prev => prev.map(m => m.channelId === snap.sourceChannelId
+      ? { ...m, dealId: snap.previousDealId ?? undefined }
+      : m));
+    // 3. Delete deal + notifications locally
+    setDeals(prev => prev.filter(d => d.id !== dealId));
+    setNotifications(prev => prev.filter(n => n.dealId !== dealId));
+
+    // Cloud cascade
+    updateChatChannel(snap.sourceChannelId, {
+      label: snap.previousLabel,
+      participantIds: snap.previousParticipantIds,
+      dealId: snap.previousDealId ?? undefined,
+    }).catch(e => console.error('[Cloud] undoExtraction: restore channel failed', e));
+    updateChatMessagesByChannel(snap.sourceChannelId, { deal_id: snap.previousDealId })
+      .catch(e => console.error('[Cloud] undoExtraction: restore chat_messages failed', e));
+    deleteNotificationsByDeal(dealId).catch(e => console.error('[Cloud] undoExtraction: notifs failed', e));
+    deleteDealRow(dealId).catch(e => console.error('[Cloud] undoExtraction: deal row failed', e));
+
+    const label = `${deal.issuerName} ${deal.currency} ${deal.tenor}`;
+    addAuditEntry({
+      action: 'DEAL_EXTRACTION_UNDONE',
+      entityType: 'deal',
+      entityId: dealId,
+      userId: currentUser.id,
+      details: `Undid AI extraction for ${label}; restored chat channel ${snap.sourceChannelId} to label "${snap.previousLabel}"`,
+    });
+    toast.success('AI extraction undone — chat restored.');
+  }, [deals, messages, currentUser.id, addAuditEntry]);
+
   const markNotificationRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     markNotificationReadRow(id).catch(e => console.error('[Cloud] markNotifRead failed', e));
@@ -785,6 +854,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deleteMessage, deleteMessageThread,
       deleteDeal,
       deleteChatChannel,
+      undoExtraction,
       addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList,
     }}>
       {children}
