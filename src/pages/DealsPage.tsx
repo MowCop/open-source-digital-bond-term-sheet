@@ -10,7 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Deal, DealStage, BookrunnerRole } from '@/types/bond';
 import { format } from 'date-fns';
-import { Plus, ChevronRight, ChevronDown, X, ArrowLeft } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2 } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const STAGES: DealStage[] = ['Mandate', 'Announced', 'Launched', 'Books Open', 'Books Closed', 'Priced', 'Settled'];
 const stageColors: Record<string, string> = {
@@ -160,7 +164,7 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard }: DealDetailProps) 
 }
 
 export default function DealsPage() {
-  const { deals, createDeal, updateDealStage, currentUser } = useScopedApp();
+  const { deals, createDeal, updateDealStage, deleteDeal, currentUser } = useScopedApp();
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newDeal, setNewDeal] = useState({
@@ -316,23 +320,58 @@ export default function DealsPage() {
           const expanded = expandedDealId === deal.id;
           return (
             <Card key={deal.id} ref={(el) => { rowRefs.current[deal.id] = el; }} className="overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setExpandedDealId(prev => prev === deal.id ? null : deal.id)}
-                className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-accent/40 transition-colors"
-              >
-                <span className="text-muted-foreground shrink-0">
-                  {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                </span>
-                <span className="font-semibold text-sm truncate">{deal.issuerName}</span>
-                <span className="text-xs text-muted-foreground truncate">
-                  {deal.currency} {deal.size} · {deal.tenor}
-                </span>
-                <Badge className={`text-[10px] ${stageColors[deal.stage]}`}>{deal.stage}</Badge>
-                <span className="text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
-                  Updated {format(deal.updatedAt, 'MMM d, HH:mm')}
-                </span>
-              </button>
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  onClick={() => setExpandedDealId(prev => prev === deal.id ? null : deal.id)}
+                  className="flex-1 min-w-0 text-left px-4 py-3 flex items-center gap-3 hover:bg-accent/40 transition-colors"
+                >
+                  <span className="text-muted-foreground shrink-0">
+                    {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </span>
+                  <span className="font-semibold text-sm truncate">{deal.issuerName}</span>
+                  <span className="text-xs text-muted-foreground truncate">
+                    {deal.currency} {deal.size} · {deal.tenor}
+                  </span>
+                  <Badge className={`text-[10px] ${stageColors[deal.stage]}`}>{deal.stage}</Badge>
+                  <span className="text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
+                    Updated {format(deal.updatedAt, 'MMM d, HH:mm')}
+                  </span>
+                </button>
+                {canManageDeals && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Delete deal"
+                        className="m-2 h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete this deal?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete &ldquo;{deal.issuerName} {deal.currency} {deal.size} · {deal.tenor}&rdquo; along with all related alerts, chat threads, chat messages and notifications. This cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => deleteDeal(deal.id)}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
               {expanded && (
                 <CardContent className="p-0">
                   <DealDetail
