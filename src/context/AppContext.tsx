@@ -97,7 +97,7 @@ interface AppContextType {
   distributionLists: DistributionList[];
   chatChannels: ChatChannel[];
   chatMessages: ChatMessage[];
-  createDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[]) => Deal;
+  createDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[], opts?: { sourceChannelId?: string }) => Deal;
   updateDeal: (dealId: string, updates: Partial<Deal>) => void;
   updateDealStage: (dealId: string, newStage: DealStage, note?: string) => void;
   createMessage: (msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => Message;
