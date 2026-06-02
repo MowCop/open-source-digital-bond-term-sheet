@@ -590,7 +590,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         title: `Chat invite: ${label}`,
         body: `You've been added to a New Issue chat.`,
         read: false,
-        createdAt: new Date(),
+        timestamp: new Date(),
       }));
       setNotifications(prev => [...newNotifs, ...prev]);
       newNotifs.forEach(n => insertNotification(n).catch(e => console.error('[Cloud] insertNotification failed', e)));
