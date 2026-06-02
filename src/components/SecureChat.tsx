@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import LinkifiedText from '@/components/LinkifiedText';
@@ -224,7 +223,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
         {activeChannel ? (
           <>
             {/* Messages */}
-            <ScrollArea className="flex-1 min-h-0 pr-2" ref={scrollRef}>
+            <div className="flex-1 min-h-0 overflow-y-auto pr-2" ref={scrollRef}>
               <div className="space-y-3 py-2">
                 {channelMessages.map(cm => {
                   const isMe = cm.senderId === currentUser.id;
@@ -285,7 +284,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
                   <p className="text-xs text-muted-foreground text-center py-6">No messages yet. Start the conversation.</p>
                 )}
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Linked message indicator */}
             {linkingMessageId && (
