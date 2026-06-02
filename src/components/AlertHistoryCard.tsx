@@ -496,7 +496,7 @@ export default function AlertHistoryCard({
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           {bulletinOpen && chatOpen ? (
             <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
-              <ResizablePanel defaultSize={42} minSize={15}>
+              <ResizablePanel defaultSize={42} minSize={0} collapsible collapsedSize={0}>
                 <div className="h-full px-5 pt-3 pb-2 flex flex-col min-h-0">
                   <button
                     type="button"
@@ -519,7 +519,7 @@ export default function AlertHistoryCard({
                 </div>
               </ResizablePanel>
               <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={58} minSize={20}>
+              <ResizablePanel defaultSize={58} minSize={10}>
                 <div className="h-full border-t border-border bg-muted/20 flex flex-col min-h-0">
                   <button
                     type="button"
