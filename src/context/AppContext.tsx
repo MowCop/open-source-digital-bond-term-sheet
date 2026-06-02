@@ -329,7 +329,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     insertAudit(full).catch(e => console.error('[Cloud] insertAudit failed', e));
   }, []);
 
-  const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[]) => {
+  const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[], opts?: { sourceChannelId?: string }) => {
     const newDeal: Deal = {
       ...deal,
       id: `d${Date.now()}`,
@@ -346,15 +346,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       currentUser.id,
       ...(scpIds ?? []),
     ]));
-    const newChannel: ChatChannel = {
-      id: `ch${Date.now()}`,
-      participantIds,
-      dealId: newDeal.id,
-      label: `${deal.issuerName} ${deal.currency} ${deal.tenor} — Deal Thread`,
-      createdAt: new Date(),
-    };
-    setChatChannels(prev => [...prev, newChannel]);
-    insertChatChannel(newChannel).catch(e => console.error('[Cloud] insertChatChannel failed', e));
+    const newChannelLabel = `${deal.issuerName} ${deal.currency} ${deal.tenor} — Deal Thread`;
+    // If this deal was extracted from an existing chat channel, re-link that
+    // channel to the new deal instead of creating a duplicate empty thread.
+    const sourceCh = opts?.sourceChannelId
+      ? chatChannels.find(c => c.id === opts.sourceChannelId)
+      : undefined;
+    if (sourceCh) {
+      const mergedParticipants = Array.from(new Set([...sourceCh.participantIds, ...participantIds]));
+      setChatChannels(prev => prev.map(c => c.id === sourceCh.id
+        ? { ...c, dealId: newDeal.id, label: newChannelLabel, participantIds: mergedParticipants }
+        : c));
+      updateChatChannel(sourceCh.id, { dealId: newDeal.id, label: newChannelLabel, participantIds: mergedParticipants })
+        .catch(e => console.error('[Cloud] createDeal: relink sourceChannel failed', e));
+    } else {
+      const newChannel: ChatChannel = {
+        id: `ch${Date.now()}`,
+        participantIds,
+        dealId: newDeal.id,
+        label: newChannelLabel,
+        createdAt: new Date(),
+      };
+      setChatChannels(prev => [...prev, newChannel]);
+      insertChatChannel(newChannel).catch(e => console.error('[Cloud] insertChatChannel failed', e));
+    }
     // Emit chat-invite notifications for each SCP added (excluding creator)
     const invitees = (scpIds ?? []).filter(id => id && id !== currentUser.id);
     if (invitees.length > 0) {
