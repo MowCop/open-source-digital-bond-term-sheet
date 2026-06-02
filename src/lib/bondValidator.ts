@@ -547,10 +547,10 @@ export function validateDeal(
       const adjusted = modifiedFollowing(deal.maturityDate, cal);
       push({
         id: 'maturity-non-business',
-        severity: 'error',
+        severity: 'info',
         field: 'maturityDate',
-        title: 'Maturity on non-business day',
-        detail: `Maturity date ${deal.maturityDate} (${isoMat}) is not a ${cal} business day. Adjusted date would be ${adjusted}.`,
+        title: 'Scheduled maturity falls on a non-business day',
+        detail: `Scheduled maturity date ${deal.maturityDate} (${isoMat}) is not a ${cal} business day. This is normal — the stated maturity is the scheduled anniversary of settlement and the actual redemption payment will be adjusted per the Business Day Convention (typically Modified Following → ${adjusted}). No action required unless the deal is documented as "Unadjusted".`,
         icmaRef: 'ICMA Rule 251.2',
       });
     }
@@ -563,10 +563,10 @@ export function validateDeal(
       const adjusted = modifiedFollowing(deal.issueDate, cal);
       push({
         id: 'issue-non-business',
-        severity: 'error',
+        severity: 'info',
         field: 'issueDate',
-        title: 'Issue date on non-business day',
-        detail: `Issue date ${deal.issueDate} falls on a weekend or ${cal} holiday. Modified Following convention suggests ${adjusted}.`,
+        title: 'Scheduled issue date falls on a non-business day',
+        detail: `Issue date ${deal.issueDate} falls on a weekend or ${cal} holiday. Scheduled issue dates do not need to be business days — actual cashflows adjust under the Business Day Convention (typically Modified Following → ${adjusted}).`,
         icmaRef: 'ICMA Rule 251.2',
       });
     }
