@@ -140,10 +140,10 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   return (
     <Card className={`flex flex-col ${heightClass}`}>
       <CardHeader className="pb-1 shrink-0 space-y-1.5">
-        {/* Title row — deal identifies the chat */}
-        <div className="flex items-center gap-2 min-w-0">
-          <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-          <CardTitle className="text-sm truncate">
+        {/* Title row — full deal name, wraps if needed */}
+        <div className="flex items-start gap-2 min-w-0">
+          <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+          <CardTitle className="text-sm leading-snug break-words flex-1 min-w-0">
             {activeDeal
               ? `${activeDeal.issuerName} ${activeDeal.currency} ${activeDeal.tenor}`
               : activeChannel?.label || 'Chat'}
@@ -151,7 +151,12 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
           {activeDeal && (
             <Badge className={`text-[10px] ${stageColor[activeDeal.stage]} shrink-0`}>{activeDeal.stage}</Badge>
           )}
-          <div className="ml-auto flex items-center gap-1 shrink-0">
+        </div>
+
+        {/* Controls row — AI Extract + header actions (expand/close) */}
+        {((activeChannel && channelMessages.length > 0 &&
+            (!activeDealId || activeChannel.dealId === activeDealId)) || headerActions) && (
+          <div className="flex items-center gap-1">
             {activeChannel && channelMessages.length > 0 &&
               (!activeDealId || activeChannel.dealId === activeDealId) && (
               <ExtractDealFromChatButton
@@ -161,9 +166,11 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
                 targetDealIds={activeDealId ? [activeDealId] : activeChannel.dealId ? [activeChannel.dealId] : undefined}
               />
             )}
-            {headerActions}
+            <div className="ml-auto flex items-center gap-1 shrink-0">
+              {headerActions}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Participants — collapsed by default */}
         {participants.length > 0 && (
