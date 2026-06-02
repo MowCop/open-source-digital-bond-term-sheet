@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import LinkifiedText from '@/components/LinkifiedText';
 import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
-import { Send, Paperclip, Link2, ShieldCheck, FileText, X, Bot } from 'lucide-react';
+import { Send, Paperclip, Link2, ShieldCheck, FileText, X, Bot, Users, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { ChatChannel, DealStage } from '@/types/bond';
 
@@ -31,7 +31,7 @@ interface SecureChatProps {
 }
 
 export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]', readOnly = false }: SecureChatProps) {
-  const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage } = useApp();
+  const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage, createDealChannel } = useApp();
   const [activeChannel, setActiveChannel] = useState<ChatChannel | null>(null);
   const [inputText, setInputText] = useState('');
   const [linkingMessageId, setLinkingMessageId] = useState<string | undefined>();
@@ -39,6 +39,8 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [highlightChatId, setHighlightChatId] = useState<string | null>(null);
+  const [startScpIds, setStartScpIds] = useState<string[]>([]);
+  const [startQuery, setStartQuery] = useState('');
 
   const myChannels = chatChannels.filter(ch => ch.participantIds.includes(currentUser.id));
 
