@@ -20,6 +20,7 @@ export default function ChatModalDialog({ open, activeDealId, onClose, onCollaps
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="p-0 max-w-3xl w-[min(900px,95vw)] h-[min(80vh,720px)] overflow-hidden">
         <SecureChat
+          key={activeDealId || 'all-chats'}
           activeDealId={activeDealId}
           heightClass="h-full"
           headerActions={
