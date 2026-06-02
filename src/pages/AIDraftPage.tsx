@@ -111,7 +111,6 @@ export default function AIDraftPage() {
   const [scpIds, setScpIds] = useState<string[]>([]);
   // Stable per-mount draft id used to key the ephemeral chat channel.
   const draftKey = useMemo(() => `draft-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, []);
-  const [scpQuery, setScpQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const replaceTargetIdRef = useRef<string | null>(null);
@@ -121,14 +120,6 @@ export default function AIDraftPage() {
   const vendorUsers = users.filter(u => u.organizationType === 'vendor');
   // Syndicate-eligible users (any category === 'Syndicate'). AI-style predictive filter.
   const syndicateCandidates = users.filter(u => u.category === 'Syndicate' && u.id !== currentUser.id);
-  const q = scpQuery.trim().toLowerCase();
-  const scpMatches = q
-    ? syndicateCandidates.filter(u =>
-        u.name.toLowerCase().includes(q) ||
-        (u.organization || '').toLowerCase().includes(q) ||
-        (u.email || '').toLowerCase().includes(q)
-      ).slice(0, 6)
-    : [];
   const toggleScp = (id: string) => {
     setScpIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
