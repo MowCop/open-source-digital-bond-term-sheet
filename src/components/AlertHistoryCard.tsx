@@ -468,13 +468,20 @@ export default function AlertHistoryCard({
         className="max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg p-0 gap-0 flex flex-col"
       >
         <DialogHeader className="px-5 pt-4 pb-2 border-b border-border shrink-0 space-y-1">
-          <button
-            type="button"
-            onClick={attemptClose}
-            className="self-start inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-3 w-3" /> Back to Issue Board
-          </button>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={attemptClose}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-3 w-3" /> Back to Issue Board
+            </button>
+            {editDeal && (
+              <Badge className={`text-[10px] mr-8 ${editStageColor[editDeal.stage]}`}>
+                {editDeal.stage}
+              </Badge>
+            )}
+          </div>
           <DialogTitle className="text-base">Edit alert</DialogTitle>
           <input
             value={editSubject}
