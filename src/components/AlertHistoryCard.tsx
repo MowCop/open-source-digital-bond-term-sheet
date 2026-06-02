@@ -470,7 +470,7 @@ export default function AlertHistoryCard({
 
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           {/* Bulletin panel — top, full width */}
-          <div className="px-5 py-4 flex flex-col min-h-[180px]" style={{ flex: chatOpen ? '1 1 50%' : '1 1 auto' }}>
+          <div className={`px-5 py-4 flex flex-col min-h-0 ${chatOpen ? 'basis-1/2 flex-1' : 'flex-1'}`}>
             <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
               Bulletin
             </div>
@@ -484,24 +484,20 @@ export default function AlertHistoryCard({
             </div>
           </div>
 
-          {/* Associated Chat Thread — below, full width, collapsible (open by default) */}
-          <Collapsible
-            open={chatOpen}
-            onOpenChange={setChatOpen}
-            className={`border-t border-border bg-muted/20 flex flex-col min-h-0 ${chatOpen ? 'flex-1' : 'shrink-0'}`}
-          >
-            <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                className="flex items-center justify-between gap-2 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors shrink-0"
-              >
-                <span>Associated Chat Thread</span>
-                {chatOpen
-                  ? <ChevronDown className="h-3.5 w-3.5" />
-                  : <ChevronUp className="h-3.5 w-3.5" />}
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="flex-1 min-h-0 data-[state=open]:flex data-[state=open]:flex-col">
+          {/* Associated Chat Thread — below, full width, expandable (open by default) */}
+          <div className={`border-t border-border bg-muted/20 flex flex-col min-h-0 ${chatOpen ? 'basis-1/2 flex-1' : 'shrink-0'}`}>
+            <button
+              type="button"
+              onClick={() => setChatOpen(o => !o)}
+              aria-expanded={chatOpen}
+              className="flex items-center justify-between gap-2 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors shrink-0"
+            >
+              <span>Associated Chat Thread</span>
+              {chatOpen
+                ? <ChevronDown className="h-3.5 w-3.5" />
+                : <ChevronUp className="h-3.5 w-3.5" />}
+            </button>
+            {chatOpen && (
               <div className="flex-1 min-h-0 px-5 pb-4">
                 <SecureChat
                   key={message.dealIds?.[0] ?? 'no-deal'}
@@ -510,8 +506,8 @@ export default function AlertHistoryCard({
                   readOnly
                 />
               </div>
-            </CollapsibleContent>
-          </Collapsible>
+            )}
+          </div>
         </div>
 
         {/* Attachments panel */}
