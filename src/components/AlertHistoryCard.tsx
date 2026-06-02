@@ -8,11 +8,10 @@ import LinkifiedText from '@/components/LinkifiedText';
 import RichTextEditor from '@/components/RichTextEditor';
 import { isHtml } from '@/lib/htmlText';
 import { format } from 'date-fns';
-import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft } from 'lucide-react';
+import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft, ChevronUp } from 'lucide-react';
 import PdfEditor from '@/components/PdfEditor';
 import DOMPurify from 'dompurify';
 import SecureChat from '@/components/SecureChat';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 
 const ALLOWED_TAGS = ['p','br','strong','em','u','s','h1','h2','h3','h4','ul','ol','li','blockquote','a','img','table','thead','tbody','tr','td','th','code','pre','span','div'];
 const ALLOWED_ATTR = ['href','target','rel','src','alt','title','class','colspan','rowspan'];
@@ -468,40 +467,50 @@ export default function AlertHistoryCard({
           />
         </DialogHeader>
 
-        <div className="flex-1 min-h-0">
-          <ResizablePanelGroup direction="horizontal" className="h-full">
-            <ResizablePanel defaultSize={60} minSize={30}>
-              <div className="h-full px-5 py-4">
-                <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Bulletin
-                </div>
-                <div className="h-[calc(100%-1.25rem)]">
-                  <RichTextEditor
-                    value={editBody}
-                    onChange={setEditBody}
-                    placeholder="Write the alert body…"
-                    className="h-full"
-                  />
-                </div>
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          {/* Bulletin panel — top, full width */}
+          <div className="px-5 py-4 flex flex-col min-h-[180px]" style={{ flex: chatOpen ? '1 1 50%' : '1 1 auto' }}>
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
+              Bulletin
+            </div>
+            <div className="flex-1 min-h-0">
+              <RichTextEditor
+                value={editBody}
+                onChange={setEditBody}
+                placeholder="Write the alert body…"
+                className="h-full"
+              />
+            </div>
+          </div>
+
+          {/* Associated Chat Thread — below, full width, collapsible (open by default) */}
+          <Collapsible
+            open={chatOpen}
+            onOpenChange={setChatOpen}
+            className={`border-t border-border bg-muted/20 flex flex-col min-h-0 ${chatOpen ? 'flex-1' : 'shrink-0'}`}
+          >
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="flex items-center justify-between gap-2 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors shrink-0"
+              >
+                <span>Associated Chat Thread</span>
+                {chatOpen
+                  ? <ChevronDown className="h-3.5 w-3.5" />
+                  : <ChevronUp className="h-3.5 w-3.5" />}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="flex-1 min-h-0 data-[state=open]:flex data-[state=open]:flex-col">
+              <div className="flex-1 min-h-0 px-5 pb-4">
+                <SecureChat
+                  key={message.dealIds?.[0] ?? 'no-deal'}
+                  activeDealId={message.dealIds?.[0] ?? null}
+                  heightClass="h-full"
+                  readOnly
+                />
               </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={40} minSize={25}>
-              <div className="h-full px-4 py-4 bg-muted/20 flex flex-col min-h-0">
-                <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
-                  Associated Chat Thread
-                </div>
-                <div className="flex-1 min-h-0">
-                  <SecureChat
-                    key={message.dealIds?.[0] ?? 'no-deal'}
-                    activeDealId={message.dealIds?.[0] ?? null}
-                    heightClass="h-full"
-                    readOnly
-                  />
-                </div>
-              </div>
-            </ResizablePanel>
-          </ResizablePanelGroup>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
 
         {/* Attachments panel */}
