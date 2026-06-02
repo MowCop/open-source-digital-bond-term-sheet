@@ -356,6 +356,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       : undefined;
     if (sourceCh) {
       const mergedParticipants = Array.from(new Set([...sourceCh.participantIds, ...participantIds]));
+      // Snapshot the channel's pre-extraction state so this extraction can
+      // be fully rolled back via `undoExtraction(dealId)`.
+      newDeal.extractionSnapshot = {
+        sourceChannelId: sourceCh.id,
+        previousLabel: sourceCh.label,
+        previousParticipantIds: [...sourceCh.participantIds],
+        previousDealId: sourceCh.dealId ?? null,
+        extractedAt: new Date().toISOString(),
+        extractedBy: currentUser.id,
+      };
+      // Persist the snapshot on the deal row (insertDeal already ran above
+      // without it — push an update so the column is populated in Cloud).
+      updateDealRow(newDeal.id, { extractionSnapshot: newDeal.extractionSnapshot })
+        .catch(e => console.error('[Cloud] createDeal: persist extractionSnapshot failed', e));
+      setDeals(prev => prev.map(d => d.id === newDeal.id ? { ...d, extractionSnapshot: newDeal.extractionSnapshot } : d));
       setChatChannels(prev => prev.map(c => c.id === sourceCh.id
         ? { ...c, dealId: newDeal.id, label: newChannelLabel, participantIds: mergedParticipants }
         : c));
