@@ -16,6 +16,19 @@ import { pdfFileToHtml } from '@/lib/pdfToHtml';
 import type { Editor } from '@tiptap/react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+
+// Trigger mode for AI extraction in the bulletin builder. Persisted in
+// localStorage from Bond Console > AI Bulletin Extraction.
+// - 'live'   = also call AI as the user types (debounced)
+// - 'onSave' = run AI on every document drop + on explicit Save/Send  (default)
+// - 'manual' = only run AI when the user clicks "Run AI extraction"
+export type AITriggerMode = 'live' | 'onSave' | 'manual';
+export const AI_TRIGGER_MODE_KEY = 'bondvdr.ai.triggerMode';
+export function getAITriggerMode(): AITriggerMode {
+  if (typeof window === 'undefined') return 'onSave';
+  const v = window.localStorage.getItem(AI_TRIGGER_MODE_KEY);
+  return v === 'live' || v === 'manual' ? v : 'onSave';
+}
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +47,22 @@ export default function AIDraftPage() {
   const [aiFields, setAiFields] = useState<Record<string, string> | null>(null);
   const [aiBookrunners, setAiBookrunners] = useState<Bookrunner[]>([]);
   const [aiConfidence, setAiConfidence] = useState<number>(0);
+  // Per-field conflicts surfaced when a fresh extraction returns a value that
+  // differs from a non-empty value the user already had. Append-by-default:
+  // we keep the existing value and let the user explicitly Replace.
+  const [aiConflicts, setAiConflicts] = useState<Record<string, string>>({});
+  const [triggerMode, setTriggerMode] = useState<AITriggerMode>(() => getAITriggerMode());
+  // Re-read trigger mode when window regains focus, so changing it in
+  // Bond Console takes effect without a reload.
+  useEffect(() => {
+    const refresh = () => setTriggerMode(getAITriggerMode());
+    window.addEventListener('focus', refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
   const [sendTarget, setSendTarget] = useState<'all' | 'selected'>('all');
   const [isDragOver, setIsDragOver] = useState(false);
   const [isExtractingAttachment, setIsExtractingAttachment] = useState(false);
