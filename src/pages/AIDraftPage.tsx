@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { pdfFileToHtml } from '@/lib/pdfToHtml';
 import type { Editor } from '@tiptap/react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import DraftChatStrip from '@/components/DraftChatStrip';
 
 // Trigger mode for AI extraction in the bulletin builder. Persisted in
 // localStorage from Bond Console > AI Bulletin Extraction.
@@ -108,6 +109,8 @@ export default function AIDraftPage() {
   const [isExtractingAttachment, setIsExtractingAttachment] = useState(false);
   // Syndicate Chat Participants (SCPs) selected for the new deal's chat channel.
   const [scpIds, setScpIds] = useState<string[]>([]);
+  // Stable per-mount draft id used to key the ephemeral chat channel.
+  const draftKey = useMemo(() => `draft-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, []);
   const [scpQuery, setScpQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
@@ -531,6 +534,8 @@ export default function AIDraftPage() {
         <h1 className="text-2xl font-bold">Create New Issue</h1>
         <p className="text-muted-foreground text-sm">Draft a new message to automatically generate deal records.</p>
       </div>
+
+      <DraftChatStrip draftKey={draftKey} headline={headline} scpIds={scpIds} />
 
       <div className="grid grid-cols-3 gap-4">
         {/* Left: Main compose area */}
