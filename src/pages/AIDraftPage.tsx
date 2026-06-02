@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Bookrunner } from '@/types/bond';
 import { extractBookrunners, simulateAIExtraction } from '@/lib/alertParsing';
 import DealChecker from '@/components/DealChecker';
-import { Sparkles, Paperclip, Send, Save, ChevronDown, MessageSquare, X, Download, Replace, Trash2 } from 'lucide-react';
+import { Sparkles, Paperclip, Send, Save, ChevronDown, Download, Replace, Trash2 } from 'lucide-react';
 import RichTextEditor from '@/components/RichTextEditor';
 import { stripHtml } from '@/lib/htmlText';
 import { docxFileToHtml } from '@/lib/docxToHtml';
