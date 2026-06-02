@@ -131,6 +131,7 @@ export default function FloatingChatPanel({ activeDealId, onClose, onExpandToMod
         </div>
       )}
       <SecureChat
+        key={activeDealId || 'all-chats'}
         activeDealId={activeDealId}
         heightClass="h-full"
         headerActions={
