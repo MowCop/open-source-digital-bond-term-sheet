@@ -43,9 +43,11 @@ interface DealDetailProps {
   canManage: boolean;
   onAdvance: (next: DealStage, note?: string) => void;
   fromBoard?: boolean;
+  hasBulletin: boolean;
+  onGenerateBulletin: () => void;
 }
 
-function DealDetail({ deal, canManage, onAdvance, fromBoard }: DealDetailProps) {
+function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGenerateBulletin }: DealDetailProps) {
   const [stageNote, setStageNote] = useState('');
   const next = getNextStage(deal.stage);
   const navigate = useNavigate();
@@ -64,14 +66,27 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard }: DealDetailProps) 
             Back to New Issue Board
           </Button>
         )}
-        {canManage && next && (
-          <div className="flex items-center gap-2">
-          <Input value={stageNote} onChange={e => setStageNote(e.target.value)} placeholder="Stage transition note..." className="w-64 h-8 text-xs" />
-          <Button size="sm" onClick={() => { onAdvance(next, stageNote || undefined); setStageNote(''); }}>
-            Advance to {next} <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
-      )}
+        {canManage && (
+          <div className="flex items-center gap-2 ml-auto">
+            {hasBulletin ? (
+              <Button size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={() => navigate(`/messages?dealId=${deal.id}`)}>
+                <FileText className="h-3 w-3 mr-1" /> Bulletin published
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" onClick={onGenerateBulletin}>
+                <Megaphone className="h-4 w-4 mr-1" /> Generate New Issue Bulletin
+              </Button>
+            )}
+            {next && (
+              <>
+                <Input value={stageNote} onChange={e => setStageNote(e.target.value)} placeholder="Stage transition note..." className="w-64 h-8 text-xs" />
+                <Button size="sm" onClick={() => { onAdvance(next, stageNote || undefined); setStageNote(''); }}>
+                  Advance to {next} <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-6">
