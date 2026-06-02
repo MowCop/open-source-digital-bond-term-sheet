@@ -12,6 +12,18 @@ import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, 
 import PdfEditor from '@/components/PdfEditor';
 import DOMPurify from 'dompurify';
 import SecureChat from '@/components/SecureChat';
+import { useApp } from '@/context/AppContext';
+import type { DealStage } from '@/types/bond';
+
+const editStageColor: Record<DealStage, string> = {
+  Mandate: 'bg-blue-100 text-blue-800',
+  Announced: 'bg-blue-100 text-blue-800',
+  Launched: 'bg-green-100 text-green-800',
+  'Books Open': 'bg-green-100 text-green-800',
+  'Books Closed': 'bg-green-100 text-green-800',
+  Priced: 'bg-amber-100 text-amber-800',
+  Settled: 'bg-amber-100 text-amber-800',
+};
 
 const ALLOWED_TAGS = ['p','br','strong','em','u','s','h1','h2','h3','h4','ul','ol','li','blockquote','a','img','table','thead','tbody','tr','td','th','code','pre','span','div'];
 const ALLOWED_ATTR = ['href','target','rel','src','alt','title','class','colspan','rowspan'];
@@ -68,6 +80,10 @@ export default function AlertHistoryCard({
   const clickEditTimerRef = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
+  const { deals } = useApp();
+  const editDeal = message.dealIds?.[0]
+    ? deals.find(d => d.id === message.dealIds[0]) || null
+    : null;
 
   const clearClickEditTimer = () => {
     if (clickEditTimerRef.current) {
@@ -452,13 +468,20 @@ export default function AlertHistoryCard({
         className="max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg p-0 gap-0 flex flex-col"
       >
         <DialogHeader className="px-5 pt-4 pb-2 border-b border-border shrink-0 space-y-1">
-          <button
-            type="button"
-            onClick={attemptClose}
-            className="self-start inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-3 w-3" /> Back to Issue Board
-          </button>
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={attemptClose}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-3 w-3" /> Back to Issue Board
+            </button>
+            {editDeal && (
+              <Badge className={`text-[10px] mr-8 ${editStageColor[editDeal.stage]}`}>
+                {editDeal.stage}
+              </Badge>
+            )}
+          </div>
           <DialogTitle className="text-base">Edit alert</DialogTitle>
           <input
             value={editSubject}
@@ -504,6 +527,7 @@ export default function AlertHistoryCard({
                   activeDealId={message.dealIds?.[0] ?? null}
                   heightClass="h-full"
                   allowDealAccess
+                  hideStageBadge
                 />
               </div>
             )}
