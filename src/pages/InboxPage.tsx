@@ -351,14 +351,15 @@ function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen,
 
   return (
     <Card className={`overflow-hidden transition-colors ${expanded ? 'border-primary ring-1 ring-primary' : ''}`}>
-      <button
-        onClick={onToggle}
-        className="w-full text-left p-3 flex items-start gap-3 hover:bg-accent/40 transition-colors"
-      >
-        <div className="mt-0.5 text-muted-foreground">
-          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </div>
-        <div className="flex-1 min-w-0">
+      <div className="flex items-start">
+        <button
+          onClick={onToggle}
+          className="flex-1 min-w-0 text-left p-3 flex items-start gap-3 hover:bg-accent/40 transition-colors"
+        >
+          <div className="mt-0.5 text-muted-foreground">
+            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </div>
+          <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-sm truncate">{channel.label}</span>
             <Badge variant="outline" className="text-[10px]">Pending — no deal yet</Badge>
@@ -379,8 +380,14 @@ function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen,
           <div className="text-[10px] text-muted-foreground mt-1">
             {last ? `Last chat: ${format(last.timestamp, 'd MMM, HH:mm')}` : 'No messages yet'}
           </div>
-        </div>
-      </button>
+          </div>
+        </button>
+        <DeleteChatButton
+          title="Delete this pending chat?"
+          description={`This will permanently delete the chat "${channel.label}" and all its messages. This cannot be undone.`}
+          onConfirm={onDelete}
+        />
+      </div>
       {expanded && (
         <ChannelThread
           channel={channel}
