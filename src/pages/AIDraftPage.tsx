@@ -16,6 +16,59 @@ import { pdfFileToHtml } from '@/lib/pdfToHtml';
 import type { Editor } from '@tiptap/react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+
+// Trigger mode for AI extraction in the bulletin builder. Persisted in
+// localStorage from Bond Console > AI Bulletin Extraction.
+// - 'live'   = also call AI as the user types (debounced)
+// - 'onSave' = run AI on every document drop + on explicit Save/Send  (default)
+// - 'manual' = only run AI when the user clicks "Run AI extraction"
+export type AITriggerMode = 'live' | 'onSave' | 'manual';
+export const AI_TRIGGER_MODE_KEY = 'bondvdr.ai.triggerMode';
+export function getAITriggerMode(): AITriggerMode {
+  if (typeof window === 'undefined') return 'onSave';
+  const v = window.localStorage.getItem(AI_TRIGGER_MODE_KEY);
+  return v === 'live' || v === 'manual' ? v : 'onSave';
+}
+
+/**
+ * Append-by-default merge: keeps any pre-existing non-empty value, fills
+ * blanks from the new extraction, and treats differing non-empty values as
+ * conflicts to be surfaced in the UI rather than silently overwritten.
+ * Returns the merged record AND a list of conflict keys with the proposed
+ * new value, via an out-callback on the React state setter.
+ */
+function mergeFieldsWithConflicts(
+  prev: Record<string, string> | null,
+  incoming: Record<string, string>,
+): Record<string, string> {
+  const base = prev ? { ...prev } : {};
+  for (const [k, raw] of Object.entries(incoming)) {
+    const v = typeof raw === 'string' ? raw.trim() : '';
+    if (!v) continue;
+    const cur = (base[k] ?? '').trim();
+    if (!cur) base[k] = v; // fill blank
+    // If cur exists and differs from v, leave cur alone — conflict is
+    // tracked separately in setAiConflicts (see callers).
+    else if (cur !== v) base[k] = cur;
+  }
+  return base;
+}
+
+/** Diff helper for the conflict tracker. */
+function diffConflicts(
+  prev: Record<string, string> | null,
+  incoming: Record<string, string>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!prev) return out;
+  for (const [k, raw] of Object.entries(incoming)) {
+    const v = typeof raw === 'string' ? raw.trim() : '';
+    if (!v) continue;
+    const cur = (prev[k] ?? '').trim();
+    if (cur && cur !== v) out[k] = v;
+  }
+  return out;
+}
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +87,22 @@ export default function AIDraftPage() {
   const [aiFields, setAiFields] = useState<Record<string, string> | null>(null);
   const [aiBookrunners, setAiBookrunners] = useState<Bookrunner[]>([]);
   const [aiConfidence, setAiConfidence] = useState<number>(0);
+  // Per-field conflicts surfaced when a fresh extraction returns a value that
+  // differs from a non-empty value the user already had. Append-by-default:
+  // we keep the existing value and let the user explicitly Replace.
+  const [aiConflicts, setAiConflicts] = useState<Record<string, string>>({});
+  const [triggerMode, setTriggerMode] = useState<AITriggerMode>(() => getAITriggerMode());
+  // Re-read trigger mode when window regains focus, so changing it in
+  // Bond Console takes effect without a reload.
+  useEffect(() => {
+    const refresh = () => setTriggerMode(getAITriggerMode());
+    window.addEventListener('focus', refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
   const [sendTarget, setSendTarget] = useState<'all' | 'selected'>('all');
   const [isDragOver, setIsDragOver] = useState(false);
   const [isExtractingAttachment, setIsExtractingAttachment] = useState(false);
@@ -120,7 +189,7 @@ export default function AIDraftPage() {
     mimeType: file.type || undefined,
   });
 
-  const applyExtractedText = async (text: string, fileName: string) => {
+  const applyExtractedText = async (text: string, fileName: string, opts?: { skipAI?: boolean }) => {
     const clean = text.replace(/\r/g, '').replace(/\n{3,}/g, '\n\n').trim();
     if (!clean) return;
 
@@ -137,9 +206,13 @@ export default function AIDraftPage() {
       if (/(New Issue Alert|Priced|Settled|Books (Open|Closed)|Launched|Announced|Mandate)\s*$/i.test(trimmed)) return subjectLine;
       return trimmed;
     });
-    setAiFields(baseline.keyTerms);
+    // Merge baseline into existing fields with conflict tracking
+    setAiConflicts(prev => ({ ...prev, ...diffConflicts(aiFields, baseline.keyTerms) }));
+    setAiFields(prev => mergeFieldsWithConflicts(prev, baseline.keyTerms));
     setAiConfidence(baseline.confidence);
     setAiBookrunners(baselineBookrunners);
+
+    if (opts?.skipAI) return;
 
     // 2) Call Lovable AI for a richer, more accurate extraction; merge over the baseline.
     try {
@@ -151,12 +224,10 @@ export default function AIDraftPage() {
         const aiKeyTerms = (data as any).keyTerms as Record<string, string>;
         const aiBks = (data as any).bookrunners as Bookrunner[] | undefined;
 
-        // Merge: AI value wins when non-empty, otherwise keep regex baseline.
-        const merged: Record<string, string> = { ...baseline.keyTerms };
-        for (const [k, v] of Object.entries(aiKeyTerms || {})) {
-          if (typeof v === 'string' && v.trim()) merged[k] = v.trim();
-        }
-        setAiFields(merged);
+        // Append-by-default: keep current value, surface differences as
+        // per-field conflicts the user can explicitly replace.
+        setAiConflicts(prev => ({ ...prev, ...diffConflicts(aiFields ?? baseline.keyTerms, aiKeyTerms || {}) }));
+        setAiFields(prev => mergeFieldsWithConflicts(prev ?? baseline.keyTerms, aiKeyTerms || {}));
         if (Array.isArray(aiBks) && aiBks.length > 0) setAiBookrunners(aiBks);
 
         // If AI gave us a stronger issuer, refresh the auto-headline.
@@ -224,7 +295,7 @@ export default function AIDraftPage() {
         };
       }
       appendHtmlToBody(html);
-      void applyExtractedText(text, file.name);
+      void applyExtractedText(text, file.name, { skipAI: getAITriggerMode() === 'manual' });
       return { ok: true };
     } catch (err) {
       console.error('extraction failed', file.name, err);
@@ -602,6 +673,65 @@ export default function AIDraftPage() {
                 </Badge>
               )}
             </div>
+            <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/20 text-[11px]">
+              <span className="text-muted-foreground">Trigger:</span>
+              <Badge variant="outline" className="text-[10px] capitalize">
+                {triggerMode === 'onSave' ? 'On Save' : triggerMode}
+              </Badge>
+              <span className="text-muted-foreground hidden md:inline">· change in Bond Console</span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="ml-auto h-7 text-[11px]"
+                disabled={isExtractingAttachment || (headline.trim() + stripHtml(body).trim()).length < 10}
+                onClick={async () => {
+                  const combined = `${headline}\n${stripHtml(body)}`.trim();
+                  if (combined.length < 10) return;
+                  setIsExtractingAttachment(true);
+                  await applyExtractedText(combined, headline || 'manual run', { skipAI: false });
+                  setIsExtractingAttachment(false);
+                }}
+              >
+                <Sparkles className="h-3 w-3 mr-1" /> Run AI
+              </Button>
+            </div>
+            {Object.keys(aiConflicts).length > 0 && (
+              <div className="border-b border-amber-800/40 bg-amber-950/20 px-4 py-2 space-y-1">
+                <div className="text-[11px] font-semibold text-amber-300 flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  Differences ({Object.keys(aiConflicts).length}) — existing value kept
+                </div>
+                <div className="space-y-1">
+                  {Object.entries(aiConflicts).map(([k, v]) => (
+                    <div key={k} className="flex items-center gap-2 text-[11px]">
+                      <span className="text-muted-foreground w-20 shrink-0 truncate">{k}</span>
+                      <span className="text-foreground truncate" title={aiFields?.[k]}>{aiFields?.[k] || '—'}</span>
+                      <span className="text-amber-400/70">→</span>
+                      <span className="text-amber-300 truncate" title={v}>{v}</span>
+                      <div className="ml-auto flex gap-1 shrink-0">
+                        <button
+                          type="button"
+                          className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-200 hover:bg-amber-500/30"
+                          onClick={() => {
+                            setAiFields(prev => ({ ...(prev || {}), [k]: v }));
+                            setAiConflicts(prev => { const next = { ...prev }; delete next[k]; return next; });
+                          }}
+                        >
+                          Replace
+                        </button>
+                        <button
+                          type="button"
+                          className="px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground hover:bg-muted/80"
+                          onClick={() => setAiConflicts(prev => { const next = { ...prev }; delete next[k]; return next; })}
+                        >
+                          Keep
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="p-4">
               {aiFields ? (
                 <div className="space-y-2">
