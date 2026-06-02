@@ -109,6 +109,9 @@ interface AppContextType {
   markNotificationRead: (id: string) => void;
   addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => void;
   sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string) => void;
+  ensureDraftChannel: (draftKey: string, label: string, participantIds: string[]) => ChatChannel;
+  renameChatChannel: (id: string, label: string) => void;
+  updateChatChannelParticipants: (id: string, participantIds: string[]) => void;
   addUser: (user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => User;
   deleteUser: (id: string) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
