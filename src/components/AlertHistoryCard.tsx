@@ -67,6 +67,7 @@ export default function AlertHistoryCard({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clickEditTimerRef = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [chatOpen, setChatOpen] = useState(true);
 
   const clearClickEditTimer = () => {
     if (clickEditTimerRef.current) {
