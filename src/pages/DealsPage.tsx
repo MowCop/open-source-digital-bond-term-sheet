@@ -195,6 +195,7 @@ export default function DealsPage() {
   const [brRole, setBrRole] = useState<BookrunnerRole>('active');
   const [brGC, setBrGC] = useState(false);
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const navigate = useNavigate();
 
   const canManageDeals = currentUser.role === 'syndicate_admin' || currentUser.role === 'master_admin';
 
