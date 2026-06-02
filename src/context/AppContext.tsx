@@ -17,6 +17,7 @@ import {
   fetchDistributionLists, insertDistributionList, updateDistributionListRow, deleteDistributionListRow, rowToDistList,
   fetchChatChannels, insertChatChannel, rowToChatChannel,
   updateChatChannel,
+  updateChatMessagesByChannel,
   fetchChatMessages, insertChatMessage, rowToChatMessage,
 } from '@/integrations/supabase/cloudData';
 
@@ -359,6 +360,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         : c));
       updateChatChannel(sourceCh.id, { dealId: newDeal.id, label: newChannelLabel, participantIds: mergedParticipants })
         .catch(e => console.error('[Cloud] createDeal: relink sourceChannel failed', e));
+      // Backfill deal_id onto every existing message in this channel so the
+      // deal / channel / messages stay bound together through future deletes
+      // and scoping queries. Without this, messages stay deal_id=NULL and
+      // become orphaned if the deal is later removed.
+      setChatMessages(prev => prev.map(m => m.channelId === sourceCh.id
+        ? { ...m, dealId: newDeal.id }
+        : m));
+      updateChatMessagesByChannel(sourceCh.id, { deal_id: newDeal.id })
+        .catch(e => console.error('[Cloud] createDeal: backfill chat_messages deal_id failed', e));
     } else {
       const newChannel: ChatChannel = {
         id: `ch${Date.now()}`,
