@@ -14,6 +14,7 @@ import DOMPurify from 'dompurify';
 import SecureChat from '@/components/SecureChat';
 import { useApp } from '@/context/AppContext';
 import type { DealStage } from '@/types/bond';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 
 const editStageColor: Record<DealStage, string> = {
   Mandate: 'bg-blue-100 text-blue-800',
@@ -80,6 +81,7 @@ export default function AlertHistoryCard({
   const clickEditTimerRef = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
+  const [bulletinOpen, setBulletinOpen] = useState(true);
   const { deals } = useApp();
   const editDeal = message.dealIds?.[0]
     ? deals.find(d => d.id === message.dealIds[0]) || null
@@ -492,46 +494,103 @@ export default function AlertHistoryCard({
         </DialogHeader>
 
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          {/* Bulletin panel — top, full width */}
-          <div className={`px-5 pt-3 pb-2 flex flex-col min-h-0 ${chatOpen ? 'basis-[42%] flex-[0.42]' : 'flex-1'}`}>
-            <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
-              Bulletin
-            </div>
-            <div className="flex-1 min-h-0">
-              <RichTextEditor
-                value={editBody}
-                onChange={setEditBody}
-                placeholder="Write the alert body…"
-                className="h-full"
-              />
-            </div>
-          </div>
-
-          {/* Associated Chat Thread — below, full width, expandable (open by default) */}
-          <div className={`border-t border-border bg-muted/20 flex flex-col min-h-0 ${chatOpen ? 'basis-[58%] flex-[0.58]' : 'shrink-0'}`}>
-            <button
-              type="button"
-              onClick={() => setChatOpen(o => !o)}
-              aria-expanded={chatOpen}
-              className="flex items-center justify-between gap-2 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors shrink-0"
-            >
-              <span>Associated Chat Thread</span>
-              {chatOpen
-                ? <ChevronDown className="h-3.5 w-3.5" />
-                : <ChevronUp className="h-3.5 w-3.5" />}
-            </button>
-            {chatOpen && (
-              <div className="flex-1 min-h-0 px-5 pb-3">
-                <SecureChat
-                  key={message.dealIds?.[0] ?? 'no-deal'}
-                  activeDealId={message.dealIds?.[0] ?? null}
-                  heightClass="h-full"
-                  allowDealAccess
-                  hideStageBadge
-                />
+          {bulletinOpen && chatOpen ? (
+            <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
+              <ResizablePanel defaultSize={42} minSize={15}>
+                <div className="h-full px-5 pt-3 pb-2 flex flex-col min-h-0">
+                  <button
+                    type="button"
+                    onClick={() => setBulletinOpen(false)}
+                    aria-expanded={bulletinOpen}
+                    className="mb-2 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                    title="Collapse bulletin"
+                  >
+                    <span>Bulletin</span>
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  </button>
+                  <div className="flex-1 min-h-0">
+                    <RichTextEditor
+                      value={editBody}
+                      onChange={setEditBody}
+                      placeholder="Write the alert body…"
+                      className="h-full"
+                    />
+                  </div>
+                </div>
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={58} minSize={20}>
+                <div className="h-full border-t border-border bg-muted/20 flex flex-col min-h-0">
+                  <button
+                    type="button"
+                    onClick={() => setChatOpen(false)}
+                    aria-expanded={chatOpen}
+                    className="flex items-center justify-between gap-2 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors shrink-0"
+                  >
+                    <span>Associated Chat Thread</span>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                  <div className="flex-1 min-h-0 px-5 pb-3">
+                    <SecureChat
+                      key={message.dealIds?.[0] ?? 'no-deal'}
+                      activeDealId={message.dealIds?.[0] ?? null}
+                      heightClass="h-full"
+                      allowDealAccess
+                      hideStageBadge
+                    />
+                  </div>
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ) : (
+            <>
+              {/* Bulletin (collapsed header bar when chat fills) or full bulletin when chat collapsed */}
+              <div className={bulletinOpen ? 'flex-1 min-h-0 px-5 pt-3 pb-2 flex flex-col' : 'shrink-0'}>
+                <button
+                  type="button"
+                  onClick={() => setBulletinOpen(o => !o)}
+                  aria-expanded={bulletinOpen}
+                  className={`flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0 ${bulletinOpen ? 'mb-2' : 'px-5 py-2 w-full hover:bg-muted/30'}`}
+                >
+                  <span>Bulletin</span>
+                  {bulletinOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </button>
+                {bulletinOpen && (
+                  <div className="flex-1 min-h-0">
+                    <RichTextEditor
+                      value={editBody}
+                      onChange={setEditBody}
+                      placeholder="Write the alert body…"
+                      className="h-full"
+                    />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+
+              <div className={`border-t border-border bg-muted/20 flex flex-col min-h-0 ${chatOpen ? 'flex-1' : 'shrink-0'}`}>
+                <button
+                  type="button"
+                  onClick={() => setChatOpen(o => !o)}
+                  aria-expanded={chatOpen}
+                  className="flex items-center justify-between gap-2 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors shrink-0"
+                >
+                  <span>Associated Chat Thread</span>
+                  {chatOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                </button>
+                {chatOpen && (
+                  <div className="flex-1 min-h-0 px-5 pb-3">
+                    <SecureChat
+                      key={message.dealIds?.[0] ?? 'no-deal'}
+                      activeDealId={message.dealIds?.[0] ?? null}
+                      heightClass="h-full"
+                      allowDealAccess
+                      hideStageBadge
+                    />
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Attachments panel */}
