@@ -421,6 +421,19 @@ export async function insertChatChannel(c: ChatChannel) {
   if (error) throw error;
 }
 
+export async function updateChatChannel(
+  id: string,
+  patch: Partial<Pick<ChatChannel, 'label' | 'participantIds' | 'dealId'>>,
+) {
+  const row: Record<string, unknown> = {};
+  if (patch.label !== undefined) row.label = patch.label;
+  if (patch.participantIds !== undefined) row.participant_ids = patch.participantIds;
+  if (patch.dealId !== undefined) row.deal_id = patch.dealId ?? null;
+  if (Object.keys(row).length === 0) return;
+  const { error } = await db.from('chat_channels').update(row).eq('id', id);
+  if (error) throw error;
+}
+
 // ---------- Chat messages ----------
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToChatMessage(r: any): ChatMessage {

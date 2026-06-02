@@ -15,6 +15,7 @@ import {
   fetchNotifications, insertNotification, markNotificationReadRow, rowToNotification,
   fetchDistributionLists, insertDistributionList, updateDistributionListRow, deleteDistributionListRow, rowToDistList,
   fetchChatChannels, insertChatChannel, rowToChatChannel,
+  updateChatChannel,
   fetchChatMessages, insertChatMessage, rowToChatMessage,
 } from '@/integrations/supabase/cloudData';
 
@@ -108,6 +109,9 @@ interface AppContextType {
   markNotificationRead: (id: string) => void;
   addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => void;
   sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string) => void;
+  ensureDraftChannel: (draftKey: string, label: string, participantIds: string[]) => ChatChannel;
+  renameChatChannel: (id: string, label: string) => void;
+  updateChatChannelParticipants: (id: string, participantIds: string[]) => void;
   addUser: (user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => User;
   deleteUser: (id: string) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
@@ -533,6 +537,70 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addAuditEntry({ action: 'CHAT_MESSAGE_SENT', entityType: 'message', entityId: newMsg.id, userId: currentUser.id, details: `Secure chat message in channel ${channelId}` });
   }, [currentUser.id, currentUser.name, currentUser.organizationType, effectiveSenderId, addAuditEntry]);
 
+  // ---------- Draft chat channel helpers ----------
+  // A draft (pre-publication) New Issue gets its own ChatChannel whose label
+  // mirrors the bulletin headline. The channel is created lazily on first
+  // message OR first save. `draftKey` is a stable per-draft id used to look
+  // up an existing draft channel via its label (no deal_id yet).
+  const draftChannelIdsRef = useRef<Record<string, string>>({});
+
+  const ensureDraftChannel = useCallback((draftKey: string, label: string, participantIds: string[]): ChatChannel => {
+    const existingId = draftChannelIdsRef.current[draftKey];
+    if (existingId) {
+      const found = chatChannels.find(c => c.id === existingId);
+      if (found) return found;
+    }
+    const cleanLabel = (label || '').trim() || 'Untitled New Issue';
+    const ids = Array.from(new Set([currentUser.id, ...participantIds.filter(Boolean)]));
+    const newChannel: ChatChannel = {
+      id: `ch${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      participantIds: ids,
+      dealId: undefined,
+      label: cleanLabel,
+      createdAt: new Date(),
+    };
+    draftChannelIdsRef.current[draftKey] = newChannel.id;
+    setChatChannels(prev => [...prev, newChannel]);
+    insertChatChannel(newChannel).catch(e => console.error('[Cloud] ensureDraftChannel failed', e));
+    addAuditEntry({
+      action: 'CHAT_CHANNEL_CREATED', entityType: 'message', entityId: newChannel.id,
+      userId: currentUser.id, details: `Draft chat channel for "${cleanLabel}"`,
+    });
+    return newChannel;
+  }, [chatChannels, currentUser.id, addAuditEntry]);
+
+  const renameChatChannel = useCallback((id: string, label: string) => {
+    const cleanLabel = (label || '').trim() || 'Untitled New Issue';
+    setChatChannels(prev => prev.map(c => c.id === id ? { ...c, label: cleanLabel } : c));
+    updateChatChannel(id, { label: cleanLabel }).catch(e => console.error('[Cloud] renameChatChannel failed', e));
+  }, []);
+
+  const updateChatChannelParticipants = useCallback((id: string, participantIds: string[]) => {
+    const ids = Array.from(new Set([currentUser.id, ...participantIds.filter(Boolean)]));
+    const existing = chatChannels.find(c => c.id === id);
+    const added = existing ? ids.filter(p => !existing.participantIds.includes(p) && p !== currentUser.id) : [];
+    setChatChannels(prev => prev.map(c => c.id === id ? { ...c, participantIds: ids } : c));
+    updateChatChannel(id, { participantIds: ids }).catch(e => console.error('[Cloud] updateChatChannelParticipants failed', e));
+    if (added.length > 0 && existing) {
+      const label = existing.label || 'New Issue';
+      const newNotifs: Notification[] = added.map((uid, i) => ({
+        id: `n${Date.now()}_${i}_${Math.random().toString(36).slice(2, 6)}`,
+        userId: uid,
+        type: 'chat_invite',
+        title: `Chat invite: ${label}`,
+        body: `You've been added to a New Issue chat.`,
+        read: false,
+        timestamp: new Date(),
+      }));
+      setNotifications(prev => [...newNotifs, ...prev]);
+      newNotifs.forEach(n => insertNotification(n).catch(e => console.error('[Cloud] insertNotification failed', e)));
+    }
+    addAuditEntry({
+      action: 'CHAT_CHANNEL_UPDATED', entityType: 'message', entityId: id,
+      userId: currentUser.id, details: `Participants updated (${ids.length})`,
+    });
+  }, [chatChannels, currentUser.id, addAuditEntry]);
+
   const addUser = useCallback((user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => {
     const newUser: User = {
       ...user,
@@ -586,6 +654,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       currentUser, setCurrentUser, users, deals, messages, auditLog, notifications, distributionLists,
       chatChannels, chatMessages,
       createDeal, updateDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addAuditEntry, sendChatMessage,
+      ensureDraftChannel, renameChatChannel, updateChatChannelParticipants,
       deleteMessage, deleteMessageThread,
       deleteDeal,
       addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList,
