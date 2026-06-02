@@ -486,12 +486,13 @@ export default function MessagesPage() {
               const groupKey = group.dealIds.join(',');
               const isExpanded = expandedAlertId === groupKey;
               const badge = stageBadge[group.stage];
+              const pubBadge = publishStatusBadge[group.publishStatus];
 
               return (
                 <div key={groupKey}>
                   {/* Main row */}
                   <div
-                    className="grid grid-cols-12 gap-2 px-4 py-3 items-center cursor-pointer hover:bg-card/60 transition-colors"
+                    className={`grid grid-cols-12 gap-2 px-4 py-3 items-center cursor-pointer hover:bg-card/60 transition-colors ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
                     onClick={(e) => {
                       // Don't toggle when interacting with the inline headline editor
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
@@ -567,6 +568,17 @@ export default function MessagesPage() {
                       )}
                     </div>
                     <div className="col-span-5 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
+                      <Badge
+                        className={`text-[9px] border mr-1.5 align-middle ${pubBadge.className}`}
+                        title={group.publishStatus === 'pre_published'
+                          ? 'Saved as draft — not yet sent / published'
+                          : group.publishStatus === 'published'
+                            ? 'Sent to recipients — published'
+                            : 'Retracted after being sent'}
+                      >
+                        <span className={`inline-block h-1.5 w-1.5 rounded-full mr-1 ${pubBadge.dot}`} />
+                        {pubBadge.label}
+                      </Badge>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
                         <div className="relative">
                           <Input
