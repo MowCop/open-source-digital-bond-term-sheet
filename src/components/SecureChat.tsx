@@ -165,16 +165,17 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
         )}
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-2 overflow-hidden p-3 pt-0">
-        {/* Channel selector */}
+        {/* Channel selector — hide when only one channel is available in contextual mode */}
+        {!(contextualMode && availableChannels.length <= 1) && (
         <Select
           value={activeChannel?.id || ''}
-          onValueChange={id => setActiveChannel(myChannels.find(ch => ch.id === id) || null)}
+          onValueChange={id => setActiveChannel(availableChannels.find(ch => ch.id === id) || null)}
         >
           <SelectTrigger className="h-8 text-xs">
             <SelectValue placeholder="Select a conversation" />
           </SelectTrigger>
           <SelectContent>
-            {myChannels.map(ch => {
+            {availableChannels.map(ch => {
               const deal = ch.dealId ? deals.find(d => d.id === ch.dealId) : null;
               return (
                 <SelectItem key={ch.id} value={ch.id} className="text-xs">
@@ -185,6 +186,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
             })}
           </SelectContent>
         </Select>
+        )}
 
         {activeChannel ? (
           <>
@@ -299,7 +301,11 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
-            {myChannels.length === 0 ? 'No conversations available for your role' : 'Select a conversation'}
+            {contextualMode
+              ? 'No chat thread for this deal yet'
+              : myChannels.length === 0
+                ? 'No conversations available for your role'
+                : 'Select a conversation'}
           </div>
         )}
       </CardContent>
