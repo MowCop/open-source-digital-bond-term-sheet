@@ -302,13 +302,108 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
             )}
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
-            {contextualMode
-              ? 'No chat thread for this deal yet'
-              : myChannels.length === 0
-                ? 'No conversations available for your role'
-                : 'Select a conversation'}
-          </div>
+          contextualMode && activeDealId && (currentUser.role === 'master_admin' || currentUser.role === 'syndicate_admin') ? (
+            (() => {
+              const deal = deals.find(d => d.id === activeDealId);
+              const defaultLabel = deal
+                ? `${deal.issuerName} ${deal.currency} ${deal.tenor} — Deal Thread`
+                : 'Deal Chat';
+              const candidates = users.filter(u =>
+                u.id !== currentUser.id &&
+                (u.role === 'syndicate_admin' || u.role === 'syndicate_readonly' || u.role === 'master_admin'),
+              );
+              const q = startQuery.trim().toLowerCase();
+              const matches = q
+                ? candidates.filter(u =>
+                    u.name.toLowerCase().includes(q) ||
+                    (u.organization || '').toLowerCase().includes(q) ||
+                    (u.email || '').toLowerCase().includes(q),
+                  ).slice(0, 6)
+                : [];
+              const selected = startScpIds
+                .map(id => users.find(u => u.id === id))
+                .filter((u): u is NonNullable<typeof u> => !!u);
+              const toggle = (id: string) =>
+                setStartScpIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+              const handleStart = () => {
+                const ch = createDealChannel(activeDealId, defaultLabel, startScpIds);
+                setActiveChannel(ch);
+                setStartScpIds([]);
+                setStartQuery('');
+              };
+              return (
+                <div className="flex-1 flex flex-col gap-3 p-3 overflow-y-auto">
+                  <div className="text-xs text-muted-foreground">
+                    No chat thread for this deal yet. Start one and invite participants.
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1">
+                      <Users className="h-3 w-3" /> Participants ({selected.length + 1})
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge variant="secondary" className="text-[11px]">
+                        {currentUser.name} <span className="text-muted-foreground">· you</span>
+                      </Badge>
+                      {selected.map(u => (
+                        <Badge key={u.id} variant="secondary" className="text-[11px] gap-1 pr-1">
+                          {u.name} <span className="text-muted-foreground">· {u.organization}</span>
+                          <button
+                            onClick={() => toggle(u.id)}
+                            className="ml-1 hover:text-destructive"
+                            aria-label={`Remove ${u.name}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      value={startQuery}
+                      onChange={e => setStartQuery(e.target.value)}
+                      placeholder="Add by name, bank, or email…"
+                      className="h-8 text-xs"
+                    />
+                    {q && matches.length > 0 && (
+                      <div className="absolute z-20 mt-1 w-full bg-popover border border-border rounded-md shadow-md max-h-48 overflow-y-auto">
+                        {matches.map(u => (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => { toggle(u.id); setStartQuery(''); }}
+                            className="w-full text-left px-3 py-2 text-xs hover:bg-accent/20 flex items-center justify-between"
+                          >
+                            <div>
+                              <div className="font-medium">{u.name}</div>
+                              <div className="text-muted-foreground">{u.organization} · {u.email}</div>
+                            </div>
+                            {startScpIds.includes(u.id) && <Badge variant="secondary" className="text-[10px]">added</Badge>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {q && matches.length === 0 && (
+                      <div className="absolute z-20 mt-1 w-full bg-popover border border-border rounded-md shadow-md px-3 py-2 text-xs text-muted-foreground">
+                        No matching user.
+                      </div>
+                    )}
+                  </div>
+                  <Button size="sm" onClick={handleStart} className="self-start">
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Start chat
+                  </Button>
+                </div>
+              );
+            })()
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
+              {contextualMode
+                ? 'No chat thread for this deal yet'
+                : myChannels.length === 0
+                  ? 'No conversations available for your role'
+                  : 'Select a conversation'}
+            </div>
+          )
         )}
       </CardContent>
     </Card>
