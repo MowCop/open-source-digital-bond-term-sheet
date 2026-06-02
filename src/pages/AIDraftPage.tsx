@@ -295,7 +295,7 @@ export default function AIDraftPage() {
         };
       }
       appendHtmlToBody(html);
-      void applyExtractedText(text, file.name);
+      void applyExtractedText(text, file.name, { skipAI: getAITriggerMode() === 'manual' });
       return { ok: true };
     } catch (err) {
       console.error('extraction failed', file.name, err);
