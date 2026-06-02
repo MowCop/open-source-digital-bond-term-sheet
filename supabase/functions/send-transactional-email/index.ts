@@ -44,25 +44,14 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get('Authorization') ?? ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  // Strict equality with the raw service-role key only.
+  // Do NOT decode JWT claims without verification — an attacker can craft an
+  // unsigned token with role:service_role and bypass auth otherwise.
   if (!token || !serviceKey || token !== serviceKey) {
-    // Fall back to claim inspection in case the caller used a signed service JWT
-    // rather than the raw service-role key.
-    let isService = false
-    try {
-      const payload = token.split('.')[1]
-      if (payload) {
-        const decoded = JSON.parse(
-          atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
-        )
-        isService = decoded?.role === 'service_role'
-      }
-    } catch { /* ignore */ }
-    if (!isService) {
-      return new Response(JSON.stringify({ error: 'Forbidden' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
