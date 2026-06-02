@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import GlobalSearch from '@/components/GlobalSearch';
 
 const navItems = [
   { path: '/messages', label: 'New Issue Board', icon: BellIcon },
@@ -107,7 +108,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-12 border-b flex items-center justify-between px-4 bg-card shrink-0">
-          <div />
+          <div className="flex-1 max-w-xl">
+            <GlobalSearch />
+          </div>
           <div className="flex items-center gap-3">
             <button
               type="button"
