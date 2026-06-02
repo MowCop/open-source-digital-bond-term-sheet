@@ -140,7 +140,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   };
 
   return (
-    <Card className={`flex flex-col ${heightClass}`}>
+    <Card className={`flex min-h-0 flex-col overflow-hidden ${heightClass}`}>
       <CardHeader className="pb-1 shrink-0 space-y-1">
         {/* Single-row header: title + participants toggle + AI Extract + actions */}
         <div className="flex items-center gap-2 min-w-0 flex-wrap">
@@ -379,7 +379,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
 
             {/* Input bar */}
             {!readOnly && (
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="sticky bottom-0 z-10 -mx-1 flex items-center gap-1 rounded-md border border-border bg-card/95 p-1 shadow-lg backdrop-blur shrink-0">
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Attach file" onClick={handleMockAttachment}>
                 <Paperclip className="h-4 w-4" />
               </Button>
