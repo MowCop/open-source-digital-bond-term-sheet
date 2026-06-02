@@ -1,3 +1,5 @@
-In `src/pages/AIDraftPage.tsx`, swap the order of the two top blocks so the "Enter deal headline" panel renders directly under the "Create New Issue" heading, and the `<DraftChatStrip />` (New Issue Chat) sits below it.
+In `src/components/AlertHistoryCard.tsx`, disable the **Retract** button when the alert is Pre-Published (i.e. `message.status === 'draft'`).
 
-No other changes — state, mirroring behavior, and styling stay the same.
+- Keep the button visible so users see it exists, but render it greyed out and non-interactive: add `disabled` and a `title` tooltip explaining "Retract is only available for Published alerts".
+- The existing condition `(isSent || isDraft) && !isRetracted` stays, but for the draft case the button becomes disabled rather than active.
+- No changes to Send, Edit, Delete, or any other component. No state/logic changes elsewhere.
