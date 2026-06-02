@@ -32,7 +32,7 @@ interface SecureChatProps {
 }
 
 export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]', readOnly = false, allowDealAccess = false, hideStageBadge = false }: SecureChatProps) {
-  const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage, createDealChannel } = useApp();
+  const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage, createDealChannel, updateChatChannelParticipants } = useApp();
   const [activeChannel, setActiveChannel] = useState<ChatChannel | null>(null);
   const [inputText, setInputText] = useState('');
   const [linkingMessageId, setLinkingMessageId] = useState<string | undefined>();
@@ -43,6 +43,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   const [startScpIds, setStartScpIds] = useState<string[]>([]);
   const [startQuery, setStartQuery] = useState('');
   const [participantsOpen, setParticipantsOpen] = useState(false);
+  const [participantQuery, setParticipantQuery] = useState('');
 
   const myChannels = chatChannels.filter(ch => ch.participantIds.includes(currentUser.id));
 
