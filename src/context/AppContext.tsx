@@ -602,6 +602,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [chatChannels, currentUser.id, addAuditEntry]);
 
+  const createDealChannel = useCallback((dealId: string, label: string, participantIds: string[]): ChatChannel => {
+    const existing = chatChannels.find(c => c.dealId === dealId);
+    if (existing) return existing;
+    const cleanLabel = (label || '').trim() || 'Deal Chat';
+    const ids = Array.from(new Set([currentUser.id, ...participantIds.filter(Boolean)]));
+    const newChannel: ChatChannel = {
+      id: `ch${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      participantIds: ids,
+      dealId,
+      label: cleanLabel,
+      createdAt: new Date(),
+    };
+    setChatChannels(prev => [...prev, newChannel]);
+    insertChatChannel(newChannel).catch(e => console.error('[Cloud] createDealChannel failed', e));
+    const invitees = ids.filter(uid => uid !== currentUser.id);
+    if (invitees.length > 0) {
+      const newNotifs: Notification[] = invitees.map((uid, i) => ({
+        id: `n${Date.now()}_${i}_${Math.random().toString(36).slice(2, 6)}`,
+        userId: uid,
+        type: 'chat_invite',
+        title: `Chat invite: ${cleanLabel}`,
+        body: `You've been added to the deal chat. Open My Deal Chats to join.`,
+        read: false,
+        timestamp: new Date(),
+        dealId,
+      }));
+      setNotifications(prev => [...newNotifs, ...prev]);
+      newNotifs.forEach(n => insertNotification(n).catch(e => console.error('[Cloud] insertNotification failed', e)));
+      invitees.forEach(uid =>
+        addAuditEntry({
+          action: 'CHAT_PARTICIPANT_ADDED', entityType: 'deal', entityId: dealId,
+          userId: currentUser.id, details: `Added ${uid} to deal chat for ${cleanLabel}`,
+        }),
+      );
+    }
+    addAuditEntry({
+      action: 'CHAT_CHANNEL_CREATED', entityType: 'deal', entityId: dealId,
+      userId: currentUser.id, details: `Deal chat channel created for "${cleanLabel}"`,
+    });
+    return newChannel;
+  }, [chatChannels, currentUser.id, addAuditEntry]);
+
   const addUser = useCallback((user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => {
     const newUser: User = {
       ...user,
