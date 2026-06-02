@@ -24,6 +24,7 @@ interface FromThreadProps extends CommonProps {
 interface FromChannelProps extends CommonProps {
   source: 'channel';
   chatMessages: ChatMessage[];  // oldest→newest expected; we re-sort
+  sourceChannelId?: string;
 }
 
 type Props = FromThreadProps | FromChannelProps;
@@ -157,6 +158,7 @@ export default function ExtractDealFromChatButton(props: Props) {
         onOpenChange={setOpen}
         extraction={extraction}
         conversationLabel={conversationLabel}
+        sourceChannelId={props.source === 'channel' ? props.sourceChannelId : undefined}
       />
     </>
   );
