@@ -164,7 +164,7 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard }: DealDetailProps) 
 }
 
 export default function DealsPage() {
-  const { deals, createDeal, updateDealStage, currentUser } = useScopedApp();
+  const { deals, createDeal, updateDealStage, deleteDeal, currentUser } = useScopedApp();
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newDeal, setNewDeal] = useState({
