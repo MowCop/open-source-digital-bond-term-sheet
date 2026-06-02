@@ -195,9 +195,10 @@ interface DealRowProps {
   lastSeen: Record<string, number>;
   onSeen: (channelId: string, ts: number) => void;
   sortBy: 'chat' | 'updated';
+  onDelete: () => void;
 }
 
-function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen, sortBy }: DealRowProps) {
+function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen, sortBy, onDelete }: DealRowProps) {
   const { chatMessages, messages } = useScopedApp();
   const [historyOpen, setHistoryOpen] = useState(false);
 
