@@ -121,6 +121,7 @@ export type Database = {
           currency: string
           cusip: string | null
           day_count_fraction: string | null
+          extraction_snapshot: Json | null
           form_of_note: string | null
           governing_law: string | null
           id: string
@@ -164,6 +165,7 @@ export type Database = {
           currency: string
           cusip?: string | null
           day_count_fraction?: string | null
+          extraction_snapshot?: Json | null
           form_of_note?: string | null
           governing_law?: string | null
           id: string
@@ -207,6 +209,7 @@ export type Database = {
           currency?: string
           cusip?: string | null
           day_count_fraction?: string | null
+          extraction_snapshot?: Json | null
           form_of_note?: string | null
           governing_law?: string | null
           id?: string

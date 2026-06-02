@@ -104,6 +104,20 @@ export interface Deal {
   businessDayConvention?: BusinessDayConvention;
   optionality?: string;
   taxonomy?: string;
+
+  /**
+   * Snapshot of the source chat channel's pre-extraction state, set when
+   * this deal was created via "AI Extraction" from an existing chat thread.
+   * Used by `undoExtraction` to fully roll back the extraction.
+   */
+  extractionSnapshot?: {
+    sourceChannelId: string;
+    previousLabel: string;
+    previousParticipantIds: string[];
+    previousDealId: string | null;
+    extractedAt: string;
+    extractedBy: string;
+  };
 }
 
 export interface StageTransition {
