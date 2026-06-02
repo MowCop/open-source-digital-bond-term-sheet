@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Bookrunner } from '@/types/bond';
 import { extractBookrunners, simulateAIExtraction } from '@/lib/alertParsing';
 import DealChecker from '@/components/DealChecker';
-import { Sparkles, Paperclip, Send, Save, ChevronDown, MessageSquare, X, Download, Replace, Trash2 } from 'lucide-react';
+import { Sparkles, Paperclip, Send, Save, ChevronDown, Download, Replace, Trash2 } from 'lucide-react';
 import RichTextEditor from '@/components/RichTextEditor';
 import { stripHtml } from '@/lib/htmlText';
 import { docxFileToHtml } from '@/lib/docxToHtml';
@@ -111,7 +111,6 @@ export default function AIDraftPage() {
   const [scpIds, setScpIds] = useState<string[]>([]);
   // Stable per-mount draft id used to key the ephemeral chat channel.
   const draftKey = useMemo(() => `draft-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, []);
-  const [scpQuery, setScpQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const replaceTargetIdRef = useRef<string | null>(null);
@@ -121,14 +120,6 @@ export default function AIDraftPage() {
   const vendorUsers = users.filter(u => u.organizationType === 'vendor');
   // Syndicate-eligible users (any category === 'Syndicate'). AI-style predictive filter.
   const syndicateCandidates = users.filter(u => u.category === 'Syndicate' && u.id !== currentUser.id);
-  const q = scpQuery.trim().toLowerCase();
-  const scpMatches = q
-    ? syndicateCandidates.filter(u =>
-        u.name.toLowerCase().includes(q) ||
-        (u.organization || '').toLowerCase().includes(q) ||
-        (u.email || '').toLowerCase().includes(q)
-      ).slice(0, 6)
-    : [];
   const toggleScp = (id: string) => {
     setScpIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
@@ -525,7 +516,7 @@ export default function AIDraftPage() {
       aiSuggestions: aiFields ? { headline, borrowerDetails: '', dealSummary: '', keyTerms: aiFields, confidence: aiConfidence } : undefined,
     });
     toast({ title: 'Alert Sent', description: `Sent to ${selectedRecipients.length} recipient(s)` });
-    setHeadline(''); setBody(''); setAttachments([]); setSelectedRecipients([]); setAiFields(null); setAiBookrunners([]); setScpIds([]); setScpQuery('');
+    setHeadline(''); setBody(''); setAttachments([]); setSelectedRecipients([]); setAiFields(null); setAiBookrunners([]); setScpIds([]);
   };
 
   return (
@@ -535,7 +526,13 @@ export default function AIDraftPage() {
         <p className="text-muted-foreground text-sm">Draft a new message to automatically generate deal records.</p>
       </div>
 
-      <DraftChatStrip draftKey={draftKey} headline={headline} scpIds={scpIds} />
+      <DraftChatStrip
+        draftKey={draftKey}
+        headline={headline}
+        scpIds={scpIds}
+        candidates={syndicateCandidates}
+        onToggleScp={toggleScp}
+      />
 
       <div className="grid grid-cols-3 gap-4">
         {/* Left: Main compose area */}
@@ -834,67 +831,6 @@ export default function AIDraftPage() {
                   />
                 </label>
               ))}
-            </div>
-          </div>
-
-          {/* Syndicate Chat Participants (SCPs) */}
-          <div className="bg-card border border-border rounded-lg">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-              <MessageSquare className="h-4 w-4 text-accent" />
-              <span className="font-semibold text-sm uppercase tracking-wider">Syndicate Chat Participants</span>
-              <Badge variant="outline" className="ml-auto text-[10px]">{scpIds.length}</Badge>
-            </div>
-            <div className="px-4 py-2 text-[11px] text-muted-foreground border-b border-border">
-              Auto-added to this New Issue's chat. Only Syndicate users are eligible.
-            </div>
-            <div className="p-3 space-y-2">
-              {scpIds.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {scpIds.map(id => {
-                    const u = users.find(x => x.id === id);
-                    if (!u) return null;
-                    return (
-                      <Badge key={id} variant="secondary" className="text-[11px] gap-1 pr-1">
-                        {u.name} <span className="text-muted-foreground">· {u.organization}</span>
-                        <button onClick={() => toggleScp(id)} className="ml-1 hover:text-destructive">
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
-              <div className="relative">
-                <Input
-                  value={scpQuery}
-                  onChange={e => setScpQuery(e.target.value)}
-                  placeholder="Type a name, bank, or email…"
-                  className="h-8 text-xs"
-                />
-                {q && scpMatches.length > 0 && (
-                  <div className="absolute z-20 mt-1 w-full bg-popover border border-border rounded-md shadow-md max-h-60 overflow-y-auto">
-                    {scpMatches.map(u => (
-                      <button
-                        key={u.id}
-                        type="button"
-                        onClick={() => { toggleScp(u.id); setScpQuery(''); }}
-                        className="w-full text-left px-3 py-2 text-xs hover:bg-accent/20 flex items-center justify-between"
-                      >
-                        <div>
-                          <div className="font-medium">{u.name}</div>
-                          <div className="text-muted-foreground">{u.organization} · {u.email}</div>
-                        </div>
-                        {scpIds.includes(u.id) && <Badge variant="secondary" className="text-[10px]">added</Badge>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {q && scpMatches.length === 0 && (
-                  <div className="absolute z-20 mt-1 w-full bg-popover border border-border rounded-md shadow-md px-3 py-2 text-xs text-muted-foreground">
-                    No matching Syndicate user.
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
