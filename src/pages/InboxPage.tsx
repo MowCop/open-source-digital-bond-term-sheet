@@ -233,14 +233,15 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
 
   return (
     <Card className={`overflow-hidden transition-colors ${expanded ? 'border-primary ring-1 ring-primary' : ''}`}>
-      <button
-        onClick={onToggle}
-        className="w-full text-left p-3 flex items-start gap-3 hover:bg-accent/40 transition-colors"
-      >
-        <div className="mt-0.5 text-muted-foreground">
-          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </div>
-        <div className="flex-1 min-w-0">
+      <div className="flex items-start">
+        <button
+          onClick={onToggle}
+          className="flex-1 min-w-0 text-left p-3 flex items-start gap-3 hover:bg-accent/40 transition-colors"
+        >
+          <div className="mt-0.5 text-muted-foreground">
+            {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </div>
+          <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-sm truncate">{deal.issuerName}</span>
             <span className="text-xs text-muted-foreground">
@@ -263,8 +264,14 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
             </div>
           )}
           <div className="text-[10px] text-muted-foreground mt-1">{tsLabel}</div>
-        </div>
-      </button>
+          </div>
+        </button>
+        <DeleteChatButton
+          title="Delete this deal chat?"
+          description={`This will permanently delete the deal "${deal.issuerName}" along with all its chat threads, messages, alerts and notifications. This cannot be undone.`}
+          onConfirm={onDelete}
+        />
+      </div>
 
       {expanded &&
         (alertsNewestFirst.length > 0 && (
