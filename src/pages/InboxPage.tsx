@@ -385,14 +385,24 @@ export default function InboxPage() {
         orphan.push(ch);
       }
     }
-    const entries: { deal: Deal; channels: ChatChannel[] }[] = [];
+    type Entry =
+      | { kind: 'deal'; deal: Deal; channels: ChatChannel[] }
+      | { kind: 'pending'; channel: ChatChannel };
+    const entries: Entry[] = [];
     for (const [dealId, channels] of byDeal) {
       const deal = deals.find(d => d.id === dealId);
-      if (deal) entries.push({ deal, channels });
+      if (deal) entries.push({ kind: 'deal', deal, channels });
     }
+    for (const ch of orphan) entries.push({ kind: 'pending', channel: ch });
     // Sort by most-recent activity
     entries.sort((a, b) => {
-      const tsOf = (entry: { deal: Deal; channels: ChatChannel[] }) => {
+      const tsOf = (entry: Entry) => {
+        if (entry.kind === 'pending') {
+          return Math.max(
+            0,
+            ...chatMessages.filter(m => m.channelId === entry.channel.id).map(m => m.timestamp.getTime()),
+          );
+        }
         if (sortBy === 'updated') return entry.deal.updatedAt.getTime();
         return Math.max(
           0,
@@ -401,7 +411,7 @@ export default function InboxPage() {
       };
       return tsOf(b) - tsOf(a);
     });
-    return { entries, orphan };
+    return { entries };
   }, [myChannels, deals, chatMessages, sortBy]);
 
   const q = search.trim().toLowerCase();
@@ -417,7 +427,17 @@ export default function InboxPage() {
     );
   };
 
-  const visibleEntries = dealEntries.entries.filter(e => matchesSearch(e.deal, e.channels));
+  const matchesPending = (ch: ChatChannel) => {
+    if (!q) return true;
+    if (ch.label.toLowerCase().includes(q)) return true;
+    return chatMessages.some(
+      m => m.channelId === ch.id && (m.body.toLowerCase().includes(q) || m.senderName.toLowerCase().includes(q)),
+    );
+  };
+
+  const visibleEntries = dealEntries.entries.filter(e =>
+    e.kind === 'deal' ? matchesSearch(e.deal, e.channels) : matchesPending(e.channel),
+  );
   const totalUnread = Object.entries(lastSeen).reduce((n, [chId, seen]) => {
     const myCh = myChannels.find(c => c.id === chId);
     if (!myCh) return n;
@@ -427,7 +447,9 @@ export default function InboxPage() {
   // Auto-expand the first matching deal when searching
   useEffect(() => {
     if (q && visibleEntries.length > 0) {
-      setExpanded(prev => (prev[visibleEntries[0].deal.id] ? prev : { ...prev, [visibleEntries[0].deal.id]: true }));
+      const first = visibleEntries[0];
+      const key = first.kind === 'deal' ? first.deal.id : `orphan-${first.channel.id}`;
+      setExpanded(prev => (prev[key] ? prev : { ...prev, [key]: true }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
