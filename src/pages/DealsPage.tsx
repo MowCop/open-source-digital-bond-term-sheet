@@ -368,6 +368,32 @@ export default function DealsPage() {
                   </span>
                 </button>
                 {canManageDeals && (
+                  <>
+                    {bulletinByDeal.has(deal.id) ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Bulletin published"
+                        title="Bulletin published — view on New Issue Board"
+                        className="m-2 h-8 w-8 text-muted-foreground hover:text-foreground"
+                        onClick={e => { e.stopPropagation(); navigate(`/messages?dealId=${deal.id}`); }}
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Generate New Issue Bulletin"
+                        title="Generate New Issue Bulletin"
+                        className="m-2 h-8 w-8 text-muted-foreground hover:text-foreground"
+                        onClick={e => { e.stopPropagation(); setBulletinDealId(deal.id); }}
+                      >
+                        <Megaphone className="h-4 w-4" />
+                      </Button>
+                    )}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
@@ -399,6 +425,7 @@ export default function DealsPage() {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                  </>
                 )}
               </div>
               {expanded && (
@@ -408,6 +435,8 @@ export default function DealsPage() {
                     canManage={canManageDeals}
                     onAdvance={(next, note) => updateDealStage(deal.id, next, note)}
                     fromBoard={!!searchParams.get('dealId')}
+                    hasBulletin={bulletinByDeal.has(deal.id)}
+                    onGenerateBulletin={() => setBulletinDealId(deal.id)}
                   />
                 </CardContent>
               )}
@@ -415,6 +444,102 @@ export default function DealsPage() {
           );
         })}
       </div>
+
+      {bulletinDealId && (
+        <GenerateBulletinDialog
+          deal={deals.find(d => d.id === bulletinDealId)!}
+          onClose={() => setBulletinDealId(null)}
+          onPublished={(msgId) => {
+            setBulletinDealId(null);
+            navigate(`/messages?dealId=${bulletinDealId}`);
+          }}
+          publish={publishBulletinFromDeal}
+        />
+      )}
     </div>
+  );
+}
+
+function GenerateBulletinDialog({
+  deal,
+  onClose,
+  onPublished,
+  publish,
+}: {
+  deal: Deal;
+  onClose: () => void;
+  onPublished: (msgId: string) => void;
+  publish: (dealId: string, args: { subject: string; body: string }) => { id: string };
+}) {
+  const [loading, setLoading] = useState(true);
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id } })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          setError(error.message || 'Failed to generate bulletin');
+          setLoading(false);
+          return;
+        }
+        setSubject((data as any)?.subject || `${deal.issuerName} ${deal.currency} ${deal.size} ${deal.tenor}`);
+        setBody((data as any)?.body || '');
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [deal.id]);
+
+  const handlePublish = () => {
+    if (!subject.trim() || !body.trim()) {
+      toast.error('Bulletin needs a headline and body.');
+      return;
+    }
+    const msg = publish(deal.id, { subject: subject.trim(), body });
+    toast.success('Bulletin published to New Issue Board');
+    onPublished(msg.id);
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Generate New Issue Bulletin</DialogTitle>
+        </DialogHeader>
+        {loading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
+            <Loader2 className="h-4 w-4 animate-spin" /> Drafting bulletin from deal data…
+          </div>
+        ) : error ? (
+          <div className="text-sm text-destructive py-6">{error}</div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs">Headline</Label>
+              <Input value={subject} onChange={e => setSubject(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Bulletin body (HTML — prose + term sheet)</Label>
+              <Textarea value={body} onChange={e => setBody(e.target.value)} rows={14} className="font-mono text-xs" />
+            </div>
+            <div>
+              <Label className="text-xs">Preview</Label>
+              <div className="border rounded-md p-4 text-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: body }} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
+              <Button onClick={handlePublish}>
+                <Megaphone className="h-4 w-4 mr-1" /> Publish to New Issue Board
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
