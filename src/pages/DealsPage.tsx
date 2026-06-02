@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Deal, DealStage, BookrunnerRole } from '@/types/bond';
 import { format } from 'date-fns';
-import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2 } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2, Undo2 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -182,7 +182,7 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
 }
 
 export default function DealsPage() {
-  const { deals, messages, createDeal, updateDealStage, deleteDeal, publishBulletinFromDeal, currentUser } = useScopedApp();
+  const { deals, messages, createDeal, updateDealStage, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser } = useScopedApp();
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
