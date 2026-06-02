@@ -170,6 +170,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
                 chatMessages={channelMessages}
                 conversationLabel={extractionConversationLabel}
                 targetDealIds={activeDealId ? [activeDealId] : activeChannel.dealId ? [activeChannel.dealId] : undefined}
+                sourceChannelId={activeChannel.id}
               />
             )}
             {!hideStageBadge && activeDeal && (
