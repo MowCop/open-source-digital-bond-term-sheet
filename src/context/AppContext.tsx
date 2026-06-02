@@ -718,6 +718,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ensureDraftChannel, renameChatChannel, updateChatChannelParticipants, createDealChannel,
       deleteMessage, deleteMessageThread,
       deleteDeal,
+      deleteChatChannel,
       addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList,
     }}>
       {children}
