@@ -92,6 +92,7 @@ const dealFieldMap: Record<string, string> = {
   dayCountFraction: 'day_count_fraction', businessDayConvention: 'business_day_convention',
   optionality: 'optionality', taxonomy: 'taxonomy',
   createdByOrg: 'created_by_org',
+  extractionSnapshot: 'extraction_snapshot',
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
