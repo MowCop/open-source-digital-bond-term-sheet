@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MessageSquare, Send, ChevronDown, ChevronUp, X, Users } from 'lucide-react';
+import { Send, ChevronDown, ChevronUp, X, Users } from 'lucide-react';
 import { format } from 'date-fns';
 
 const COLLAPSE_KEY = 'bondvdr.aiDraft.chatOpen';
@@ -117,7 +117,6 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
     <div className="bg-card border border-border rounded-lg">
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-2 border-b border-border">
-        <MessageSquare className="h-4 w-4 text-accent shrink-0" />
         <div className="text-sm font-semibold truncate" title={displayLabel}>
           {displayLabel}
         </div>
