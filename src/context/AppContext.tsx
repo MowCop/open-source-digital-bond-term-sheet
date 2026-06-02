@@ -11,6 +11,7 @@ import {
   insertDeal, updateDealRow, rowToDeal, rowToUser,
   fetchMessages, insertMessage, updateMessageRow, deleteMessageRow, deleteMessagesByDealKey, rowToMessage,
   deleteMessagesContainingDeal, deleteDealRow, deleteChatChannelsByDeal, deleteChatMessagesByDeal, deleteNotificationsByDeal,
+  deleteChatChannelRow, deleteChatMessagesByChannel,
   fetchAuditLog, insertAudit, rowToAudit,
   fetchNotifications, insertNotification, markNotificationReadRow, rowToNotification,
   fetchDistributionLists, insertDistributionList, updateDistributionListRow, deleteDistributionListRow, rowToDistList,
