@@ -646,6 +646,7 @@ export default function InboxPage() {
                 lastSeen={lastSeen}
                 onSeen={onSeen}
                 sortBy={sortBy}
+                onDelete={() => deleteDeal(deal.id)}
               />
             );
           }
@@ -660,6 +661,7 @@ export default function InboxPage() {
               onToggle={() => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))}
               lastSeen={lastSeen}
               onSeen={onSeen}
+              onDelete={() => deleteChatChannel(ch.id)}
             />
           );
         })}
