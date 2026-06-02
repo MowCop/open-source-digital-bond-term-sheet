@@ -80,6 +80,10 @@ export default function AlertHistoryCard({
   const clickEditTimerRef = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
+  const { deals } = useApp();
+  const editDeal = message.dealIds?.[0]
+    ? deals.find(d => d.id === message.dealIds[0]) || null
+    : null;
 
   const clearClickEditTimer = () => {
     if (clickEditTimerRef.current) {
