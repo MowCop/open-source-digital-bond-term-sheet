@@ -100,6 +100,9 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   const activeDeal = activeDealId
     ? deals.find(d => d.id === activeDealId) || null
     : activeChannel?.dealId ? deals.find(d => d.id === activeChannel.dealId) || null : null;
+  const extractionConversationLabel = activeDeal
+    ? `${activeDeal.issuerName} ${activeDeal.currency} ${activeDeal.tenor} — Deal Thread`
+    : activeChannel?.label || 'Deal Thread';
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -160,7 +163,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
             <ExtractDealFromChatButton
               source="channel"
               chatMessages={channelMessages}
-              conversationLabel={activeChannel.label}
+              conversationLabel={extractionConversationLabel}
               targetDealIds={activeDealId ? [activeDealId] : activeChannel.dealId ? [activeChannel.dealId] : undefined}
             />
           )}
