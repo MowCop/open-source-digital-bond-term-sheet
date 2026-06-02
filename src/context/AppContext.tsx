@@ -15,6 +15,7 @@ import {
   fetchNotifications, insertNotification, markNotificationReadRow, rowToNotification,
   fetchDistributionLists, insertDistributionList, updateDistributionListRow, deleteDistributionListRow, rowToDistList,
   fetchChatChannels, insertChatChannel, rowToChatChannel,
+  updateChatChannel,
   fetchChatMessages, insertChatMessage, rowToChatMessage,
 } from '@/integrations/supabase/cloudData';
 
