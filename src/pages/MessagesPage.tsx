@@ -4,7 +4,7 @@ import { useApp, useScopedApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Message, DealStage } from '@/types/bond';
+import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
 import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History, Edit2 } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
@@ -35,6 +35,36 @@ const stageBadge: Record<DealStage, { label: string; className: string }> = {
   Settled: { label: 'Settled', className: 'bg-amber-900/50 text-amber-400 border-amber-800' },
 };
 
+// "Send" = "Publish" in product terms. We collapse the underlying message
+// statuses into a 3-state publish lifecycle so the New Issue Board can
+// clearly distinguish Pre-Published (saved-but-not-sent) from Published
+// (sent) from Retracted.
+export type PublishStatus = 'pre_published' | 'published' | 'retracted';
+
+export function publishStatusOf(m: Message): PublishStatus {
+  if (m.status === 'retracted') return 'retracted';
+  if (m.status === 'sent') return 'published';
+  return 'pre_published';
+}
+
+const publishStatusBadge: Record<PublishStatus, { label: string; className: string; dot: string }> = {
+  pre_published: {
+    label: 'Pre-Published',
+    className: 'bg-amber-900/40 text-amber-300 border-amber-800',
+    dot: 'bg-amber-400',
+  },
+  published: {
+    label: 'Published',
+    className: 'bg-green-900/40 text-green-300 border-green-800',
+    dot: 'bg-green-400',
+  },
+  retracted: {
+    label: 'Retracted',
+    className: 'bg-muted text-muted-foreground border-border',
+    dot: 'bg-muted-foreground/60',
+  },
+};
+
 interface AlertGroup {
   borrower: string;
   dealIds: string[];
@@ -44,6 +74,7 @@ interface AlertGroup {
   bookrunners: string;
   bookrunnersFull: string;
   stage: DealStage;
+  publishStatus: PublishStatus;
 }
 
 export default function MessagesPage() {
@@ -54,6 +85,7 @@ export default function MessagesPage() {
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
+  const [filterPublish, setFilterPublish] = useState<'all' | PublishStatus>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
   const [chatView, setChatView] = useState<'closed' | 'floating' | 'modal'>('closed');
   const showChat = chatView !== 'closed';
@@ -103,7 +135,12 @@ export default function MessagesPage() {
   // between sessions/environments.
   const visibleDealIds = new Set(deals.map(d => d.id));
   const visibleMessages = messages.filter(m => {
-    if (isReadOnly) return m.recipients.includes(currentUser.id) || m.senderId === currentUser.id;
+    if (isReadOnly) {
+      // Vendors / read-only roles only ever see PUBLISHED (sent) alerts —
+      // pre-published drafts must never leak out of the syndicate.
+      if (m.status !== 'sent') return false;
+      return m.recipients.includes(currentUser.id) || m.senderId === currentUser.id;
+    }
     // Master Admin sees all deals (scopeDeals returns all), so this is a no-op for them.
     // Syndicate Admins only see threads tied to their own org's visible deals.
     // Messages with no linked deal at all are kept (genuine standalone alerts).
@@ -134,14 +171,27 @@ export default function MessagesPage() {
       bookrunners: bookrunnerNames.length > 30 ? bookrunnerNames.slice(0, 28) + '...' : bookrunnerNames,
       bookrunnersFull: bookrunnerNames,
       stage: primaryDeal?.stage || 'Mandate',
+      publishStatus: publishStatusOf(sorted[0]),
     });
   });
 
   // Sort by latest update
   alertGroups.sort((a, b) => b.latestMessage.updatedAt.getTime() - a.latestMessage.updatedAt.getTime());
 
-  // Filter by stage
-  const filtered = filterStage === 'all' ? alertGroups : alertGroups.filter(g => g.stage === filterStage);
+  // Filter by publish status (primary) and stage (secondary)
+  const stageFiltered = filterStage === 'all'
+    ? alertGroups
+    : alertGroups.filter(g => g.stage === filterStage);
+  const filtered = filterPublish === 'all'
+    ? stageFiltered
+    : stageFiltered.filter(g => g.publishStatus === filterPublish);
+
+  const publishCounts = {
+    all: alertGroups.length,
+    pre_published: alertGroups.filter(g => g.publishStatus === 'pre_published').length,
+    published: alertGroups.filter(g => g.publishStatus === 'published').length,
+    retracted: alertGroups.filter(g => g.publishStatus === 'retracted').length,
+  };
 
   // Auto-expand deal when arriving from Deal Data panel via ?dealId=
   useEffect(() => {
