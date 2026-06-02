@@ -54,13 +54,16 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
 
   // When activeDealId changes externally, auto-select matching channel
   useEffect(() => {
-    if (activeDealId) {
-      const source = contextualMode ? chatChannels : myChannels;
-      const dealChannel = source.find(ch => ch.dealId === activeDealId);
-      if (dealChannel) {
-        setActiveChannel(dealChannel);
-      }
+    if (!activeDealId) return;
+    if (contextualMode) {
+      // Strict: only show a channel that belongs to THIS deal. Never fall
+      // back to another deal's channel (would mislead AI extraction).
+      const dealChannel = dealChannels[0] || null;
+      setActiveChannel(prev => (prev?.id === dealChannel?.id ? prev : dealChannel));
+      return;
     }
+    const dealChannel = myChannels.find(ch => ch.dealId === activeDealId);
+    if (dealChannel) setActiveChannel(dealChannel);
   }, [activeDealId, contextualMode, chatChannels]);
 
   const channelMessages = activeChannel
@@ -103,10 +106,10 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   }, [channelMessages.length, activeChannel]);
 
   useEffect(() => {
-    if (!activeChannel && myChannels.length > 0 && !activeDealId) {
+    if (!activeChannel && myChannels.length > 0 && !activeDealId && !readOnly) {
       setActiveChannel(myChannels[0]);
     }
-  }, [myChannels, activeChannel, activeDealId]);
+  }, [myChannels, activeChannel, activeDealId, readOnly]);
 
   const handleSend = () => {
     if (!activeChannel || !inputText.trim()) return;
@@ -150,7 +153,8 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
             </div>
           )}
           <Badge variant="outline" className="text-[10px] ml-auto">Secure Channel</Badge>
-          {activeChannel && channelMessages.length > 0 && (
+          {activeChannel && channelMessages.length > 0 &&
+            (!contextualMode || activeChannel.dealId === activeDealId) && (
             <ExtractDealFromChatButton
               source="channel"
               chatMessages={channelMessages}
