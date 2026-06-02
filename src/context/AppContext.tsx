@@ -697,7 +697,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       currentUser, setCurrentUser, users, deals, messages, auditLog, notifications, distributionLists,
       chatChannels, chatMessages,
       createDeal, updateDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addAuditEntry, sendChatMessage,
-      ensureDraftChannel, renameChatChannel, updateChatChannelParticipants,
+      ensureDraftChannel, renameChatChannel, updateChatChannelParticipants, createDealChannel,
       deleteMessage, deleteMessageThread,
       deleteDeal,
       addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList,
