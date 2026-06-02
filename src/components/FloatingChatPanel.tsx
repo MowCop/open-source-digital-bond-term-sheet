@@ -134,6 +134,7 @@ export default function FloatingChatPanel({ activeDealId, onClose, onExpandToMod
         key={activeDealId || 'all-chats'}
         activeDealId={activeDealId}
         heightClass="h-full"
+        allowDealAccess
         headerActions={
           <>
             <Button
