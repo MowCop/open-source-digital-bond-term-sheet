@@ -514,6 +514,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, [currentUser.id, addAuditEntry, deals, messages, chatChannels, chatMessages, notifications]);
 
+  const deleteChatChannel = useCallback((channelId: string) => {
+    const ch = chatChannels.find(c => c.id === channelId);
+    const cmCount = chatMessages.filter(c => c.channelId === channelId).length;
+    setChatChannels(prev => prev.filter(c => c.id !== channelId));
+    setChatMessages(prev => prev.filter(c => c.channelId !== channelId));
+    deleteChatMessagesByChannel(channelId).catch(e => console.error('[Cloud] deleteChatChannel msgs failed', e));
+    deleteChatChannelRow(channelId).catch(e => console.error('[Cloud] deleteChatChannel row failed', e));
+    addAuditEntry({
+      action: 'CHAT_CHANNEL_DELETED',
+      entityType: 'message',
+      entityId: channelId,
+      userId: currentUser.id,
+      details: `Deleted chat channel ${ch?.label ?? channelId} (cascaded: ${cmCount} chat message(s))`,
+    });
+  }, [currentUser.id, addAuditEntry, chatChannels, chatMessages]);
+
   const markNotificationRead = useCallback((id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     markNotificationReadRow(id).catch(e => console.error('[Cloud] markNotifRead failed', e));
