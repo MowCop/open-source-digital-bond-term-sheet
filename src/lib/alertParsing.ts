@@ -10,6 +10,28 @@ const KNOWN_BANKS = [
   'SEB', 'Swedbank', 'DBS', 'OCBC', 'ANZ', 'Westpac', 'NAB', 'Lloyds',
 ];
 
+/**
+ * Pull an explicit "Subject:" line out of a document/email-style transcript and
+ * clean up the decorative wrapping (€€€, ***, ###, quotes) that desks tend to
+ * put around it. Returns '' if no usable subject is found.
+ */
+export function extractSubjectLine(rawText: string): string {
+  if (!rawText) return '';
+  const head = rawText.split(/\r?\n/).slice(0, 30).join('\n');
+  const m = /^\s*Subject\s*[:\-]\s*(.+?)\s*$/im.exec(head);
+  if (!m) return '';
+  let line = m[1];
+  const deco = /^[\s\u20AC$#*>"'\u201C\u201D\u00AB\u00BB`~|\-=_]+|[\s\u20AC$#*<"'\u201C\u201D\u00AB\u00BB`~|\-=_]+$/g;
+  let prev = '';
+  for (let i = 0; i < 4 && line !== prev; i++) {
+    prev = line;
+    line = line.replace(deco, '').trim();
+  }
+  line = line.replace(/\s+/g, ' ').trim();
+  if (line.length < 10) return '';
+  return line;
+}
+
 export function extractBookrunners(rawText: string): Bookrunner[] {
   const text = rawText.replace(/\s+/g, ' ');
   const cuePattern = /(appointed|mandated|joint lead managers?|bookrunners?|global coordinators?|lead managers?)/gi;
