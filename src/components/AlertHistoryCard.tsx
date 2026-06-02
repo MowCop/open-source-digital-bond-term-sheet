@@ -408,7 +408,14 @@ export default function AlertHistoryCard({
                 </Button>
               )}
               {(isSent || isDraft) && !isRetracted && (
-                <Button size="sm" variant="destructive" className="text-xs" onClick={() => onRetract(message.id)}>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="text-xs"
+                  disabled={isDraft}
+                  title={isDraft ? 'Retract is only available for Published alerts' : undefined}
+                  onClick={() => onRetract(message.id)}
+                >
                   <RotateCcw className="h-3 w-3 mr-1" />
                   Retract
                 </Button>
