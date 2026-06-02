@@ -468,13 +468,39 @@ export default function AlertHistoryCard({
           />
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 px-5 py-4">
-          <RichTextEditor
-            value={editBody}
-            onChange={setEditBody}
-            placeholder="Write the alert body…"
-            className="h-full"
-          />
+        <div className="flex-1 min-h-0">
+          <ResizablePanelGroup direction="horizontal" className="h-full">
+            <ResizablePanel defaultSize={60} minSize={30}>
+              <div className="h-full px-5 py-4">
+                <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Bulletin
+                </div>
+                <div className="h-[calc(100%-1.25rem)]">
+                  <RichTextEditor
+                    value={editBody}
+                    onChange={setEditBody}
+                    placeholder="Write the alert body…"
+                    className="h-full"
+                  />
+                </div>
+              </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={40} minSize={25}>
+              <div className="h-full px-4 py-4 bg-muted/20 flex flex-col min-h-0">
+                <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
+                  Associated Chat Thread
+                </div>
+                <div className="flex-1 min-h-0">
+                  <SecureChat
+                    activeDealId={message.dealId ?? null}
+                    heightClass="h-full"
+                    readOnly
+                  />
+                </div>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </div>
 
         {/* Attachments panel */}
