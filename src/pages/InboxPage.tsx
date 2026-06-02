@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApp, useScopedApp } from '@/context/AppContext';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -312,6 +313,17 @@ export default function InboxPage() {
   const { currentUser, deals, chatChannels, chatMessages } = useScopedApp();
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    const dealId = searchParams.get('dealId');
+    if (!dealId) return;
+    setExpanded(prev => ({ ...prev, [dealId]: true }));
+    // brief scroll to the deal card
+    setTimeout(() => {
+      const el = document.getElementById(`inbox-deal-${dealId}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }, [searchParams]);
   const [sortBy, setSortBy] = useState<'chat' | 'updated'>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('bondvdr.inbox.sortBy') : null;
     return saved === 'updated' ? 'updated' : 'chat';
