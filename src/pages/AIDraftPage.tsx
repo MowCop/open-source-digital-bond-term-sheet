@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Attachment } from '@/types/bond';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Bookrunner } from '@/types/bond';
-import { extractBookrunners, simulateAIExtraction } from '@/lib/alertParsing';
+import { extractBookrunners, extractSubjectLine, simulateAIExtraction } from '@/lib/alertParsing';
 import DealChecker from '@/components/DealChecker';
 import { Sparkles, Paperclip, Send, Save, ChevronDown, Download, Replace, Trash2 } from 'lucide-react';
 import RichTextEditor from '@/components/RichTextEditor';
@@ -190,9 +190,12 @@ export default function AIDraftPage() {
     // 1) Fast regex baseline so the Deal Checker shows something immediately.
     const baseline = simulateAIExtraction(clean);
     const baselineBookrunners = extractBookrunners(clean);
-    const subjectLine = baseline.headline && !baseline.headline.startsWith('Issuer ')
-      ? baseline.headline
-      : fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+    const docSubject = extractSubjectLine(clean);
+    const subjectLine = docSubject
+      ? docSubject
+      : (baseline.headline && !baseline.headline.startsWith('Issuer ')
+          ? baseline.headline
+          : fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '));
 
     setHeadline(prev => {
       const trimmed = prev.trim();
@@ -226,7 +229,7 @@ export default function AIDraftPage() {
 
         // If AI gave us a stronger issuer, refresh the auto-headline.
         const aiIssuer = (aiKeyTerms?.['Issuer Name'] || '').trim();
-        if (aiIssuer) {
+        if (aiIssuer && !docSubject) {
           setHeadline(prev => {
             const trimmed = prev.trim();
             if (!trimmed) return `${aiIssuer} — New Issue Alert`;
