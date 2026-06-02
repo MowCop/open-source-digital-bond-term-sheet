@@ -535,7 +535,13 @@ export default function AIDraftPage() {
         <p className="text-muted-foreground text-sm">Draft a new message to automatically generate deal records.</p>
       </div>
 
-      <DraftChatStrip draftKey={draftKey} headline={headline} scpIds={scpIds} />
+      <DraftChatStrip
+        draftKey={draftKey}
+        headline={headline}
+        scpIds={scpIds}
+        candidates={syndicateCandidates}
+        onToggleScp={toggleScp}
+      />
 
       <div className="grid grid-cols-3 gap-4">
         {/* Left: Main compose area */}
