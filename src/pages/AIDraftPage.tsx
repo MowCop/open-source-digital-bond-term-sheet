@@ -673,6 +673,65 @@ export default function AIDraftPage() {
                 </Badge>
               )}
             </div>
+            <div className="flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/20 text-[11px]">
+              <span className="text-muted-foreground">Trigger:</span>
+              <Badge variant="outline" className="text-[10px] capitalize">
+                {triggerMode === 'onSave' ? 'On Save' : triggerMode}
+              </Badge>
+              <span className="text-muted-foreground hidden md:inline">· change in Bond Console</span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="ml-auto h-7 text-[11px]"
+                disabled={isExtractingAttachment || (headline.trim() + stripHtml(body).trim()).length < 10}
+                onClick={async () => {
+                  const combined = `${headline}\n${stripHtml(body)}`.trim();
+                  if (combined.length < 10) return;
+                  setIsExtractingAttachment(true);
+                  await applyExtractedText(combined, headline || 'manual run', { skipAI: false });
+                  setIsExtractingAttachment(false);
+                }}
+              >
+                <Sparkles className="h-3 w-3 mr-1" /> Run AI
+              </Button>
+            </div>
+            {Object.keys(aiConflicts).length > 0 && (
+              <div className="border-b border-amber-800/40 bg-amber-950/20 px-4 py-2 space-y-1">
+                <div className="text-[11px] font-semibold text-amber-300 flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  Differences ({Object.keys(aiConflicts).length}) — existing value kept
+                </div>
+                <div className="space-y-1">
+                  {Object.entries(aiConflicts).map(([k, v]) => (
+                    <div key={k} className="flex items-center gap-2 text-[11px]">
+                      <span className="text-muted-foreground w-20 shrink-0 truncate">{k}</span>
+                      <span className="text-foreground truncate" title={aiFields?.[k]}>{aiFields?.[k] || '—'}</span>
+                      <span className="text-amber-400/70">→</span>
+                      <span className="text-amber-300 truncate" title={v}>{v}</span>
+                      <div className="ml-auto flex gap-1 shrink-0">
+                        <button
+                          type="button"
+                          className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-200 hover:bg-amber-500/30"
+                          onClick={() => {
+                            setAiFields(prev => ({ ...(prev || {}), [k]: v }));
+                            setAiConflicts(prev => { const next = { ...prev }; delete next[k]; return next; });
+                          }}
+                        >
+                          Replace
+                        </button>
+                        <button
+                          type="button"
+                          className="px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground hover:bg-muted/80"
+                          onClick={() => setAiConflicts(prev => { const next = { ...prev }; delete next[k]; return next; })}
+                        >
+                          Keep
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="p-4">
               {aiFields ? (
                 <div className="space-y-2">
