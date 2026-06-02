@@ -27,9 +27,10 @@ interface SecureChatProps {
   activeDealId?: string | null;
   headerActions?: ReactNode;
   heightClass?: string;
+  readOnly?: boolean;
 }
 
-export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]' }: SecureChatProps) {
+export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]', readOnly = false }: SecureChatProps) {
   const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage } = useApp();
   const [activeChannel, setActiveChannel] = useState<ChatChannel | null>(null);
   const [inputText, setInputText] = useState('');
@@ -265,6 +266,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
             )}
 
             {/* Input bar */}
+            {!readOnly && (
             <div className="flex items-center gap-1 shrink-0">
               <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" title="Attach file" onClick={handleMockAttachment}>
                 <Paperclip className="h-4 w-4" />
@@ -284,6 +286,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
                 <Send className="h-4 w-4" />
               </Button>
             </div>
+            )}
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
