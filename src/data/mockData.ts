@@ -157,6 +157,54 @@ export const mockDeals: Deal[] = [
     taxonomy: 'Green Bond',
     stageHistory: [],
   },
+  {
+    id: 'd5',
+    issuerName: 'Kingdom of Spain',
+    currency: 'EUR',
+    size: '3,000,000,000',
+    tenor: '7Y',
+    coupon: '3.10%',
+    stage: 'Books Open',
+    bookrunners: [
+      { name: 'GlobalBank', role: 'active', isGlobalCoordinator: true },
+      { name: 'EuroBank', role: 'active', isGlobalCoordinator: false },
+      { name: 'Citi', role: 'passive', isGlobalCoordinator: false },
+    ],
+    createdAt: new Date('2024-04-08T07:00:00'),
+    updatedAt: new Date('2024-04-10T13:35:00'),
+    isin: 'ES0000012P89',
+    commonCode: '276431558',
+    maturityDate: '2031-04-15',
+    issuerRating: 'A/A-',
+    ratingOutlook: 'STABLE',
+    issuerLEI: '959800DQQUAMV0K08004',
+    issuanceType: 'STANDALONE',
+    specifiedDenomination: '100,000',
+    reofferSpread: 'MS+62bps',
+    midSwapRate: '2.48%',
+    pricingDate: '2024-04-10',
+    issueDate: '2024-04-15',
+    settlementDate: '2024-04-15',
+    issuePrice: '99.825',
+    reofferPrice: '99.825',
+    reofferYield: '3.13%',
+    governingLaw: 'ENGLISH_LAW',
+    sellingRestrictions: 'Reg S only',
+    listingVenue: 'Euronext Dublin',
+    formOfNote: 'BEARER_GLOBAL',
+    statusOfNote: 'SENIOR_UNSECURED',
+    interestType: 'FIXED',
+    interestRate: '3.10%',
+    interestPaymentFrequency: 'ANNUAL',
+    dayCountFraction: 'ACT_ACT',
+    businessDayConvention: 'MODIFIED_FOLLOWING',
+    optionality: 'NONE',
+    stageHistory: [
+      { from: 'Mandate', to: 'Announced', timestamp: new Date('2024-04-08T08:00:00'), userId: 'u2' },
+      { from: 'Announced', to: 'Launched', timestamp: new Date('2024-04-09T09:00:00'), userId: 'u2' },
+      { from: 'Launched', to: 'Books Open', timestamp: new Date('2024-04-10T07:45:00'), userId: 'u2', note: 'IPT MS+75 area' },
+    ],
+  },
 ];
 
 export const mockMessages: Message[] = [
@@ -196,6 +244,14 @@ export const mockMessages: Message[] = [
     createdAt: new Date('2024-03-20T07:00:00'), updatedAt: new Date('2024-03-20T07:00:00'),
     aiSuggestions: { headline: 'Apple Inc. Dual-Tranche Green Bond — USD 30Y + GBP 10Y', borrowerDetails: 'AA+/Aa1 rated US corporate', dealSummary: 'USD 3bn 30Y and GBP 1bn 10Y dual-tranche Green Bond issuance', keyTerms: { Borrower: 'Apple Inc.', 'Tranche 1': 'USD 3bn 30Y', 'Tranche 2': 'GBP 1bn 10Y', Label: 'Green Bond' }, confidence: 0.90 },
   },
+  {
+    id: 'm6', dealIds: ['d5'], subject: 'Kingdom of Spain EUR 7Y — Books Open at MS+65 area',
+    body: 'Kingdom of Spain (A/A- stable) has opened books for a new EUR 3bn 7Y senior unsecured benchmark. Joint Lead Managers: GlobalBank (B&D), EuroBank, Citi. IPT MS+75 area, revised guidance MS+65 (±2) WPIR. Settlement T+5 (15 April 2024). Reg S only, EUR 100k+1k denominations, listing Euronext Dublin, English law.',
+    status: 'sent', senderId: 'u2', recipients: ['u4', 'u5', 'u6', 'u8'],
+    attachments: [{ id: 'a4', name: 'Spain_7Y_TermSheet.pdf', type: 'pdf', size: 215000, url: '#' }],
+    createdAt: new Date('2024-04-10T07:50:00'), updatedAt: new Date('2024-04-10T08:00:00'), sentAt: new Date('2024-04-10T08:00:00'),
+    aiSuggestions: { headline: 'Kingdom of Spain EUR 3bn 7Y — Books Open', borrowerDetails: 'Sovereign issuer, A/A- rated, stable outlook', dealSummary: 'EUR 3bn 7Y benchmark, IPT MS+75 area, revised guidance MS+65 (±2)', keyTerms: { Size: 'EUR 3bn', Tenor: '7Y', IPT: 'MS+75 area', Guidance: 'MS+65 (±2)' }, confidence: 0.94 },
+  },
 ];
 
 export const mockAuditLog: AuditLogEntry[] = [
@@ -206,11 +262,15 @@ export const mockAuditLog: AuditLogEntry[] = [
   { id: 'al5', action: 'USER_ROLE_CHANGED', entityType: 'user', entityId: 'u3', userId: 'u1', timestamp: new Date('2024-03-12T09:00:00'), details: 'Role changed to syndicate_admin for Anna Schmidt' },
   { id: 'al6', action: 'DEAL_PRICED', entityType: 'deal', entityId: 'd2', userId: 'u2', timestamp: new Date('2024-03-14T10:00:00'), details: 'Volkswagen AG EUR 5Y priced at MS+120bps' },
   { id: 'al7', action: 'MESSAGE_SENT', entityType: 'message', entityId: 'm3', userId: 'u2', timestamp: new Date('2024-03-14T10:35:00'), details: 'Sent pricing alert for Volkswagen AG EUR 5Y' },
+  { id: 'al8', action: 'DEAL_CREATED', entityType: 'deal', entityId: 'd5', userId: 'u2', timestamp: new Date('2024-04-08T07:00:00'), details: 'Created deal: Kingdom of Spain EUR 7Y' },
+  { id: 'al9', action: 'DEAL_STAGE_CHANGED', entityType: 'deal', entityId: 'd5', userId: 'u2', timestamp: new Date('2024-04-10T07:45:00'), details: 'Stage changed from Launched to Books Open (IPT MS+75 area)' },
+  { id: 'al10', action: 'MESSAGE_SENT', entityType: 'message', entityId: 'm6', userId: 'u2', timestamp: new Date('2024-04-10T08:00:00'), details: 'Sent alert: Kingdom of Spain EUR 7Y - Books Open to 4 vendors' },
 ];
 
 export const mockNotifications: Notification[] = [
   { id: 'n1', userId: 'u4', type: 'message_received', title: 'New Deal Alert', body: 'Republic of Italy EUR 10Y - Books Open', read: false, timestamp: new Date('2024-03-18T08:20:00'), dealId: 'd1', messageId: 'm1' },
   { id: 'n2', userId: 'u5', type: 'deal_update', title: 'Deal Stage Updated', body: 'Volkswagen AG EUR 5Y has been priced', read: true, timestamp: new Date('2024-03-14T10:00:00'), dealId: 'd2' },
+  { id: 'n3', userId: 'u1', type: 'message_received', title: 'New Deal Alert', body: 'Kingdom of Spain EUR 7Y — Books Open at MS+65 area', read: false, timestamp: new Date('2024-04-10T08:00:00'), dealId: 'd5', messageId: 'm6' },
 ];
 
 export const mockDistributionLists: DistributionList[] = [
@@ -225,6 +285,7 @@ export const mockChatChannels: ChatChannel[] = [
   { id: 'ch3', participantIds: ['u3', 'u4'], label: 'EuroBank ↔ Bloomberg — General', createdAt: new Date('2024-03-16T09:00:00') },
   { id: 'ch4', participantIds: ['u2', 'u3', 'u4', 'u5', 'u6'], dealId: 'd3', label: 'Apple Inc. USD 30Y — Deal Thread', createdAt: new Date('2024-03-20T06:00:00') },
   { id: 'ch5', participantIds: ['u2', 'u3', 'u4', 'u5', 'u6'], dealId: 'd4', label: 'Apple Inc. GBP 10Y — Deal Thread', createdAt: new Date('2024-03-20T06:00:00') },
+  { id: 'ch6', participantIds: ['u1', 'u2', 'u3', 'u4', 'u7'], dealId: 'd5', label: 'Kingdom of Spain EUR 7Y — Deal Thread', createdAt: new Date('2024-04-08T07:30:00') },
 ];
 
 export const mockChatMessages: ChatMessage[] = [
@@ -239,4 +300,12 @@ export const mockChatMessages: ChatMessage[] = [
   { id: 'cm9', channelId: 'ch3', senderId: 'u3', senderName: 'Anna Schmidt', senderType: 'bank', body: 'Nothing confirmed yet but we may have a covered bond next week. Will share details via the data room once mandated.', attachments: [], timestamp: new Date('2024-03-16T09:25:00') },
   { id: 'cm10', channelId: 'ch1', dealId: 'd1', senderId: 'system', senderName: 'BondVDR Bot', senderType: 'system', body: '📢 [BOOKS OPEN] Republic of Italy EUR 10Y — Books Open. IPT MS+90 area. Discuss Now →', attachments: [], timestamp: new Date('2024-03-18T08:21:00'), linkedMessageId: 'm1' },
   { id: 'cm11', channelId: 'ch2', dealId: 'd2', senderId: 'system', senderName: 'BondVDR Bot', senderType: 'system', body: '📢 [PRICED] Volkswagen AG EUR 5Y — Priced at MS+120bps, coupon 3.875%. Books closed at EUR 4.2bn. Discuss Now →', attachments: [], timestamp: new Date('2024-03-14T10:36:00'), linkedMessageId: 'm3' },
+  { id: 'cm12', channelId: 'ch6', dealId: 'd5', senderId: 'system', senderName: 'BondVDR Bot', senderType: 'system', body: '📢 [MANDATE] Kingdom of Spain EUR 7Y — mandate announced. Joint Lead Managers: GlobalBank (B&D), EuroBank, Citi.', attachments: [], timestamp: new Date('2024-04-08T07:35:00') },
+  { id: 'cm13', channelId: 'ch6', dealId: 'd5', senderId: 'u2', senderName: 'James Miller', senderType: 'bank', body: 'Pre-marketing kicks off today. Targeting Books Open Wednesday AM. IPTs MS+75 area indicative — please share early feedback from real-money accounts.', attachments: [], timestamp: new Date('2024-04-08T08:15:00') },
+  { id: 'cm14', channelId: 'ch6', dealId: 'd5', senderId: 'u3', senderName: 'Anna Schmidt', senderType: 'bank', body: 'Investor calls scheduled tomorrow 10:00 CET. Roadshow deck attached — please disseminate to your distribution lists.', attachments: [{ id: 'ca5', name: 'Spain_7Y_Roadshow_Deck.pdf', type: 'pdf', size: 1850000, url: '#' }], timestamp: new Date('2024-04-08T09:40:00') },
+  { id: 'cm15', channelId: 'ch6', dealId: 'd5', senderId: 'u7', senderName: 'Elena Rodriguez', senderType: 'bank', body: 'Initial feedback supportive at the 7Y point. Several real-money accounts pushing for tighter than IPTs. Asset managers in particular keen on the duration.', attachments: [], timestamp: new Date('2024-04-09T14:20:00') },
+  { id: 'cm16', channelId: 'ch6', dealId: 'd5', senderId: 'system', senderName: 'BondVDR Bot', senderType: 'system', body: '📢 [BOOKS OPEN] Kingdom of Spain EUR 7Y — Books opened 07:45 UKT. IPT MS+75 area.', attachments: [], timestamp: new Date('2024-04-10T07:46:00'), linkedMessageId: 'm6' },
+  { id: 'cm17', channelId: 'ch6', dealId: 'd5', senderId: 'u2', senderName: 'James Miller', senderType: 'bank', body: 'Books > EUR 18bn (ex-JLM) after 2 hours. Revising guidance to MS+65 (±2) WPIR. Targeting EUR 3bn final size.', attachments: [], timestamp: new Date('2024-04-10T09:55:00') },
+  { id: 'cm18', channelId: 'ch6', dealId: 'd5', senderId: 'u4', senderName: 'Mike Johnson', senderType: 'vendor', body: 'Dissemination confirmed across Bloomberg terminals. Please share allocation logic for top-25 accounts once books close.', attachments: [], timestamp: new Date('2024-04-10T11:10:00') },
+  { id: 'cm19', channelId: 'ch6', dealId: 'd5', senderId: 'u2', senderName: 'James Miller', senderType: 'bank', body: 'Final spread MS+62. Coupon 3.10%, reoffer 99.825, yield 3.13%. Pricing 13:30 UKT, settlement T+5 (15 April). Final term sheet to follow shortly.', attachments: [], timestamp: new Date('2024-04-10T13:32:00') },
 ];
