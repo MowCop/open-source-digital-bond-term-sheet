@@ -493,7 +493,7 @@ export default function AlertHistoryCard({
                 </div>
                 <div className="flex-1 min-h-0">
                   <SecureChat
-                    activeDealId={message.dealId ?? null}
+                    activeDealId={message.dealIds?.[0] ?? null}
                     heightClass="h-full"
                     readOnly
                   />
