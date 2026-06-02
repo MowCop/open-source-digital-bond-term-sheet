@@ -525,14 +525,6 @@ export default function AIDraftPage() {
         <h1 className="text-2xl font-bold">Create New Issue</h1>
       </div>
 
-      <DraftChatStrip
-        draftKey={draftKey}
-        headline={headline}
-        scpIds={scpIds}
-        candidates={syndicateCandidates}
-        onToggleScp={toggleScp}
-      />
-
       <div className="bg-card border border-border rounded-lg">
         <Input
           value={headline}
@@ -541,6 +533,14 @@ export default function AIDraftPage() {
           className="border-0 rounded-lg text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
         />
       </div>
+
+      <DraftChatStrip
+        draftKey={draftKey}
+        headline={headline}
+        scpIds={scpIds}
+        candidates={syndicateCandidates}
+        onToggleScp={toggleScp}
+      />
 
       <div className="grid grid-cols-3 gap-4">
         {/* Left: Main compose area */}
