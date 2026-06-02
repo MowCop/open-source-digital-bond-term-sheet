@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { pdfFileToHtml } from '@/lib/pdfToHtml';
 import type { Editor } from '@tiptap/react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import DraftChatStrip from '@/components/DraftChatStrip';
 
 // Trigger mode for AI extraction in the bulletin builder. Persisted in
 // localStorage from Bond Console > AI Bulletin Extraction.
