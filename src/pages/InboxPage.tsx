@@ -441,7 +441,7 @@ function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen,
 }
 
 export default function InboxPage() {
-  const { currentUser, deals, chatChannels, chatMessages } = useScopedApp();
+  const { currentUser, deals, chatChannels, chatMessages, deleteDeal, deleteChatChannel } = useScopedApp();
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [searchParams] = useSearchParams();
