@@ -10,11 +10,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Deal, DealStage, BookrunnerRole } from '@/types/bond';
 import { format } from 'date-fns';
-import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2 } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const STAGES: DealStage[] = ['Mandate', 'Announced', 'Launched', 'Books Open', 'Books Closed', 'Priced', 'Settled'];
 const stageColors: Record<string, string> = {
@@ -40,9 +43,11 @@ interface DealDetailProps {
   canManage: boolean;
   onAdvance: (next: DealStage, note?: string) => void;
   fromBoard?: boolean;
+  hasBulletin: boolean;
+  onGenerateBulletin: () => void;
 }
 
-function DealDetail({ deal, canManage, onAdvance, fromBoard }: DealDetailProps) {
+function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGenerateBulletin }: DealDetailProps) {
   const [stageNote, setStageNote] = useState('');
   const next = getNextStage(deal.stage);
   const navigate = useNavigate();
@@ -61,14 +66,27 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard }: DealDetailProps) 
             Back to New Issue Board
           </Button>
         )}
-        {canManage && next && (
-          <div className="flex items-center gap-2">
-          <Input value={stageNote} onChange={e => setStageNote(e.target.value)} placeholder="Stage transition note..." className="w-64 h-8 text-xs" />
-          <Button size="sm" onClick={() => { onAdvance(next, stageNote || undefined); setStageNote(''); }}>
-            Advance to {next} <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
-      )}
+        {canManage && (
+          <div className="flex items-center gap-2 ml-auto">
+            {hasBulletin ? (
+              <Button size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={() => navigate(`/messages?dealId=${deal.id}`)}>
+                <FileText className="h-3 w-3 mr-1" /> Bulletin published
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" onClick={onGenerateBulletin}>
+                <Megaphone className="h-4 w-4 mr-1" /> Generate New Issue Bulletin
+              </Button>
+            )}
+            {next && (
+              <>
+                <Input value={stageNote} onChange={e => setStageNote(e.target.value)} placeholder="Stage transition note..." className="w-64 h-8 text-xs" />
+                <Button size="sm" onClick={() => { onAdvance(next, stageNote || undefined); setStageNote(''); }}>
+                  Advance to {next} <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-6">
@@ -164,8 +182,9 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard }: DealDetailProps) 
 }
 
 export default function DealsPage() {
-  const { deals, createDeal, updateDealStage, deleteDeal, currentUser } = useScopedApp();
+  const { deals, messages, createDeal, updateDealStage, deleteDeal, publishBulletinFromDeal, currentUser } = useScopedApp();
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
+  const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newDeal, setNewDeal] = useState({
     issuerName: '', currency: 'EUR', size: '', tenor: '', coupon: 'TBD',
@@ -176,8 +195,19 @@ export default function DealsPage() {
   const [brRole, setBrRole] = useState<BookrunnerRole>('active');
   const [brGC, setBrGC] = useState(false);
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const navigate = useNavigate();
 
   const canManageDeals = currentUser.role === 'syndicate_admin' || currentUser.role === 'master_admin';
+
+  const bulletinByDeal = useMemo(() => {
+    const m = new Map<string, string>(); // dealId -> messageId
+    for (const msg of messages) {
+      if (msg.bulletinSource === 'deal_data' && msg.status === 'sent') {
+        for (const did of msg.dealIds) if (!m.has(did)) m.set(did, msg.id);
+      }
+    }
+    return m;
+  }, [messages]);
 
   const sortedDeals = useMemo(
     () => [...deals].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
@@ -339,6 +369,32 @@ export default function DealsPage() {
                   </span>
                 </button>
                 {canManageDeals && (
+                  <>
+                    {bulletinByDeal.has(deal.id) ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Bulletin published"
+                        title="Bulletin published — view on New Issue Board"
+                        className="m-2 h-8 w-8 text-muted-foreground hover:text-foreground"
+                        onClick={e => { e.stopPropagation(); navigate(`/messages?dealId=${deal.id}`); }}
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Generate New Issue Bulletin"
+                        title="Generate New Issue Bulletin"
+                        className="m-2 h-8 w-8 text-muted-foreground hover:text-foreground"
+                        onClick={e => { e.stopPropagation(); setBulletinDealId(deal.id); }}
+                      >
+                        <Megaphone className="h-4 w-4" />
+                      </Button>
+                    )}
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
@@ -370,6 +426,7 @@ export default function DealsPage() {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                  </>
                 )}
               </div>
               {expanded && (
@@ -379,6 +436,8 @@ export default function DealsPage() {
                     canManage={canManageDeals}
                     onAdvance={(next, note) => updateDealStage(deal.id, next, note)}
                     fromBoard={!!searchParams.get('dealId')}
+                    hasBulletin={bulletinByDeal.has(deal.id)}
+                    onGenerateBulletin={() => setBulletinDealId(deal.id)}
                   />
                 </CardContent>
               )}
@@ -386,6 +445,102 @@ export default function DealsPage() {
           );
         })}
       </div>
+
+      {bulletinDealId && (
+        <GenerateBulletinDialog
+          deal={deals.find(d => d.id === bulletinDealId)!}
+          onClose={() => setBulletinDealId(null)}
+          onPublished={(msgId) => {
+            setBulletinDealId(null);
+            navigate(`/messages?dealId=${bulletinDealId}`);
+          }}
+          publish={publishBulletinFromDeal}
+        />
+      )}
     </div>
+  );
+}
+
+function GenerateBulletinDialog({
+  deal,
+  onClose,
+  onPublished,
+  publish,
+}: {
+  deal: Deal;
+  onClose: () => void;
+  onPublished: (msgId: string) => void;
+  publish: (dealId: string, args: { subject: string; body: string }) => { id: string };
+}) {
+  const [loading, setLoading] = useState(true);
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id } })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          setError(error.message || 'Failed to generate bulletin');
+          setLoading(false);
+          return;
+        }
+        setSubject((data as any)?.subject || `${deal.issuerName} ${deal.currency} ${deal.size} ${deal.tenor}`);
+        setBody((data as any)?.body || '');
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [deal.id]);
+
+  const handlePublish = () => {
+    if (!subject.trim() || !body.trim()) {
+      toast.error('Bulletin needs a headline and body.');
+      return;
+    }
+    const msg = publish(deal.id, { subject: subject.trim(), body });
+    toast.success('Bulletin published to New Issue Board');
+    onPublished(msg.id);
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Generate New Issue Bulletin</DialogTitle>
+        </DialogHeader>
+        {loading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
+            <Loader2 className="h-4 w-4 animate-spin" /> Drafting bulletin from deal data…
+          </div>
+        ) : error ? (
+          <div className="text-sm text-destructive py-6">{error}</div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <Label className="text-xs">Headline</Label>
+              <Input value={subject} onChange={e => setSubject(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">Bulletin body (HTML — prose + term sheet)</Label>
+              <Textarea value={body} onChange={e => setBody(e.target.value)} rows={14} className="font-mono text-xs" />
+            </div>
+            <div>
+              <Label className="text-xs">Preview</Label>
+              <div className="border rounded-md p-4 text-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: body }} />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
+              <Button onClick={handlePublish}>
+                <Megaphone className="h-4 w-4 mr-1" /> Publish to New Issue Board
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -167,6 +167,8 @@ export interface Message {
   threadId?: string;
   parentMessageId?: string;
   aiSuggestions?: AISuggestion;
+  /** Marker for bulletins generated from Deal Data (vs. authored manually). */
+  bulletinSource?: 'deal_data' | 'manual';
 }
 
 export interface Attachment {
