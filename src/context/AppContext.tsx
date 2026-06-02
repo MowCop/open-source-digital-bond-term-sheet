@@ -103,6 +103,7 @@ interface AppContextType {
   createMessage: (msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => Message;
   updateMessage: (id: string, updates: Partial<Message>) => void;
   sendMessage: (id: string) => void;
+  publishBulletinFromDeal: (dealId: string, args: { subject: string; body: string }) => Message;
   retractMessage: (id: string) => void;
   deleteMessage: (id: string) => void;
   deleteMessageThread: (dealIds: string[]) => void;
@@ -462,6 +463,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser.id, addAuditEntry, messages, deals, chatChannels]);
 
+  const publishBulletinFromDeal = useCallback((dealId: string, args: { subject: string; body: string }) => {
+    const now = new Date();
+    const newMsg: Message = {
+      id: `m${Date.now()}`,
+      dealIds: [dealId],
+      subject: args.subject,
+      body: args.body,
+      status: 'sent',
+      senderId: effectiveSenderId,
+      recipients: [],
+      attachments: [],
+      createdAt: now,
+      updatedAt: now,
+      sentAt: now,
+      bulletinSource: 'deal_data',
+    };
+    setMessages(prev => [newMsg, ...prev]);
+    insertMessage(newMsg).catch(e => {
+      console.error('[Cloud] publishBulletinFromDeal: insertMessage failed', e);
+      setMessages(prev => prev.filter(m => m.id !== newMsg.id));
+      toast.error('Could not publish bulletin', { description: e?.message ?? 'Please retry.' });
+    });
+    // Re-link the existing chat channel for this deal so it appears under the bulletin headline.
+    const channel = chatChannels.find(ch => ch.dealId === dealId);
+    if (channel && channel.label !== args.subject) {
+      setChatChannels(prev => prev.map(ch => ch.id === channel.id ? { ...ch, label: args.subject } : ch));
+      updateChatChannel(channel.id, { label: args.subject }).catch(e =>
+        console.error('[Cloud] publishBulletinFromDeal: updateChatChannel failed', e));
+    }
+    addAuditEntry({
+      action: 'DEAL_BULLETIN_GENERATED',
+      entityType: 'deal',
+      entityId: dealId,
+      userId: currentUser.id,
+      details: `Generated New Issue Bulletin: ${args.subject}`,
+    });
+    return newMsg;
+  }, [currentUser.id, effectiveSenderId, addAuditEntry, chatChannels]);
+
   const retractMessage = useCallback((id: string) => {
     const now = new Date();
     setMessages(prev => prev.map(m => m.id === id ? { ...m, status: 'retracted' as MessageStatus, retractedAt: now, retractedBy: currentUser.id, updatedAt: now } : m));
@@ -715,6 +755,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       currentUser, setCurrentUser, users, deals, messages, auditLog, notifications, distributionLists,
       chatChannels, chatMessages,
       createDeal, updateDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addAuditEntry, sendChatMessage,
+      publishBulletinFromDeal,
       ensureDraftChannel, renameChatChannel, updateChatChannelParticipants, createDealChannel,
       deleteMessage, deleteMessageThread,
       deleteDeal,
