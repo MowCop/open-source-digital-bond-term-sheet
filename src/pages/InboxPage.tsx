@@ -317,6 +317,69 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
   );
 }
 
+interface PendingDealRowProps {
+  channel: ChatChannel;
+  search: string;
+  expanded: boolean;
+  onToggle: () => void;
+  lastSeen: Record<string, number>;
+  onSeen: (channelId: string, ts: number) => void;
+}
+
+function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen }: PendingDealRowProps) {
+  const { chatMessages } = useScopedApp();
+  const msgs = useMemo(
+    () => chatMessages.filter(m => m.channelId === channel.id).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()),
+    [chatMessages, channel.id],
+  );
+  const last = msgs[0];
+  const seen = lastSeen[channel.id] ?? 0;
+  const unread = msgs.filter(m => m.timestamp.getTime() > seen).length;
+
+  return (
+    <Card className={`overflow-hidden transition-colors ${expanded ? 'border-primary ring-1 ring-primary' : ''}`}>
+      <button
+        onClick={onToggle}
+        className="w-full text-left p-3 flex items-start gap-3 hover:bg-accent/40 transition-colors"
+      >
+        <div className="mt-0.5 text-muted-foreground">
+          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-sm truncate">{channel.label}</span>
+            <Badge variant="outline" className="text-[10px]">Pending — no deal yet</Badge>
+            <span className="text-[10px] text-muted-foreground ml-auto flex items-center gap-1">
+              <MessageSquare className="h-3 w-3" />1 thread
+            </span>
+            {unread > 0 && (
+              <Badge className="bg-destructive text-destructive-foreground text-[10px] h-5 min-w-5 px-1.5">
+                {unread}
+              </Badge>
+            )}
+          </div>
+          {last && (
+            <div className="text-xs text-muted-foreground mt-1 truncate">
+              <span className="font-medium">{last.senderName}:</span> {stripHtml(last.body)}
+            </div>
+          )}
+          <div className="text-[10px] text-muted-foreground mt-1">
+            {last ? `Last chat: ${format(last.timestamp, 'd MMM, HH:mm')}` : 'No messages yet'}
+          </div>
+        </div>
+      </button>
+      {expanded && (
+        <ChannelThread
+          channel={channel}
+          search={search}
+          lastSeen={lastSeen[channel.id] ?? 0}
+          onSeen={onSeen}
+        />
+      )}
+    </Card>
+  );
+}
+
 export default function InboxPage() {
   const { currentUser, deals, chatChannels, chatMessages } = useScopedApp();
   const [search, setSearch] = useState('');
