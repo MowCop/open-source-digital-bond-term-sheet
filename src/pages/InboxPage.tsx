@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import LinkifiedText from '@/components/LinkifiedText';
+import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
 import { stripHtml } from '@/lib/htmlText';
 import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History } from 'lucide-react';
 import { format } from 'date-fns';
@@ -76,7 +77,14 @@ function ChannelThread({ channel, search, lastSeen, onSeen }: ChannelThreadProps
           <ShieldCheck className="h-3 w-3" />
           <span className="font-medium">{channel.label}</span>
         </div>
-        <span>{channel.participantIds.length} participants</span>
+        <div className="flex items-center gap-2">
+          <ExtractDealFromChatButton
+            source="channel"
+            chatMessages={channelMsgs}
+            conversationLabel={channel.label}
+          />
+          <span>{channel.participantIds.length} participants</span>
+        </div>
       </div>
 
       <ScrollArea className="h-72" ref={scrollRef}>
