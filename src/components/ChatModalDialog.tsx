@@ -23,6 +23,7 @@ export default function ChatModalDialog({ open, activeDealId, onClose, onCollaps
           key={activeDealId || 'all-chats'}
           activeDealId={activeDealId}
           heightClass="h-full"
+          allowDealAccess
           headerActions={
             <Button
               variant="ghost"
