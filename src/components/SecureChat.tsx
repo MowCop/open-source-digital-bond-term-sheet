@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import LinkifiedText from '@/components/LinkifiedText';
 import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
-import { Send, Paperclip, Link2, ShieldCheck, FileText, X, Bot, Users, Plus } from 'lucide-react';
+import { Send, Paperclip, Link2, ShieldCheck, FileText, X, Bot, Users, Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ChatChannel, DealStage } from '@/types/bond';
 
@@ -41,6 +41,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   const [highlightChatId, setHighlightChatId] = useState<string | null>(null);
   const [startScpIds, setStartScpIds] = useState<string[]>([]);
   const [startQuery, setStartQuery] = useState('');
+  const [participantsOpen, setParticipantsOpen] = useState(false);
 
   const myChannels = chatChannels.filter(ch => ch.participantIds.includes(currentUser.id));
 
@@ -138,41 +139,60 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
 
   return (
     <Card className={`flex flex-col ${heightClass}`}>
-      <CardHeader className="pb-2 shrink-0">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-primary" />
-          <CardTitle className="text-sm">Secure Communications</CardTitle>
-          {participants.length > 0 && (
-            <div className="flex items-center gap-1 flex-wrap min-w-0">
-              {participants.map(p => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => handleParticipantClick(p.id, p.name)}
-                  title={`Reply to ${p.name}`}
-                  className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/40 hover:bg-accent text-accent-foreground hover:underline truncate max-w-[120px]"
-                >
-                  {p.name}
-                </button>
-              ))}
-            </div>
+      <CardHeader className="pb-2 shrink-0 space-y-2">
+        {/* Title row — deal identifies the chat */}
+        <div className="flex items-center gap-2 min-w-0">
+          <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
+          <CardTitle className="text-sm truncate">
+            {activeDeal
+              ? `${activeDeal.issuerName} ${activeDeal.currency} ${activeDeal.tenor}`
+              : activeChannel?.label || 'Chat'}
+          </CardTitle>
+          {activeDeal && (
+            <Badge className={`text-[10px] ${stageColor[activeDeal.stage]} shrink-0`}>{activeDeal.stage}</Badge>
           )}
-          <Badge variant="outline" className="text-[10px] ml-auto">Secure Channel</Badge>
-          {activeChannel && channelMessages.length > 0 &&
-            (!activeDealId || activeChannel.dealId === activeDealId) && (
-            <ExtractDealFromChatButton
-              source="channel"
-              chatMessages={channelMessages}
-              conversationLabel={extractionConversationLabel}
-              targetDealIds={activeDealId ? [activeDealId] : activeChannel.dealId ? [activeChannel.dealId] : undefined}
-            />
-          )}
-          {headerActions && <div className="flex items-center gap-1">{headerActions}</div>}
+          <div className="ml-auto flex items-center gap-1 shrink-0">
+            {activeChannel && channelMessages.length > 0 &&
+              (!activeDealId || activeChannel.dealId === activeDealId) && (
+              <ExtractDealFromChatButton
+                source="channel"
+                chatMessages={channelMessages}
+                conversationLabel={extractionConversationLabel}
+                targetDealIds={activeDealId ? [activeDealId] : activeChannel.dealId ? [activeChannel.dealId] : undefined}
+              />
+            )}
+            {headerActions}
+          </div>
         </div>
-        {activeDeal && (
-          <div className="flex items-center gap-2 mt-1">
-            <Badge className={`text-[10px] ${stageColor[activeDeal.stage]}`}>{activeDeal.stage}</Badge>
-            <span className="text-[10px] text-muted-foreground">{activeDeal.issuerName} {activeDeal.currency} {activeDeal.tenor}</span>
+
+        {/* Participants — collapsed by default */}
+        {participants.length > 0 && (
+          <div>
+            <button
+              type="button"
+              onClick={() => setParticipantsOpen(o => !o)}
+              className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              aria-expanded={participantsOpen}
+            >
+              {participantsOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+              <Users className="h-3 w-3" />
+              Participants ({participants.length})
+            </button>
+            {participantsOpen && (
+              <div className="mt-1 flex items-center gap-1 flex-wrap">
+                {participants.map(p => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleParticipantClick(p.id, p.name)}
+                    title={`Reply to ${p.name}`}
+                    className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/40 hover:bg-accent text-accent-foreground hover:underline truncate max-w-[140px]"
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </CardHeader>
