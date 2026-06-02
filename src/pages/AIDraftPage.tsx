@@ -537,7 +537,7 @@ export default function AIDraftPage() {
       <div className="grid grid-cols-3 gap-4">
         {/* Left: Main compose area */}
         <div className="col-span-2 flex flex-col">
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+          <div className="text-sm font-bold text-foreground mb-1.5">
             New Issue Bulletin
           </div>
           <div

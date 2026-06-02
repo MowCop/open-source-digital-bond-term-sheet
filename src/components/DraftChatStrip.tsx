@@ -50,7 +50,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
     return ids.map(id => users.find(u => u.id === id)).filter(Boolean) as typeof users;
   }, [channel, scpIds, currentUser.id, users]);
 
-  const displayLabel = (headline || '').trim() || 'Untitled New Issue';
+  const displayLabel = (headline || '').trim() || 'New Issue Chat';
 
   const q = scpQuery.trim().toLowerCase();
   const scpMatches = q
