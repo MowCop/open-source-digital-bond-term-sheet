@@ -529,7 +529,7 @@ export default function AIDraftPage() {
         <Input
           value={headline}
           onChange={e => setHeadline(e.target.value)}
-          placeholder="Enter deal headline (e.g. Republic of Italy EUR 1.5bn 10Y BTP Syndication)"
+          placeholder="Enter Deal/Chat Headline - title will mirror"
           className="border-0 rounded-lg text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
         />
       </div>
