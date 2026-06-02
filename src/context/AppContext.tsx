@@ -398,7 +398,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     addAuditEntry({ action: 'DEAL_CREATED', entityType: 'deal', entityId: newDeal.id, userId: currentUser.id, details: `Created deal: ${deal.issuerName} ${deal.currency} ${deal.tenor}` });
     return newDeal;
-  }, [currentUser.id, addAuditEntry, ownerOrg]);
+  }, [currentUser.id, addAuditEntry, ownerOrg, chatChannels]);
 
   const updateDeal = useCallback((dealId: string, updates: Partial<Deal>) => {
     setDeals(prev => prev.map(d => d.id === dealId ? { ...d, ...updates, updatedAt: new Date() } : d));
