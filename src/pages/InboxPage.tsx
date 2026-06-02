@@ -336,9 +336,10 @@ interface PendingDealRowProps {
   onToggle: () => void;
   lastSeen: Record<string, number>;
   onSeen: (channelId: string, ts: number) => void;
+  onDelete: () => void;
 }
 
-function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen }: PendingDealRowProps) {
+function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen, onDelete }: PendingDealRowProps) {
   const { chatMessages } = useScopedApp();
   const msgs = useMemo(
     () => chatMessages.filter(m => m.channelId === channel.id).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()),
