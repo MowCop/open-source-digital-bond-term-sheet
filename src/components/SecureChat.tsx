@@ -42,15 +42,24 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
 
   const myChannels = chatChannels.filter(ch => ch.participantIds.includes(currentUser.id));
 
+  // In read-only contextual mode (e.g. Edit Alert split-screen), show the
+  // deal's channel(s) regardless of whether the current user is a participant.
+  const contextualMode = readOnly && !!activeDealId;
+  const dealChannels = activeDealId
+    ? chatChannels.filter(ch => ch.dealId === activeDealId)
+    : [];
+  const availableChannels = contextualMode ? dealChannels : myChannels;
+
   // When activeDealId changes externally, auto-select matching channel
   useEffect(() => {
     if (activeDealId) {
-      const dealChannel = myChannels.find(ch => ch.dealId === activeDealId);
+      const source = contextualMode ? chatChannels : myChannels;
+      const dealChannel = source.find(ch => ch.dealId === activeDealId);
       if (dealChannel) {
         setActiveChannel(dealChannel);
       }
     }
-  }, [activeDealId]);
+  }, [activeDealId, contextualMode, chatChannels]);
 
   const channelMessages = activeChannel
     ? chatMessages.filter(cm => cm.channelId === activeChannel.id).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
