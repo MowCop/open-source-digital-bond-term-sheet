@@ -854,6 +854,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       deleteMessage, deleteMessageThread,
       deleteDeal,
       deleteChatChannel,
+      undoExtraction,
       addUser, deleteUser, updateUser, addDistributionList, updateDistributionList, deleteDistributionList,
     }}>
       {children}
