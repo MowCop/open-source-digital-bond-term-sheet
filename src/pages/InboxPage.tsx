@@ -317,6 +317,69 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
   );
 }
 
+interface PendingDealRowProps {
+  channel: ChatChannel;
+  search: string;
+  expanded: boolean;
+  onToggle: () => void;
+  lastSeen: Record<string, number>;
+  onSeen: (channelId: string, ts: number) => void;
+}
+
+function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen }: PendingDealRowProps) {
+  const { chatMessages } = useScopedApp();
+  const msgs = useMemo(
+    () => chatMessages.filter(m => m.channelId === channel.id).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()),
+    [chatMessages, channel.id],
+  );
+  const last = msgs[0];
+  const seen = lastSeen[channel.id] ?? 0;
+  const unread = msgs.filter(m => m.timestamp.getTime() > seen).length;
+
+  return (
+    <Card className={`overflow-hidden transition-colors ${expanded ? 'border-primary ring-1 ring-primary' : ''}`}>
+      <button
+        onClick={onToggle}
+        className="w-full text-left p-3 flex items-start gap-3 hover:bg-accent/40 transition-colors"
+      >
+        <div className="mt-0.5 text-muted-foreground">
+          {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-sm truncate">{channel.label}</span>
+            <Badge variant="outline" className="text-[10px]">Pending — no deal yet</Badge>
+            <span className="text-[10px] text-muted-foreground ml-auto flex items-center gap-1">
+              <MessageSquare className="h-3 w-3" />1 thread
+            </span>
+            {unread > 0 && (
+              <Badge className="bg-destructive text-destructive-foreground text-[10px] h-5 min-w-5 px-1.5">
+                {unread}
+              </Badge>
+            )}
+          </div>
+          {last && (
+            <div className="text-xs text-muted-foreground mt-1 truncate">
+              <span className="font-medium">{last.senderName}:</span> {stripHtml(last.body)}
+            </div>
+          )}
+          <div className="text-[10px] text-muted-foreground mt-1">
+            {last ? `Last chat: ${format(last.timestamp, 'd MMM, HH:mm')}` : 'No messages yet'}
+          </div>
+        </div>
+      </button>
+      {expanded && (
+        <ChannelThread
+          channel={channel}
+          search={search}
+          lastSeen={lastSeen[channel.id] ?? 0}
+          onSeen={onSeen}
+        />
+      )}
+    </Card>
+  );
+}
+
 export default function InboxPage() {
   const { currentUser, deals, chatChannels, chatMessages } = useScopedApp();
   const [search, setSearch] = useState('');
@@ -385,14 +448,24 @@ export default function InboxPage() {
         orphan.push(ch);
       }
     }
-    const entries: { deal: Deal; channels: ChatChannel[] }[] = [];
+    type Entry =
+      | { kind: 'deal'; deal: Deal; channels: ChatChannel[] }
+      | { kind: 'pending'; channel: ChatChannel };
+    const entries: Entry[] = [];
     for (const [dealId, channels] of byDeal) {
       const deal = deals.find(d => d.id === dealId);
-      if (deal) entries.push({ deal, channels });
+      if (deal) entries.push({ kind: 'deal', deal, channels });
     }
+    for (const ch of orphan) entries.push({ kind: 'pending', channel: ch });
     // Sort by most-recent activity
     entries.sort((a, b) => {
-      const tsOf = (entry: { deal: Deal; channels: ChatChannel[] }) => {
+      const tsOf = (entry: Entry) => {
+        if (entry.kind === 'pending') {
+          return Math.max(
+            0,
+            ...chatMessages.filter(m => m.channelId === entry.channel.id).map(m => m.timestamp.getTime()),
+          );
+        }
         if (sortBy === 'updated') return entry.deal.updatedAt.getTime();
         return Math.max(
           0,
@@ -401,7 +474,7 @@ export default function InboxPage() {
       };
       return tsOf(b) - tsOf(a);
     });
-    return { entries, orphan };
+    return { entries };
   }, [myChannels, deals, chatMessages, sortBy]);
 
   const q = search.trim().toLowerCase();
@@ -417,7 +490,17 @@ export default function InboxPage() {
     );
   };
 
-  const visibleEntries = dealEntries.entries.filter(e => matchesSearch(e.deal, e.channels));
+  const matchesPending = (ch: ChatChannel) => {
+    if (!q) return true;
+    if (ch.label.toLowerCase().includes(q)) return true;
+    return chatMessages.some(
+      m => m.channelId === ch.id && (m.body.toLowerCase().includes(q) || m.senderName.toLowerCase().includes(q)),
+    );
+  };
+
+  const visibleEntries = dealEntries.entries.filter(e =>
+    e.kind === 'deal' ? matchesSearch(e.deal, e.channels) : matchesPending(e.channel),
+  );
   const totalUnread = Object.entries(lastSeen).reduce((n, [chId, seen]) => {
     const myCh = myChannels.find(c => c.id === chId);
     if (!myCh) return n;
@@ -427,7 +510,9 @@ export default function InboxPage() {
   // Auto-expand the first matching deal when searching
   useEffect(() => {
     if (q && visibleEntries.length > 0) {
-      setExpanded(prev => (prev[visibleEntries[0].deal.id] ? prev : { ...prev, [visibleEntries[0].deal.id]: true }));
+      const first = visibleEntries[0];
+      const key = first.kind === 'deal' ? first.deal.id : `orphan-${first.channel.id}`;
+      setExpanded(prev => (prev[key] ? prev : { ...prev, [key]: true }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
@@ -487,52 +572,37 @@ export default function InboxPage() {
             {q ? 'No deals match your search.' : 'No deal threads available for your account.'}
           </Card>
         )}
-        {visibleEntries.map(({ deal, channels }) => (
-          <DealRow
-            key={deal.id}
-            deal={deal}
-            channels={channels}
-            search={search}
-            expanded={!!expanded[deal.id]}
-            onToggle={() => setExpanded(prev => ({ ...prev, [deal.id]: !prev[deal.id] }))}
-            lastSeen={lastSeen}
-            onSeen={onSeen}
-            sortBy={sortBy}
-          />
-        ))}
-
-        {dealEntries.orphan.length > 0 && !q && (
-          <div className="pt-4">
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              General Conversations
-            </h2>
-            {dealEntries.orphan.map(ch => {
-              const msgs = chatMessages.filter(m => m.channelId === ch.id);
-              const seen = lastSeen[ch.id] ?? 0;
-              const unread = msgs.filter(m => m.timestamp.getTime() > seen).length;
-              const isOpen = !!expanded[`orphan-${ch.id}`];
-              return (
-                <Card key={ch.id} className="overflow-hidden mb-2">
-                  <button
-                    onClick={() => setExpanded(prev => ({ ...prev, [`orphan-${ch.id}`]: !prev[`orphan-${ch.id}`] }))}
-                    className="w-full text-left p-3 flex items-center gap-3 hover:bg-accent/40"
-                  >
-                    {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    <span className="font-medium text-sm flex-1 truncate">{ch.label}</span>
-                    {unread > 0 && (
-                      <Badge className="bg-destructive text-destructive-foreground text-[10px] h-5 min-w-5 px-1.5">
-                        {unread}
-                      </Badge>
-                    )}
-                  </button>
-                  {isOpen && (
-                    <ChannelThread channel={ch} search={search} lastSeen={lastSeen[ch.id] ?? 0} onSeen={onSeen} />
-                  )}
-                </Card>
-              );
-            })}
-          </div>
-        )}
+        {visibleEntries.map(entry => {
+          if (entry.kind === 'deal') {
+            const { deal, channels } = entry;
+            return (
+              <DealRow
+                key={deal.id}
+                deal={deal}
+                channels={channels}
+                search={search}
+                expanded={!!expanded[deal.id]}
+                onToggle={() => setExpanded(prev => ({ ...prev, [deal.id]: !prev[deal.id] }))}
+                lastSeen={lastSeen}
+                onSeen={onSeen}
+                sortBy={sortBy}
+              />
+            );
+          }
+          const ch = entry.channel;
+          const key = `orphan-${ch.id}`;
+          return (
+            <PendingDealRow
+              key={key}
+              channel={ch}
+              search={search}
+              expanded={!!expanded[key]}
+              onToggle={() => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))}
+              lastSeen={lastSeen}
+              onSeen={onSeen}
+            />
+          );
+        })}
       </div>
     </div>
   );
