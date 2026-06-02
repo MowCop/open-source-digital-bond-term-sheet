@@ -534,6 +534,15 @@ export default function AIDraftPage() {
         onToggleScp={toggleScp}
       />
 
+      <div className="bg-card border border-border rounded-lg">
+        <Input
+          value={headline}
+          onChange={e => setHeadline(e.target.value)}
+          placeholder="Enter deal headline (e.g. Republic of Italy EUR 1.5bn 10Y BTP Syndication)"
+          className="border-0 rounded-lg text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
+        />
+      </div>
+
       <div className="grid grid-cols-3 gap-4">
         {/* Left: Main compose area */}
         <div className="col-span-2 flex flex-col">
@@ -550,13 +559,6 @@ export default function AIDraftPage() {
             onDrop={handleDrop}
             className={`relative bg-card border rounded-lg flex-1 flex flex-col transition-colors ${isDragOver ? 'border-accent border-dashed bg-accent/5' : 'border-border'}`}
           >
-            {/* Headline */}
-            <Input
-              value={headline}
-              onChange={e => setHeadline(e.target.value)}
-              placeholder="Enter deal headline (e.g. Republic of Italy EUR 1.5bn 10Y BTP Syndication)"
-              className="border-0 border-b border-border rounded-none text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
-            />
             <div className="flex flex-1 flex-col min-h-[400px]">
               {/* Rich-text body editor — preserves formatting from dropped Word / PDF files */}
               <div className="flex flex-1 flex-col min-h-0">
