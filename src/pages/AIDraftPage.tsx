@@ -669,7 +669,10 @@ export default function AIDraftPage() {
         {/* Right: AI extraction + Distribution */}
         <div className="space-y-4">
           {/* AI Field Extraction */}
-          <div className="bg-card border border-border rounded-lg">
+          <div className="text-sm font-bold mb-1.5 pl-4 invisible" aria-hidden="true">
+            AI Field Extraction
+          </div>
+          <div className="bg-card border border-border rounded-lg !mt-0">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
               <Sparkles className="h-4 w-4 text-accent" />
               <span className="font-semibold text-sm">AI Field Extraction</span>
