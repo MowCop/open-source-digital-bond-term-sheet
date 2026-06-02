@@ -217,11 +217,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
           {/* Messages */}
           <ScrollArea className="px-4">
             <div ref={scrollRef} className="max-h-48 py-2 space-y-2 overflow-y-auto">
-              {channelMessages.length === 0 ? (
-                <div className="text-xs text-muted-foreground italic py-2">
-                  Start the conversation — the chat will be created with this draft and the title will mirror the headline.
-                </div>
-              ) : (
+              {channelMessages.length === 0 ? null : (
                 channelMessages.map(cm => {
                   const isMe = cm.senderId === currentUser.id;
                   return (
