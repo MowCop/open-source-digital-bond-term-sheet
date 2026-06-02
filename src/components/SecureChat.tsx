@@ -32,7 +32,7 @@ interface SecureChatProps {
 }
 
 export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]', readOnly = false, allowDealAccess = false, hideStageBadge = false }: SecureChatProps) {
-  const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage, createDealChannel } = useApp();
+  const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage, createDealChannel, updateChatChannelParticipants } = useApp();
   const [activeChannel, setActiveChannel] = useState<ChatChannel | null>(null);
   const [inputText, setInputText] = useState('');
   const [linkingMessageId, setLinkingMessageId] = useState<string | undefined>();
@@ -43,6 +43,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   const [startScpIds, setStartScpIds] = useState<string[]>([]);
   const [startQuery, setStartQuery] = useState('');
   const [participantsOpen, setParticipantsOpen] = useState(false);
+  const [participantQuery, setParticipantQuery] = useState('');
 
   const myChannels = chatChannels.filter(ch => ch.participantIds.includes(currentUser.id));
 
@@ -178,21 +179,91 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
           </div>
         </div>
 
-        {participants.length > 0 && participantsOpen && (
-          <div className="flex items-center gap-1 flex-wrap">
-            {participants.map(p => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => handleParticipantClick(p.id, p.name)}
-                title={`Reply to ${p.name}`}
-                className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/40 hover:bg-accent text-accent-foreground hover:underline truncate max-w-[140px]"
-              >
-                {p.name}
-              </button>
-            ))}
-          </div>
-        )}
+        {participants.length > 0 && participantsOpen && activeChannel && (() => {
+          const canEdit = !readOnly && (currentUser.role === 'master_admin' || currentUser.role === 'syndicate_admin');
+          const q = participantQuery.trim().toLowerCase();
+          const candidates = users.filter(u =>
+            !activeChannel.participantIds.includes(u.id) &&
+            u.id !== currentUser.id &&
+            (u.role === 'syndicate_admin' || u.role === 'syndicate_readonly' || u.role === 'master_admin'),
+          );
+          const matches = q
+            ? candidates.filter(u =>
+                u.name.toLowerCase().includes(q) ||
+                (u.organization || '').toLowerCase().includes(q) ||
+                (u.email || '').toLowerCase().includes(q),
+              ).slice(0, 6)
+            : [];
+          const addParticipant = (id: string) => {
+            updateChatChannelParticipants(activeChannel.id, Array.from(new Set([...activeChannel.participantIds, id])));
+            setParticipantQuery('');
+          };
+          const removeParticipant = (id: string) => {
+            if (id === currentUser.id) return;
+            updateChatChannelParticipants(activeChannel.id, activeChannel.participantIds.filter(pid => pid !== id));
+          };
+          return (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1 flex-wrap">
+                {participants.map(p => (
+                  <span
+                    key={p.id}
+                    className="inline-flex items-center gap-1 text-[10px] pl-1.5 pr-1 py-0.5 rounded-full bg-accent/40 text-accent-foreground"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleParticipantClick(p.id, p.name)}
+                      title={`Reply to ${p.name}`}
+                      className="hover:underline truncate max-w-[140px]"
+                    >
+                      {p.name}
+                    </button>
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => removeParticipant(p.id)}
+                        title={`Remove ${p.name}`}
+                        className="rounded-full hover:bg-destructive/20 hover:text-destructive p-0.5"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    )}
+                  </span>
+                ))}
+              </div>
+              {canEdit && (
+                <div className="relative max-w-xs">
+                  <Input
+                    value={participantQuery}
+                    onChange={e => setParticipantQuery(e.target.value)}
+                    placeholder="Add participant by name, bank, or email…"
+                    className="h-7 text-[11px]"
+                  />
+                  {q && matches.length > 0 && (
+                    <div className="absolute z-20 mt-1 w-full bg-popover border border-border rounded-md shadow-md max-h-48 overflow-y-auto">
+                      {matches.map(u => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onClick={() => addParticipant(u.id)}
+                          className="w-full text-left px-2 py-1.5 text-[11px] hover:bg-accent/20"
+                        >
+                          <div className="font-medium">{u.name}</div>
+                          <div className="text-muted-foreground">{u.organization} · {u.email}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {q && matches.length === 0 && (
+                    <div className="absolute z-20 mt-1 w-full bg-popover border border-border rounded-md shadow-md px-2 py-1.5 text-[11px] text-muted-foreground">
+                      No matching user.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </CardHeader>
       <CardContent className="flex-1 min-h-0 flex flex-col gap-2 overflow-hidden p-3 pt-0">
         {/* Channel selector — hide when only one channel is available in contextual mode */}
