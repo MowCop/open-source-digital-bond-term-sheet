@@ -10,6 +10,7 @@ import ExtractDealReviewModal, { type AIExtraction } from './ExtractDealReviewMo
 
 interface CommonProps {
   conversationLabel: string;
+  targetDealIds?: string[];
   className?: string;
   size?: 'sm' | 'default' | 'icon';
   variant?: 'default' | 'outline' | 'ghost';
@@ -58,7 +59,7 @@ function buildChannelTranscript(msgs: ChatMessage[]): string {
 }
 
 export default function ExtractDealFromChatButton(props: Props) {
-  const { conversationLabel, className, size = 'sm', variant = 'outline' } = props;
+  const { conversationLabel, targetDealIds, className, size = 'sm', variant = 'outline' } = props;
   const { deals, currentUser } = useApp();
   const { toast } = useToast();
 
@@ -85,7 +86,11 @@ export default function ExtractDealFromChatButton(props: Props) {
 
     setLoading(true);
     try {
-      const existingDeals = deals.map(d => ({
+      const allowedDealIds = new Set((targetDealIds ?? []).filter(Boolean));
+      const extractionDeals = allowedDealIds.size > 0
+        ? deals.filter(d => allowedDealIds.has(d.id))
+        : deals;
+      const existingDeals = extractionDeals.map(d => ({
         id: d.id,
         issuerName: d.issuerName,
         currency: d.currency,
