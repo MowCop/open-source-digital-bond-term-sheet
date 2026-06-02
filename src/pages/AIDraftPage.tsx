@@ -207,6 +207,7 @@ export default function AIDraftPage() {
       return trimmed;
     });
     // Merge baseline into existing fields with conflict tracking
+    setAiConflicts(prev => ({ ...prev, ...diffConflicts(aiFields, baseline.keyTerms) }));
     setAiFields(prev => mergeFieldsWithConflicts(prev, baseline.keyTerms));
     setAiConfidence(baseline.confidence);
     setAiBookrunners(baselineBookrunners);
@@ -225,6 +226,7 @@ export default function AIDraftPage() {
 
         // Append-by-default: keep current value, surface differences as
         // per-field conflicts the user can explicitly replace.
+        setAiConflicts(prev => ({ ...prev, ...diffConflicts(aiFields ?? baseline.keyTerms, aiKeyTerms || {}) }));
         setAiFields(prev => mergeFieldsWithConflicts(prev ?? baseline.keyTerms, aiKeyTerms || {}));
         if (Array.isArray(aiBks) && aiBks.length > 0) setAiBookrunners(aiBks);
 
