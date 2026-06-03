@@ -237,9 +237,10 @@ interface DealRowProps {
   onSeen: (channelId: string, ts: number) => void;
   sortBy: 'chat' | 'updated';
   onDelete: () => void;
+  fullscreen?: boolean;
 }
 
-function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen, sortBy, onDelete }: DealRowProps) {
+function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen, sortBy, onDelete, fullscreen }: DealRowProps) {
   const { chatMessages, messages } = useScopedApp();
   const [historyOpen, setHistoryOpen] = useState(false);
 
@@ -363,6 +364,7 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
               search={search}
               lastSeen={lastSeen[channel.id] ?? 0}
               onSeen={onSeen}
+              heightClass={fullscreen ? 'h-[calc(100vh-22rem)]' : 'h-72'}
             />
           </div>
         ))}
@@ -378,9 +380,10 @@ interface PendingDealRowProps {
   lastSeen: Record<string, number>;
   onSeen: (channelId: string, ts: number) => void;
   onDelete: () => void;
+  fullscreen?: boolean;
 }
 
-function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen, onDelete }: PendingDealRowProps) {
+function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen, onDelete, fullscreen }: PendingDealRowProps) {
   const { chatMessages } = useScopedApp();
   const msgs = useMemo(
     () => chatMessages.filter(m => m.channelId === channel.id).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()),
@@ -435,6 +438,7 @@ function PendingDealRow({ channel, search, expanded, onToggle, lastSeen, onSeen,
           search={search}
           lastSeen={lastSeen[channel.id] ?? 0}
           onSeen={onSeen}
+          heightClass={fullscreen ? 'h-[calc(100vh-18rem)]' : 'h-72'}
         />
       )}
     </Card>
