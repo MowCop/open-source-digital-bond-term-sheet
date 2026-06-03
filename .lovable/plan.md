@@ -1,61 +1,47 @@
-## Undo AI Extraction (in-app rollback)
+## What I found
 
-Add an in-app rollback so a Master Admin / Syndicate Admin can fully reverse an AI Extraction on any deal — deleting the extracted deal and restoring the original chat thread to its pre-extraction state. No code rollback, no project history involved.
+The signup pipeline is wired correctly:
 
-### How it works for the demo
+```
+AuthPage (signup tab)
+  → AuthContext.signUp()
+      → supabase.auth.signUp()
+      → invoke notify-author-on-signup
+          → send-transactional-email × 3:
+              1. signup-notification → karl@eurobondmarkets.com  (primary)
+              2. signup-notification → karl.mallalieu@gmail.com  (fallback)
+              3. signup-acknowledgement → new user
+```
 
-1. In **My Deal Chats**, click **AI Extraction** on the Kingdom of Narnia thread → a new Narnia deal is created in **Deal Data**.
-2. Open the deal → header now shows an **Undo AI Extraction** button (only if the deal was created via extraction).
-3. Click it → confirm dialog → deal is deleted, chat channel is unlinked from the deal and restored to its original alert-thread state, all chat messages get `dealId` cleared back to NULL, channel label restored to its pre-extraction label.
-4. Demo is ready to run again from step 1.
+Email infra is healthy:
+- Sender domain `notify.eurobondmarkets.com` is **verified**.
+- Queue, RPCs, and send-transactional-email function are deployed.
+- `suppressed_emails` table is currently empty.
 
-### What gets captured & restored
+But two real problems show up in `email_send_log`:
 
-When a deal is created via AI Extraction (the `if (sourceCh)` branch of `createDeal`), we snapshot the pre-extraction state of the source channel into a new `extraction_snapshot` JSONB column on `deals`:
+1. **Primary author address has a deliverability problem.** On 2026-05-13 a system email to `karl@eurobondmarkets.com` was logged with `status = bounced`, error "Permanent bounce — email address is invalid or rejected". Every `signup-notification` to that address after that (5 attempts on 5/14, 5/25, 5/26) was logged as `suppressed`. The suppression list is empty now, so the next attempt would try again — and likely bounce again, re-suppressing the address. **Net effect today: the author probably is not receiving signup notifications.**
 
-- `sourceChannelId`
-- previous `label`
-- previous `participantIds`
-- previous `dealId` (usually null)
-- `extractedAt` timestamp
-- `extractedBy` user id
+2. **The fallback to `karl.mallalieu@gmail.com` has never fired.** The source code in `notify-author-on-signup/index.ts` (lines 78–94) sends the fallback, but `email_send_log` shows zero rows for that recipient/template combo across every signup since this code was written. This strongly suggests the deployed Edge Function predates the fallback code and was never redeployed. The signup-acknowledgement to the new user does send correctly.
 
-On Undo:
-- Restore `chat_channels` row: set `label`, `participant_ids`, `deal_id` back to snapshot values.
-- Backfill `chat_messages` where `channel_id = sourceChannelId`: set `deal_id = snapshot.dealId` (NULL for the Narnia case).
-- Delete the deal row + any deal-scoped notifications.
-- Write `DEAL_EXTRACTION_UNDONE` audit log entry.
+## Plan
 
-### Scope rules
+1. **Redeploy `notify-author-on-signup`** so the fallback path actually runs in production.
 
-- Button visible only when `deal.extractionSnapshot` exists (so existing/seeded deals don't show it).
-- Visible to Master Admin and Syndicate Admin only.
-- Confirmation modal lists what will happen ("Delete deal X, restore chat thread Y").
-- If the deal has any sent messages/bulletins → block Undo with a tooltip ("Cannot undo: bulletins have been sent from this deal"). Avoids breaking audit trail.
+2. **Make the author notification deliverable.** Two options to discuss:
+   - (a) Keep `karl@eurobondmarkets.com` as primary and fix the mailbox at the mail provider so it stops bouncing.
+   - (b) Swap primary and fallback so `karl.mallalieu@gmail.com` becomes the primary recipient and `karl@eurobondmarkets.com` becomes the secondary. (Lowest-risk change — no DNS / mail-server work.)
 
-### Files to touch
+3. **Verify end-to-end on production.** After step 1 (and optionally step 2), perform one real signup at https://eurobondmarkets.com/auth with a throwaway address, then re-check `email_send_log`:
+   - `signup-notification` → primary author: expect `sent`.
+   - `signup-notification` → fallback author: expect `sent`.
+   - `signup-acknowledgement` → new user: expect `sent`.
+   - Confirm both inboxes physically received the message (not just `sent` in the log).
 
-**Database (migration):**
-- Add `extraction_snapshot JSONB NULL` column to `public.deals`.
+4. **If the primary still bounces**, switch to option 2(b) and re-test.
 
-**Backend helpers (`src/integrations/supabase/cloudData.ts`):**
-- Extend `dealFieldMap` to include `extractionSnapshot` ↔ `extraction_snapshot`.
-- No new RPC needed — Undo uses existing `updateChatChannel`, `updateChatMessagesByChannel`, `deleteDealRow`, `deleteNotificationsByDeal`.
+No other code changes needed; the rest of the pipeline (template rendering, queue dispatch, cron, signup-acknowledgement) is working as evidenced by every recent `sent` row for new-user acknowledgements and approval emails.
 
-**`src/types/bond.ts`:**
-- Add `extractionSnapshot?: { sourceChannelId; previousLabel; previousParticipantIds; previousDealId; extractedAt; extractedBy }` to `Deal`.
+## One question for you
 
-**`src/context/AppContext.tsx`:**
-- In `createDeal` `if (sourceCh)` branch: capture snapshot before mutating channel; store on new deal.
-- Add new `undoExtraction(dealId)` action: validates snapshot, restores channel + messages, deletes deal + notifications, writes audit entry, updates local state.
-- Expose `undoExtraction` via context.
-
-**Deal header UI (likely `src/pages/DealsPage.tsx` deal detail view):**
-- Add **Undo AI Extraction** button (destructive variant) next to title when `deal.extractionSnapshot` is set and user is admin and no sent messages exist.
-- Confirm dialog → call `undoExtraction(deal.id)` → toast + navigate back to chat.
-
-### Out of scope
-
-- Per-field "undo just these fields" (full delete + restore only, per your choice).
-- Undoing extractions on deals created before this migration (no snapshot stored).
-- Time-limited undo window — available indefinitely while snapshot exists and no bulletins sent.
+Before I redeploy, do you want me to also swap the primary/fallback so notifications go to **karl.mallalieu@gmail.com first** (and `karl@eurobondmarkets.com` second)? That's the safest fix given the historical bounce on the eurobondmarkets address. If you'd rather keep the current order, I'll just redeploy and we'll see whether the address still bounces.

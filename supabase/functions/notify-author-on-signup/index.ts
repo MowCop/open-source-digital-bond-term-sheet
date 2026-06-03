@@ -5,8 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const AUTHOR_EMAIL = 'karl@eurobondmarkets.com';
-const FALLBACK_EMAIL = 'karl.mallalieu@gmail.com';
+// NOTE: gmail is used as the primary recipient because karl@eurobondmarkets.com
+// has previously hard-bounced and gets auto-suppressed by the email pipeline.
+const AUTHOR_EMAIL = 'karl.mallalieu@gmail.com';
+const FALLBACK_EMAIL = 'karl@eurobondmarkets.com';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
