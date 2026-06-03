@@ -1,35 +1,41 @@
-## Problem
+## Deliverable
 
-On `Create New Issue`, the chat panel creates a `ChatChannel` via `ensureDraftChannel(draftKey, …)` with `dealId: undefined` — keyed only by the ephemeral `draftKey`.
+A single 2-page PDF — `New_Issue_Vault_Overview.pdf` — saved to `/mnt/documents/` and delivered as a downloadable artifact.
 
-When the user hits Save (`AIDraftPage.handleSave` / `handleSend`), a new `Deal` is created and a `Message` is stored against `deal.id`, but the draft chat channel is **never updated with that `dealId`**.
+## Audience & tone
 
-In `AlertHistoryCard` ("Edit alert"), the chat panel is `SecureChat` keyed on `message.dealIds[0]`, and `SecureChat` looks up channels by `dealId`. Since the draft channel still has `dealId: undefined`, nothing is found → "No messages yet."
+Balanced overview — readable by execs/investors, credible to DCM/syndicate readers. ICMA / MiFID II / MAR terminology used where it adds weight, but no jargon walls.
 
-## Fix
+## Structure (2 pages)
 
-Attach the draft channel to the new deal at save/send time.
+**Page 1 — What it is & why it exists**
+- Title block: "New Issue Vault — AI-native primary bond market infrastructure"
+- One-paragraph positioning statement (the "competitive position in one sentence" reframed).
+- "The problem with the status quo" — condensed: Outlook irreversibility, Bloomberg cost, taxonomy fragmentation, manual re-keying across vendors.
+- "What the New Issue Vault is" — bank-hosted VDR + native New Issue Alert Thread; banks drop content, everything downstream is automated.
 
-### Files to change
+**Page 2 — Three AI pillars + commercials & compliance**
+- **AI as Parser** — extracts ICMA-taxonomy structured data from term sheets, alerts, and free-text chat ("size up to EUR 750m" parsed as a field update). Once at source, not ten times across vendors.
+- **AI as Compliance Checker** — version diffing with HITL controls, full audit trail of every upload/extraction/push, permissioned disclosure, alignment with MiFID II / MAR and emerging primary-market transparency rules.
+- **AI as Feed Automator (Bond Consol)** — single clean structured feed pushed simultaneously to all subscribed vendors via API / MCP; Bond Consol acts as the consolidated outbound channel, eliminating vendor-by-vendor rekeying.
+- Short closing strip: pay-per-deal / AI-metered pricing, bank-hosted & bank-controlled, ICMA built-in.
 
-1. **`src/context/AppContext.tsx`**
-   - Add `attachDraftChannelToDeal(draftKey: string, dealId: string, label?: string): void` to the context:
-     - Look up channel id via `draftChannelIdsRef.current[draftKey]`. If none, no-op (user never opened/sent in chat).
-     - Update local `chatChannels` state: set `dealId` (and optionally refresh `label`).
-     - Call `updateChatChannel(channelId, { dealId, label })` to persist to Cloud.
-     - Add an audit entry `CHAT_CHANNEL_UPDATED` describing the link.
-   - Expose it in the context value alongside `ensureDraftChannel`.
+## Design
 
-2. **`src/pages/AIDraftPage.tsx`**
-   - Pull `attachDraftChannelToDeal` from `useApp()`.
-   - In `handleSave` and `handleSend`, **after** `createDealFromFields()` returns the deal, call `attachDraftChannelToDeal(draftKey, deal.id, headline)` (before/around `createMessage`).
-   - In `handleSend` reset flow, also clear the local `draftChannelIdsRef` entry implicitly by regenerating `draftKey` on next mount (no extra work needed — the page already remounts a new key).
+- Clean editorial 2-pager, A4 portrait, ~18mm margins.
+- Restrained palette anchored on deep navy + warm gold accent (Navy Trust / Emerald Prestige tone — fits finance/legal audience).
+- Serif display headings (e.g. Libre Baskerville / DM Serif) paired with a clean sans body (IBM Plex Sans / Inter) for editorial credibility.
+- Two-column body on page 2 for the three AI pillars; iconographic bullets, no clip-art.
+- Footer: "New Issue Vault · Confidential draft · June 2026".
 
-### Behavior after fix
-- Save as Draft: the existing draft chat channel becomes the deal's channel. Reopening the draft via `Edit alert` shows the prior messages (e.g. "Can this be seen after saving as draft").
-- Send: same — recipients/syndicate users keep the conversation against the published deal.
-- If the user never typed in chat, no channel exists; Edit Alert behaves as before (empty chat ready for first message — `SecureChat` will create one on first send via `createDealChannel`).
+## Build approach (technical)
 
-### Out of scope
-- Changes to `SecureChat`, `createDealChannel`, or the Edit Alert UI.
-- Migrating already-orphaned draft channels from past sessions (those will remain unlinked).
+- Generate via Python using ReportLab Platypus (SimpleDocTemplate, Paragraph, Table, Spacer) — reliable for typographic 2-pagers.
+- Write script to `/tmp/`, output PDF to `/mnt/documents/New_Issue_Vault_Overview.pdf`.
+- QA: render both pages to JPG with `pdftoppm` and visually inspect for overflow, overlap, orphaned headings, and that content fits exactly 2 pages. Iterate until clean.
+- Deliver via `<presentation-artifact>` tag.
+
+## Out of scope
+
+- No changes to the app codebase.
+- No DOCX version (PDF only, per your choice). Easy to add later if needed.
