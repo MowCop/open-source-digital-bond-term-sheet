@@ -19,7 +19,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import {
   Shield, ChevronDown, ChevronUp, AlertTriangle, XCircle,
-  Info, CheckCircle2, ExternalLink, ShieldAlert,
+  Info, CheckCircle2, ExternalLink, ShieldAlert, RefreshCw,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -335,6 +335,8 @@ export default function DealChecker({
   const [overrideModal, setOverrideModal] = useState<ValidationResult | null>(null);
   const [overrides, setOverrides]     = useState<OverrideContext['overriddenRuleIds']>([]);
   const [overrideReasons, setOverrideReasons] = useState<Record<string, string>>({});
+  const [refreshTick, setRefreshTick] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   const isMasterAdmin = userRole === 'master_admin';
 
@@ -356,7 +358,13 @@ export default function DealChecker({
       if (auditEntries.length > 0) onAuditEntries?.(auditEntries);
     }, 400);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [aiFields, aiBookrunners, overrides, overrideReasons, isMasterAdmin, currentUserId, currentUserName, onAuditEntries]);
+  }, [aiFields, aiBookrunners, overrides, overrideReasons, isMasterAdmin, currentUserId, currentUserName, onAuditEntries, refreshTick]);
+
+  function handleRefresh() {
+    setRefreshing(true);
+    setRefreshTick(t => t + 1);
+    setTimeout(() => setRefreshing(false), 600);
+  }
 
   const counts = useMemo(() => countBySeverity(results), [results]);
   const ready  = useMemo(() => isReadyToPublish(results), [results]);
@@ -393,10 +401,19 @@ export default function DealChecker({
               {overrides.length} override{overrides.length > 1 ? 's' : ''} active
             </Badge>
           )}
+          <button
+            type="button"
+            onClick={handleRefresh}
+            title="Re-run Deal Checker"
+            className={`${results.length > 0 ? '' : 'ml-auto'} inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-colors`}
+          >
+            <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
           {results.length > 0 && (
             <Badge
               variant="outline"
-              className={`ml-auto text-[10px] border ${
+              className={`text-[10px] border ${
                 counts.error > 0
                   ? 'bg-red-900/30 text-red-400 border-red-800/60'
                   : counts.warning > 0
