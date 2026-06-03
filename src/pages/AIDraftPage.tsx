@@ -78,7 +78,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export default function AIDraftPage() {
-  const { distributionLists, createMessage, createDeal, currentUser, users, addAuditEntry, attachDraftChannelToDeal } = useApp();
+  const { distributionLists, createMessage, createDeal, currentUser, users, addAuditEntry, sendChatMessage, ensureDraftChannel, attachDraftChannelToDeal } = useApp();
   const { toast } = useToast();
 
   const [headline, setHeadline] = useState('');
@@ -109,6 +109,8 @@ export default function AIDraftPage() {
   const [isExtractingAttachment, setIsExtractingAttachment] = useState(false);
   // Syndicate Chat Participants (SCPs) selected for the new deal's chat channel.
   const [scpIds, setScpIds] = useState<string[]>([]);
+  const [pendingChatMessage, setPendingChatMessage] = useState('');
+  const [clearChatSignal, setClearChatSignal] = useState(0);
   // Stable per-mount draft id used to key the ephemeral chat channel.
   const draftKey = useMemo(() => `draft-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -424,7 +426,8 @@ export default function AIDraftPage() {
   };
 
   const createDealFromFields = () => {
-    return createDeal({
+    const draftChannel = ensureDraftChannel(draftKey, headline, scpIds);
+    const deal = createDeal({
       issuerName: aiFields?.['Issuer Name'] || headline.split(/\s+/).slice(0, 3).join(' ') || 'New Deal',
       currency: aiFields?.['Currency'] || '',
       size: aiFields?.['Size'] || '',
@@ -446,7 +449,16 @@ export default function AIDraftPage() {
       specifiedDenomination: aiFields?.['Denomination'] || undefined,
       governingLaw: aiFields?.['Governing Law'] ? aiFields['Governing Law'].toUpperCase().replace(/ /g, '_') as any : undefined,
       listingVenue: aiFields?.['Listing'] || undefined,
-    }, scpIds);
+    }, scpIds, { sourceChannelId: draftChannel.id, sourceChannel: draftChannel });
+    return { deal, draftChannel };
+  };
+
+  const flushPendingChatMessage = (channelId: string, dealId: string) => {
+    const text = pendingChatMessage.trim();
+    if (!text) return;
+    sendChatMessage(channelId, text, [], undefined, dealId);
+    setPendingChatMessage('');
+    setClearChatSignal(v => v + 1);
   };
 
   const uploadPendingAttachments = async (): Promise<Attachment[]> => {
@@ -482,9 +494,10 @@ export default function AIDraftPage() {
       toast({ title: 'Missing headline', description: 'Please enter a deal headline', variant: 'destructive' });
       return;
     }
-    const deal = createDealFromFields();
+    const { deal, draftChannel } = createDealFromFields();
     const uploaded = await uploadPendingAttachments();
     attachDraftChannelToDeal(draftKey, deal.id, headline);
+    flushPendingChatMessage(draftChannel.id, deal.id);
     createMessage({
       dealIds: [deal.id],
       subject: headline,
@@ -507,9 +520,10 @@ export default function AIDraftPage() {
       toast({ title: 'No recipients', description: 'Select at least one distribution recipient', variant: 'destructive' });
       return;
     }
-    const deal = createDealFromFields();
+    const { deal, draftChannel } = createDealFromFields();
     const uploaded = await uploadPendingAttachments();
     attachDraftChannelToDeal(draftKey, deal.id, headline);
+    flushPendingChatMessage(draftChannel.id, deal.id);
     createMessage({
       dealIds: [deal.id],
       subject: headline,
@@ -545,6 +559,8 @@ export default function AIDraftPage() {
         scpIds={scpIds}
         candidates={syndicateCandidates}
         onToggleScp={toggleScp}
+        onPendingMessageChange={setPendingChatMessage}
+        clearSignal={clearChatSignal}
       />
 
       <div className="grid grid-cols-3 gap-4">

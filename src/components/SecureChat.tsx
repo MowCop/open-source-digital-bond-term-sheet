@@ -29,9 +29,10 @@ interface SecureChatProps {
   readOnly?: boolean;
   allowDealAccess?: boolean;
   hideStageBadge?: boolean;
+  fallbackThreadLabel?: string;
 }
 
-export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]', readOnly = false, allowDealAccess = false, hideStageBadge = false }: SecureChatProps) {
+export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]', readOnly = false, allowDealAccess = false, hideStageBadge = false, fallbackThreadLabel }: SecureChatProps) {
   const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage, createDealChannel, updateChatChannelParticipants } = useApp();
   const [activeChannel, setActiveChannel] = useState<ChatChannel | null>(null);
   const [inputText, setInputText] = useState('');
@@ -50,14 +51,27 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   // In contextual deal mode (e.g. Edit Alert), show the deal's channel(s)
   // even when the viewer is not already listed as a participant.
   const contextualMode = (readOnly || allowDealAccess) && !!activeDealId;
+  const activeDeal = activeDealId
+    ? deals.find(d => d.id === activeDealId) || null
+    : activeChannel?.dealId ? deals.find(d => d.id === activeChannel.dealId) || null : null;
   const dealChannels = activeDealId
     ? chatChannels.filter(ch => ch.dealId === activeDealId)
+    : [];
+  const orphanedDraftChannels = activeDealId && activeDeal
+    ? chatChannels.filter(ch => {
+        if (ch.dealId) return false;
+        if (!chatMessages.some(cm => cm.channelId === ch.id)) return false;
+        const channelLabel = ch.label.trim().toLowerCase();
+        return [fallbackThreadLabel, activeDeal.issuerName]
+          .filter(Boolean)
+          .some(label => channelLabel === label!.trim().toLowerCase());
+      }).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     : [];
   const myDealChannels = activeDealId
     ? myChannels.filter(ch => ch.dealId === activeDealId)
     : [];
   const availableChannels = activeDealId
-    ? (contextualMode ? dealChannels : myDealChannels)
+    ? (contextualMode ? [...orphanedDraftChannels, ...dealChannels] : myDealChannels)
     : myChannels;
 
   // When activeDealId changes externally, auto-select matching channel
@@ -67,7 +81,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
     // to THIS deal. If none exists, clear any previously selected channel.
     const dealChannel = availableChannels[0] || null;
     setActiveChannel(prev => (prev?.id === dealChannel?.id ? prev : dealChannel));
-  }, [activeDealId, contextualMode, chatChannels]);
+  }, [activeDealId, contextualMode, chatChannels, chatMessages, fallbackThreadLabel]);
 
   const channelMessages = activeChannel
     ? chatMessages.filter(cm => cm.channelId === activeChannel.id).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
@@ -100,9 +114,6 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   const sentMessages = messages.filter(m => m.status === 'sent');
 
   // Get deal stage for header badge
-  const activeDeal = activeDealId
-    ? deals.find(d => d.id === activeDealId) || null
-    : activeChannel?.dealId ? deals.find(d => d.id === activeChannel.dealId) || null : null;
   const extractionConversationLabel = activeDeal
     ? `${activeDeal.issuerName} ${activeDeal.currency} ${activeDeal.tenor} — Deal Thread`
     : activeChannel?.label || 'Deal Thread';
