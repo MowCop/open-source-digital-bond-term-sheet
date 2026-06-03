@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// NOTE: gmail is used as the primary recipient because karl@eurobondmarkets.com
+// has previously hard-bounced and gets auto-suppressed by the email pipeline.
 const AUTHOR_EMAIL = 'karl@eurobondmarkets.com';
 const FALLBACK_EMAIL = 'karl@eurobondmarkets.com';
 
