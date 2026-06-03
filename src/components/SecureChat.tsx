@@ -29,9 +29,10 @@ interface SecureChatProps {
   readOnly?: boolean;
   allowDealAccess?: boolean;
   hideStageBadge?: boolean;
+  fallbackThreadLabel?: string;
 }
 
-export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]', readOnly = false, allowDealAccess = false, hideStageBadge = false }: SecureChatProps) {
+export default function SecureChat({ activeDealId, headerActions, heightClass = 'h-[600px]', readOnly = false, allowDealAccess = false, hideStageBadge = false, fallbackThreadLabel }: SecureChatProps) {
   const { currentUser, users, chatChannels, chatMessages, messages, deals, sendChatMessage, createDealChannel, updateChatChannelParticipants } = useApp();
   const [activeChannel, setActiveChannel] = useState<ChatChannel | null>(null);
   const [inputText, setInputText] = useState('');
@@ -60,10 +61,11 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
     ? chatChannels.filter(ch => {
         if (ch.dealId) return false;
         if (!chatMessages.some(cm => cm.channelId === ch.id)) return false;
-        const createdNearDeal = Math.abs(ch.createdAt.getTime() - activeDeal.createdAt.getTime()) <= 10 * 60 * 1000;
-        const labelMatches = ch.label.trim().toLowerCase() === activeDeal.issuerName.trim().toLowerCase();
-        return createdNearDeal || labelMatches;
-      })
+        const channelLabel = ch.label.trim().toLowerCase();
+        return [fallbackThreadLabel, activeDeal.issuerName]
+          .filter(Boolean)
+          .some(label => channelLabel === label!.trim().toLowerCase());
+      }).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     : [];
   const myDealChannels = activeDealId
     ? myChannels.filter(ch => ch.dealId === activeDealId)
@@ -79,7 +81,7 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
     // to THIS deal. If none exists, clear any previously selected channel.
     const dealChannel = availableChannels[0] || null;
     setActiveChannel(prev => (prev?.id === dealChannel?.id ? prev : dealChannel));
-  }, [activeDealId, contextualMode, chatChannels]);
+  }, [activeDealId, contextualMode, chatChannels, chatMessages, fallbackThreadLabel]);
 
   const channelMessages = activeChannel
     ? chatMessages.filter(cm => cm.channelId === activeChannel.id).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
