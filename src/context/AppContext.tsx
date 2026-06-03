@@ -117,6 +117,7 @@ interface AppContextType {
   ensureDraftChannel: (draftKey: string, label: string, participantIds: string[]) => ChatChannel;
   renameChatChannel: (id: string, label: string) => void;
   updateChatChannelParticipants: (id: string, participantIds: string[]) => void;
+  attachDraftChannelToDeal: (draftKey: string, dealId: string, label?: string) => void;
   createDealChannel: (dealId: string, label: string, participantIds: string[]) => ChatChannel;
   addUser: (user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => User;
   deleteUser: (id: string) => void;
@@ -796,6 +797,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return newChannel;
   }, [chatChannels, currentUser.id, addAuditEntry]);
 
+  const attachDraftChannelToDeal = useCallback((draftKey: string, dealId: string, label?: string) => {
+    const channelId = draftChannelIdsRef.current[draftKey];
+    if (!channelId) return;
+    const cleanLabel = (label || '').trim();
+    const updates: Partial<ChatChannel> = { dealId };
+    if (cleanLabel) updates.label = cleanLabel;
+    setChatChannels(prev => prev.map(c => c.id === channelId ? { ...c, ...updates } : c));
+    updateChatChannel(channelId, updates).catch(e => console.error('[Cloud] attachDraftChannelToDeal failed', e));
+    addAuditEntry({
+      action: 'CHAT_CHANNEL_UPDATED', entityType: 'deal', entityId: dealId,
+      userId: currentUser.id, details: `Linked draft chat channel ${channelId} to deal ${dealId}`,
+    });
+    delete draftChannelIdsRef.current[draftKey];
+  }, [currentUser.id, addAuditEntry]);
+
   const addUser = useCallback((user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => {
     const newUser: User = {
       ...user,
@@ -850,7 +866,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       chatChannels, chatMessages,
       createDeal, updateDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addAuditEntry, sendChatMessage,
       publishBulletinFromDeal,
-      ensureDraftChannel, renameChatChannel, updateChatChannelParticipants, createDealChannel,
+      ensureDraftChannel, renameChatChannel, updateChatChannelParticipants, attachDraftChannelToDeal, createDealChannel,
       deleteMessage, deleteMessageThread,
       deleteDeal,
       deleteChatChannel,
