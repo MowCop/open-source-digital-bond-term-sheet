@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import LinkifiedText from '@/components/LinkifiedText';
 import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
 import { stripHtml } from '@/lib/htmlText';
-import { Send, Paperclip, Link2, ChevronDown, ChevronRight, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History, Trash2 } from 'lucide-react';
+import { Send, Paperclip, Link2, ChevronDown, ChevronRight, ChevronLeft, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { ChatChannel, ChatMessage, Deal, DealStage } from '@/types/bond';
 
@@ -73,9 +73,10 @@ interface ChannelThreadProps {
   search: string;
   lastSeen: number;
   onSeen: (channelId: string, ts: number) => void;
+  heightClass?: string;
 }
 
-function ChannelThread({ channel, search, lastSeen, onSeen }: ChannelThreadProps) {
+function ChannelThread({ channel, search, lastSeen, onSeen, heightClass = 'h-72' }: ChannelThreadProps) {
   const { currentUser, users, chatMessages, messages, sendChatMessage } = useScopedApp();
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -131,7 +132,7 @@ function ChannelThread({ channel, search, lastSeen, onSeen }: ChannelThreadProps
         </div>
       </div>
 
-      <ScrollArea className="h-72" ref={scrollRef}>
+      <ScrollArea className={heightClass} ref={scrollRef}>
         <div className="p-3 space-y-3">
           {filtered.length === 0 && (
             <p className="text-xs text-muted-foreground text-center py-6">
