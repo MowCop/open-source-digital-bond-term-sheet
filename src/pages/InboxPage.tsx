@@ -662,8 +662,11 @@ export default function InboxPage() {
                 deal={deal}
                 channels={channels}
                 search={search}
-                expanded={!!expanded[deal.id]}
-                onToggle={() => setExpanded(prev => ({ ...prev, [deal.id]: !prev[deal.id] }))}
+                expanded={false}
+                onToggle={() => {
+                  setExpanded(prev => ({ ...prev, [deal.id]: true }));
+                  setActiveKey(deal.id);
+                }}
                 lastSeen={lastSeen}
                 onSeen={onSeen}
                 sortBy={sortBy}
@@ -678,8 +681,11 @@ export default function InboxPage() {
               key={key}
               channel={ch}
               search={search}
-              expanded={!!expanded[key]}
-              onToggle={() => setExpanded(prev => ({ ...prev, [key]: !prev[key] }))}
+              expanded={false}
+              onToggle={() => {
+                setExpanded(prev => ({ ...prev, [key]: true }));
+                setActiveKey(key);
+              }}
               lastSeen={lastSeen}
               onSeen={onSeen}
               onDelete={() => deleteChatChannel(ch.id)}
@@ -687,6 +693,52 @@ export default function InboxPage() {
           );
         })}
       </div>
+
+      {activeKey && (() => {
+        const active = visibleEntries.find(e =>
+          e.kind === 'deal' ? e.deal.id === activeKey : `orphan-${e.channel.id}` === activeKey,
+        );
+        if (!active) return null;
+        return (
+          <div className="fixed inset-y-0 right-0 left-60 z-40 bg-background flex flex-col animate-in fade-in-0">
+            <div className="h-12 border-b px-4 flex items-center gap-3 shrink-0 bg-card">
+              <Button variant="ghost" size="sm" onClick={() => setActiveKey(null)} className="-ml-2">
+                <ChevronLeft className="h-4 w-4 mr-1" /> Back to My Deal Chats
+              </Button>
+              <span className="text-[11px] text-muted-foreground ml-auto">Press Esc to close</span>
+            </div>
+            <div className="flex-1 overflow-auto p-6">
+              <div className="max-w-5xl mx-auto">
+                {active.kind === 'deal' ? (
+                  <DealRow
+                    deal={active.deal}
+                    channels={active.channels}
+                    search={search}
+                    expanded
+                    onToggle={() => setActiveKey(null)}
+                    lastSeen={lastSeen}
+                    onSeen={onSeen}
+                    sortBy={sortBy}
+                    onDelete={() => { deleteDeal(active.deal.id); setActiveKey(null); }}
+                    fullscreen
+                  />
+                ) : (
+                  <PendingDealRow
+                    channel={active.channel}
+                    search={search}
+                    expanded
+                    onToggle={() => setActiveKey(null)}
+                    lastSeen={lastSeen}
+                    onSeen={onSeen}
+                    onDelete={() => { deleteChatChannel(active.channel.id); setActiveKey(null); }}
+                    fullscreen
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
