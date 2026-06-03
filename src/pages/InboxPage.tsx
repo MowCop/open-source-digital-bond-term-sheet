@@ -449,17 +449,33 @@ export default function InboxPage() {
   const { currentUser, deals, chatChannels, chatMessages, deleteDeal, deleteChatChannel } = useScopedApp();
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [activeKey, setActiveKey] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   useEffect(() => {
     const dealId = searchParams.get('dealId');
     if (!dealId) return;
     setExpanded(prev => ({ ...prev, [dealId]: true }));
+    setActiveKey(dealId);
     // brief scroll to the deal card
     setTimeout(() => {
       const el = document.getElementById(`inbox-deal-${dealId}`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   }, [searchParams]);
+
+  // Esc closes the fullscreen chat view and returns to the list.
+  useEffect(() => {
+    if (!activeKey) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      // Don't steal Esc from open dialogs/popovers.
+      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+      e.stopPropagation();
+      setActiveKey(null);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [activeKey]);
   const [sortBy, setSortBy] = useState<'chat' | 'updated'>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('bondvdr.inbox.sortBy') : null;
     return saved === 'updated' ? 'updated' : 'chat';
