@@ -50,14 +50,26 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   // In contextual deal mode (e.g. Edit Alert), show the deal's channel(s)
   // even when the viewer is not already listed as a participant.
   const contextualMode = (readOnly || allowDealAccess) && !!activeDealId;
+  const activeDeal = activeDealId
+    ? deals.find(d => d.id === activeDealId) || null
+    : activeChannel?.dealId ? deals.find(d => d.id === activeChannel.dealId) || null : null;
   const dealChannels = activeDealId
     ? chatChannels.filter(ch => ch.dealId === activeDealId)
+    : [];
+  const orphanedDraftChannels = activeDealId && activeDeal
+    ? chatChannels.filter(ch => {
+        if (ch.dealId) return false;
+        if (!chatMessages.some(cm => cm.channelId === ch.id)) return false;
+        const createdNearDeal = Math.abs(ch.createdAt.getTime() - activeDeal.createdAt.getTime()) <= 10 * 60 * 1000;
+        const labelMatches = ch.label.trim().toLowerCase() === activeDeal.issuerName.trim().toLowerCase();
+        return createdNearDeal || labelMatches;
+      })
     : [];
   const myDealChannels = activeDealId
     ? myChannels.filter(ch => ch.dealId === activeDealId)
     : [];
   const availableChannels = activeDealId
-    ? (contextualMode ? dealChannels : myDealChannels)
+    ? (contextualMode ? [...orphanedDraftChannels, ...dealChannels] : myDealChannels)
     : myChannels;
 
   // When activeDealId changes externally, auto-select matching channel
@@ -100,9 +112,6 @@ export default function SecureChat({ activeDealId, headerActions, heightClass = 
   const sentMessages = messages.filter(m => m.status === 'sent');
 
   // Get deal stage for header badge
-  const activeDeal = activeDealId
-    ? deals.find(d => d.id === activeDealId) || null
-    : activeChannel?.dealId ? deals.find(d => d.id === activeChannel.dealId) || null : null;
   const extractionConversationLabel = activeDeal
     ? `${activeDeal.issuerName} ${activeDeal.currency} ${activeDeal.tenor} — Deal Thread`
     : activeChannel?.label || 'Deal Thread';
