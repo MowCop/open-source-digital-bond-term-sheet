@@ -20,6 +20,8 @@ interface Props {
   candidates: { id: string; name: string; organization?: string; email?: string }[];
   /** Add/remove handler for an SCP id. */
   onToggleScp: (id: string) => void;
+  onPendingMessageChange?: (value: string) => void;
+  clearSignal?: number;
 }
 
 /**
@@ -28,7 +30,7 @@ interface Props {
  * ChatChannel is created lazily on the first message; until then we render
  * an empty-state input row. Participants = creator + selected SCPs.
  */
-export default function DraftChatStrip({ draftKey, headline, scpIds, candidates, onToggleScp }: Props) {
+export default function DraftChatStrip({ draftKey, headline, scpIds, candidates, onToggleScp, onPendingMessageChange, clearSignal = 0 }: Props) {
   const {
     currentUser, users, chatChannels, chatMessages,
     ensureDraftChannel, renameChatChannel, updateChatChannelParticipants, sendChatMessage,
@@ -75,6 +77,11 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
   useEffect(() => {
     try { localStorage.setItem(COLLAPSE_KEY, open ? 'true' : 'false'); } catch { /* ignore */ }
   }, [open]);
+
+  useEffect(() => {
+    setInput('');
+    onPendingMessageChange?.('');
+  }, [clearSignal, onPendingMessageChange]);
 
   const handleHeaderMouseDown = (e: React.MouseEvent) => {
     // Ignore drags that originate on buttons/inputs inside the header.
@@ -140,6 +147,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
     }
     sendChatMessage(id, text);
     setInput('');
+    onPendingMessageChange?.('');
   };
 
   const handleKey = (e: React.KeyboardEvent) => {
@@ -289,7 +297,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
           <div className="flex items-center gap-2 p-2 border-t border-border">
             <Input
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={e => { setInput(e.target.value); onPendingMessageChange?.(e.target.value); }}
               onKeyDown={handleKey}
               placeholder="Message the Syndicate Chat Participants…"
               className="h-8 text-xs"
