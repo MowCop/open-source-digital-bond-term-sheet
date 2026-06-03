@@ -78,7 +78,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export default function AIDraftPage() {
-  const { distributionLists, createMessage, createDeal, currentUser, users, addAuditEntry } = useApp();
+  const { distributionLists, createMessage, createDeal, currentUser, users, addAuditEntry, attachDraftChannelToDeal } = useApp();
   const { toast } = useToast();
 
   const [headline, setHeadline] = useState('');
@@ -484,6 +484,7 @@ export default function AIDraftPage() {
     }
     const deal = createDealFromFields();
     const uploaded = await uploadPendingAttachments();
+    attachDraftChannelToDeal(draftKey, deal.id, headline);
     createMessage({
       dealIds: [deal.id],
       subject: headline,
@@ -508,6 +509,7 @@ export default function AIDraftPage() {
     }
     const deal = createDealFromFields();
     const uploaded = await uploadPendingAttachments();
+    attachDraftChannelToDeal(draftKey, deal.id, headline);
     createMessage({
       dealIds: [deal.id],
       subject: headline,
