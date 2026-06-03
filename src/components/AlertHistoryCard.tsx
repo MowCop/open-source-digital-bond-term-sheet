@@ -543,6 +543,7 @@ export default function AlertHistoryCard({
                       heightClass="h-full"
                       allowDealAccess
                       hideStageBadge
+                      fallbackThreadLabel={message.subject}
                     />
                   </div>
                 </div>
@@ -591,6 +592,7 @@ export default function AlertHistoryCard({
                       heightClass="h-full"
                       allowDealAccess
                       hideStageBadge
+                      fallbackThreadLabel={message.subject}
                     />
                   </div>
                 )}
