@@ -8,6 +8,9 @@ import { Send, ChevronDown, ChevronUp, X, Users } from 'lucide-react';
 import { format } from 'date-fns';
 
 const COLLAPSE_KEY = 'bondvdr.aiDraft.chatOpen';
+const HEIGHT_KEY = 'bondvdr.aiDraft.chatHeight';
+const MIN_HEIGHT = 120;
+const DEFAULT_HEIGHT = 192;
 
 interface Props {
   draftKey: string;
@@ -36,6 +39,13 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
   const [open, setOpen] = useState<boolean>(() => {
     try { return localStorage.getItem(COLLAPSE_KEY) !== 'false'; } catch { return true; }
   });
+  const [messagesHeight, setMessagesHeight] = useState<number>(() => {
+    try {
+      const v = Number(localStorage.getItem(HEIGHT_KEY));
+      return v && v >= MIN_HEIGHT ? v : DEFAULT_HEIGHT;
+    } catch { return DEFAULT_HEIGHT; }
+  });
+  const dragRef = useRef<{ startY: number; startH: number } | null>(null);
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [scpQuery, setScpQuery] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -65,6 +75,34 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
   useEffect(() => {
     try { localStorage.setItem(COLLAPSE_KEY, open ? 'true' : 'false'); } catch { /* ignore */ }
   }, [open]);
+
+  const handleHeaderMouseDown = (e: React.MouseEvent) => {
+    // Ignore drags that originate on buttons/inputs inside the header.
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, input')) return;
+    if (!open) return;
+    e.preventDefault();
+    dragRef.current = { startY: e.clientY, startH: messagesHeight };
+    const maxH = Math.max(MIN_HEIGHT, Math.round(window.innerHeight * 0.7));
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const dy = ev.clientY - dragRef.current.startY;
+      const next = Math.min(maxH, Math.max(MIN_HEIGHT, dragRef.current.startH + dy));
+      setMessagesHeight(next);
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      try { setMessagesHeight(h => { localStorage.setItem(HEIGHT_KEY, String(h)); return h; }); } catch { /* ignore */ }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+  };
 
   // Auto-scroll to bottom when new messages arrive.
   useEffect(() => {
@@ -116,7 +154,11 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
   return (
     <div className="bg-card border border-border rounded-lg">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-2 border-b border-border">
+      <div
+        className={`flex items-center gap-2 px-4 py-2 border-b border-border ${open ? 'cursor-ns-resize select-none' : ''}`}
+        onMouseDown={handleHeaderMouseDown}
+        title={open ? 'Drag to resize chat' : undefined}
+      >
         <div className="text-sm font-semibold truncate" title={displayLabel}>
           {displayLabel}
         </div>
@@ -216,7 +258,11 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
 
           {/* Messages */}
           <ScrollArea className="px-4">
-            <div ref={scrollRef} className="max-h-48 py-2 space-y-2 overflow-y-auto">
+            <div
+              ref={scrollRef}
+              className="py-2 space-y-2 overflow-y-auto"
+              style={{ height: messagesHeight }}
+            >
               {channelMessages.length === 0 ? null : (
                 channelMessages.map(cm => {
                   const isMe = cm.senderId === currentUser.id;
