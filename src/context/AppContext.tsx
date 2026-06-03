@@ -117,6 +117,7 @@ interface AppContextType {
   ensureDraftChannel: (draftKey: string, label: string, participantIds: string[]) => ChatChannel;
   renameChatChannel: (id: string, label: string) => void;
   updateChatChannelParticipants: (id: string, participantIds: string[]) => void;
+  attachDraftChannelToDeal: (draftKey: string, dealId: string, label?: string) => void;
   createDealChannel: (dealId: string, label: string, participantIds: string[]) => ChatChannel;
   addUser: (user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => User;
   deleteUser: (id: string) => void;
