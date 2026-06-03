@@ -251,6 +251,21 @@ export default function DealsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, deals]);
 
+  // Esc collapses any open deal panel back to the main list
+  useEffect(() => {
+    if (!expandedDealId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      // Ignore when typing in inputs or when a dialog/modal is open
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      if (document.querySelector('[role="dialog"]')) return;
+      setExpandedDealId(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expandedDealId]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
