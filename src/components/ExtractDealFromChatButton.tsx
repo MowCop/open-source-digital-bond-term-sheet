@@ -67,11 +67,14 @@ export default function ExtractDealFromChatButton(props: Props) {
   const [loading, setLoading] = useState(false);
   const [extraction, setExtraction] = useState<AIExtraction | null>(null);
   const [open, setOpen] = useState(false);
+  const [popping, setPopping] = useState(false);
 
   const canRun = currentUser.role === 'master_admin' || currentUser.role === 'syndicate_admin';
   if (!canRun) return null;
 
   const handleClick = async () => {
+    setPopping(true);
+    window.setTimeout(() => setPopping(false), 750);
     const text = props.source === 'thread'
       ? buildThreadTranscript(props.messages)
       : buildChannelTranscript(props.chatMessages);
@@ -143,14 +146,14 @@ export default function ExtractDealFromChatButton(props: Props) {
       <Button
         size={size}
         variant={variant}
-        className={className}
+        className={`btn-champagne ${popping ? 'is-popping' : ''} ${className ?? ''}`}
         onClick={handleClick}
         disabled={loading}
         title="Extract bond deal info from this conversation"
       >
         {loading
-          ? <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-          : <Sparkles className="h-3 w-3 mr-1" />}
+          ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+          : <Sparkles className="h-3.5 w-3.5 mr-1" style={{ color: '#f3d98a' }} />}
         AI Extract
       </Button>
       <ExtractDealReviewModal
