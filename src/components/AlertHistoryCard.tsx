@@ -123,9 +123,15 @@ export default function AlertHistoryCard({
   // Esc collapses any expanded alert card (including the force-expanded
   // latest one). Skip when the edit modal is open — Radix Dialog owns Esc.
   useEffect(() => {
-    if (!expanded || mode === 'edit') return;
+    if (!expanded) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key !== 'Escape') return;
+      if (mode === 'edit') {
+        // Editor open → close the editor and bubble up to collapse the deal row
+        // so a single Esc returns the user to the Issue Board.
+        e.stopPropagation();
+        attemptClose();
+      } else {
         setIsOpen(false);
         setCollapsedOverride(true);
       }
