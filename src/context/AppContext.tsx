@@ -98,7 +98,7 @@ interface AppContextType {
   distributionLists: DistributionList[];
   chatChannels: ChatChannel[];
   chatMessages: ChatMessage[];
-  createDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[], opts?: { sourceChannelId?: string }) => Deal;
+  createDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[], opts?: { sourceChannelId?: string; sourceChannel?: ChatChannel }) => Deal;
   updateDeal: (dealId: string, updates: Partial<Deal>) => void;
   updateDealStage: (dealId: string, newStage: DealStage, note?: string) => void;
   createMessage: (msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => Message;
@@ -113,7 +113,7 @@ interface AppContextType {
   undoExtraction: (dealId: string) => void;
   markNotificationRead: (id: string) => void;
   addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => void;
-  sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string) => void;
+  sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string, dealId?: string) => void;
   ensureDraftChannel: (draftKey: string, label: string, participantIds: string[]) => ChatChannel;
   renameChatChannel: (id: string, label: string) => void;
   updateChatChannelParticipants: (id: string, participantIds: string[]) => void;
@@ -332,7 +332,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     insertAudit(full).catch(e => console.error('[Cloud] insertAudit failed', e));
   }, []);
 
-  const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[], opts?: { sourceChannelId?: string }) => {
+  const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[], opts?: { sourceChannelId?: string; sourceChannel?: ChatChannel }) => {
     const newDeal: Deal = {
       ...deal,
       id: `d${Date.now()}`,
@@ -352,18 +352,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const newChannelLabel = `${deal.issuerName} ${deal.currency} ${deal.tenor} — Deal Thread`;
     // If this deal was extracted from an existing chat channel, re-link that
     // channel to the new deal instead of creating a duplicate empty thread.
-    const sourceCh = opts?.sourceChannelId
-      ? chatChannels.find(c => c.id === opts.sourceChannelId)
-      : undefined;
-    if (sourceCh) {
-      const mergedParticipants = Array.from(new Set([...sourceCh.participantIds, ...participantIds]));
+    const sourceChId = opts?.sourceChannelId;
+    const sourceCh = opts?.sourceChannel ?? (sourceChId ? chatChannels.find(c => c.id === sourceChId) : undefined);
+    if (sourceChId) {
+      const mergedParticipants = Array.from(new Set([...(sourceCh?.participantIds ?? []), ...participantIds]));
       // Snapshot the channel's pre-extraction state so this extraction can
       // be fully rolled back via `undoExtraction(dealId)`.
       newDeal.extractionSnapshot = {
-        sourceChannelId: sourceCh.id,
-        previousLabel: sourceCh.label,
-        previousParticipantIds: [...sourceCh.participantIds],
-        previousDealId: sourceCh.dealId ?? null,
+        sourceChannelId: sourceChId,
+        previousLabel: sourceCh?.label ?? newChannelLabel,
+        previousParticipantIds: [...(sourceCh?.participantIds ?? participantIds)],
+        previousDealId: sourceCh?.dealId ?? null,
         extractedAt: new Date().toISOString(),
         extractedBy: currentUser.id,
       };
@@ -372,19 +371,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateDealRow(newDeal.id, { extractionSnapshot: newDeal.extractionSnapshot })
         .catch(e => console.error('[Cloud] createDeal: persist extractionSnapshot failed', e));
       setDeals(prev => prev.map(d => d.id === newDeal.id ? { ...d, extractionSnapshot: newDeal.extractionSnapshot } : d));
-      setChatChannels(prev => prev.map(c => c.id === sourceCh.id
+      setChatChannels(prev => prev.map(c => c.id === sourceChId
         ? { ...c, dealId: newDeal.id, label: newChannelLabel, participantIds: mergedParticipants }
         : c));
-      updateChatChannel(sourceCh.id, { dealId: newDeal.id, label: newChannelLabel, participantIds: mergedParticipants })
+      const relinkChannel = () => updateChatChannel(sourceChId, { dealId: newDeal.id, label: newChannelLabel, participantIds: mergedParticipants });
+      (chatChannelInsertPromisesRef.current[sourceChId] ?? Promise.resolve())
+        .then(relinkChannel)
         .catch(e => console.error('[Cloud] createDeal: relink sourceChannel failed', e));
       // Backfill deal_id onto every existing message in this channel so the
       // deal / channel / messages stay bound together through future deletes
       // and scoping queries. Without this, messages stay deal_id=NULL and
       // become orphaned if the deal is later removed.
-      setChatMessages(prev => prev.map(m => m.channelId === sourceCh.id
+      setChatMessages(prev => prev.map(m => m.channelId === sourceChId
         ? { ...m, dealId: newDeal.id }
         : m));
-      updateChatMessagesByChannel(sourceCh.id, { deal_id: newDeal.id })
+      updateChatMessagesByChannel(sourceChId, { deal_id: newDeal.id })
         .catch(e => console.error('[Cloud] createDeal: backfill chat_messages deal_id failed', e));
     } else {
       const newChannel: ChatChannel = {
@@ -670,10 +671,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     markNotificationReadRow(id).catch(e => console.error('[Cloud] markNotifRead failed', e));
   }, []);
 
-  const sendChatMessage = useCallback((channelId: string, body: string, attachments: ChatMessage['attachments'] = [], linkedMessageId?: string) => {
+  const sendChatMessage = useCallback((channelId: string, body: string, attachments: ChatMessage['attachments'] = [], linkedMessageId?: string, dealId?: string) => {
     const newMsg: ChatMessage = {
       id: `cm${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
       channelId,
+      dealId,
       senderId: effectiveSenderId,
       senderName: currentUser.name,
       senderType: currentUser.organizationType,
@@ -697,12 +699,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // message OR first save. `draftKey` is a stable per-draft id used to look
   // up an existing draft channel via its label (no deal_id yet).
   const draftChannelIdsRef = useRef<Record<string, string>>({});
+  const draftChannelsRef = useRef<Record<string, ChatChannel>>({});
+  const chatChannelInsertPromisesRef = useRef<Record<string, Promise<void>>>({});
 
   const ensureDraftChannel = useCallback((draftKey: string, label: string, participantIds: string[]): ChatChannel => {
     const existingId = draftChannelIdsRef.current[draftKey];
     if (existingId) {
       const found = chatChannels.find(c => c.id === existingId);
       if (found) return found;
+      const pending = draftChannelsRef.current[draftKey];
+      if (pending) return pending;
     }
     const cleanLabel = (label || '').trim() || 'Untitled New Issue';
     const ids = Array.from(new Set([currentUser.id, ...participantIds.filter(Boolean)]));
@@ -714,8 +720,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date(),
     };
     draftChannelIdsRef.current[draftKey] = newChannel.id;
+    draftChannelsRef.current[draftKey] = newChannel;
     setChatChannels(prev => [...prev, newChannel]);
-    insertChatChannel(newChannel).catch(e => console.error('[Cloud] ensureDraftChannel failed', e));
+    const insertPromise = insertChatChannel(newChannel).catch(e => console.error('[Cloud] ensureDraftChannel failed', e));
+    chatChannelInsertPromisesRef.current[newChannel.id] = insertPromise;
+    insertPromise.finally(() => { delete chatChannelInsertPromisesRef.current[newChannel.id]; });
     addAuditEntry({
       action: 'CHAT_CHANNEL_CREATED', entityType: 'message', entityId: newChannel.id,
       userId: currentUser.id, details: `Draft chat channel for "${cleanLabel}"`,
@@ -804,12 +813,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const updates: Partial<ChatChannel> = { dealId };
     if (cleanLabel) updates.label = cleanLabel;
     setChatChannels(prev => prev.map(c => c.id === channelId ? { ...c, ...updates } : c));
-    updateChatChannel(channelId, updates).catch(e => console.error('[Cloud] attachDraftChannelToDeal failed', e));
+    (chatChannelInsertPromisesRef.current[channelId] ?? Promise.resolve())
+      .then(() => updateChatChannel(channelId, updates))
+      .catch(e => console.error('[Cloud] attachDraftChannelToDeal failed', e));
     addAuditEntry({
       action: 'CHAT_CHANNEL_UPDATED', entityType: 'deal', entityId: dealId,
       userId: currentUser.id, details: `Linked draft chat channel ${channelId} to deal ${dealId}`,
     });
     delete draftChannelIdsRef.current[draftKey];
+    delete draftChannelsRef.current[draftKey];
   }, [currentUser.id, addAuditEntry]);
 
   const addUser = useCallback((user: Omit<User, 'id' | 'createdAt' | 'createdBy'>) => {
