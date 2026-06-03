@@ -1,24 +1,35 @@
-## Goal
-Make the **New Issue Chat** panel on `Create New Issue` vertically resizable by click-and-hold on its header bar, so users can grow or shrink the chat while the New Issue Bulletin (and AI Extraction / Deal Checker side panels) shrink/grow correspondingly — total page height stays constant.
+## Problem
 
-## Files to change
-- `src/components/DraftChatStrip.tsx` — add drag-resize logic + height state, persisted to localStorage per user.
-- `src/pages/AIDraftPage.tsx` — pass a `bulletinHeightOffset` (or simply let the bulletin column flex) so the bulletin editor's content area shrinks when the chat grows.
+On `Create New Issue`, the chat panel creates a `ChatChannel` via `ensureDraftChannel(draftKey, …)` with `dealId: undefined` — keyed only by the ephemeral `draftKey`.
 
-## Behavior
-1. **Drag handle = the whole "New Issue Chat" header bar** (the row with title / participant badge / collapse chevron). Cursor switches to `ns-resize` on hover; mousedown starts a drag, mousemove updates height, mouseup ends.
-2. Chat panel height is clamped between a sensible min (≈180 px, current default) and max (≈70% of viewport height).
-3. **Squeeze behavior**: the bulletin editor below uses `flex-1 min-h-0` inside a fixed-height column container, so as the chat grows the bulletin's editable area shrinks automatically. AI Extraction and Deal Checker side panels keep their alignment because they live in the same column grid.
-4. **Persistence**: store the chosen height in `localStorage` under `bondvdr.aiDraft.chatHeight` (per browser/user, matching the existing `bondvdr.aiDraft.chatOpen` pattern).
-5. Existing collapse chevron still works (independent of height); when collapsed, height value is preserved for next expand.
-6. Click-without-drag on the header (movement < 4 px) does nothing — does not toggle collapse (collapse stays on its dedicated chevron) to avoid accidental toggles while grabbing.
+When the user hits Save (`AIDraftPage.handleSave` / `handleSend`), a new `Deal` is created and a `Message` is stored against `deal.id`, but the draft chat channel is **never updated with that `dealId`**.
 
-## Technical notes
-- Add `const [height, setHeight] = useState(() => Number(localStorage.getItem('bondvdr.aiDraft.chatHeight')) || 280)`.
-- On the messages ScrollArea, replace `max-h-48` with an inline `style={{ height }}` (minus header/input/participants heights) so the panel resizes smoothly.
-- Drag handler: `onMouseDown` on the header attaches `mousemove` + `mouseup` to `window`, computes `newHeight = startHeight + (e.clientY - startY)`, clamps, calls `setHeight`. Persist on mouseup.
-- Add `cursor-ns-resize select-none` to the header div; keep buttons inside it with `cursor-pointer` and `stopPropagation` on their `onMouseDown` so clicking the chevron / participant toggle doesn't start a drag.
-- No backend or schema changes.
+In `AlertHistoryCard` ("Edit alert"), the chat panel is `SecureChat` keyed on `message.dealIds[0]`, and `SecureChat` looks up channels by `dealId`. Since the draft channel still has `dealId: undefined`, nothing is found → "No messages yet."
 
-## Out of scope
-- Horizontal resize, drag-to-reorder, mobile-touch resize gestures (will work via pointer events but not specifically tuned), animations.
+## Fix
+
+Attach the draft channel to the new deal at save/send time.
+
+### Files to change
+
+1. **`src/context/AppContext.tsx`**
+   - Add `attachDraftChannelToDeal(draftKey: string, dealId: string, label?: string): void` to the context:
+     - Look up channel id via `draftChannelIdsRef.current[draftKey]`. If none, no-op (user never opened/sent in chat).
+     - Update local `chatChannels` state: set `dealId` (and optionally refresh `label`).
+     - Call `updateChatChannel(channelId, { dealId, label })` to persist to Cloud.
+     - Add an audit entry `CHAT_CHANNEL_UPDATED` describing the link.
+   - Expose it in the context value alongside `ensureDraftChannel`.
+
+2. **`src/pages/AIDraftPage.tsx`**
+   - Pull `attachDraftChannelToDeal` from `useApp()`.
+   - In `handleSave` and `handleSend`, **after** `createDealFromFields()` returns the deal, call `attachDraftChannelToDeal(draftKey, deal.id, headline)` (before/around `createMessage`).
+   - In `handleSend` reset flow, also clear the local `draftChannelIdsRef` entry implicitly by regenerating `draftKey` on next mount (no extra work needed — the page already remounts a new key).
+
+### Behavior after fix
+- Save as Draft: the existing draft chat channel becomes the deal's channel. Reopening the draft via `Edit alert` shows the prior messages (e.g. "Can this be seen after saving as draft").
+- Send: same — recipients/syndicate users keep the conversation against the published deal.
+- If the user never typed in chat, no channel exists; Edit Alert behaves as before (empty chat ready for first message — `SecureChat` will create one on first send via `createDealChannel`).
+
+### Out of scope
+- Changes to `SecureChat`, `createDealChannel`, or the Edit Alert UI.
+- Migrating already-orphaned draft channels from past sessions (those will remain unlinked).
