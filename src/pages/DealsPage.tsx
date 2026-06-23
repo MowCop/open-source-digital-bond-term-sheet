@@ -400,14 +400,14 @@ export default function DealsPage() {
                     ) : (
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
                         aria-label="Generate New Issue Bulletin"
                         title="Generate New Issue Bulletin"
-                        className="m-2 h-8 w-8 text-muted-foreground hover:text-foreground"
+                        className="m-2 h-9 w-9 btn-champagne"
                         onClick={e => { e.stopPropagation(); setBulletinDealId(deal.id); }}
                       >
-                        <Megaphone className="h-4 w-4" />
+                        <Megaphone className="h-4 w-4" style={{ color: '#f3d98a' }} />
                       </Button>
                     )}
                   {deal.extractionSnapshot && (
