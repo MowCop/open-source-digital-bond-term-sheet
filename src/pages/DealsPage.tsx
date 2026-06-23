@@ -73,8 +73,8 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
                 <FileText className="h-3 w-3 mr-1" /> Bulletin published
               </Button>
             ) : (
-              <Button size="sm" variant="outline" onClick={onGenerateBulletin}>
-                <Megaphone className="h-4 w-4 mr-1" /> Generate New Issue Bulletin
+              <Button size="default" variant="outline" className="btn-champagne" onClick={onGenerateBulletin}>
+                <Megaphone className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} /> Generate New Issue Bulletin
               </Button>
             )}
             {next && (
