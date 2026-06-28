@@ -69,8 +69,14 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
         {canManage && (
           <div className="flex items-center gap-2 ml-auto">
             {hasBulletin ? (
-              <Button size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={() => navigate(`/messages?dealId=${deal.id}`)}>
-                <FileText className="h-3 w-3 mr-1" /> Bulletin published
+              <Button
+                size="default"
+                variant="outline"
+                className="opacity-50 text-muted-foreground"
+                title="Bulletin published — view on New Issue Board"
+                onClick={() => navigate(`/messages?dealId=${deal.id}`)}
+              >
+                <Megaphone className="h-4 w-4 mr-1 text-muted-foreground" /> Bulletin published
               </Button>
             ) : (
               <Button size="default" variant="outline" className="btn-champagne" onClick={onGenerateBulletin}>
@@ -388,14 +394,14 @@ export default function DealsPage() {
                     {bulletinByDeal.has(deal.id) ? (
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
                         aria-label="Bulletin published"
                         title="Bulletin published — view on New Issue Board"
-                        className="m-2 h-8 w-8 text-muted-foreground hover:text-foreground"
+                        className="m-2 h-9 w-9 opacity-50 text-muted-foreground"
                         onClick={e => { e.stopPropagation(); navigate(`/messages?dealId=${deal.id}`); }}
                       >
-                        <FileText className="h-4 w-4" />
+                        <Megaphone className="h-4 w-4 text-muted-foreground" />
                       </Button>
                     ) : (
                       <Button
