@@ -1,41 +1,22 @@
-## Deliverable
+## Show greyed-out Megaphone when bulletin already generated
 
-A single 2-page PDF — `New_Issue_Vault_Overview.pdf` — saved to `/mnt/documents/` and delivered as a downloadable artifact.
+Currently, when a deal already has a published bulletin (e.g. Kingdom of Nania), the UI swaps the gold "Generate New Issue Bulletin" button for a different `FileText` icon, so it's not visually recognisable as the same action.
 
-## Audience & tone
+Update the "bulletin already exists" state in `src/pages/DealsPage.tsx` to reuse the **same Megaphone icon** as the active button, but rendered in a greyed-out / disabled-looking style. Clicking it still navigates to the New Issue Board for that deal.
 
-Balanced overview — readable by execs/investors, credible to DCM/syndicate readers. ICMA / MiFID II / MAR terminology used where it adds weight, but no jargon walls.
+### Changes (two places in `src/pages/DealsPage.tsx`)
 
-## Structure (2 pages)
+1. **Deals list row (around lines 388–399)** — the per-row icon button:
+   - Replace `<FileText />` with `<Megaphone />`.
+   - Keep `variant="outline"` and the same `h-9 w-9` size as the active version (so the slot looks identical).
+   - Drop `btn-champagne`; instead use muted styling: `opacity-50`, muted border, no gold gradient.
+   - Icon colour: `text-muted-foreground` (greyed) instead of gold `#f3d98a`.
+   - Tooltip stays: "Bulletin published — view on New Issue Board".
+   - `onClick` still navigates to `/messages?dealId={deal.id}`.
 
-**Page 1 — What it is & why it exists**
-- Title block: "New Issue Vault — AI-native primary bond market infrastructure"
-- One-paragraph positioning statement (the "competitive position in one sentence" reframed).
-- "The problem with the status quo" — condensed: Outlook irreversibility, Bloomberg cost, taxonomy fragmentation, manual re-keying across vendors.
-- "What the New Issue Vault is" — bank-hosted VDR + native New Issue Alert Thread; banks drop content, everything downstream is automated.
+2. **Expanded Deal Detail header (around lines 71–74)** — the inline "Bulletin published" button:
+   - Replace `<FileText />` with `<Megaphone />`.
+   - Match the active button's `size="default"` and shape, but greyed: `variant="outline"`, no `btn-champagne`, `opacity-50`, muted icon + label colour.
+   - Label remains "Bulletin published" (clarifies the state); navigates to the New Issue Board on click.
 
-**Page 2 — Three AI pillars + commercials & compliance**
-- **AI as Parser** — extracts ICMA-taxonomy structured data from term sheets, alerts, and free-text chat ("size up to EUR 750m" parsed as a field update). Once at source, not ten times across vendors.
-- **AI as Compliance Checker** — version diffing with HITL controls, full audit trail of every upload/extraction/push, permissioned disclosure, alignment with MiFID II / MAR and emerging primary-market transparency rules.
-- **AI as Feed Automator (Bond Consol)** — single clean structured feed pushed simultaneously to all subscribed vendors via API / MCP; Bond Consol acts as the consolidated outbound channel, eliminating vendor-by-vendor rekeying.
-- Short closing strip: pay-per-deal / AI-metered pricing, bank-hosted & bank-controlled, ICMA built-in.
-
-## Design
-
-- Clean editorial 2-pager, A4 portrait, ~18mm margins.
-- Restrained palette anchored on deep navy + warm gold accent (Navy Trust / Emerald Prestige tone — fits finance/legal audience).
-- Serif display headings (e.g. Libre Baskerville / DM Serif) paired with a clean sans body (IBM Plex Sans / Inter) for editorial credibility.
-- Two-column body on page 2 for the three AI pillars; iconographic bullets, no clip-art.
-- Footer: "New Issue Vault · Confidential draft · June 2026".
-
-## Build approach (technical)
-
-- Generate via Python using ReportLab Platypus (SimpleDocTemplate, Paragraph, Table, Spacer) — reliable for typographic 2-pagers.
-- Write script to `/tmp/`, output PDF to `/mnt/documents/New_Issue_Vault_Overview.pdf`.
-- QA: render both pages to JPG with `pdftoppm` and visually inspect for overflow, overlap, orphaned headings, and that content fits exactly 2 pages. Iterate until clean.
-- Deliver via `<presentation-artifact>` tag.
-
-## Out of scope
-
-- No changes to the app codebase.
-- No DOCX version (PDF only, per your choice). Easy to add later if needed.
+No other files, no logic changes — `bulletinByDeal` detection and the `hasBulletin` prop stay as-is.
