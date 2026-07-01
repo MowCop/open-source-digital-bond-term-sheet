@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useState } from 'react';
 import { UserRole } from '@/types/bond';
 import { useToast } from '@/hooks/use-toast';
+import ApprovedUsersSection from '@/components/ApprovedUsersSection';
 
 const roleBadge: Record<UserRole, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
   master_admin: { label: 'Master Admin', variant: 'default' },
@@ -59,6 +60,12 @@ export default function AdminPage() {
       <Card>
         <CardHeader><CardTitle>Bank Users</CardTitle></CardHeader>
         <CardContent>
+          <div className="mb-6">
+            <ApprovedUsersSection
+              title="Approved Self-Registered Users"
+              subtitle="Users approved via the sign-up flow. Change their role or revoke access here."
+            />
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
