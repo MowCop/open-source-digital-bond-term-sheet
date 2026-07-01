@@ -1,0 +1,178 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
+interface ApprovedProfile {
+  user_id: string;
+  email: string;
+  name: string | null;
+  organization: string | null;
+  created_at: string;
+}
+
+const ALL_ROLES = [
+  { value: 'syndicate_admin', label: 'Syndicate Admin' },
+  { value: 'syndicate_readonly', label: 'Syndicate – Read Only' },
+  { value: 'sales_readonly', label: 'Sales – Read Only' },
+  { value: 'master_admin', label: 'Master Admin' },
+];
+
+interface Props {
+  title?: string;
+  subtitle?: string;
+}
+
+export default function ApprovedUsersSection({
+  title = 'Approved Users',
+  subtitle = 'Self-registered users who have been approved. Change their role or revoke access here.',
+}: Props) {
+  const { toast } = useToast();
+  const { isMaster } = useAuth();
+  const ROLES = isMaster ? ALL_ROLES : ALL_ROLES.filter(r => r.value !== 'master_admin');
+  const [rows, setRows] = useState<ApprovedProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [roleByUser, setRoleByUser] = useState<Record<string, string>>({});
+  const [confirmRevoke, setConfirmRevoke] = useState<ApprovedProfile | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('user_id, email, name, organization, created_at')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false });
+    if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+    const profiles = (data as any[]) ?? [];
+    setRows(profiles as any);
+    const ids = profiles.map((p: any) => p.user_id);
+    if (ids.length) {
+      const { data: roleRows } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .in('user_id', ids);
+      const map: Record<string, string> = {};
+      (roleRows ?? []).forEach((r: any) => { map[r.user_id] = r.role; });
+      setRoleByUser(map);
+    } else {
+      setRoleByUser({});
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const persistRole = async (p: ApprovedProfile, newRole: string) => {
+    const { error: eDel } = await supabase.from('user_roles').delete().eq('user_id', p.user_id);
+    if (eDel) return toast({ title: 'Failed', description: eDel.message, variant: 'destructive' });
+    const { error: eIns } = await supabase.from('user_roles').insert({ user_id: p.user_id, role: newRole as any });
+    if (eIns) return toast({ title: 'Failed', description: eIns.message, variant: 'destructive' });
+    await supabase.from('audit_log').insert({
+      id: crypto.randomUUID(),
+      action: 'USER_ROLE_CHANGED',
+      entity_type: 'user',
+      entity_id: p.user_id,
+      user_id: 'admin',
+      details: `Role changed to ${newRole} for ${p.email}`,
+    });
+    toast({ title: 'Role updated', description: `${p.email} → ${newRole}` });
+  };
+
+  const revoke = async (p: ApprovedProfile) => {
+    const { error: e1 } = await supabase.from('profiles').update({ status: 'rejected' }).eq('user_id', p.user_id);
+    const { error: e2 } = await supabase.from('user_roles').delete().eq('user_id', p.user_id);
+    if (e1 || e2) return toast({ title: 'Failed', description: (e1 || e2)?.message, variant: 'destructive' });
+    await supabase.from('audit_log').insert({
+      id: crypto.randomUUID(),
+      action: 'USER_REVOKED',
+      entity_type: 'user',
+      entity_id: p.user_id,
+      user_id: 'admin',
+      details: `Revoked access for ${p.email}`,
+    });
+    toast({ title: 'Access revoked', description: `${p.email} moved back to Pending Approvals.` });
+    setConfirmRevoke(null);
+    load();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="font-semibold">{title}</h3>
+        <p className="text-xs text-muted-foreground">{subtitle}</p>
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Email</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Organization</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Loading…</TableCell></TableRow>}
+          {!loading && rows.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No approved users yet.</TableCell></TableRow>}
+          {rows.map(p => (
+            <TableRow key={p.user_id}>
+              <TableCell>{p.email}</TableCell>
+              <TableCell>{p.name || '—'}</TableCell>
+              <TableCell>{p.organization || '—'}</TableCell>
+              <TableCell>
+                <Select
+                  value={roleByUser[p.user_id] || 'syndicate_readonly'}
+                  onValueChange={(v) => {
+                    setRoleByUser(prev => ({ ...prev, [p.user_id]: v }));
+                    persistRole(p, v);
+                  }}
+                >
+                  <SelectTrigger className="w-44 h-8"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </TableCell>
+              <TableCell className="text-right">
+                <Button size="sm" variant="outline" onClick={() => setConfirmRevoke(p)}>Revoke access</Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <AlertDialog open={!!confirmRevoke} onOpenChange={(o) => !o && setConfirmRevoke(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke this user's access?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>{confirmRevoke?.email}</strong> will lose access and reappear in the Pending Approvals tab where you can re-approve them later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => confirmRevoke && revoke(confirmRevoke)}
+            >
+              Yes, revoke
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

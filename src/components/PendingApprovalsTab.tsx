@@ -91,6 +91,7 @@ export default function PendingApprovalsTab() {
     const { data, error } = await supabase
       .from('profiles')
       .select('user_id, email, name, organization, status, created_at')
+      .neq('status', 'approved')
       .order('created_at', { ascending: false });
     if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
     const profiles = (data as any[]) ?? [];
@@ -214,7 +215,7 @@ export default function PendingApprovalsTab() {
     <div className="space-y-4">
       <div>
         <h3 className="font-semibold">Registered Users (approval queue)</h3>
-        <p className="text-xs text-muted-foreground">New self-registered syndicate users appear here as "pending" until you approve and assign a role.</p>
+        <p className="text-xs text-muted-foreground">New self-registered syndicate users appear here as "pending" until you approve and assign a role. Once approved they move to the <strong>Users</strong> tab.</p>
       </div>
       <Table>
         <TableHeader>
