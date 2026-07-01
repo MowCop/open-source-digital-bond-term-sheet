@@ -56,6 +56,7 @@ export default function UserManagementPage() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [showCreateList, setShowCreateList] = useState(false);
   const [editingList, setEditingList] = useState<DistributionList | null>(null);
+  const [justAddedEmail, setJustAddedEmail] = useState<string | null>(null);
 
   // Login activity (Option A — derived from auth.users)
   const [loginStats, setLoginStats] = useState<Record<string, { lastSignInAt: string | null; confirmedAt: string | null }>>({});
@@ -173,9 +174,12 @@ export default function UserManagementPage() {
     }
     const orgType: 'vendor' | 'bank' = newRole === 'vendor_user' ? 'vendor' : 'bank';
     addUser({ name: newName, email: newEmail, phone: newPhone, role: newRole, organization: newOrg, organizationType: orgType, category: newCategory });
-    toast({ title: 'User Created', description: `${newName} has been added` });
+    toast({ title: 'User Created', description: `${newName} added to the Address Book (top of the list).` });
+    setJustAddedEmail(newEmail.toLowerCase());
+    setTimeout(() => setJustAddedEmail(null), 3500);
     setShowAddUser(false);
     setNewName(''); setNewEmail(''); setNewPhone(''); setNewOrg('');
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
   };
 
   const openEditUser = (u: User) => {
