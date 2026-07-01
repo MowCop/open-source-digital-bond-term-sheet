@@ -19,6 +19,7 @@ import { useAuth } from '@/context/AuthContext';
 import { KeyRound, UserCheck } from 'lucide-react';
 import GuestsTab from '@/components/GuestsTab';
 import PendingApprovalsTab from '@/components/PendingApprovalsTab';
+import ApprovedUsersSection from '@/components/ApprovedUsersSection';
 
 const roleLabels: Record<UserRole, string> = {
   master_admin: 'Master Admin',
@@ -452,6 +453,11 @@ export default function UserManagementPage() {
 
         {/* Users Tab */}
         <TabsContent value="users" className="mt-6">
+          {isMaster && (
+            <div className="mb-8">
+              <ApprovedUsersSection />
+            </div>
+          )}
           {!showAddUser && isMaster && (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
               {[
