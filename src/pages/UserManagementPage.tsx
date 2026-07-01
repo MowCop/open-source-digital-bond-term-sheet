@@ -536,6 +536,11 @@ export default function UserManagementPage() {
               </CardContent>
             </Card>
           ) : (
+            <>
+            <div className="mb-3">
+              <h3 className="font-semibold">Address Book <span className="text-xs font-normal text-muted-foreground">(manually added contacts)</span></h3>
+              <p className="text-xs text-muted-foreground">Contacts added here appear in distribution lists and message recipients. They do not create login accounts — new sign-ups appear in “Approved Login Users” above.</p>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow className="border-border">
@@ -551,11 +556,16 @@ export default function UserManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map(u => {
+                {[...users].sort((a, b) => {
+                  const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                  const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                  return tb - ta;
+                }).map(u => {
                   const userDeals = dealsForUser(u);
                   const { active: activeDeals, passive: passiveDeals } = splitDealsForUser(u);
+                  const isJustAdded = justAddedEmail && u.email.toLowerCase() === justAddedEmail;
                   return (
-                  <TableRow key={u.id} className="border-border">
+                  <TableRow key={u.id} className={`border-border ${isJustAdded ? 'bg-primary/10 animate-pulse' : ''}`}>
                     <TableCell>
                       <div className="font-medium">{u.name}</div>
                       <div className="text-xs text-muted-foreground">{u.email}</div>
@@ -669,6 +679,7 @@ export default function UserManagementPage() {
                 })}
               </TableBody>
             </Table>
+            </>
           )}
         </TabsContent>
         {isMaster && (
