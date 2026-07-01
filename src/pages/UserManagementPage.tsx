@@ -56,6 +56,7 @@ export default function UserManagementPage() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [showCreateList, setShowCreateList] = useState(false);
   const [editingList, setEditingList] = useState<DistributionList | null>(null);
+  const [justAddedEmail, setJustAddedEmail] = useState<string | null>(null);
 
   // Login activity (Option A — derived from auth.users)
   const [loginStats, setLoginStats] = useState<Record<string, { lastSignInAt: string | null; confirmedAt: string | null }>>({});
@@ -173,9 +174,12 @@ export default function UserManagementPage() {
     }
     const orgType: 'vendor' | 'bank' = newRole === 'vendor_user' ? 'vendor' : 'bank';
     addUser({ name: newName, email: newEmail, phone: newPhone, role: newRole, organization: newOrg, organizationType: orgType, category: newCategory });
-    toast({ title: 'User Created', description: `${newName} has been added` });
+    toast({ title: 'User Created', description: `${newName} added to the Address Book (top of the list).` });
+    setJustAddedEmail(newEmail.toLowerCase());
+    setTimeout(() => setJustAddedEmail(null), 3500);
     setShowAddUser(false);
     setNewName(''); setNewEmail(''); setNewPhone(''); setNewOrg('');
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
   };
 
   const openEditUser = (u: User) => {
@@ -532,6 +536,11 @@ export default function UserManagementPage() {
               </CardContent>
             </Card>
           ) : (
+            <>
+            <div className="mb-3">
+              <h3 className="font-semibold">Address Book <span className="text-xs font-normal text-muted-foreground">(manually added contacts)</span></h3>
+              <p className="text-xs text-muted-foreground">Contacts added here appear in distribution lists and message recipients. They do not create login accounts — new sign-ups appear in “Approved Login Users” above.</p>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow className="border-border">
@@ -547,11 +556,16 @@ export default function UserManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map(u => {
+                {[...users].sort((a, b) => {
+                  const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                  const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                  return tb - ta;
+                }).map(u => {
                   const userDeals = dealsForUser(u);
                   const { active: activeDeals, passive: passiveDeals } = splitDealsForUser(u);
+                  const isJustAdded = justAddedEmail && u.email.toLowerCase() === justAddedEmail;
                   return (
-                  <TableRow key={u.id} className="border-border">
+                  <TableRow key={u.id} className={`border-border ${isJustAdded ? 'bg-primary/10 animate-pulse' : ''}`}>
                     <TableCell>
                       <div className="font-medium">{u.name}</div>
                       <div className="text-xs text-muted-foreground">{u.email}</div>
@@ -665,6 +679,7 @@ export default function UserManagementPage() {
                 })}
               </TableBody>
             </Table>
+            </>
           )}
         </TabsContent>
         {isMaster && (
