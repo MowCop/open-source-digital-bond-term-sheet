@@ -37,8 +37,8 @@ interface Props {
 }
 
 export default function ApprovedUsersSection({
-  title = 'Approved Users',
-  subtitle = 'Self-registered users who have been approved. Change their role or revoke access here.',
+  title = 'Approved Login Users (self-registered)',
+  subtitle = 'People who signed up and were approved — they have login access. Change their role or revoke access here. This is separate from the Address Book below.',
 }: Props) {
   const { toast } = useToast();
   const { isMaster } = useAuth();
