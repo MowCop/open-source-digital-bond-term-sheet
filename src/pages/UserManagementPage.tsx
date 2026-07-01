@@ -348,7 +348,7 @@ export default function UserManagementPage() {
           <p className="text-muted-foreground text-sm">Manage users, roles, and distribution lists.</p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={() => { setShowAddUser(true); setActiveTab('users'); }}>
+          <Button variant="outline" onClick={() => { setShowAddUser(true); setActiveTab('users'); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0); }}>
             <UserPlus className="h-4 w-4 mr-2" /> Add User
           </Button>
           <Button onClick={() => { setShowCreateList(true); setActiveTab('lists'); }}>
@@ -453,7 +453,7 @@ export default function UserManagementPage() {
 
         {/* Users Tab */}
         <TabsContent value="users" className="mt-6">
-          {isMaster && (
+          {!showAddUser && isMaster && (
             <div className="mb-8">
               <ApprovedUsersSection />
             </div>
