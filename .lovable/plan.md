@@ -1,32 +1,19 @@
-## Goal
-Once a registrant is approved, they disappear from **Pending Approvals** and appear in a new **Users** list — both in the Address Book and on the Administration page. Rejected, disabled, and still-pending users stay in Pending Approvals.
+## Problem
+Victor Tango was created successfully (address-book row in `public.users`), but the Users tab is split into two stacked tables with no headings and no sort, so a newly-added row appears at the bottom of the lower table and looks missing.
 
-## Changes
+## Fix
 
-### 1. `PendingApprovalsTab.tsx`
-- Filter out rows where `status === 'approved'` so only `pending | rejected | disabled` remain.
-- Remove the now-unused "Revoke access" / role editor for approved rows (they'll live in the Users tab).
-- Rename the section header to "Pending Approvals" for clarity; keep re-approve action on rejected/disabled.
+### 1. `src/pages/UserManagementPage.tsx` — Address Book table
+- Sort `users` by `createdAt` **descending** so newly added rows appear at the top.
+- Add a clear section heading above the existing table: **"Address Book (manually added contacts)"** with a one-line subtitle: "Contacts you add here appear in distribution lists and message recipients. They do not create login accounts."
+- After `handleCreateUser` succeeds, briefly highlight the new row (background flash for ~2s) so it's obvious where it landed.
 
-### 2. New `ApprovedUsersTab.tsx` (Address Book)
-- Loads `profiles` where `status = 'approved'`, joined with `user_roles` and login stats.
-- Columns: Email, Name, Organization, Role (inline `Select` to change), Last Login, Actions.
-- Actions:
-  - **Change role** — same `persistRole` logic as today (writes `user_roles`, audit entry, toast).
-  - **Revoke access** — sets `profiles.status = 'rejected'`, deletes `user_roles` row, audit entry. Row then reappears in Pending Approvals.
-- Master Admin can assign `master_admin`; Syndicate Admin cannot (mirrors current `ALL_ROLES` gating).
+### 2. `ApprovedUsersSection.tsx` heading
+- Rename to **"Approved Login Users (self-registered)"** so the distinction from the Address Book table is obvious at a glance.
 
-### 3. Address Book page (wherever `PendingApprovalsTab` is mounted)
-- Add a sibling tab: **Users** (approved) alongside **Pending Approvals**. Users tab is the default landing tab.
-
-### 4. `AdminPage.tsx`
-- Replace the current mock `users` (from `useApp()`) with a live load from `profiles` + `user_roles` filtered to `status = 'approved'`.
-- Keep the existing "Bank Users" / "Vendor Users" split by deriving `organizationType` from `organization` (or drop the split into a single "Approved Users" table if no reliable org-type field exists — will confirm from data during build).
-- Keep the inline role editor.
-
-### 5. No schema changes
-All data already lives in `profiles` + `user_roles`. No migration required.
+### 3. No schema or auth changes
+- Add User continues to write only to `public.users` (address book). No `user_roles` row, no auth account — same behaviour as today, just made visible.
 
 ## Out of scope
-- No changes to signup flow, email notifications, or delete behaviour.
-- No new "moved to Users" badge on the Pending tab (per your choice to hide entirely).
+- Turning address-book contacts into login users (that's the existing sign-up + approval flow).
+- Merging the two tables — they represent different things (contacts vs. login accounts) and should stay separate.
