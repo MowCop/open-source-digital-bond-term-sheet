@@ -453,7 +453,7 @@ export default function UserManagementPage() {
 
         {/* Users Tab */}
         <TabsContent value="users" className="mt-6">
-          {isMaster && (
+          {!showAddUser && isMaster && (
             <div className="mb-8">
               <ApprovedUsersSection />
             </div>
