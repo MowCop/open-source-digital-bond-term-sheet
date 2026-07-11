@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut, Settings } from 'lucide-react';
+import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut, Settings, RefreshCw } from 'lucide-react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ const navItems = [
   { path: '/bond-console', label: 'Bond Console', icon: Settings },
   { path: '/master-admin', label: 'Master Admin', icon: Shield, masterOnly: true },
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
+  { path: '/sync-log', label: 'Sync Log', icon: RefreshCw, adminOnly: true },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

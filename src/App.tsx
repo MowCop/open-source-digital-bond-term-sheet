@@ -15,6 +15,7 @@ import InboxPage from "@/pages/InboxPage";
 import AIDraftPage from "@/pages/AIDraftPage";
 import UserManagementPage from "@/pages/UserManagementPage";
 import AuditLogPage from "@/pages/AuditLogPage";
+import SyncAuditLogPage from "@/pages/SyncAuditLogPage";
 import MasterAdminPage from "@/pages/MasterAdminPage";
 import BondConsolePage from "@/pages/BondConsolePage";
 import NotFound from "./pages/NotFound.tsx";
@@ -50,6 +51,7 @@ const App = () => (
                       <Route path="/ai-draft" element={<GuestBlock><AIDraftPage /></GuestBlock>} />
                       <Route path="/admin" element={<GuestBlock><UserManagementPage /></GuestBlock>} />
                       <Route path="/audit-log" element={<GuestBlock><AuditLogPage /></GuestBlock>} />
+                      <Route path="/sync-log" element={<GuestBlock><SyncAuditLogPage /></GuestBlock>} />
                       <Route path="/master-admin" element={<GuestBlock><MasterAdminPage /></GuestBlock>} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
