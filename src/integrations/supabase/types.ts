@@ -599,6 +599,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_audit_log: {
+        Row: {
+          created_at: string
+          details: Json | null
+          error_message: string | null
+          event_type: string
+          id: string
+          records_processed: number | null
+          repo: string | null
+          source: string
+          status: string
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          records_processed?: number | null
+          repo?: string | null
+          source: string
+          status: string
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          records_processed?: number | null
+          repo?: string | null
+          source?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
