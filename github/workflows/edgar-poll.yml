@@ -1,0 +1,48 @@
+name: EDGAR sovereign filings poll
+
+on:
+  schedule:
+    # 13:00 UTC, Mon–Fri (after EDGAR opens for the day)
+    - cron: "0 13 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      backfill_only:
+        description: "Mark all current filings as seen without posting (day-one setup)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Poll EDGAR and post new filings
+        env:
+          INGEST_URL: ${{ secrets.INGEST_URL }}
+          EDGAR_SEC_AGENTIC_FLOW_LOVEABLE_SOVEREIGNS_2020: ${{ secrets.EDGAR_SEC_AGENTIC_FLOW_LOVEABLE_SOVEREIGNS_2020 }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          BACKFILL_ONLY: ${{ github.event.inputs.backfill_only || 'false' }}
+        run: python scripts/poll_edgar.py
+
+      - name: Commit seen.json if changed
+        run: |
+          if [[ -n "$(git status --porcelain state/seen.json)" ]]; then
+            git config user.name "edgar-bot"
+            git config user.email "edgar-bot@users.noreply.github.com"
+            git add state/seen.json
+            git commit -m "chore(edgar): update seen accessions"
+            git push
+          else
+            echo "No changes to seen.json"
+          fi
