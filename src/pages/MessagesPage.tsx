@@ -922,6 +922,68 @@ export default function MessagesPage() {
       </div>
 
       {/* Floating chat panel (default) */}
+      {focusedKey && (() => {
+        const fg = (filtered.find(g => g.dealIds.join(',') === focusedKey)
+          || alertGroups.find(g => g.dealIds.join(',') === focusedKey));
+        if (!fg) return null;
+        const list = filtered.length ? filtered : alertGroups;
+        return (
+          <div className="fixed inset-0 z-40 flex bg-background">
+            {/* Deal list — takes the place of the app menu */}
+            <aside className="w-60 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
+              <div className="p-3 border-b border-sidebar-border">
+                <div className="text-sm font-bold">New Issue Board</div>
+                <div className="text-[11px] text-sidebar-foreground/60">Esc to return to the board</div>
+              </div>
+              <div className="flex-1 overflow-auto p-2 space-y-1">
+                {list.map(g => {
+                  const key = g.dealIds.join(',');
+                  const active = key === focusedKey;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      ref={active ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}
+                      onClick={() => openFocus(key)}
+                      className={`w-full text-left rounded-md px-2.5 py-2 transition-colors ${
+                        active
+                          ? 'border-2 border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/50'
+                          : 'border-2 border-transparent hover:bg-sidebar-accent/50'
+                      }`}
+                    >
+                      <div className={`text-xs ${active ? 'font-bold text-amber-300' : 'font-medium'}`}>{g.borrower}</div>
+                      <div className="text-[11px] text-sidebar-foreground/60 line-clamp-2">{g.headline}</div>
+                      <Badge className={`mt-1 text-[9px] border ${stageBadge[g.stage].className}`}>{stageBadge[g.stage].label}</Badge>
+                    </button>
+                  );
+                })}
+              </div>
+            </aside>
+            {/* Focused deal */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="h-12 shrink-0 border-b border-border bg-card flex items-center gap-3 px-4">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold truncate">{fg.borrower}</div>
+                  <div className="text-[11px] text-muted-foreground truncate">{fg.headline}</div>
+                </div>
+                <Badge className={`text-[10px] border ${stageBadge[fg.stage].className}`}>{stageBadge[fg.stage].label}</Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto text-xs"
+                  onClick={() => setFocusedKey(null)}
+                >
+                  Back to board (Esc)
+                </Button>
+              </div>
+              <div className="flex-1 overflow-auto">
+                {renderDealDetail(fg, focusedKey)}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {chatView === 'floating' && (
         <FloatingChatPanel
           activeDealId={activeDealId}
