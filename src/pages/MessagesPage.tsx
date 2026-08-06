@@ -131,7 +131,6 @@ export default function MessagesPage() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (document.querySelector('[role="dialog"][data-state="open"]')) return;
-      if (document.querySelector('[data-alert-card-expanded="true"]')) return;
       setFocusedKey(null);
     };
     window.addEventListener('keydown', onKey);
