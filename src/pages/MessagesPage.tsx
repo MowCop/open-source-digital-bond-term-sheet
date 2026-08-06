@@ -735,15 +735,23 @@ export default function MessagesPage() {
                       // Don't toggle when interacting with the inline headline editor
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
                       if ((e.target as HTMLElement).closest('[data-borrower-editor]')) return;
-                      toggleExpand(groupKey);
+                      openFocus(groupKey);
                     }}
                   >
                     <div className="col-span-1 flex items-center gap-1">
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      )}
+                      <button
+                        type="button"
+                        title={isExpanded ? 'Collapse inline preview' : 'Expand inline preview'}
+                        aria-label={isExpanded ? 'Collapse inline preview' : 'Expand inline preview'}
+                        onClick={(e) => { e.stopPropagation(); toggleExpand(groupKey); }}
+                        className="p-0.5 -m-0.5 rounded hover:bg-accent/40"
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </button>
                     </div>
                     <div className="col-span-1" onClick={(e) => e.stopPropagation()}>
                       {(() => {
