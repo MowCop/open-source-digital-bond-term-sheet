@@ -564,6 +564,19 @@ export default function MessagesPage() {
           </Button>
         );
       })()}
+      <Button
+        size="sm"
+        variant="outline"
+        className="text-xs"
+        title="OrderBook (coming soon)"
+        onClick={(e) => {
+          e.stopPropagation();
+          toast({ title: 'OrderBook', description: 'OrderBook module coming soon.' });
+        }}
+      >
+        <BookOpen className="h-3 w-3 mr-1" />
+        OrderBook
+      </Button>
       {canManageMessages && (
         <Button
           size="sm"
