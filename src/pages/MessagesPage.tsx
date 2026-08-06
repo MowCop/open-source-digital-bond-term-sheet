@@ -137,6 +137,67 @@ export default function MessagesPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [focusedKey]);
 
+  // --- Focus Mode: focus management + keyboard navigation -------------------
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const activeListItemRef = useRef<HTMLButtonElement | null>(null);
+
+  // Move focus into the overlay on open; restore it to the trigger on close.
+  useEffect(() => {
+    if (!focusedKey) {
+      const el = returnFocusRef.current;
+      returnFocusRef.current = null;
+      if (el && document.contains(el)) {
+        requestAnimationFrame(() => el.focus());
+      }
+      return;
+    }
+    const t = requestAnimationFrame(() => {
+      (activeListItemRef.current || overlayRef.current)?.focus();
+    });
+    return () => cancelAnimationFrame(t);
+    // Only run on enter/exit of Focus Mode, not on every deal switch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusedKey === null]);
+
+  // Trap Tab inside the overlay while Focus Mode is open.
+  useEffect(() => {
+    if (!focusedKey) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const root = overlayRef.current;
+      if (!root) return;
+      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+      const nodes = Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]'
+        )
+      ).filter(el => el.offsetParent !== null || el === document.activeElement);
+      if (!nodes.length) {
+        e.preventDefault();
+        root.focus();
+        return;
+      }
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      const current = document.activeElement as HTMLElement | null;
+      if (!current || !root.contains(current)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+        return;
+      }
+      if (e.shiftKey && current === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && current === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  }, [focusedKey]);
+
 
   // Group messages by their primary deal (first dealId) to create alert groups
   const alertGroups: AlertGroup[] = [];
