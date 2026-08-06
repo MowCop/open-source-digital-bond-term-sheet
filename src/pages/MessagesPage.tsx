@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History, Edit2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History, Edit2, BookOpen } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
@@ -564,6 +564,19 @@ export default function MessagesPage() {
           </Button>
         );
       })()}
+      <Button
+        size="sm"
+        variant="outline"
+        className="text-xs"
+        title="OrderBook (coming soon)"
+        onClick={(e) => {
+          e.stopPropagation();
+          toast({ title: 'OrderBook', description: 'OrderBook module coming soon.' });
+        }}
+      >
+        <BookOpen className="h-3 w-3 mr-1" />
+        OrderBook
+      </Button>
       {canManageMessages && (
         <Button
           size="sm"
