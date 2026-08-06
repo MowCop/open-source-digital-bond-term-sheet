@@ -87,6 +87,7 @@ export default function MessagesPage() {
   const [filterStage, setFilterStage] = useState<string>('all');
   const [filterPublish, setFilterPublish] = useState<'all' | PublishStatus>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
+  const [focusedKey, setFocusedKey] = useState<string | null>(null);
   const [chatView, setChatView] = useState<'closed' | 'floating' | 'modal'>('closed');
   const showChat = chatView !== 'closed';
   const [editingHeadlineId, setEditingHeadlineId] = useState<string | null>(null);
@@ -122,6 +123,19 @@ export default function MessagesPage() {
       window.removeEventListener('alert-editor-closed', onEditorClosed);
     };
   }, [expandedAlertId]);
+
+  // Esc from Focus Mode returns to the full New Issue Board. Any open dialog
+  // or expanded alert card owns Esc first (existing cascade preserved).
+  useEffect(() => {
+    if (!focusedKey) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+      setFocusedKey(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [focusedKey]);
 
 
   // Group messages by their primary deal (first dealId) to create alert groups
@@ -256,6 +270,12 @@ export default function MessagesPage() {
       if (next) setActivePanel('history');
       return next;
     });
+  };
+
+  // Focus Mode: full-screen single-deal view with the board list on the left.
+  const openFocus = (key: string) => {
+    setActivePanel('history');
+    setFocusedKey(key);
   };
 
   const flash = (key: string) => {
@@ -406,6 +426,229 @@ export default function MessagesPage() {
     setPendingDelete(null);
   };
 
+  const renderDealDetail = (group: AlertGroup, groupKey: string) => (
+                  <div
+                    className="bg-card/40 border-t border-border px-8 py-4 space-y-4"
+                    title="Double-click or double-tap empty area to close"
+                    onClick={(e) => handlePanelTapClose(groupKey, e)}
+                    onDoubleClick={(e) => {
+                      const t = e.target as HTMLElement;
+                      // Ignore double-clicks on interactive / editable controls
+                      if (shouldIgnorePanelCloseGesture(t)) return;
+                      panelTapRef.current = null;
+                      setExpandedAlertId(null);
+                    }}
+                  >
+                    {activePanel === 'history' && (
+                      <div className="space-y-4">
+                        {(() => {
+                          const total = group.messages.length;
+                          const renderCard = (msg: typeof group.messages[number], idx: number) => {
+                            const versionNum = total - idx;
+                            const versionLabel = total > 1
+                              ? (versionNum === 1 ? 'Original' : `Update #${versionNum - 1}`)
+                              : undefined;
+                            return (
+                              <AlertHistoryCard
+                                key={msg.id}
+                                message={msg}
+                                senderName={getUserName(msg.senderId)}
+                                recipientNames={getRecipientNames(msg.recipients)}
+                                canManage={canManageMessages}
+                                versionLabel={versionLabel}
+                                isLatest={idx === 0}
+                                editSignal={editSignals[msg.id] || 0}
+                                onUpdate={updateMessage}
+                                onRetract={(id) => {
+                                  retractMessage(id);
+                                  toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+                                }}
+                                onSend={(id) => {
+                                  sendMessage(id);
+                                  const m = messages.find(x => x.id === id);
+                                  toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
+                                }}
+                                onPostUpdate={handlePostUpdate}
+                                onDelete={(id) => {
+                                  deleteMessage(id);
+                                  toast({ title: 'Alert Deleted', description: 'The alert has been removed.' });
+                                }}
+                              />
+                            );
+                          };
+                          const latest = group.messages[0];
+                          const rest = group.messages.slice(1);
+                          return (
+                            <>
+                              {latest && (
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    {group.messages.length > 1 && (
+                                      <span className="text-[10px] font-semibold uppercase text-accent bg-accent/10 px-1.5 py-0.5 rounded">
+                                        Update #{group.messages.length - 1}
+                                      </span>
+                                    )}
+                                    <span>{getUserName(latest.senderId)}</span>
+                                  </div>
+                                  <AlertHistoryCard
+                                    key={latest.id}
+                                    message={latest}
+                                    senderName={getUserName(latest.senderId)}
+                                    recipientNames={getRecipientNames(latest.recipients)}
+                                    canManage={canManageMessages}
+                                    isLatest
+                                    embedded
+                                    editSignal={editSignals[latest.id] || 0}
+                                    onUpdate={updateMessage}
+                                    onRetract={(id) => {
+                                      retractMessage(id);
+                                      toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+                                    }}
+                                    onSend={(id) => {
+                                      sendMessage(id);
+                                      const m = messages.find(x => x.id === id);
+                                      toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
+                                    }}
+                                    onPostUpdate={handlePostUpdate}
+                                    onDelete={(id) => {
+                                      deleteMessage(id);
+                                      toast({ title: 'Alert Deleted', description: 'The alert has been removed.' });
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              <div className="flex items-center gap-2 py-2 border-y border-border/50 flex-wrap">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className={`text-xs ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
+                                  disabled={!group.dealIds[0]}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    flash(`${groupKey}:data`);
+                                    const did = group.dealIds[0];
+                                    if (did) setTimeout(() => navigate(`/deals?dealId=${did}`), 150);
+                                  }}
+                                >
+                                  <Database className="h-3 w-3 mr-1" />
+                                  Deal Alert Data
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className={`text-xs ${activePanel === 'history' ? 'bg-accent text-accent-foreground' : ''} ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
+                                  onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
+                                >
+                                  <History className="h-3 w-3 mr-1" />
+                                  Update History ({group.messages.length})
+                                </Button>
+                                {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs"
+                                    title="Edit the latest update"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const id = group.latestMessage.id;
+                                      setActivePanel('history');
+                                      setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+                                    }}
+                                  >
+                                    <Edit2 className="h-3 w-3 mr-1" />
+                                    Edit Latest
+                                  </Button>
+                                )}
+                                {canManageMessages && group.messages.length > 0 && (
+                                  <div onClick={(e) => e.stopPropagation()}>
+                                    <ExtractDealFromChatButton
+                                      source="thread"
+                                      messages={group.messages}
+                                      conversationLabel={group.headline || group.borrower}
+                                      targetDealIds={group.dealIds}
+                                    />
+                                  </div>
+                                )}
+                                {canManageMessages && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
+                                    title="Delete duplicate deal and all related data"
+                                  >
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    Delete
+                                  </Button>
+                                )}
+                              </div>
+                              {rest.map((msg, i) => renderCard(msg, i + 1))}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+
+                    {activePanel !== 'history' && (
+                      <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={`text-xs ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
+                        disabled={!group.dealIds[0]}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          flash(`${groupKey}:data`);
+                          const did = group.dealIds[0];
+                          if (did) setTimeout(() => navigate(`/deals?dealId=${did}`), 150);
+                        }}
+                      >
+                        <Database className="h-3 w-3 mr-1" />
+                        Deal Alert Data
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={`text-xs ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
+                      >
+                        <History className="h-3 w-3 mr-1" />
+                        Update History ({group.messages.length})
+                      </Button>
+                      {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs"
+                          title="Edit the latest update"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const id = group.latestMessage.id;
+                            setActivePanel('history');
+                            setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+                          }}
+                        >
+                          <Edit2 className="h-3 w-3 mr-1" />
+                          Edit Latest
+                        </Button>
+                      )}
+                      {canManageMessages && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                          onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
+                          title="Delete duplicate deal and all related data"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      )}
+                      </div>
+                    )}
+                  </div>
+  );
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -497,15 +740,23 @@ export default function MessagesPage() {
                       // Don't toggle when interacting with the inline headline editor
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
                       if ((e.target as HTMLElement).closest('[data-borrower-editor]')) return;
-                      toggleExpand(groupKey);
+                      openFocus(groupKey);
                     }}
                   >
                     <div className="col-span-1 flex items-center gap-1">
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      )}
+                      <button
+                        type="button"
+                        title={isExpanded ? 'Collapse inline preview' : 'Expand inline preview'}
+                        aria-label={isExpanded ? 'Collapse inline preview' : 'Expand inline preview'}
+                        onClick={(e) => { e.stopPropagation(); toggleExpand(groupKey); }}
+                        className="p-0.5 -m-0.5 rounded hover:bg-accent/40"
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </button>
                     </div>
                     <div className="col-span-1" onClick={(e) => e.stopPropagation()}>
                       {(() => {
@@ -650,228 +901,7 @@ export default function MessagesPage() {
                   </div>
 
                   {/* Expanded content */}
-                  {isExpanded && (
-                    <div
-                      className="bg-card/40 border-t border-border px-8 py-4 space-y-4"
-                      title="Double-click or double-tap empty area to close"
-                      onClick={(e) => handlePanelTapClose(groupKey, e)}
-                      onDoubleClick={(e) => {
-                        const t = e.target as HTMLElement;
-                        // Ignore double-clicks on interactive / editable controls
-                        if (shouldIgnorePanelCloseGesture(t)) return;
-                        panelTapRef.current = null;
-                        setExpandedAlertId(null);
-                      }}
-                    >
-                      {activePanel === 'history' && (
-                        <div className="space-y-4">
-                          {(() => {
-                            const total = group.messages.length;
-                            const renderCard = (msg: typeof group.messages[number], idx: number) => {
-                              const versionNum = total - idx;
-                              const versionLabel = total > 1
-                                ? (versionNum === 1 ? 'Original' : `Update #${versionNum - 1}`)
-                                : undefined;
-                              return (
-                                <AlertHistoryCard
-                                  key={msg.id}
-                                  message={msg}
-                                  senderName={getUserName(msg.senderId)}
-                                  recipientNames={getRecipientNames(msg.recipients)}
-                                  canManage={canManageMessages}
-                                  versionLabel={versionLabel}
-                                  isLatest={idx === 0}
-                                  editSignal={editSignals[msg.id] || 0}
-                                  onUpdate={updateMessage}
-                                  onRetract={(id) => {
-                                    retractMessage(id);
-                                    toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
-                                  }}
-                                  onSend={(id) => {
-                                    sendMessage(id);
-                                    const m = messages.find(x => x.id === id);
-                                    toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
-                                  }}
-                                  onPostUpdate={handlePostUpdate}
-                                  onDelete={(id) => {
-                                    deleteMessage(id);
-                                    toast({ title: 'Alert Deleted', description: 'The alert has been removed.' });
-                                  }}
-                                />
-                              );
-                            };
-                            const latest = group.messages[0];
-                            const rest = group.messages.slice(1);
-                            return (
-                              <>
-                                {latest && (
-                                  <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                      {group.messages.length > 1 && (
-                                        <span className="text-[10px] font-semibold uppercase text-accent bg-accent/10 px-1.5 py-0.5 rounded">
-                                          Update #{group.messages.length - 1}
-                                        </span>
-                                      )}
-                                      <span>{getUserName(latest.senderId)}</span>
-                                    </div>
-                                    <AlertHistoryCard
-                                      key={latest.id}
-                                      message={latest}
-                                      senderName={getUserName(latest.senderId)}
-                                      recipientNames={getRecipientNames(latest.recipients)}
-                                      canManage={canManageMessages}
-                                      isLatest
-                                      embedded
-                                      editSignal={editSignals[latest.id] || 0}
-                                      onUpdate={updateMessage}
-                                      onRetract={(id) => {
-                                        retractMessage(id);
-                                        toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
-                                      }}
-                                      onSend={(id) => {
-                                        sendMessage(id);
-                                        const m = messages.find(x => x.id === id);
-                                        toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
-                                      }}
-                                      onPostUpdate={handlePostUpdate}
-                                      onDelete={(id) => {
-                                        deleteMessage(id);
-                                        toast({ title: 'Alert Deleted', description: 'The alert has been removed.' });
-                                      }}
-                                    />
-                                  </div>
-                                )}
-                                <div className="flex items-center gap-2 py-2 border-y border-border/50 flex-wrap">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className={`text-xs ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
-                                    disabled={!group.dealIds[0]}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      flash(`${groupKey}:data`);
-                                      const did = group.dealIds[0];
-                                      if (did) setTimeout(() => navigate(`/deals?dealId=${did}`), 150);
-                                    }}
-                                  >
-                                    <Database className="h-3 w-3 mr-1" />
-                                    Deal Alert Data
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className={`text-xs ${activePanel === 'history' ? 'bg-accent text-accent-foreground' : ''} ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
-                                    onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
-                                  >
-                                    <History className="h-3 w-3 mr-1" />
-                                    Update History ({group.messages.length})
-                                  </Button>
-                                  {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="text-xs"
-                                      title="Edit the latest update"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const id = group.latestMessage.id;
-                                        setActivePanel('history');
-                                        setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
-                                      }}
-                                    >
-                                      <Edit2 className="h-3 w-3 mr-1" />
-                                      Edit Latest
-                                    </Button>
-                                  )}
-                                  {canManageMessages && group.messages.length > 0 && (
-                                    <div onClick={(e) => e.stopPropagation()}>
-                                      <ExtractDealFromChatButton
-                                        source="thread"
-                                        messages={group.messages}
-                                        conversationLabel={group.headline || group.borrower}
-                                        targetDealIds={group.dealIds}
-                                      />
-                                    </div>
-                                  )}
-                                  {canManageMessages && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="text-xs ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                      onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
-                                      title="Delete duplicate deal and all related data"
-                                    >
-                                      <Trash2 className="h-3 w-3 mr-1" />
-                                      Delete
-                                    </Button>
-                                  )}
-                                </div>
-                                {rest.map((msg, i) => renderCard(msg, i + 1))}
-                              </>
-                            );
-                          })()}
-                        </div>
-                      )}
-
-                      {activePanel !== 'history' && (
-                        <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className={`text-xs ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
-                          disabled={!group.dealIds[0]}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            flash(`${groupKey}:data`);
-                            const did = group.dealIds[0];
-                            if (did) setTimeout(() => navigate(`/deals?dealId=${did}`), 150);
-                          }}
-                        >
-                          <Database className="h-3 w-3 mr-1" />
-                          Deal Alert Data
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className={`text-xs ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
-                          onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
-                        >
-                          <History className="h-3 w-3 mr-1" />
-                          Update History ({group.messages.length})
-                        </Button>
-                        {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-xs"
-                            title="Edit the latest update"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const id = group.latestMessage.id;
-                              setActivePanel('history');
-                              setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
-                            }}
-                          >
-                            <Edit2 className="h-3 w-3 mr-1" />
-                            Edit Latest
-                          </Button>
-                        )}
-                        {canManageMessages && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-xs ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                            onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
-                            title="Delete duplicate deal and all related data"
-                          >
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            Delete
-                          </Button>
-                        )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {isExpanded && renderDealDetail(group, groupKey)}
                 </div>
               );
             })}
@@ -891,6 +921,68 @@ export default function MessagesPage() {
       </div>
 
       {/* Floating chat panel (default) */}
+      {focusedKey && (() => {
+        const fg = (filtered.find(g => g.dealIds.join(',') === focusedKey)
+          || alertGroups.find(g => g.dealIds.join(',') === focusedKey));
+        if (!fg) return null;
+        const list = filtered.length ? filtered : alertGroups;
+        return (
+          <div className="fixed inset-0 z-40 flex bg-background">
+            {/* Deal list — takes the place of the app menu */}
+            <aside className="w-60 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
+              <div className="p-3 border-b border-sidebar-border">
+                <div className="text-sm font-bold">New Issue Board</div>
+                <div className="text-[11px] text-sidebar-foreground/60">Esc to return to the board</div>
+              </div>
+              <div className="flex-1 overflow-auto p-2 space-y-1">
+                {list.map(g => {
+                  const key = g.dealIds.join(',');
+                  const active = key === focusedKey;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      ref={active ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}
+                      onClick={() => openFocus(key)}
+                      className={`w-full text-left rounded-md px-2.5 py-2 transition-colors ${
+                        active
+                          ? 'border-2 border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/50'
+                          : 'border-2 border-transparent hover:bg-sidebar-accent/50'
+                      }`}
+                    >
+                      <div className={`text-xs ${active ? 'font-bold text-amber-300' : 'font-medium'}`}>{g.borrower}</div>
+                      <div className="text-[11px] text-sidebar-foreground/60 line-clamp-2">{g.headline}</div>
+                      <Badge className={`mt-1 text-[9px] border ${stageBadge[g.stage].className}`}>{stageBadge[g.stage].label}</Badge>
+                    </button>
+                  );
+                })}
+              </div>
+            </aside>
+            {/* Focused deal */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="h-12 shrink-0 border-b border-border bg-card flex items-center gap-3 px-4">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold truncate">{fg.borrower}</div>
+                  <div className="text-[11px] text-muted-foreground truncate">{fg.headline}</div>
+                </div>
+                <Badge className={`text-[10px] border ${stageBadge[fg.stage].className}`}>{stageBadge[fg.stage].label}</Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto text-xs"
+                  onClick={() => setFocusedKey(null)}
+                >
+                  Back to board (Esc)
+                </Button>
+              </div>
+              <div className="flex-1 overflow-auto">
+                {renderDealDetail(fg, focusedKey)}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {chatView === 'floating' && (
         <FloatingChatPanel
           activeDealId={activeDealId}
