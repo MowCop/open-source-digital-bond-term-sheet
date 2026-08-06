@@ -335,6 +335,11 @@ export default function MessagesPage() {
 
   // Focus Mode: full-screen single-deal view with the board list on the left.
   const openFocus = (key: string) => {
+    // Remember where focus came from so Esc can return it to the board row.
+    if (!focusedKey) {
+      const el = document.activeElement as HTMLElement | null;
+      returnFocusRef.current = el && el !== document.body ? el : null;
+    }
     setActivePanel('history');
     setFocusedKey(key);
   };
