@@ -273,6 +273,12 @@ export default function MessagesPage() {
     });
   };
 
+  // Focus Mode: full-screen single-deal view with the board list on the left.
+  const openFocus = (key: string) => {
+    setActivePanel('history');
+    setFocusedKey(key);
+  };
+
   const flash = (key: string) => {
     setFlashingBtn(key);
     setTimeout(() => setFlashingBtn(prev => (prev === key ? null : prev)), 500);
