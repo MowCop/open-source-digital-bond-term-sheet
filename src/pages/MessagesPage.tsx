@@ -1130,6 +1130,44 @@ export default function MessagesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!docsGroup} onOpenChange={(o) => !o && setDocsGroup(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-sm">
+              Attachments{docsGroup ? ` — ${docsGroup.headline || docsGroup.borrower}` : ''}
+            </DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const docs = (docsGroup?.messages ?? []).flatMap(m => (m.attachments ?? []).map(a => ({ a, m })));
+            if (docs.length === 0) {
+              return <p className="text-sm text-muted-foreground py-4">No documentation attached to this deal.</p>;
+            }
+            return (
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Attachments ({docs.length})
+                </p>
+                {docs.map(({ a, m }) => (
+                  <a
+                    key={a.id}
+                    href={a.url || undefined}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 rounded-md border border-border bg-card/60 px-3 py-2 hover:bg-accent/40 transition-colors"
+                  >
+                    <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm truncate flex-1">{a.name}</span>
+                    <span className="text-[10px] uppercase text-muted-foreground shrink-0">
+                      {format(m.createdAt, 'dd MMM yyyy')}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
