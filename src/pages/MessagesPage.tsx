@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History, Edit2, BookOpen } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History, Edit2, BookOpen, FileText, Paperclip } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
@@ -24,6 +24,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const stageBadge: Record<DealStage, { label: string; className: string }> = {
   Mandate: { label: 'Mandate', className: 'bg-blue-900/50 text-blue-400 border-blue-800' },
@@ -84,6 +90,7 @@ export default function MessagesPage() {
   const [editSignals, setEditSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AlertGroup | null>(null);
+  const [docsGroup, setDocsGroup] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [filterPublish, setFilterPublish] = useState<'all' | PublishStatus>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
@@ -577,6 +584,21 @@ export default function MessagesPage() {
         <BookOpen className="h-3 w-3 mr-1" />
         OrderBook
       </Button>
+      {(() => {
+        const docCount = group.messages.reduce((n, m) => n + (m.attachments?.length ?? 0), 0);
+        return (
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs"
+            title="View attached documentation"
+            onClick={(e) => { e.stopPropagation(); setDocsGroup(group); }}
+          >
+            <FileText className="h-3 w-3 mr-1" />
+            Docs{docCount > 0 ? ` (${docCount})` : ''}
+          </Button>
+        );
+      })()}
       {canManageMessages && (
         <Button
           size="sm"
