@@ -137,6 +137,67 @@ export default function MessagesPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [focusedKey]);
 
+  // --- Focus Mode: focus management + keyboard navigation -------------------
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+  const activeListItemRef = useRef<HTMLButtonElement | null>(null);
+
+  // Move focus into the overlay on open; restore it to the trigger on close.
+  useEffect(() => {
+    if (!focusedKey) {
+      const el = returnFocusRef.current;
+      returnFocusRef.current = null;
+      if (el && document.contains(el)) {
+        requestAnimationFrame(() => el.focus());
+      }
+      return;
+    }
+    const t = requestAnimationFrame(() => {
+      (activeListItemRef.current || overlayRef.current)?.focus();
+    });
+    return () => cancelAnimationFrame(t);
+    // Only run on enter/exit of Focus Mode, not on every deal switch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusedKey === null]);
+
+  // Trap Tab inside the overlay while Focus Mode is open.
+  useEffect(() => {
+    if (!focusedKey) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const root = overlayRef.current;
+      if (!root) return;
+      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+      const nodes = Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]'
+        )
+      ).filter(el => el.offsetParent !== null || el === document.activeElement);
+      if (!nodes.length) {
+        e.preventDefault();
+        root.focus();
+        return;
+      }
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      const current = document.activeElement as HTMLElement | null;
+      if (!current || !root.contains(current)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+        return;
+      }
+      if (e.shiftKey && current === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && current === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  }, [focusedKey]);
+
 
   // Group messages by their primary deal (first dealId) to create alert groups
   const alertGroups: AlertGroup[] = [];
@@ -274,6 +335,11 @@ export default function MessagesPage() {
 
   // Focus Mode: full-screen single-deal view with the board list on the left.
   const openFocus = (key: string) => {
+    // Remember where focus came from so Esc can return it to the board row.
+    if (!focusedKey) {
+      const el = document.activeElement as HTMLElement | null;
+      returnFocusRef.current = el && el !== document.body ? el : null;
+    }
     setActivePanel('history');
     setFocusedKey(key);
   };
@@ -735,11 +801,23 @@ export default function MessagesPage() {
                 <div key={groupKey}>
                   {/* Main row */}
                   <div
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open deal ${group.borrower}: ${group.headline}`}
                     className={`grid grid-cols-12 gap-2 px-4 py-3 items-center cursor-pointer hover:bg-card/60 transition-colors ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
                     onClick={(e) => {
                       // Don't toggle when interacting with the inline headline editor
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
                       if ((e.target as HTMLElement).closest('[data-borrower-editor]')) return;
+                      returnFocusRef.current = e.currentTarget as HTMLElement;
+                      openFocus(groupKey);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter' && e.key !== ' ') return;
+                      const t = e.target as HTMLElement;
+                      if (t !== e.currentTarget) return;
+                      e.preventDefault();
+                      returnFocusRef.current = e.currentTarget as HTMLElement;
                       openFocus(groupKey);
                     }}
                   >
@@ -927,14 +1005,41 @@ export default function MessagesPage() {
         if (!fg) return null;
         const list = filtered.length ? filtered : alertGroups;
         return (
-          <div className="fixed inset-0 z-40 flex bg-background">
+          <div
+            ref={overlayRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Deal focus view: ${fg.borrower}`}
+            tabIndex={-1}
+            className="fixed inset-0 z-40 flex bg-background outline-none"
+          >
             {/* Deal list — takes the place of the app menu */}
             <aside className="w-60 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
               <div className="p-3 border-b border-sidebar-border">
                 <div className="text-sm font-bold">New Issue Board</div>
-                <div className="text-[11px] text-sidebar-foreground/60">Esc to return to the board</div>
+                <div className="text-[11px] text-sidebar-foreground/60">↑↓ to browse · Esc to return to the board</div>
               </div>
-              <div className="flex-1 overflow-auto p-2 space-y-1">
+              <div
+                role="listbox"
+                aria-label="Deals on the New Issue Board"
+                className="flex-1 overflow-auto p-2 space-y-1"
+                onKeyDown={(e) => {
+                  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') return;
+                  e.preventDefault();
+                  const keys = list.map(g => g.dealIds.join(','));
+                  const i = keys.indexOf(focusedKey);
+                  let next = i;
+                  if (e.key === 'ArrowDown') next = Math.min(keys.length - 1, i + 1);
+                  else if (e.key === 'ArrowUp') next = Math.max(0, i - 1);
+                  else if (e.key === 'Home') next = 0;
+                  else next = keys.length - 1;
+                  if (next !== i && keys[next]) {
+                    setActivePanel('history');
+                    setFocusedKey(keys[next]);
+                    requestAnimationFrame(() => activeListItemRef.current?.focus());
+                  }
+                }}
+              >
                 {list.map(g => {
                   const key = g.dealIds.join(',');
                   const active = key === focusedKey;
@@ -942,7 +1047,10 @@ export default function MessagesPage() {
                     <button
                       key={key}
                       type="button"
-                      ref={active ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}
+                      role="option"
+                      aria-selected={active}
+                      tabIndex={active ? 0 : -1}
+                      ref={active ? (el) => { activeListItemRef.current = el; el?.scrollIntoView({ block: 'nearest' }); } : undefined}
                       onClick={() => openFocus(key)}
                       className={`w-full text-left rounded-md px-2.5 py-2 transition-colors ${
                         active
