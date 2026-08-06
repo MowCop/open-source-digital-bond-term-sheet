@@ -401,7 +401,7 @@ export default function MessagesPage() {
     panelTapRef.current = { key: groupKey, time: now, x, y };
   };
 
-  const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
+  const getUserName = (id: string) => users.find(u => u.id === id)?.name || 'System';
   const getRecipientNames = (ids: string[]) => ids.map(id => getUserName(id)).join(', ');
 
   const buildSuggestions = (msg: Message): string[] => {
