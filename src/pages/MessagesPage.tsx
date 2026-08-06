@@ -87,6 +87,7 @@ export default function MessagesPage() {
   const [filterStage, setFilterStage] = useState<string>('all');
   const [filterPublish, setFilterPublish] = useState<'all' | PublishStatus>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
+  const [focusedKey, setFocusedKey] = useState<string | null>(null);
   const [chatView, setChatView] = useState<'closed' | 'floating' | 'modal'>('closed');
   const showChat = chatView !== 'closed';
   const [editingHeadlineId, setEditingHeadlineId] = useState<string | null>(null);
