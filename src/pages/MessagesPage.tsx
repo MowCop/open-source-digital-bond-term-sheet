@@ -1005,14 +1005,41 @@ export default function MessagesPage() {
         if (!fg) return null;
         const list = filtered.length ? filtered : alertGroups;
         return (
-          <div className="fixed inset-0 z-40 flex bg-background">
+          <div
+            ref={overlayRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Deal focus view: ${fg.borrower}`}
+            tabIndex={-1}
+            className="fixed inset-0 z-40 flex bg-background outline-none"
+          >
             {/* Deal list — takes the place of the app menu */}
             <aside className="w-60 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
               <div className="p-3 border-b border-sidebar-border">
                 <div className="text-sm font-bold">New Issue Board</div>
-                <div className="text-[11px] text-sidebar-foreground/60">Esc to return to the board</div>
+                <div className="text-[11px] text-sidebar-foreground/60">↑↓ to browse · Esc to return to the board</div>
               </div>
-              <div className="flex-1 overflow-auto p-2 space-y-1">
+              <div
+                role="listbox"
+                aria-label="Deals on the New Issue Board"
+                className="flex-1 overflow-auto p-2 space-y-1"
+                onKeyDown={(e) => {
+                  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') return;
+                  e.preventDefault();
+                  const keys = list.map(g => g.dealIds.join(','));
+                  const i = keys.indexOf(focusedKey);
+                  let next = i;
+                  if (e.key === 'ArrowDown') next = Math.min(keys.length - 1, i + 1);
+                  else if (e.key === 'ArrowUp') next = Math.max(0, i - 1);
+                  else if (e.key === 'Home') next = 0;
+                  else next = keys.length - 1;
+                  if (next !== i && keys[next]) {
+                    setActivePanel('history');
+                    setFocusedKey(keys[next]);
+                    requestAnimationFrame(() => activeListItemRef.current?.focus());
+                  }
+                }}
+              >
                 {list.map(g => {
                   const key = g.dealIds.join(',');
                   const active = key === focusedKey;
@@ -1020,7 +1047,10 @@ export default function MessagesPage() {
                     <button
                       key={key}
                       type="button"
-                      ref={active ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}
+                      role="option"
+                      aria-selected={active}
+                      tabIndex={active ? 0 : -1}
+                      ref={active ? (el) => { activeListItemRef.current = el; el?.scrollIntoView({ block: 'nearest' }); } : undefined}
                       onClick={() => openFocus(key)}
                       className={`w-full text-left rounded-md px-2.5 py-2 transition-colors ${
                         active
