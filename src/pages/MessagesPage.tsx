@@ -401,7 +401,7 @@ export default function MessagesPage() {
     panelTapRef.current = { key: groupKey, time: now, x, y };
   };
 
-  const getUserName = (id: string) => users.find(u => u.id === id)?.name || id;
+  const getUserName = (id: string) => users.find(u => u.id === id)?.name || 'System';
   const getRecipientNames = (ids: string[]) => ids.map(id => getUserName(id)).join(', ');
 
   const buildSuggestions = (msg: Message): string[] => {
@@ -492,6 +492,74 @@ export default function MessagesPage() {
     setPendingDelete(null);
   };
 
+  const renderDealActions = (group: AlertGroup, groupKey: string) => (
+    <div className="flex items-center gap-2 pb-3 mb-3 border-b border-border/50 flex-wrap">
+      <Button
+        size="sm"
+        variant="outline"
+        className={`text-xs ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
+        disabled={!group.dealIds[0]}
+        onClick={(e) => {
+          e.stopPropagation();
+          flash(`${groupKey}:data`);
+          const did = group.dealIds[0];
+          if (did) setTimeout(() => navigate(`/deals?dealId=${did}`), 150);
+        }}
+      >
+        <Database className="h-3 w-3 mr-1" />
+        Deal Alert Data
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        className={`text-xs ${activePanel === 'history' ? 'bg-accent text-accent-foreground' : ''} ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
+        onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
+      >
+        <History className="h-3 w-3 mr-1" />
+        Update History ({group.messages.length})
+      </Button>
+      {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs"
+          title="Edit the latest update"
+          onClick={(e) => {
+            e.stopPropagation();
+            const id = group.latestMessage.id;
+            setActivePanel('history');
+            setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+          }}
+        >
+          <Edit2 className="h-3 w-3 mr-1" />
+          Edit Latest
+        </Button>
+      )}
+      {canManageMessages && group.messages.length > 0 && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ExtractDealFromChatButton
+            source="thread"
+            messages={group.messages}
+            conversationLabel={group.headline || group.borrower}
+            targetDealIds={group.dealIds}
+          />
+        </div>
+      )}
+      {canManageMessages && (
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+          onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
+          title="Delete duplicate deal and all related data"
+        >
+          <Trash2 className="h-3 w-3 mr-1" />
+          Delete
+        </Button>
+      )}
+    </div>
+  );
+
   const renderDealDetail = (group: AlertGroup, groupKey: string) => (
                   <div
                     className="bg-card/40 border-t border-border px-8 py-4 space-y-4"
@@ -505,6 +573,7 @@ export default function MessagesPage() {
                       setExpandedAlertId(null);
                     }}
                   >
+                    {renderDealActions(group, groupKey)}
                     {activePanel === 'history' && (
                       <div className="space-y-4">
                         {(() => {
@@ -583,71 +652,6 @@ export default function MessagesPage() {
                                   />
                                 </div>
                               )}
-                              <div className="flex items-center gap-2 py-2 border-y border-border/50 flex-wrap">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className={`text-xs ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
-                                  disabled={!group.dealIds[0]}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    flash(`${groupKey}:data`);
-                                    const did = group.dealIds[0];
-                                    if (did) setTimeout(() => navigate(`/deals?dealId=${did}`), 150);
-                                  }}
-                                >
-                                  <Database className="h-3 w-3 mr-1" />
-                                  Deal Alert Data
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className={`text-xs ${activePanel === 'history' ? 'bg-accent text-accent-foreground' : ''} ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
-                                  onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
-                                >
-                                  <History className="h-3 w-3 mr-1" />
-                                  Update History ({group.messages.length})
-                                </Button>
-                                {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-xs"
-                                    title="Edit the latest update"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const id = group.latestMessage.id;
-                                      setActivePanel('history');
-                                      setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
-                                    }}
-                                  >
-                                    <Edit2 className="h-3 w-3 mr-1" />
-                                    Edit Latest
-                                  </Button>
-                                )}
-                                {canManageMessages && group.messages.length > 0 && (
-                                  <div onClick={(e) => e.stopPropagation()}>
-                                    <ExtractDealFromChatButton
-                                      source="thread"
-                                      messages={group.messages}
-                                      conversationLabel={group.headline || group.borrower}
-                                      targetDealIds={group.dealIds}
-                                    />
-                                  </div>
-                                )}
-                                {canManageMessages && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-xs ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                                    onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
-                                    title="Delete duplicate deal and all related data"
-                                  >
-                                    <Trash2 className="h-3 w-3 mr-1" />
-                                    Delete
-                                  </Button>
-                                )}
-                              </div>
                               {rest.map((msg, i) => renderCard(msg, i + 1))}
                             </>
                           );
@@ -655,63 +659,6 @@ export default function MessagesPage() {
                       </div>
                     )}
 
-                    {activePanel !== 'history' && (
-                      <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className={`text-xs ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
-                        disabled={!group.dealIds[0]}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          flash(`${groupKey}:data`);
-                          const did = group.dealIds[0];
-                          if (did) setTimeout(() => navigate(`/deals?dealId=${did}`), 150);
-                        }}
-                      >
-                        <Database className="h-3 w-3 mr-1" />
-                        Deal Alert Data
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className={`text-xs ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
-                        onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
-                      >
-                        <History className="h-3 w-3 mr-1" />
-                        Update History ({group.messages.length})
-                      </Button>
-                      {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs"
-                          title="Edit the latest update"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const id = group.latestMessage.id;
-                            setActivePanel('history');
-                            setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
-                          }}
-                        >
-                          <Edit2 className="h-3 w-3 mr-1" />
-                          Edit Latest
-                        </Button>
-                      )}
-                      {canManageMessages && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                          onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
-                          title="Delete duplicate deal and all related data"
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          Delete
-                        </Button>
-                      )}
-                      </div>
-                    )}
                   </div>
   );
 
