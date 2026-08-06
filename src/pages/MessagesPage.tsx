@@ -545,6 +545,25 @@ export default function MessagesPage() {
           />
         </div>
       )}
+      {group.dealIds.length > 0 && (() => {
+        const unread = getUnreadChatCount(group.dealIds);
+        return (
+          <Button
+            size="sm"
+            variant="outline"
+            className={`text-xs ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
+            title={unread > 0 ? `Open Deal Chat — ${unread} unread` : 'Open Deal Chat'}
+            onClick={(e) => {
+              e.stopPropagation();
+              flash(`${groupKey}:openchat`);
+              handleOpenChat(group.dealIds, { modal: true });
+            }}
+          >
+            <MessageSquare className="h-3 w-3 mr-1" />
+            Deal Chat{unread > 0 ? ` (${unread})` : ''}
+          </Button>
+        );
+      })()}
       {canManageMessages && (
         <Button
           size="sm"
