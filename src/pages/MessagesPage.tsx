@@ -124,6 +124,20 @@ export default function MessagesPage() {
     };
   }, [expandedAlertId]);
 
+  // Esc from Focus Mode returns to the full New Issue Board. Any open dialog
+  // or expanded alert card owns Esc first (existing cascade preserved).
+  useEffect(() => {
+    if (!focusedKey) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+      if (document.querySelector('[data-alert-card-expanded="true"]')) return;
+      setFocusedKey(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [focusedKey]);
+
 
   // Group messages by their primary deal (first dealId) to create alert groups
   const alertGroups: AlertGroup[] = [];
