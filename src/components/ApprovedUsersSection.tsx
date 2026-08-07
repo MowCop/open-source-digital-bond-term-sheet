@@ -103,14 +103,6 @@ export default function ApprovedUsersSection({
   return (
     <div className="space-y-4">
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Name & Contact</TableHead>
-            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-center">Profile</TableHead>
-            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Organization</TableHead>
-            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
-          </TableRow>
-        </TableHeader>
         <TableBody>
           {loading && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Loading…</TableCell></TableRow>}
           {!loading && rows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No registered users yet.</TableCell></TableRow>}
