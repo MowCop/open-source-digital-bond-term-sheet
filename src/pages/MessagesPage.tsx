@@ -138,6 +138,7 @@ export default function MessagesPage() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+      cancelHover();
       setFocusedKey(null);
     };
     window.addEventListener('keydown', onKey);
@@ -1067,6 +1068,8 @@ export default function MessagesPage() {
                   else if (e.key === 'Home') next = 0;
                   else next = keys.length - 1;
                   if (next !== i && keys[next]) {
+                    keyboardNavRef.current = true;
+                    cancelHover();
                     setActivePanel('history');
                     setFocusedKey(keys[next]);
                     requestAnimationFrame(() => activeListItemRef.current?.focus());
@@ -1085,6 +1088,8 @@ export default function MessagesPage() {
                       tabIndex={active ? 0 : -1}
                       ref={active ? (el) => { activeListItemRef.current = el; el?.scrollIntoView({ block: 'nearest' }); } : undefined}
                       onClick={() => openFocus(key)}
+                      onMouseEnter={() => hoverSelect(key)}
+                      onMouseLeave={cancelHover}
                       className={`w-full text-left rounded-md px-2.5 py-2 transition-colors ${
                         active
                           ? 'border-2 border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/50'
