@@ -147,14 +147,7 @@ export default function ApprovedUsersSection({
               </TableCell>
               <TableCell>{p.organization || '—'}</TableCell>
               <TableCell>
-                <Badge
-                  variant="secondary"
-                  className={(roleByUser[p.user_id] || 'syndicate_readonly').includes('admin')
-                    ? 'bg-secondary text-secondary-foreground hover:bg-secondary hover:text-white focus:bg-secondary focus:text-white focus:outline-none border-transparent'
-                    : 'bg-transparent text-foreground border border-border hover:bg-muted focus:bg-muted focus:outline-none'}
-                >
-                  {ALL_ROLES.find(r => r.value === (roleByUser[p.user_id] || 'syndicate_readonly'))?.label ?? 'Read Only'}
-                </Badge>
+                <RoleBadge role={roleByUser[p.user_id]} />
               </TableCell>
             </TableRow>
           ))}
