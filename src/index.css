@@ -27,6 +27,10 @@
     --ring: 43 96% 56%;
     --radius: 0.5rem;
 
+    --role-admin: 217 33% 17%;
+    --role-admin-foreground: 0 0% 100%;
+    --role-admin-hover: 217 33% 22%;
+
     --warning: 38 92% 50%;
     --warning-foreground: 222 47% 8%;
     --success: 142 71% 45%;
@@ -68,6 +72,14 @@
 }
 
 @layer utilities {
+  .role-badge-admin {
+    background-color: hsl(var(--role-admin));
+    color: hsl(var(--role-admin-foreground));
+  }
+  .role-badge-admin:hover,
+  .role-badge-admin:focus {
+    background-color: hsl(var(--role-admin-hover));
+  }
   .stage-mandate { @apply bg-blue-900/40 text-blue-400; }
   .stage-launched { @apply bg-green-900/40 text-green-400; }
   .stage-priced { @apply bg-amber-900/40 text-amber-400; }
