@@ -269,7 +269,7 @@ export default function MessagesPage() {
   // Filter by publish status (primary) and stage (secondary)
   const stageFiltered = filterStage === 'all'
     ? alertGroups
-    : alertGroups.filter(g => g.stage === filterStage);
+    : alertGroups.filter(g => filterStage === 'Pipeline' ? (g.stage === 'Mandate' || g.stage === 'Launched') : g.stage === filterStage);
   const filtered = filterPublish === 'all'
     ? stageFiltered
     : stageFiltered.filter(g => g.publishStatus === filterPublish);
