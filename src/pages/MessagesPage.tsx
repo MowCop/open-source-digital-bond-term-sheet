@@ -508,9 +508,9 @@ export default function MessagesPage() {
   const renderDealActions = (group: AlertGroup, groupKey: string) => (
     <div className="flex items-center gap-2 pb-3 mb-3 border-b border-border/50 flex-wrap">
       <Button
-        size="sm"
+        size="default"
         variant="outline"
-        className={`text-xs ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
+        className={`toolbar-btn ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
         disabled={!group.dealIds[0]}
         onClick={(e) => {
           e.stopPropagation();
@@ -519,14 +519,14 @@ export default function MessagesPage() {
           if (did) setTimeout(() => navigate(`/deals?dealId=${did}`), 150);
         }}
       >
-        <Database className="h-3 w-3 mr-1" />
+        <Database className="h-4 w-4 mr-1" />
         Deal Data
       </Button>
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
         <Button
-          size="sm"
+          size="default"
           variant="outline"
-          className="text-xs"
+          className="toolbar-btn"
           title="Edit the latest update"
           onClick={(e) => {
             e.stopPropagation();
@@ -535,17 +535,19 @@ export default function MessagesPage() {
             setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
           }}
         >
-          <Edit2 className="h-3 w-3 mr-1" />
+          <Edit2 className="h-4 w-4 mr-1" />
           Edit Latest
         </Button>
       )}
       {canManageMessages && group.messages.length > 0 && (
         <div onClick={(e) => e.stopPropagation()}>
           <ExtractDealFromChatButton
+            size="default"
             source="thread"
             messages={group.messages}
             conversationLabel={group.headline || group.borrower}
             targetDealIds={group.dealIds}
+            className="toolbar-btn-ai"
           />
         </div>
       )}
@@ -553,9 +555,9 @@ export default function MessagesPage() {
         const unread = getUnreadChatCount(group.dealIds);
         return (
           <Button
-            size="sm"
+            size="default"
             variant="outline"
-            className={`text-xs ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
+            className={`toolbar-btn ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
             title={unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat'}
             onClick={(e) => {
               e.stopPropagation();
@@ -563,60 +565,61 @@ export default function MessagesPage() {
               handleOpenChat(group.dealIds, { modal: true });
             }}
           >
-            <MessageSquare className="h-3 w-3 mr-1" />
+            <MessageSquare className="h-4 w-4 mr-1" />
             Chat{unread > 0 ? ` (${unread})` : ''}
           </Button>
         );
       })()}
       <Button
-        size="sm"
+        size="default"
         variant="outline"
-        className="text-xs"
+        className="toolbar-btn"
         title="OrderBook (coming soon)"
         onClick={(e) => {
           e.stopPropagation();
           toast({ title: 'OrderBook', description: 'OrderBook module coming soon.' });
         }}
       >
-        <BookOpen className="h-3 w-3 mr-1" />
+        <BookOpen className="h-4 w-4 mr-1" />
         OrderBook
       </Button>
       {(() => {
         const docCount = group.messages.reduce((n, m) => n + (m.attachments?.length ?? 0), 0);
         return (
           <Button
-            size="sm"
+            size="default"
             variant="outline"
-            className="text-xs"
+            className="toolbar-btn"
             title="View attached documentation"
             onClick={(e) => { e.stopPropagation(); setDocsGroup(group); }}
           >
-            <FileText className="h-3 w-3 mr-1" />
+            <FileText className="h-4 w-4 mr-1" />
             Docs{docCount > 0 ? ` (${docCount})` : ''}
           </Button>
         );
       })()}
       <Button
-        size="sm"
+        size="default"
         variant="outline"
-        className={`text-xs ${activePanel === 'history' ? 'bg-accent text-accent-foreground' : ''} ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
+        aria-pressed={activePanel === 'history'}
+        className={`toolbar-btn ${activePanel === 'history' ? 'toolbar-btn-selected' : ''} ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
         onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
       >
-        <History className="h-3 w-3 mr-1" />
+        <History className="h-4 w-4 mr-1" />
         Update History ({group.messages.length})
       </Button>
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && group.latestMessage.status !== 'draft' && (
         <Button
-          size="sm"
+          size="default"
           variant="destructive"
-          className="text-xs"
+          className="toolbar-btn-danger"
           onClick={(e) => {
             e.stopPropagation();
             retractMessage(group.latestMessage.id);
             toast({ title: 'Alert Retracted', description: 'The latest alert has been retracted.' });
           }}
         >
-          <RotateCcw className="h-3 w-3 mr-1" />
+          <RotateCcw className="h-4 w-4 mr-1" />
           Retract
         </Button>
       )}
@@ -624,11 +627,11 @@ export default function MessagesPage() {
         <Button
           size="icon"
           variant="outline"
-          className="h-8 w-8 ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+          className="toolbar-icon-btn ml-auto"
           onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
           title="Delete duplicate deal and all related data"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-4 w-4" />
         </Button>
       )}
     </div>
