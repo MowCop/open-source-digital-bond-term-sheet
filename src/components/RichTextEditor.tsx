@@ -20,8 +20,10 @@ interface RichTextEditorProps {
   onChange: (html: string) => void;
   placeholder?: string;
   className?: string;
+  contentClassName?: string;
   onReady?: (editor: Editor) => void;
 }
+
 
 function ToolbarButton({
   onClick, active, disabled, title, children,
@@ -101,7 +103,7 @@ function Toolbar({ editor }: { editor: Editor }) {
   );
 }
 
-export default function RichTextEditor({ value, onChange, placeholder, className, onReady }: RichTextEditorProps) {
+export default function RichTextEditor({ value, onChange, placeholder, className, contentClassName, onReady }: RichTextEditorProps) {
   const [toolbarOpen, setToolbarOpen] = useState(false);
   const editor = useEditor({
     extensions: [
@@ -118,7 +120,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
     editorProps: {
       attributes: {
         class:
-          'tiptap prose prose-sm dark:prose-invert max-w-none focus:outline-none px-3 py-2 min-h-full',
+          `tiptap prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-full ${contentClassName || 'px-3 py-2'}`,
       },
     },
     onUpdate: ({ editor }) => {
