@@ -110,7 +110,7 @@ export default function AdminPage() {
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.organization}</TableCell>
-                  <TableCell><Badge variant="outline">{roleBadge[user.role].label}</Badge></TableCell>
+                  <TableCell><RoleBadge role={user.role} /></TableCell>
                   <TableCell><Badge className="bg-success text-success-foreground">Active</Badge></TableCell>
                 </TableRow>
               ))}
