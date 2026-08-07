@@ -563,7 +563,6 @@ export default function UserManagementPage() {
                       <div className="text-xs text-muted-foreground">{u.email}</div>
                       {u.phone && <div className="text-xs text-muted-foreground">{u.phone}</div>}
                     </TableCell>
-                    <TableCell>{u.organization}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-end gap-4">
                         <Button variant="ghost" size="icon" onClick={() => openEditUser(u)}><Pencil className="h-4 w-4" /></Button>
@@ -572,6 +571,7 @@ export default function UserManagementPage() {
                         </Button>
                       </div>
                     </TableCell>
+                    <TableCell>{u.organization}</TableCell>
                     <TableCell>
                       <Badge variant={u.role === 'master_admin' ? 'default' : u.role === 'syndicate_admin' ? 'secondary' : 'outline'}>
                         {roleLabels[u.role]}
