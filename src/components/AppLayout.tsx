@@ -3,6 +3,7 @@ import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, U
 import { useApp, resetDemoData } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
+import { RoleBadge } from '@/components/RoleBadge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import GlobalSearch from '@/components/GlobalSearch';
