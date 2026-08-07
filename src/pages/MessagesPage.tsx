@@ -776,7 +776,7 @@ export default function MessagesPage() {
           </div>
           {/* Stage filter — secondary */}
           <div className="flex items-center gap-1 bg-card rounded-lg p-1 border border-border">
-            {['all', 'Mandate', 'Launched', 'Priced'].map(s => (
+            {['all', 'Pipeline', 'Priced'].map(s => (
               <button
                 key={s}
                 onClick={() => setFilterStage(s)}
