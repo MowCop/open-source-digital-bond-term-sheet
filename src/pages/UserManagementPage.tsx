@@ -584,9 +584,7 @@ export default function UserManagementPage() {
                     </TableCell>
                     <TableCell>{u.organization}</TableCell>
                     <TableCell>
-                      <Badge variant={u.role === 'master_admin' ? 'default' : u.role === 'syndicate_admin' ? 'secondary' : 'outline'}>
-                        {roleLabels[u.role]}
-                      </Badge>
+                      <RoleBadge role={u.role} />
                     </TableCell>
                   </TableRow>
                   );
