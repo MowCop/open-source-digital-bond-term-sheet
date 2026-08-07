@@ -28,7 +28,7 @@ interface ApprovedProfile {
 interface Props {
   title?: string;
   subtitle?: string;
-  onOpenProfile?: (email: string, name?: string) => void;
+  onOpenProfile?: (email: string, name?: string, organization?: string) => void;
   reloadKey?: number;
 }
 
@@ -143,7 +143,7 @@ export default function ApprovedUsersSection({
                     variant="ghost"
                     size="icon"
                     aria-label={`Open profile for ${p.email}`}
-                    onClick={() => onOpenProfile?.(p.email, p.name)}
+                    onClick={() => onOpenProfile?.(p.email, p.name, p.organization ?? undefined)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>

@@ -504,15 +504,18 @@ export default function UserManagementPage() {
             <div className="mb-8">
               <ApprovedUsersSection
                 reloadKey={usersReloadKey}
-                onOpenProfile={(email, name) => {
+                onOpenProfile={(email, name, organization) => {
                   const u = users.find(x => x.email.toLowerCase() === email.toLowerCase());
-                  if (u) openEditUser(u);
+                  if (u) {
+                    openEditUser(u);
+                    if (!u.organization && organization) setEditOrg(organization);
+                  }
                   else {
                     // No Address Book record yet — open a blank "Profile" template pre-filled with the email
                     setNewName(name || '');
                     setNewEmail(email);
                     setNewPhone('');
-                    setNewOrg('');
+                    setNewOrg(organization || '');
                     setNewRole('syndicate_admin');
                     setNewCategory('Syndicate');
                     setShowAddUser(true);
