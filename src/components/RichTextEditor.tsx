@@ -56,7 +56,7 @@ function Toolbar({ editor }: { editor: Editor }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b border-border bg-card/40 px-2 py-1.5 sticky top-0 z-10">
+    <div className="flex flex-wrap items-center gap-1 border-b border-border bg-card/40 px-2 py-1 sticky top-0 z-10">
       <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold (⌘B)">
         <Bold className="h-4 w-4" />
       </ToolbarButton>
@@ -117,7 +117,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
     editorProps: {
       attributes: {
         class:
-          'tiptap prose prose-sm dark:prose-invert max-w-none focus:outline-none px-4 py-3 min-h-full',
+          'tiptap prose prose-sm dark:prose-invert max-w-none focus:outline-none px-3 py-2 min-h-full',
       },
     },
     onUpdate: ({ editor }) => {
