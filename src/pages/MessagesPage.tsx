@@ -137,6 +137,7 @@ export default function MessagesPage() {
     setDeleteConfirmText('');
   }, [pendingDelete]);
 
+  // Esc from Focus Mode returns to the full New Issue Board. Any open dialog
   // or expanded alert card owns Esc first (existing cascade preserved).
   useEffect(() => {
     if (!focusedKey) return;
