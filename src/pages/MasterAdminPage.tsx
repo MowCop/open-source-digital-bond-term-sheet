@@ -172,8 +172,8 @@ export default function MasterAdminPage() {
                       <TooltipProvider delayDuration={150}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <button type="button" className="text-muted-foreground hover:text-foreground focus:outline-none">
-                              <Info className="h-3.5 w-3.5" />
+                            <button type="button" className="role-admin-icon inline-flex items-center justify-center rounded-full h-5 w-5 focus:outline-none">
+                              <Info className="h-3 w-3" />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent className="max-w-sm text-xs leading-relaxed">
