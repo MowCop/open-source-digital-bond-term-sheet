@@ -117,11 +117,10 @@ export default function ApprovedUsersSection({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Organization</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Name & Contact</TableHead>
+            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Organization</TableHead>
+            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
+            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
