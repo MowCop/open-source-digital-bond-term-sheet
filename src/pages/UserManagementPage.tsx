@@ -483,27 +483,6 @@ export default function UserManagementPage() {
               />
             </div>
           )}
-          {!showAddUser && isMaster && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-              {[
-                { label: 'Active (24h)', value: loginMetrics.d1, tone: 'text-green-500' },
-                { label: 'Active (7d)', value: loginMetrics.d7, tone: 'text-green-500' },
-                { label: 'Active (30d)', value: loginMetrics.d30, tone: 'text-emerald-400' },
-                { label: 'Never signed in', value: loginMetrics.never, tone: 'text-muted-foreground' },
-                { label: 'Unconfirmed email', value: loginMetrics.unconfirmed, tone: 'text-blue-500' },
-              ].map(tile => (
-                <Card key={tile.label} className="border-border">
-                  <CardContent className="p-4">
-                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{tile.label}</div>
-                    <div className={`text-2xl font-bold mt-1 ${tile.tone}`}>
-                      {loginStatsLoading ? '…' : tile.value}
-                      <span className="text-xs font-normal text-muted-foreground ml-1">/ {loginMetrics.total}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
           {showAddUser ? (
             <Card className="border-border max-w-2xl">
               <CardContent className="p-6 space-y-5">
