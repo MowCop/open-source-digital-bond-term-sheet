@@ -853,6 +853,12 @@ export default function MessagesPage() {
                       openFocus(groupKey);
                     }}
                     onMouseEnter={(e) => hoverSelect(groupKey, e.currentTarget as HTMLElement)}
+                    onMouseMove={(e) => {
+                      // Fallback: if mouseenter was missed (re-render, overlay
+                      // close, pointer already inside), arm the hover select.
+                      if (focusedKey === groupKey || hoverTimerRef.current !== null) return;
+                      hoverSelect(groupKey, e.currentTarget as HTMLElement);
+                    }}
                     onMouseLeave={() => {
                       cancelHover();
                       if (escapedKeyRef.current === groupKey) escapedKeyRef.current = null;
