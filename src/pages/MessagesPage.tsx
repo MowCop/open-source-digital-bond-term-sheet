@@ -132,7 +132,11 @@ export default function MessagesPage() {
     };
   }, [expandedAlertId]);
 
-  // Esc from Focus Mode returns to the full New Issue Board. Any open dialog
+  // Reset the delete confirmation input whenever the dialog opens or closes.
+  useEffect(() => {
+    setDeleteConfirmText('');
+  }, [pendingDelete]);
+
   // or expanded alert card owns Esc first (existing cascade preserved).
   useEffect(() => {
     if (!focusedKey) return;
