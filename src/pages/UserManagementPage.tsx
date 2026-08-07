@@ -19,6 +19,7 @@ import { KeyRound, UserCheck } from 'lucide-react';
 import GuestsTab from '@/components/GuestsTab';
 import PendingApprovalsTab from '@/components/PendingApprovalsTab';
 import ApprovedUsersSection from '@/components/ApprovedUsersSection';
+import RoleBadge from '@/components/RoleBadge';
 
 const roleLabels: Record<UserRole, string> = {
   master_admin: 'Master Admin',
