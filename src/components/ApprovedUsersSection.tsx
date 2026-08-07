@@ -22,18 +22,21 @@ interface ApprovedProfile {
   name: string | null;
   organization: string | null;
   created_at: string;
+  status: string;
 }
 
 interface Props {
   title?: string;
   subtitle?: string;
   onOpenProfile?: (email: string, name?: string) => void;
+  reloadKey?: number;
 }
 
 export default function ApprovedUsersSection({
-  title = 'Approved Login Users (self-registered)',
-  subtitle = 'People who signed up and were approved — they have login access. Change their role or revoke access here. This is separate from the Address Book below.',
+  title = 'Login Users (self-registered)',
+  subtitle = 'People who signed up. An orange dot means their registration is awaiting approval — open their Profile to approve or reject. This is separate from the Address Book below.',
   onOpenProfile,
+  reloadKey = 0,
 }: Props) {
   const { toast } = useToast();
   const [rows, setRows] = useState<ApprovedProfile[]>([]);
@@ -45,8 +48,8 @@ export default function ApprovedUsersSection({
     setLoading(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('user_id, email, name, organization, created_at')
-      .eq('status', 'approved')
+      .select('user_id, email, name, organization, created_at, status')
+      .in('status', ['approved', 'pending'])
       .order('name', { ascending: true, nullsFirst: false });
     if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
     const profiles = (data as any[]) ?? [];
@@ -66,7 +69,7 @@ export default function ApprovedUsersSection({
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [reloadKey]);
 
   const persistRole = async (p: ApprovedProfile, newRole: string) => {
     const { error: eDel } = await supabase.from('user_roles').delete().eq('user_id', p.user_id);
@@ -118,22 +121,36 @@ export default function ApprovedUsersSection({
         </TableHeader>
         <TableBody>
           {loading && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Loading…</TableCell></TableRow>}
-          {!loading && rows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No approved users yet.</TableCell></TableRow>}
+          {!loading && rows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No registered users yet.</TableCell></TableRow>}
           {rows.map(p => (
             <TableRow key={p.user_id}>
               <TableCell>
-                <div className="font-medium">{p.name || '—'}</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{p.name || '—'}</span>
+                  {p.status === 'pending' && (
+                    <span
+                      title="Awaiting approval"
+                      aria-label="Awaiting approval"
+                      className="inline-block h-2.5 w-2.5 rounded-full bg-orange-500"
+                    />
+                  )}
+                </div>
                 <div className="text-xs text-muted-foreground">{p.email}</div>
               </TableCell>
               <TableCell className="text-center">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Open profile for ${p.email}`}
-                  onClick={() => onOpenProfile?.(p.email, p.name)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                <div className="inline-flex items-center gap-1.5">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Open profile for ${p.email}`}
+                    onClick={() => onOpenProfile?.(p.email, p.name)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  {p.status === 'pending' && (
+                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-orange-500" title="Awaiting approval" />
+                  )}
+                </div>
               </TableCell>
               <TableCell>{p.organization || '—'}</TableCell>
               <TableCell>
