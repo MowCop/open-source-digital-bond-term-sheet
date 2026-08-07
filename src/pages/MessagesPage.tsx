@@ -28,7 +28,7 @@ const stageBadge: Record<DealStage, { label: string; className: string }> = {
   'Books Open': { label: 'Books Open', className: 'bg-green-900/50 text-green-400 border-green-800' },
   'Books Closed': { label: 'Books Closed', className: 'bg-green-900/50 text-green-400 border-green-800' },
   Priced: { label: 'Priced', className: 'bg-card text-timestamp border-timestamp' },
-  Settled: { label: 'Settled', className: 'bg-amber-900/50 text-amber-400 border-amber-800' },
+  Settled: { label: 'Settled', className: 'bg-card text-timestamp border-timestamp' },
 };
 
 // "Send" = "Publish" in product terms. We collapse the underlying message
