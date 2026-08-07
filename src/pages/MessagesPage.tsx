@@ -843,6 +843,8 @@ export default function MessagesPage() {
                       returnFocusRef.current = e.currentTarget as HTMLElement;
                       openFocus(groupKey);
                     }}
+                    onMouseEnter={(e) => hoverSelect(groupKey, e.currentTarget as HTMLElement)}
+                    onMouseLeave={cancelHover}
                     onKeyDown={(e) => {
                       if (e.key !== 'Enter' && e.key !== ' ') return;
                       const t = e.target as HTMLElement;
