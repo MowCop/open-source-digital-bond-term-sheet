@@ -478,7 +478,18 @@ export default function UserManagementPage() {
                 onOpenProfile={(email) => {
                   const u = users.find(x => x.email.toLowerCase() === email.toLowerCase());
                   if (u) openEditUser(u);
-                  else toast({ title: 'No Address Book entry', description: `${email} has login access but no Address Book record yet.` });
+                  else {
+                    // No Address Book record yet — open a blank "Add New User" template pre-filled with the email
+                    setNewName('');
+                    setNewEmail(email);
+                    setNewPhone('');
+                    setNewOrg('');
+                    setNewRole('syndicate_admin');
+                    setNewCategory('Syndicate');
+                    setShowAddUser(true);
+                    toast({ title: 'No Address Book entry', description: `Complete the blank profile below to add ${email}.` });
+                    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
+                  }
                 }}
               />
             </div>
