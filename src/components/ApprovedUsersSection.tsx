@@ -25,13 +25,6 @@ interface ApprovedProfile {
   created_at: string;
 }
 
-const ALL_ROLES = [
-  { value: 'syndicate_admin', label: 'Syndicate Admin' },
-  { value: 'syndicate_readonly', label: 'Syndicate – Read Only' },
-  { value: 'sales_readonly', label: 'Sales – Read Only' },
-  { value: 'master_admin', label: 'Master Admin' },
-];
-
 interface Props {
   title?: string;
   subtitle?: string;
