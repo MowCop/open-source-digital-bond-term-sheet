@@ -581,9 +581,9 @@ export default function UserManagementPage() {
             <Table>
               <TableBody>
                 {[...users].sort((a, b) => {
-                  const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                  const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                  return tb - ta;
+                  const na = (a.name || '').toLowerCase();
+                  const nb = (b.name || '').toLowerCase();
+                  return na.localeCompare(nb);
                 }).map(u => {
                   const isJustAdded = justAddedEmail && u.email.toLowerCase() === justAddedEmail;
                   return (

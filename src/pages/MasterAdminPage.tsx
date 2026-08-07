@@ -36,7 +36,7 @@ export default function MasterAdminPage() {
       supabase
       .from('profiles')
       .select('user_id, email, name, organization, status, created_at')
-        .order('created_at', { ascending: false }),
+        .order('name', { ascending: true, nullsFirst: false }),
       supabase.from('user_roles').select('user_id, role').eq('role', 'syndicate_admin'),
     ]);
     if (error || roleErr) {
