@@ -631,7 +631,7 @@ export default function UserManagementPage() {
       <Dialog open={!!editingUser} onOpenChange={(o) => !o && setEditingUser(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
+            <DialogTitle>Profile</DialogTitle>
           </DialogHeader>
           {editingUser && (
             <div className="space-y-5">
