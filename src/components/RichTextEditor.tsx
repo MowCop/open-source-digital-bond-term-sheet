@@ -102,6 +102,7 @@ function Toolbar({ editor }: { editor: Editor }) {
 }
 
 export default function RichTextEditor({ value, onChange, placeholder, className, onReady }: RichTextEditorProps) {
+  const [toolbarOpen, setToolbarOpen] = useState(false);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
@@ -145,7 +146,19 @@ export default function RichTextEditor({ value, onChange, placeholder, className
 
   return (
     <div className={`flex flex-col rounded-md border border-border bg-background overflow-hidden ${className || ''}`}>
-      <Toolbar editor={editor} />
+      <button
+        type="button"
+        onClick={() => setToolbarOpen(o => !o)}
+        aria-expanded={toolbarOpen}
+        className="flex items-center justify-between gap-2 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground bg-card/40 hover:text-foreground hover:bg-card/60 transition-colors border-b border-border shrink-0"
+      >
+        <span className="flex items-center gap-1.5">
+          {toolbarOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          Formatting tools
+        </span>
+        <span className="text-[10px] font-normal normal-case opacity-70">{toolbarOpen ? 'Hide' : 'Show'}</span>
+      </button>
+      {toolbarOpen && <Toolbar editor={editor} />}
       <div className="flex-1 overflow-y-auto">
         <EditorContent editor={editor} className="h-full" />
       </div>
