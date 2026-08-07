@@ -26,15 +26,11 @@ interface ApprovedProfile {
 }
 
 interface Props {
-  title?: string;
-  subtitle?: string;
   onOpenProfile?: (email: string, name?: string, organization?: string) => void;
   reloadKey?: number;
 }
 
 export default function ApprovedUsersSection({
-  title = 'Login Users (self-registered)',
-  subtitle = 'People who signed up. An orange dot means their registration is awaiting approval — open their Profile to approve or reject. This is separate from the Address Book below.',
   onOpenProfile,
   reloadKey = 0,
 }: Props) {
