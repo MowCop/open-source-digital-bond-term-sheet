@@ -80,7 +80,7 @@ export default function AlertHistoryCard({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clickEditTimerRef = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const [chatOpen, setChatOpen] = useState(true);
+  const [chatOpen, setChatOpen] = useState(false);
   const [bulletinOpen, setBulletinOpen] = useState(true);
   const { deals } = useApp();
   const editDeal = message.dealIds?.[0]
