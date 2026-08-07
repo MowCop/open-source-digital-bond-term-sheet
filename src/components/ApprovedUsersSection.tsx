@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -133,18 +134,9 @@ export default function ApprovedUsersSection({
               </TableCell>
               <TableCell>{p.organization || '—'}</TableCell>
               <TableCell>
-                <Select
-                  value={roleByUser[p.user_id] || 'syndicate_readonly'}
-                  onValueChange={(v) => {
-                    setRoleByUser(prev => ({ ...prev, [p.user_id]: v }));
-                    persistRole(p, v);
-                  }}
-                >
-                  <SelectTrigger className="w-44 h-8"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Badge variant={(roleByUser[p.user_id] || 'syndicate_readonly').includes('admin') ? 'default' : 'outline'}>
+                  {ALL_ROLES.find(r => r.value === (roleByUser[p.user_id] || 'syndicate_readonly'))?.label ?? 'Read Only'}
+                </Badge>
               </TableCell>
             </TableRow>
           ))}
