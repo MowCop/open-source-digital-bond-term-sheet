@@ -475,7 +475,7 @@ export default function AlertHistoryCard({
       <DialogContent
         className="max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg p-0 gap-0 flex flex-col"
       >
-        <DialogHeader className="px-5 pt-4 pb-2 border-b border-border shrink-0 space-y-1">
+        <DialogHeader className="px-5 pt-2 pb-1 border-b border-border shrink-0 space-y-0.5">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -495,7 +495,7 @@ export default function AlertHistoryCard({
             value={editSubject}
             onChange={e => setEditSubject(e.target.value)}
             placeholder="Subject"
-            className="mt-1 w-full bg-background border border-border rounded px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full bg-background border border-border rounded px-3 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </DialogHeader>
 
