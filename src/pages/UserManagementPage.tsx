@@ -119,22 +119,6 @@ export default function UserManagementPage() {
     return { label: 'Active', tone: 'active', lastIso: stats.lastSignInAt };
   };
 
-  // Aggregate login metrics across all listed users (master-admin visible tiles).
-  const loginMetrics = (() => {
-    const now = Date.now();
-    const buckets = { d1: 0, d7: 0, d30: 0, never: 0, unconfirmed: 0, total: users.length };
-    for (const u of users) {
-      const s = loginStats[u.email.toLowerCase()];
-      if (!s) { buckets.never++; continue; }
-      if (!s.confirmedAt) buckets.unconfirmed++;
-      if (!s.lastSignInAt) { buckets.never++; continue; }
-      const ageMs = now - new Date(s.lastSignInAt).getTime();
-      if (ageMs <= 86400000) buckets.d1++;
-      if (ageMs <= 7 * 86400000) buckets.d7++;
-      if (ageMs <= 30 * 86400000) buckets.d30++;
-    }
-    return buckets;
-  })();
 
   const formatFullTimestamp = (iso: string | null) =>
     iso ? new Date(iso).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never signed in';
@@ -497,27 +481,6 @@ export default function UserManagementPage() {
                   else toast({ title: 'No Address Book entry', description: `${email} has login access but no Address Book record yet.` });
                 }}
               />
-            </div>
-          )}
-          {!showAddUser && isMaster && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-              {[
-                { label: 'Active (24h)', value: loginMetrics.d1, tone: 'text-green-500' },
-                { label: 'Active (7d)', value: loginMetrics.d7, tone: 'text-green-500' },
-                { label: 'Active (30d)', value: loginMetrics.d30, tone: 'text-emerald-400' },
-                { label: 'Never signed in', value: loginMetrics.never, tone: 'text-muted-foreground' },
-                { label: 'Unconfirmed email', value: loginMetrics.unconfirmed, tone: 'text-blue-500' },
-              ].map(tile => (
-                <Card key={tile.label} className="border-border">
-                  <CardContent className="p-4">
-                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">{tile.label}</div>
-                    <div className={`text-2xl font-bold mt-1 ${tile.tone}`}>
-                      {loginStatsLoading ? '…' : tile.value}
-                      <span className="text-xs font-normal text-muted-foreground ml-1">/ {loginMetrics.total}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
             </div>
           )}
           {showAddUser ? (
