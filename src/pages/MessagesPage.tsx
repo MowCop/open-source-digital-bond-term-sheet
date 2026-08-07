@@ -753,13 +753,14 @@ export default function MessagesPage() {
           {/* Table header */}
           <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
             <div className="col-span-1"></div>
+            <div className="col-span-1 text-center">Public Status</div>
             <div className="col-span-1">Chat</div>
             <div className="col-span-2">Last Updated</div>
             <div className="col-span-2">Borrower</div>
-            <div className="col-span-1 text-center">Public Status</div>
             <div className="col-span-4">Headline</div>
             <div className="col-span-1">Stage</div>
           </div>
+
 
           {/* Alert rows */}
           <div className="divide-y divide-border">
@@ -807,6 +808,12 @@ export default function MessagesPage() {
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         )}
                       </button>
+                    </div>
+                    <div className="col-span-1 flex justify-center items-center">
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${pubBadge.dot}`}
+                        title={pubBadge.label}
+                      />
                     </div>
                     <div className="col-span-1" onClick={(e) => e.stopPropagation()}>
                       {(() => {
@@ -868,12 +875,7 @@ export default function MessagesPage() {
                         </span>
                       )}
                     </div>
-                    <div className="col-span-1 flex justify-center items-center">
-                      <span
-                        className={`h-2.5 w-2.5 rounded-full ${pubBadge.dot}`}
-                        title={pubBadge.label}
-                      />
-                    </div>
+
                     <div className="col-span-4 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
                         <div className="relative">
