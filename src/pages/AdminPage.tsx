@@ -69,7 +69,7 @@ export default function AdminPage() {
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.organization}</TableCell>
-                  <TableCell><Badge variant={roleBadge[user.role].variant}>{roleBadge[user.role].label}</Badge></TableCell>
+                  <TableCell><RoleBadge role={user.role} /></TableCell>
                   <TableCell>
                     {editingUser === user.id ? (
                       <div className="flex items-center gap-2">
