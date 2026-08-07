@@ -687,7 +687,7 @@ export default function UserManagementPage() {
                         {activeDeals.length} active (manage/edit) · {passiveDeals.length} passive (read-only)
                       </div>
                     </div>
-                    <div className="max-h-64 overflow-y-auto">
+                    <div className="max-h-48 overflow-y-auto">
                       {[
                         { label: 'Active — manage & edit', list: activeDeals, tone: 'default' as const, labelClass: 'font-bold text-green-500' },
                         { label: 'Passive — read only', list: passiveDeals, tone: 'outline' as const, labelClass: 'font-bold text-foreground' },
