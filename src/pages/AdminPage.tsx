@@ -52,12 +52,9 @@ export default function AdminPage() {
       <Card>
         <CardHeader><CardTitle>Bank Users</CardTitle></CardHeader>
         <CardContent>
-          <div className="mb-6">
-            <ApprovedUsersSection
-              title="Approved Self-Registered Users"
-              subtitle="Users approved via the sign-up flow. Change their role or revoke access here."
-            />
-          </div>
+            <div className="mb-6">
+              <ApprovedUsersSection />
+            </div>
           <Table>
             <TableHeader>
               <TableRow>
