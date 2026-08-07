@@ -552,12 +552,12 @@ export default function AlertHistoryCard({
           ) : (
             <>
               {/* Bulletin (collapsed header bar when chat fills) or full bulletin when chat collapsed */}
-              <div className={bulletinOpen ? 'flex-1 min-h-0 px-5 pt-3 pb-2 flex flex-col' : 'shrink-0'}>
+              <div className={bulletinOpen ? 'flex-1 min-h-0 px-5 pt-2 pb-1 flex flex-col' : 'shrink-0'}>
                 <button
                   type="button"
                   onClick={() => setBulletinOpen(o => !o)}
                   aria-expanded={bulletinOpen}
-                  className={`flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0 ${bulletinOpen ? 'mb-2' : 'px-5 py-2 w-full hover:bg-muted/30'}`}
+                  className={`flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0 ${bulletinOpen ? 'mb-1' : 'px-5 py-2 w-full hover:bg-muted/30'}`}
                 >
                   <span>Bulletin</span>
                   {bulletinOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
