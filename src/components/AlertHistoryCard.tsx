@@ -425,57 +425,50 @@ export default function AlertHistoryCard({
 
       {/* Action buttons */}
       {canManage && (
-        <div className="flex items-center gap-2 pt-2 border-t border-border/50 flex-wrap">
-            <>
-              {!isRetracted && !isLatest && (
-                <Button size="sm" variant="outline" className="text-xs" onClick={enterEdit}>
-                  <Edit2 className="h-3 w-3 mr-1" />
-                  Edit
+        <div className="relative flex items-center justify-center gap-2 pt-2 pb-1 px-5 border-t border-border/50">
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            {!isRetracted && !isLatest && (
+              <Button variant="outline" className="btn-footer-action" onClick={enterEdit}>
+                <Edit2 className="h-4 w-4 mr-1" /> Edit
+              </Button>
+            )}
+            {isDraft && !isRetracted && (
+              <Button className="btn-footer-action" onClick={() => onSend(message.id)}>
+                <Send className="h-4 w-4 mr-1" /> Send
+              </Button>
+            )}
+            {!(isLatest && embedded) && (
+              <Button variant="outline" className="btn-footer-action" onClick={() => {
+                if (confirm(`Delete this alert "${message.subject}"? This cannot be undone.`)) onDelete(message.id);
+              }}>
+                <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
+              </Button>
+            )}
+            {!isRetracted && (
+              <>
+                <Button variant="ghost" className="btn-footer-action" onClick={attemptClose}>Cancel</Button>
+                <Button variant="outline" className="btn-footer-action" onClick={handleSave}>
+                  <Save className="h-4 w-4 mr-1" /> Save
                 </Button>
-              )}
-              {(isSent || isDraft) && !isRetracted && (
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="text-xs"
-                  disabled={isDraft}
-                  title={isDraft ? 'Retract is only available for Published alerts' : undefined}
-                  onClick={() => onRetract(message.id)}
-                >
-                  <RotateCcw className="h-3 w-3 mr-1" />
-                  Retract
-                </Button>
-              )}
-              {isDraft && !isRetracted && (
-                <Button size="sm" className="text-xs" onClick={() => onSend(message.id)}>
-                  <Send className="h-3 w-3 mr-1" />
-                  Send
-                </Button>
-              )}
-              {!(isLatest && embedded) && (
-                <Button size="sm" variant="outline" className="text-xs ml-auto" onClick={() => {
-                  if (confirm(`Delete this alert "${message.subject}"? This cannot be undone.`)) onDelete(message.id);
-                }}>
-                  <Trash2 className="h-3 w-3 mr-1 text-destructive" />
-                  Delete
-                </Button>
-              )}
-              {!isRetracted && (
-                <div className="ml-auto flex items-center gap-2">
-                  <Button size="sm" variant="ghost" className="text-xs" onClick={attemptClose}>
-                    Cancel
+                {isSent && (
+                  <Button className="btn-footer-action" onClick={handleSaveAndSend}>
+                    <Send className="h-4 w-4 mr-1" /> Save &amp; Send
                   </Button>
-                  <Button size="sm" variant="outline" className="text-xs" onClick={handleSave}>
-                    <Save className="h-3 w-3 mr-1" /> Save
-                  </Button>
-                  {isSent && (
-                    <Button size="sm" className="text-xs" onClick={handleSaveAndSend}>
-                      <Send className="h-3 w-3 mr-1" /> Save &amp; Send
-                    </Button>
-                  )}
-                </div>
-              )}
-            </>
+                )}
+              </>
+            )}
+          </div>
+          {(isSent || isDraft) && !isRetracted && (
+            <Button
+              variant="destructive"
+              className="h-10 px-4 absolute right-5 top-1/2 -translate-y-1/2"
+              disabled={isDraft}
+              title={isDraft ? 'Retract is only available for Published alerts' : undefined}
+              onClick={() => onRetract(message.id)}
+            >
+              <RotateCcw className="h-4 w-4 mr-1" /> Retract
+            </Button>
+          )}
         </div>
       )}
       </>
