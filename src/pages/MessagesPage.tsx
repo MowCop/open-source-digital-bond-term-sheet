@@ -1139,11 +1139,26 @@ export default function MessagesPage() {
               the Deal Data entry, and any notifications. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="py-4 space-y-2">
+            <label htmlFor="delete-confirm" className="text-sm font-medium">
+              Type <strong>Delete</strong> to confirm
+            </label>
+            <Input
+              id="delete-confirm"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Delete"
+              className="w-full"
+              autoComplete="off"
+              autoFocus
+            />
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeleteConfirmText('')}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteThread}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteConfirmText.trim() !== 'Delete'}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Delete deal
             </AlertDialogAction>
