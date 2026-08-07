@@ -597,12 +597,12 @@ export default function UserManagementPage() {
 
       {/* Edit User Dialog */}
       <Dialog open={!!editingUser} onOpenChange={(o) => !o && setEditingUser(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle>Profile</DialogTitle>
           </DialogHeader>
           {editingUser && (
-            <div className="space-y-5">
+            <div className="flex-1 overflow-y-auto px-6 pb-2 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-xs uppercase tracking-wider text-muted-foreground">Full Name</Label>
@@ -654,8 +654,8 @@ export default function UserManagementPage() {
                     status.tone === 'unconfirmed' ? 'bg-blue-500' :
                     'bg-muted-foreground/40';
                   return (
-                    <div className="px-4 py-4 border-r border-border">
-                      <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-3">
+                    <div className="px-3 py-3 border-r border-border">
+                      <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-2">
                         <Activity className="h-3 w-3" /> Login Activity
                       </div>
                       <div className="flex items-center gap-2">
@@ -668,8 +668,8 @@ export default function UserManagementPage() {
                     </div>
                   );
                 })()}
-                <div className="px-4 py-4">
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Created Details</div>
+                <div className="px-3 py-3">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Created Details</div>
                   <div className="text-sm font-medium">{formatDate(editingUser.createdAt)}</div>
                   <div className="text-xs text-muted-foreground mt-1">by {creatorName(editingUser.createdBy || 'System')}</div>
                 </div>
@@ -687,7 +687,7 @@ export default function UserManagementPage() {
                         {activeDeals.length} active (manage/edit) · {passiveDeals.length} passive (read-only)
                       </div>
                     </div>
-                    <div className="max-h-64 overflow-y-auto">
+                    <div className="max-h-48 overflow-y-auto">
                       {[
                         { label: 'Active — manage & edit', list: activeDeals, tone: 'default' as const, labelClass: 'font-bold text-green-500' },
                         { label: 'Passive — read only', list: passiveDeals, tone: 'outline' as const, labelClass: 'font-bold text-foreground' },
@@ -732,7 +732,7 @@ export default function UserManagementPage() {
                     {chatChannels.filter(c => (c.participantIds ?? []).includes(editingUser.id)).length}
                   </Badge>
                 </div>
-                <div className="max-h-40 overflow-y-auto divide-y divide-border">
+                <div className="max-h-32 overflow-y-auto divide-y divide-border">
                   {(() => {
                     const myChannels = chatChannels.filter(c => (c.participantIds ?? []).includes(editingUser.id));
                     if (myChannels.length === 0) {
@@ -758,7 +758,7 @@ export default function UserManagementPage() {
                   Per-deal chat membership. Global User Role above is independent.
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="px-0 pb-2 pt-2">
                 <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
                 <Button onClick={handleSaveEditUser}>Save Changes</Button>
               </DialogFooter>
