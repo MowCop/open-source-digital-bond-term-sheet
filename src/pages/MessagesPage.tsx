@@ -849,8 +849,8 @@ export default function MessagesPage() {
                               flash(`${groupKey}:chat`);
                               handleOpenChat(group.dealIds, { modal: e.shiftKey, toggle: true });
                             }}
-                            title={unread > 0 ? `Open Deal Chat — ${unread} unread (Shift-click for dialog)` : 'Open Deal Chat (Shift-click for dialog)'}
-                            aria-label="Open Deal Chat"
+                            title={unread > 0 ? `Open Chat — ${unread} unread (Shift-click for dialog)` : 'Open Chat (Shift-click for dialog)'}
+                            aria-label="Open Chat"
                             className={`relative inline-flex h-7 w-7 items-center justify-center rounded-md border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                               isActive
                                 ? 'bg-primary text-primary-foreground border-primary'
