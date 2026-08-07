@@ -680,6 +680,55 @@ export default function UserManagementPage() {
               <div className="rounded-md bg-muted/40 border border-border px-3 py-2 text-xs text-muted-foreground">
                 Created: {formatDate(editingUser.createdAt)} by {creatorName(editingUser.createdBy || 'System')}
               </div>
+              {/* Authorised deals for this user */}
+              {(() => {
+                const userDeals = dealsForUser(editingUser);
+                const { active: activeDeals, passive: passiveDeals } = splitDealsForUser(editingUser);
+                return (
+                  <div className="border border-border rounded-md">
+                    <div className="p-3 border-b border-border">
+                      <div className="text-xs uppercase tracking-wider text-muted-foreground">Authorised Deals</div>
+                      <div className="text-sm font-medium">{editingUser.name} · {userDeals.length} deal{userDeals.length === 1 ? '' : 's'}</div>
+                      <div className="text-[11px] text-muted-foreground mt-1">
+                        {activeDeals.length} active (manage/edit) · {passiveDeals.length} passive (read-only)
+                      </div>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {[
+                        { label: 'Active — manage & edit', list: activeDeals, tone: 'default' as const, labelClass: 'font-bold text-green-500' },
+                        { label: 'Passive — read only', list: passiveDeals, tone: 'outline' as const, labelClass: 'font-bold text-foreground' },
+                      ].map(section => (
+                        <div key={section.label}>
+                          <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between">
+                            <span className={`text-[11px] uppercase tracking-wider ${section.labelClass}`}>{section.label}</span>
+                            <Badge variant={section.tone} className="text-[10px]">{section.list.length}</Badge>
+                          </div>
+                          {section.list.length === 0 ? (
+                            <div className="px-3 py-2 text-xs text-muted-foreground">None</div>
+                          ) : (
+                            <div className="divide-y divide-border">
+                              {section.list.map(d => (
+                                <div key={d.id} className="p-3 text-sm">
+                                  <div className="font-medium">{d.issuerName}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {d.currency} {d.size} · {d.tenor} · {d.coupon}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-[10px]">{d.stage}</Badge>
+                                    {d.createdByOrg && (
+                                      <span className="text-[11px] text-muted-foreground">Created by {d.createdByOrg}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
               {/* Deal Chats this user is invited into */}
               <div className="border border-border rounded-md">
                 <div className="px-3 py-2 border-b border-border flex items-center gap-2">
