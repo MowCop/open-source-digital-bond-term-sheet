@@ -654,8 +654,8 @@ export default function UserManagementPage() {
                     status.tone === 'unconfirmed' ? 'bg-blue-500' :
                     'bg-muted-foreground/40';
                   return (
-                    <div className="px-4 py-4 border-r border-border">
-                      <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-3">
+                    <div className="px-3 py-3 border-r border-border">
+                      <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-2">
                         <Activity className="h-3 w-3" /> Login Activity
                       </div>
                       <div className="flex items-center gap-2">
@@ -668,8 +668,8 @@ export default function UserManagementPage() {
                     </div>
                   );
                 })()}
-                <div className="px-4 py-4">
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Created Details</div>
+                <div className="px-3 py-3">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Created Details</div>
                   <div className="text-sm font-medium">{formatDate(editingUser.createdAt)}</div>
                   <div className="text-xs text-muted-foreground mt-1">by {creatorName(editingUser.createdBy || 'System')}</div>
                 </div>
