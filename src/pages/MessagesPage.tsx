@@ -849,10 +849,14 @@ export default function MessagesPage() {
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
                       if ((e.target as HTMLElement).closest('[data-borrower-editor]')) return;
                       returnFocusRef.current = e.currentTarget as HTMLElement;
+                      escapedKeyRef.current = null;
                       openFocus(groupKey);
                     }}
                     onMouseEnter={(e) => hoverSelect(groupKey, e.currentTarget as HTMLElement)}
-                    onMouseLeave={cancelHover}
+                    onMouseLeave={() => {
+                      cancelHover();
+                      if (escapedKeyRef.current === groupKey) escapedKeyRef.current = null;
+                    }}
                     onKeyDown={(e) => {
                       if (e.key !== 'Enter' && e.key !== ' ') return;
                       const t = e.target as HTMLElement;
