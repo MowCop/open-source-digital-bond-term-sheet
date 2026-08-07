@@ -149,6 +149,23 @@ export default function MessagesPage() {
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const activeListItemRef = useRef<HTMLButtonElement | null>(null);
 
+  // --- Hover-to-select ------------------------------------------------------
+  const hoverTimerRef = useRef<number | null>(null);
+  const keyboardNavRef = useRef(false);
+  const cancelHover = () => {
+    if (hoverTimerRef.current !== null) {
+      window.clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  };
+  useEffect(() => () => cancelHover(), []);
+  // A real mouse move re-enables hover takeover after keyboard navigation.
+  useEffect(() => {
+    const onMove = () => { keyboardNavRef.current = false; };
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
+  }, []);
+
   // Move focus into the overlay on open; restore it to the trigger on close.
   useEffect(() => {
     if (!focusedKey) {
@@ -349,6 +366,19 @@ export default function MessagesPage() {
     }
     setActivePanel('history');
     setFocusedKey(key);
+  };
+
+  // Hover selection with a short dwell so sweeping the cursor doesn't flip
+  // through every deal.
+  const hoverSelect = (key: string, el?: HTMLElement | null) => {
+    if (keyboardNavRef.current) return;
+    cancelHover();
+    hoverTimerRef.current = window.setTimeout(() => {
+      hoverTimerRef.current = null;
+      if (keyboardNavRef.current) return;
+      if (el) returnFocusRef.current = el;
+      openFocus(key);
+    }, 200);
   };
 
   const flash = (key: string) => {
