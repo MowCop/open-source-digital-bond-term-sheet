@@ -85,6 +85,15 @@ export default function UserManagementPage() {
     return () => { cancelled = true; };
   }, [isAdmin, currentUser.role]);
 
+  useEffect(() => {
+    if (!isAdmin && currentUser.role !== 'master_admin') return;
+    let cancelled = false;
+    supabase.from('profiles').select('email').eq('status', 'approved').then(({ data }) => {
+      if (!cancelled && data) setApprovedEmails(data.map((r: any) => String(r.email).toLowerCase()));
+    });
+    return () => { cancelled = true; };
+  }, [isAdmin, currentUser.role]);
+
   const formatRelative = (iso: string | null): string => {
     if (!iso) return 'Never';
     const then = new Date(iso).getTime();
@@ -140,6 +149,8 @@ export default function UserManagementPage() {
 
   // Edit User state
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [approvedEmails, setApprovedEmails] = useState<string[]>([]);
+  const [revoking, setRevoking] = useState(false);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
@@ -210,6 +221,27 @@ export default function UserManagementPage() {
   const handleDeleteUser = (u: User) => {
     deleteUser(u.id);
     toast({ title: 'User Deleted', description: `${u.name} has been removed` });
+  };
+
+  const handleRevokeAccess = async (u: User) => {
+    if (!confirm(`Revoke login access for ${u.email}? They will move back to Pending Approvals.`)) return;
+    setRevoking(true);
+    const { data: prof } = await supabase.from('profiles').select('user_id').eq('email', u.email).maybeSingle();
+    if (!prof) { setRevoking(false); return toast({ title: 'Not found', description: 'No login account for this email.', variant: 'destructive' }); }
+    const { error: e1 } = await supabase.from('profiles').update({ status: 'rejected' }).eq('user_id', prof.user_id);
+    const { error: e2 } = await supabase.from('user_roles').delete().eq('user_id', prof.user_id);
+    setRevoking(false);
+    if (e1 || e2) return toast({ title: 'Failed', description: (e1 || e2)?.message, variant: 'destructive' });
+    await supabase.from('audit_log').insert({
+      id: crypto.randomUUID(),
+      action: 'USER_REVOKED',
+      entity_type: 'user',
+      entity_id: prof.user_id,
+      user_id: 'admin',
+      details: `Revoked access for ${u.email}`,
+    });
+    setApprovedEmails(prev => prev.filter(e => e !== u.email.toLowerCase()));
+    toast({ title: 'Access revoked', description: `${u.email} moved back to Pending Approvals.` });
   };
 
   const handleSaveList = () => {
@@ -766,6 +798,15 @@ export default function UserManagementPage() {
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
                 <div className="flex gap-2">
+                  {approvedEmails.includes(editingUser.email.toLowerCase()) && (
+                    <Button
+                      variant="outline"
+                      disabled={revoking || editingUser.id === currentUser.id}
+                      onClick={() => handleRevokeAccess(editingUser)}
+                    >
+                      Revoke access
+                    </Button>
+                  )}
                   <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
                   <Button onClick={handleSaveEditUser}>Save Changes</Button>
                 </div>

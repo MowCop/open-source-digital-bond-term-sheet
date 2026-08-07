@@ -120,12 +120,11 @@ export default function ApprovedUsersSection({
             <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Name & Contact</TableHead>
             <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Organization</TableHead>
             <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
-            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loading && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Loading…</TableCell></TableRow>}
-          {!loading && rows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No approved users yet.</TableCell></TableRow>}
+          {loading && <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">Loading…</TableCell></TableRow>}
+          {!loading && rows.length === 0 && <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No approved users yet.</TableCell></TableRow>}
           {rows.map(p => (
             <TableRow key={p.user_id}>
               <TableCell>
@@ -146,9 +145,6 @@ export default function ApprovedUsersSection({
                     {ROLES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button size="sm" variant="outline" onClick={() => setConfirmRevoke(p)}>Revoke access</Button>
               </TableCell>
             </TableRow>
           ))}
