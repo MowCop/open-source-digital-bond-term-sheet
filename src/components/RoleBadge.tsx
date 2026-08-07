@@ -43,7 +43,7 @@ export function RoleBadge({ role, label, className }: RoleBadgeProps) {
       <Badge
         variant="secondary"
         className={cn(
-          'bg-secondary text-white hover:bg-secondary hover:text-white focus:bg-secondary focus:text-white focus:outline-none border-transparent',
+          'role-badge-admin border-transparent focus:outline-none',
           className
         )}
       >
