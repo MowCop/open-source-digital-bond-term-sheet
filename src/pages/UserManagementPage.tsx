@@ -480,7 +480,7 @@ export default function UserManagementPage() {
                   const u = users.find(x => x.email.toLowerCase() === email.toLowerCase());
                   if (u) openEditUser(u);
                   else {
-                    // No Address Book record yet — open a blank "Add New User" template pre-filled with the email
+                    // No Address Book record yet — open a blank "Profile" template pre-filled with the email
                     setNewName(name || '');
                     setNewEmail(email);
                     setNewPhone('');
@@ -498,7 +498,7 @@ export default function UserManagementPage() {
           {showAddUser ? (
             <Card className="border-border max-w-2xl">
               <CardContent className="p-6 space-y-5">
-                <h2 className="text-lg font-semibold">Add New User</h2>
+                <h2 className="text-lg font-semibold">Profile</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-xs uppercase tracking-wider text-muted-foreground">Full Name</Label>
