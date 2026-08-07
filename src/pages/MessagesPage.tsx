@@ -809,6 +809,12 @@ export default function MessagesPage() {
                         )}
                       </button>
                     </div>
+                    <div className="col-span-1 flex justify-center items-center">
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${pubBadge.dot}`}
+                        title={pubBadge.label}
+                      />
+                    </div>
                     <div className="col-span-1" onClick={(e) => e.stopPropagation()}>
                       {(() => {
                         const unread = getUnreadChatCount(group.dealIds);
@@ -869,12 +875,7 @@ export default function MessagesPage() {
                         </span>
                       )}
                     </div>
-                    <div className="col-span-1 flex justify-center items-center">
-                      <span
-                        className={`h-2.5 w-2.5 rounded-full ${pubBadge.dot}`}
-                        title={pubBadge.label}
-                      />
-                    </div>
+
                     <div className="col-span-4 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
                         <div className="relative">
