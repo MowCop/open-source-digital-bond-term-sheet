@@ -732,7 +732,7 @@ export default function UserManagementPage() {
                     {chatChannels.filter(c => (c.participantIds ?? []).includes(editingUser.id)).length}
                   </Badge>
                 </div>
-                <div className="max-h-40 overflow-y-auto divide-y divide-border">
+                <div className="max-h-32 overflow-y-auto divide-y divide-border">
                   {(() => {
                     const myChannels = chatChannels.filter(c => (c.participantIds ?? []).includes(editingUser.id));
                     if (myChannels.length === 0) {
