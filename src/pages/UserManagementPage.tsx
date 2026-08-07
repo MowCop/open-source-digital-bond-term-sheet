@@ -15,9 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus, MessageSquare, Activity } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/context/AuthContext';
-import { KeyRound, UserCheck } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import GuestsTab from '@/components/GuestsTab';
-import PendingApprovalsTab from '@/components/PendingApprovalsTab';
 import ApprovedUsersSection from '@/components/ApprovedUsersSection';
 import RoleBadge from '@/components/RoleBadge';
 
@@ -378,11 +377,6 @@ export default function UserManagementPage() {
           <TabsTrigger value="lists" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
             <ListTree className="h-4 w-4 mr-2" /> Distribution Lists
           </TabsTrigger>
-          {isMaster && (
-            <TabsTrigger value="approvals" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
-              <UserCheck className="h-4 w-4 mr-2" /> Approvals
-            </TabsTrigger>
-          )}
           <TabsTrigger value="guests" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary rounded-none pb-2 bg-transparent data-[state=active]:bg-transparent data-[state=active]:shadow-none">
             <KeyRound className="h-4 w-4 mr-2" /> Guests
           </TabsTrigger>
@@ -587,11 +581,6 @@ export default function UserManagementPage() {
             </>
           )}
         </TabsContent>
-        {isMaster && (
-          <TabsContent value="approvals" className="mt-6">
-            <PendingApprovalsTab />
-          </TabsContent>
-        )}
         <TabsContent value="guests" className="mt-6">
           <GuestsTab />
         </TabsContent>
