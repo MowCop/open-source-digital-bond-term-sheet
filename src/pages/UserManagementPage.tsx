@@ -14,7 +14,6 @@ import { UserRole, UserCategory, User, DistributionList } from '@/types/bond';
 import { useToast } from '@/hooks/use-toast';
 import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus, MessageSquare, Activity } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/context/AuthContext';
 import { KeyRound, UserCheck } from 'lucide-react';
 import GuestsTab from '@/components/GuestsTab';
@@ -547,7 +546,6 @@ export default function UserManagementPage() {
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Name & Contact</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Organization</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Deals</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">
                     <span className="inline-flex items-center gap-1"><Activity className="h-3 w-3" /> Login Activity</span>
                   </TableHead>
@@ -561,8 +559,6 @@ export default function UserManagementPage() {
                   const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
                   return tb - ta;
                 }).map(u => {
-                  const userDeals = dealsForUser(u);
-                  const { active: activeDeals, passive: passiveDeals } = splitDealsForUser(u);
                   const isJustAdded = justAddedEmail && u.email.toLowerCase() === justAddedEmail;
                   return (
                   <TableRow key={u.id} className={`border-border ${isJustAdded ? 'bg-primary/10 animate-pulse' : ''}`}>
@@ -576,67 +572,6 @@ export default function UserManagementPage() {
                       <Badge variant={u.role === 'master_admin' ? 'default' : u.role === 'syndicate_admin' ? 'secondary' : 'outline'}>
                         {u.category || roleLabels[u.role]}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {userDeals.length === 0 ? (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      ) : (
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <button type="button" className="text-left group">
-                              <Badge variant="outline" className="cursor-pointer group-hover:bg-accent">
-                                {userDeals.length} deal{userDeals.length === 1 ? '' : 's'}
-                              </Badge>
-                              <div className="text-xs text-muted-foreground mt-1 line-clamp-2 max-w-[220px]">
-                                {userDeals.slice(0, 2).map(d => `${d.issuerName} ${d.currency}${d.size}`).join(', ')}
-                                {userDeals.length > 2 ? ` +${userDeals.length - 2}` : ''}
-                              </div>
-                            </button>
-                          </PopoverTrigger>
-                          <PopoverContent align="start" className="w-96 p-0">
-                            <div className="p-3 border-b border-border">
-                              <div className="text-xs uppercase tracking-wider text-muted-foreground">Authorised Deals</div>
-                              <div className="text-sm font-medium">{u.name} · {userDeals.length} deal{userDeals.length === 1 ? '' : 's'}</div>
-                              <div className="text-[11px] text-muted-foreground mt-1">
-                                {activeDeals.length} active (manage/edit) · {passiveDeals.length} passive (read-only)
-                              </div>
-                            </div>
-                            <div className="max-h-80 overflow-y-auto">
-                              {[
-                                { label: 'Active — manage & edit', list: activeDeals, tone: 'default' as const, labelClass: 'font-bold text-green-500' },
-                                { label: 'Passive — read only', list: passiveDeals, tone: 'outline' as const, labelClass: 'font-bold text-white' },
-                              ].map(section => (
-                                <div key={section.label}>
-                                  <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between">
-                                    <span className={`text-[11px] uppercase tracking-wider ${section.labelClass}`}>{section.label}</span>
-                                    <Badge variant={section.tone} className="text-[10px]">{section.list.length}</Badge>
-                                  </div>
-                                  {section.list.length === 0 ? (
-                                    <div className="px-3 py-2 text-xs text-muted-foreground">None</div>
-                                  ) : (
-                                    <div className="divide-y divide-border">
-                                      {section.list.map(d => (
-                                        <div key={d.id} className="p-3 text-sm">
-                                          <div className="font-medium">{d.issuerName}</div>
-                                          <div className="text-xs text-muted-foreground">
-                                            {d.currency} {d.size} · {d.tenor} · {d.coupon}
-                                          </div>
-                                          <div className="flex items-center gap-2 mt-1">
-                                            <Badge variant="outline" className="text-[10px]">{d.stage}</Badge>
-                                            {d.createdByOrg && (
-                                              <span className="text-[11px] text-muted-foreground">Created by {d.createdByOrg}</span>
-                                            )}
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      )}
                     </TableCell>
                     <TableCell>
                       {(() => {
@@ -745,6 +680,55 @@ export default function UserManagementPage() {
               <div className="rounded-md bg-muted/40 border border-border px-3 py-2 text-xs text-muted-foreground">
                 Created: {formatDate(editingUser.createdAt)} by {creatorName(editingUser.createdBy || 'System')}
               </div>
+              {/* Authorised deals for this user */}
+              {(() => {
+                const userDeals = dealsForUser(editingUser);
+                const { active: activeDeals, passive: passiveDeals } = splitDealsForUser(editingUser);
+                return (
+                  <div className="border border-border rounded-md">
+                    <div className="p-3 border-b border-border">
+                      <div className="text-xs uppercase tracking-wider text-muted-foreground">Authorised Deals</div>
+                      <div className="text-sm font-medium">{editingUser.name} · {userDeals.length} deal{userDeals.length === 1 ? '' : 's'}</div>
+                      <div className="text-[11px] text-muted-foreground mt-1">
+                        {activeDeals.length} active (manage/edit) · {passiveDeals.length} passive (read-only)
+                      </div>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {[
+                        { label: 'Active — manage & edit', list: activeDeals, tone: 'default' as const, labelClass: 'font-bold text-green-500' },
+                        { label: 'Passive — read only', list: passiveDeals, tone: 'outline' as const, labelClass: 'font-bold text-foreground' },
+                      ].map(section => (
+                        <div key={section.label}>
+                          <div className="px-3 py-2 bg-muted/40 border-b border-border flex items-center justify-between">
+                            <span className={`text-[11px] uppercase tracking-wider ${section.labelClass}`}>{section.label}</span>
+                            <Badge variant={section.tone} className="text-[10px]">{section.list.length}</Badge>
+                          </div>
+                          {section.list.length === 0 ? (
+                            <div className="px-3 py-2 text-xs text-muted-foreground">None</div>
+                          ) : (
+                            <div className="divide-y divide-border">
+                              {section.list.map(d => (
+                                <div key={d.id} className="p-3 text-sm">
+                                  <div className="font-medium">{d.issuerName}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {d.currency} {d.size} · {d.tenor} · {d.coupon}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-[10px]">{d.stage}</Badge>
+                                    {d.createdByOrg && (
+                                      <span className="text-[11px] text-muted-foreground">Created by {d.createdByOrg}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
               {/* Deal Chats this user is invited into */}
               <div className="border border-border rounded-md">
                 <div className="px-3 py-2 border-b border-border flex items-center gap-2">
