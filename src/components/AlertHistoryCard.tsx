@@ -666,14 +666,25 @@ export default function AlertHistoryCard({
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-5 py-2 border-t border-border shrink-0 bg-card/40">
-          <Button variant="ghost" onClick={attemptClose}>Cancel</Button>
-          <Button variant="outline" onClick={handleSave}>
-            <Save className="h-4 w-4 mr-1" /> Save
-          </Button>
+        <div className="relative flex items-center justify-center gap-2 px-5 py-2 border-t border-border shrink-0 bg-card/40">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" className="btn-footer-action" onClick={attemptClose}>Cancel</Button>
+            <Button variant="outline" className="btn-footer-action" onClick={handleSave}>
+              <Save className="h-4 w-4 mr-1" /> Save
+            </Button>
+            {isSent && !isRetracted && (
+              <Button className="btn-footer-action" onClick={handleSaveAndSend}>
+                <Send className="h-4 w-4 mr-1" /> Save &amp; Send
+              </Button>
+            )}
+          </div>
           {isSent && !isRetracted && (
-            <Button onClick={handleSaveAndSend}>
-              <Send className="h-4 w-4 mr-1" /> Save &amp; Send
+            <Button
+              variant="destructive"
+              className="h-10 px-4 absolute right-5 top-1/2 -translate-y-1/2"
+              onClick={() => onRetract(message.id)}
+            >
+              <RotateCcw className="h-4 w-4 mr-1" /> Retract
             </Button>
           )}
         </div>
