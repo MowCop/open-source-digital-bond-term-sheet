@@ -255,7 +255,7 @@ export default function AlertHistoryCard({
       } : undefined}
       onDoubleClick={(e) => {
         const target = e.target as HTMLElement;
-        if (target.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap')) return;
+        if (target.closest('button, a, input, textarea, select, [contenteditable="true"]')) return;
         clearClickEditTimer();
         e.stopPropagation();
         window.dispatchEvent(new CustomEvent('alert-editor-closed'));
