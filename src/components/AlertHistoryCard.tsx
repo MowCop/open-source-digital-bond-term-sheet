@@ -578,7 +578,7 @@ export default function AlertHistoryCard({
                   {bulletinOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                 </button>
                 {bulletinOpen && (
-                  <div className="flex-1 min-h-0">
+                  <div className="flex-1 min-h-0 rounded-md border border-dashed border-primary/40 overflow-hidden">
                     <RichTextEditor
                       value={editBody}
                       onChange={setEditBody}
