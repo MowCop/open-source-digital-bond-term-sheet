@@ -138,6 +138,7 @@ export default function MessagesPage() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (document.querySelector('[role="dialog"][data-state="open"]')) return;
+      cancelHover();
       setFocusedKey(null);
     };
     window.addEventListener('keydown', onKey);
@@ -148,6 +149,23 @@ export default function MessagesPage() {
   const overlayRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
   const activeListItemRef = useRef<HTMLButtonElement | null>(null);
+
+  // --- Hover-to-select ------------------------------------------------------
+  const hoverTimerRef = useRef<number | null>(null);
+  const keyboardNavRef = useRef(false);
+  const cancelHover = () => {
+    if (hoverTimerRef.current !== null) {
+      window.clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  };
+  useEffect(() => () => cancelHover(), []);
+  // A real mouse move re-enables hover takeover after keyboard navigation.
+  useEffect(() => {
+    const onMove = () => { keyboardNavRef.current = false; };
+    window.addEventListener('mousemove', onMove);
+    return () => window.removeEventListener('mousemove', onMove);
+  }, []);
 
   // Move focus into the overlay on open; restore it to the trigger on close.
   useEffect(() => {
@@ -349,6 +367,19 @@ export default function MessagesPage() {
     }
     setActivePanel('history');
     setFocusedKey(key);
+  };
+
+  // Hover selection with a short dwell so sweeping the cursor doesn't flip
+  // through every deal.
+  const hoverSelect = (key: string, el?: HTMLElement | null) => {
+    if (keyboardNavRef.current) return;
+    cancelHover();
+    hoverTimerRef.current = window.setTimeout(() => {
+      hoverTimerRef.current = null;
+      if (keyboardNavRef.current) return;
+      if (el) returnFocusRef.current = el;
+      openFocus(key);
+    }, 200);
   };
 
   const flash = (key: string) => {
@@ -813,6 +844,8 @@ export default function MessagesPage() {
                       returnFocusRef.current = e.currentTarget as HTMLElement;
                       openFocus(groupKey);
                     }}
+                    onMouseEnter={(e) => hoverSelect(groupKey, e.currentTarget as HTMLElement)}
+                    onMouseLeave={cancelHover}
                     onKeyDown={(e) => {
                       if (e.key !== 'Enter' && e.key !== ' ') return;
                       const t = e.target as HTMLElement;
@@ -1035,6 +1068,8 @@ export default function MessagesPage() {
                   else if (e.key === 'Home') next = 0;
                   else next = keys.length - 1;
                   if (next !== i && keys[next]) {
+                    keyboardNavRef.current = true;
+                    cancelHover();
                     setActivePanel('history');
                     setFocusedKey(keys[next]);
                     requestAnimationFrame(() => activeListItemRef.current?.focus());
@@ -1053,6 +1088,8 @@ export default function MessagesPage() {
                       tabIndex={active ? 0 : -1}
                       ref={active ? (el) => { activeListItemRef.current = el; el?.scrollIntoView({ block: 'nearest' }); } : undefined}
                       onClick={() => openFocus(key)}
+                      onMouseEnter={() => hoverSelect(key)}
+                      onMouseLeave={cancelHover}
                       className={`w-full text-left rounded-md px-2.5 py-2 transition-colors ${
                         active
                           ? 'border-2 border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/50'
