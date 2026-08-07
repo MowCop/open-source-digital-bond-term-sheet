@@ -758,7 +758,7 @@ export default function UserManagementPage() {
                   Per-deal chat membership. Global User Role above is independent.
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="px-0 pb-2 pt-2">
                 <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
                 <Button onClick={handleSaveEditUser}>Save Changes</Button>
               </DialogFooter>
