@@ -692,6 +692,15 @@ export default function MessagesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">New Issue Board</h1>
         <div className="flex items-center gap-3 flex-wrap">
+          {canManageMessages && (
+            <Button
+              onClick={() => navigate('/ai-draft')}
+              className="px-3 py-1 h-auto rounded text-xs font-medium bg-accent hover:bg-accent/90 text-accent-foreground"
+            >
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
+              Create New Issue
+            </Button>
+          )}
           {/* Publish status filter — primary partition between Pre-Published and Published */}
           <div className="flex items-center gap-1 bg-card rounded-lg p-1 border border-border">
             {(['all', 'pre_published', 'published', 'retracted'] as const).map(s => {
@@ -740,17 +749,8 @@ export default function MessagesPage() {
 
       <div className="grid gap-4 grid-cols-1">
         <div>
-          {/* Create New Issue button */}
-          {canManageMessages && (
-            <div className="flex justify-center mb-4">
-              <Button onClick={() => navigate('/ai-draft')} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                <Plus className="h-4 w-4 mr-2" />
-                Create New Issue
-              </Button>
-            </div>
-          )}
-
           {/* Table header */}
+
           <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
             <div className="col-span-1"></div>
             <div className="col-span-1 text-center">Public Status</div>
