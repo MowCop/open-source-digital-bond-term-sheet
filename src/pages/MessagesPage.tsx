@@ -22,13 +22,13 @@ import {
 } from '@/components/ui/dialog';
 
 const stageBadge: Record<DealStage, { label: string; className: string }> = {
-  Mandate: { label: 'Mandate', className: 'bg-blue-900/50 text-green-400 border-green-800' },
-  Announced: { label: 'Announced', className: 'bg-blue-900/50 text-green-400 border-green-800' },
-  Launched: { label: 'Launched', className: 'bg-blue-900/50 text-green-400 border-green-800' },
-  'Books Open': { label: 'Books Open', className: 'bg-blue-900/50 text-green-400 border-green-800' },
-  'Books Closed': { label: 'Books Closed', className: 'bg-blue-900/50 text-green-400 border-green-800' },
-  Priced: { label: 'Priced', className: 'bg-card text-timestamp border-timestamp' },
-  Settled: { label: 'Settled', className: 'bg-card text-timestamp border-timestamp' },
+  Mandate: { label: 'Mandate', className: 'bg-blue-900/50 text-green-400' },
+  Announced: { label: 'Announced', className: 'bg-blue-900/50 text-green-400' },
+  Launched: { label: 'Launched', className: 'bg-blue-900/50 text-green-400' },
+  'Books Open': { label: 'Books Open', className: 'bg-blue-900/50 text-green-400' },
+  'Books Closed': { label: 'Books Closed', className: 'bg-blue-900/50 text-green-400' },
+  Priced: { label: 'Priced', className: 'bg-card text-timestamp' },
+  Settled: { label: 'Settled', className: 'bg-card text-timestamp' },
 };
 
 // "Send" = "Publish" in product terms. We collapse the underlying message
