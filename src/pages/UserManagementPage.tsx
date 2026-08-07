@@ -566,7 +566,7 @@ export default function UserManagementPage() {
                     <TableCell>{u.organization}</TableCell>
                     <TableCell>
                       <Badge variant={u.role === 'master_admin' ? 'default' : u.role === 'syndicate_admin' ? 'secondary' : 'outline'}>
-                        {u.category || roleLabels[u.role]}
+                        {roleLabels[u.role]}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
