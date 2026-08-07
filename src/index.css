@@ -80,6 +80,14 @@
   .role-badge-admin:focus {
     background-color: hsl(var(--role-admin-hover));
   }
+  .role-admin-icon {
+    background-color: hsl(var(--role-admin));
+    color: hsl(var(--role-admin-foreground));
+  }
+  .role-admin-icon:hover,
+  .role-admin-icon:focus {
+    background-color: hsl(var(--role-admin-hover));
+  }
   .stage-mandate { @apply bg-blue-900/40 text-blue-400; }
   .stage-launched { @apply bg-green-900/40 text-green-400; }
   .stage-priced { @apply bg-amber-900/40 text-amber-400; }

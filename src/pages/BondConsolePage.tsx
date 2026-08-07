@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { RoleBadge } from '@/components/RoleBadge';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -134,7 +135,9 @@ export default function BondConsolePage() {
             </div>
             <div className="space-y-1.5">
               <Label>Role</Label>
-              <Input value={currentUser.role.replace('_', ' ')} disabled />
+              <div className="h-9 flex items-center">
+                <RoleBadge role={currentUser.role} className="text-xs px-2 py-0.5" />
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-2">
