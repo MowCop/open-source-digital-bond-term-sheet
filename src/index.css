@@ -27,6 +27,10 @@
     --ring: 43 96% 56%;
     --radius: 0.5rem;
 
+    --role-admin: 217 33% 17%;
+    --role-admin-foreground: 0 0% 100%;
+    --role-admin-hover: 217 33% 22%;
+
     --warning: 38 92% 50%;
     --warning-foreground: 222 47% 8%;
     --success: 142 71% 45%;
