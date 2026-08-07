@@ -1,6 +1,5 @@
 import { useApp } from '@/context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,15 +7,7 @@ import { useState } from 'react';
 import { UserRole } from '@/types/bond';
 import { useToast } from '@/hooks/use-toast';
 import ApprovedUsersSection from '@/components/ApprovedUsersSection';
-
-const roleBadge: Record<UserRole, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
-  master_admin: { label: 'Master Admin', variant: 'default' },
-  syndicate_admin: { label: 'Syndicate Admin', variant: 'secondary' },
-  vendor_user: { label: 'Read Only', variant: 'outline' },
-  syndicate_readonly: { label: 'Syndicate – Read Only', variant: 'outline' },
-  sales_readonly: { label: 'Sales – Read Only', variant: 'outline' },
-  guest_readonly: { label: 'Guest Read Only', variant: 'outline' },
-};
+import RoleBadge from '@/components/RoleBadge';
 
 export default function AdminPage() {
   const { users, currentUser, addAuditEntry, updateUser } = useApp();
