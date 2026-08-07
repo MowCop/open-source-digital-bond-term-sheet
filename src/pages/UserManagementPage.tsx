@@ -490,7 +490,13 @@ export default function UserManagementPage() {
         <TabsContent value="users" className="mt-6">
           {!showAddUser && isMaster && (
             <div className="mb-8">
-              <ApprovedUsersSection />
+              <ApprovedUsersSection
+                onOpenProfile={(email) => {
+                  const u = users.find(x => x.email.toLowerCase() === email.toLowerCase());
+                  if (u) openEditUser(u);
+                  else toast({ title: 'No Address Book entry', description: `${email} has login access but no Address Book record yet.` });
+                }}
+              />
             </div>
           )}
           {!showAddUser && isMaster && (
