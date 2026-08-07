@@ -564,12 +564,9 @@ export default function UserManagementPage() {
                       {u.phone && <div className="text-xs text-muted-foreground">{u.phone}</div>}
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex justify-end gap-4">
-                        <Button variant="ghost" size="icon" onClick={() => openEditUser(u)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(u)} disabled={u.id === currentUser.id}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+                       <div className="flex justify-end">
+                         <Button variant="ghost" size="icon" onClick={() => openEditUser(u)}><Pencil className="h-4 w-4" /></Button>
+                       </div>
                     </TableCell>
                     <TableCell>{u.organization}</TableCell>
                     <TableCell>
@@ -758,10 +755,21 @@ export default function UserManagementPage() {
                   Per-deal chat membership. Global User Role above is independent.
                 </div>
               </div>
-              <DialogFooter className="px-0 pb-2 pt-2">
-                <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
-                <Button onClick={handleSaveEditUser}>Save Changes</Button>
-              </DialogFooter>
+              <div className="flex items-center justify-between px-0 pb-2 pt-2 gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Delete user"
+                  disabled={editingUser.id === currentUser.id}
+                  onClick={() => { const u = editingUser; setEditingUser(null); handleDeleteUser(u); }}
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+                  <Button onClick={handleSaveEditUser}>Save Changes</Button>
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>
