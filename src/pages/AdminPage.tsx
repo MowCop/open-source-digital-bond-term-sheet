@@ -33,8 +33,8 @@ export default function AdminPage() {
     setEditingUser(null);
   };
 
-  const bankUsers = users.filter(u => u.organizationType === 'bank');
-  const vendorUsersList = users.filter(u => u.organizationType === 'vendor');
+  const bankUsers = users.filter(u => u.organizationType === 'bank').sort((a, b) => (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase()));
+  const vendorUsersList = users.filter(u => u.organizationType === 'vendor').sort((a, b) => (a.name || '').toLowerCase().localeCompare((b.name || '').toLowerCase()));
 
   return (
     <div className="space-y-6">
