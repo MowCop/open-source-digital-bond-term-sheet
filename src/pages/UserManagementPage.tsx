@@ -21,14 +21,6 @@ import PendingApprovalsTab from '@/components/PendingApprovalsTab';
 import ApprovedUsersSection from '@/components/ApprovedUsersSection';
 import RoleBadge from '@/components/RoleBadge';
 
-const roleLabels: Record<UserRole, string> = {
-  master_admin: 'Master Admin',
-  syndicate_admin: 'Syndicate Admin',
-  vendor_user: 'Read Only',
-  syndicate_readonly: 'Syndicate – Read Only',
-  sales_readonly: 'Sales – Read Only',
-  guest_readonly: 'Guest Read Only',
-};
 
 // Centralised editable UI labels for User Management.
 const UM_LABELS = {
