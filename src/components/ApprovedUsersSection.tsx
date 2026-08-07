@@ -102,10 +102,6 @@ export default function ApprovedUsersSection({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="font-semibold">{title}</h3>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
-      </div>
       <Table>
         <TableHeader>
           <TableRow>
