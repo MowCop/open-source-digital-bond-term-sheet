@@ -546,7 +546,7 @@ export default function UserManagementPage() {
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Name & Contact</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Organization</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-right">Profile</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
