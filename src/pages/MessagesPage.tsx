@@ -90,6 +90,7 @@ export default function MessagesPage() {
   const [editSignals, setEditSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AlertGroup | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [docsGroup, setDocsGroup] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [filterPublish, setFilterPublish] = useState<'all' | PublishStatus>('all');
