@@ -51,7 +51,7 @@ const publishStatusBadge: Record<PublishStatus, { label: string; className: stri
   },
   published: {
     label: 'Published',
-    className: 'bg-green-900/40 text-green-300 border-green-800',
+    className: 'bg-card text-timestamp border-timestamp',
     dot: 'bg-green-400',
   },
   retracted: {
