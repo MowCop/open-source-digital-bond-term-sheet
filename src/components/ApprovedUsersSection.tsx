@@ -35,11 +35,13 @@ const ALL_ROLES = [
 interface Props {
   title?: string;
   subtitle?: string;
+  onOpenProfile?: (email: string) => void;
 }
 
 export default function ApprovedUsersSection({
   title = 'Approved Login Users (self-registered)',
   subtitle = 'People who signed up and were approved — they have login access. Change their role or revoke access here. This is separate from the Address Book below.',
+  onOpenProfile,
 }: Props) {
   const { toast } = useToast();
   const { isMaster } = useAuth();
@@ -119,18 +121,29 @@ export default function ApprovedUsersSection({
         <TableHeader>
           <TableRow>
             <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Name & Contact</TableHead>
+            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-center">Profile</TableHead>
             <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Organization</TableHead>
             <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loading && <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">Loading…</TableCell></TableRow>}
-          {!loading && rows.length === 0 && <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No approved users yet.</TableCell></TableRow>}
+          {loading && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Loading…</TableCell></TableRow>}
+          {!loading && rows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No approved users yet.</TableCell></TableRow>}
           {rows.map(p => (
             <TableRow key={p.user_id}>
               <TableCell>
                 <div className="font-medium">{p.name || '—'}</div>
                 <div className="text-xs text-muted-foreground">{p.email}</div>
+              </TableCell>
+              <TableCell className="text-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Open profile for ${p.email}`}
+                  onClick={() => onOpenProfile?.(p.email)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
               </TableCell>
               <TableCell>{p.organization || '—'}</TableCell>
               <TableCell>
