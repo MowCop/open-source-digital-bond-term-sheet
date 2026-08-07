@@ -246,7 +246,7 @@ export default function AlertHistoryCard({
         // the second tap can cancel it and close the panel instead.
         clearClickEditTimer();
         const target = e.target as HTMLElement;
-        if (target.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap')) return;
+        if (target.closest('button, a, input, textarea, select, [contenteditable="true"]')) return;
         if (e.detail > 1) return;
         clickEditTimerRef.current = window.setTimeout(() => {
           clickEditTimerRef.current = null;
