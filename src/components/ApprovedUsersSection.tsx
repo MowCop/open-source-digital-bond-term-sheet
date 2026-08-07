@@ -117,20 +117,21 @@ export default function ApprovedUsersSection({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Organization</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Name & Contact</TableHead>
+            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Organization</TableHead>
+            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
+            <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {loading && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Loading…</TableCell></TableRow>}
-          {!loading && rows.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">No approved users yet.</TableCell></TableRow>}
+          {loading && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Loading…</TableCell></TableRow>}
+          {!loading && rows.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">No approved users yet.</TableCell></TableRow>}
           {rows.map(p => (
             <TableRow key={p.user_id}>
-              <TableCell className="font-medium">{p.name || '—'}</TableCell>
-              <TableCell>{p.email}</TableCell>
+              <TableCell>
+                <div className="font-medium">{p.name || '—'}</div>
+                <div className="text-xs text-muted-foreground">{p.email}</div>
+              </TableCell>
               <TableCell>{p.organization || '—'}</TableCell>
               <TableCell>
                 <Select
