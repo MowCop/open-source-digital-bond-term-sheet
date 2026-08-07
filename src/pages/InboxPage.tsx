@@ -244,7 +244,7 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
   const { chatMessages, messages } = useScopedApp();
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  // Alert Update History for this deal (newest first). Matches New Issue Board grouping.
+  // Alert History for this deal (newest first). Matches New Issue Board grouping.
   const dealAlerts = useMemo(() => {
     return messages
       .filter(m => m.dealIds.includes(deal.id))
