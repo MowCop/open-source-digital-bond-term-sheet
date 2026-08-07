@@ -29,9 +29,6 @@ const UM_LABELS = {
   createList: 'Create List',
   tabLists: 'Distribution Lists',
   tabUsers: 'Users',
-  colNameContact: 'Name & Contact',
-  colOrganization: 'Organization',
-  colRole: 'Role',
   colCreated: 'Created Details',
   colActions: 'Actions',
 };
@@ -582,14 +579,6 @@ export default function UserManagementPage() {
           ) : (
             <>
             <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Name & Contact</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-center">Profile</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Organization</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
-                </TableRow>
-              </TableHeader>
               <TableBody>
                 {[...users].sort((a, b) => {
                   const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
