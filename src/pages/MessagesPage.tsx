@@ -868,18 +868,13 @@ export default function MessagesPage() {
                         </span>
                       )}
                     </div>
-                    <div className="col-span-5 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
-                      <Badge
-                        className={`text-[9px] border mr-1.5 align-middle ${pubBadge.className}`}
-                        title={group.publishStatus === 'pre_published'
-                          ? 'Saved as draft — not yet sent / published'
-                          : group.publishStatus === 'published'
-                            ? 'Sent to recipients — published'
-                            : 'Retracted after being sent'}
-                      >
-                        <span className={`inline-block h-1.5 w-1.5 rounded-full mr-1 ${pubBadge.dot}`} />
-                        {pubBadge.label}
-                      </Badge>
+                    <div className="col-span-1 flex justify-center items-center">
+                      <span
+                        className={`h-2.5 w-2.5 rounded-full ${pubBadge.dot}`}
+                        title={pubBadge.label}
+                      />
+                    </div>
+                    <div className="col-span-4 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
                         <div className="relative">
                           <Input
