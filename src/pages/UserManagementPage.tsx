@@ -798,6 +798,15 @@ export default function UserManagementPage() {
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
                 <div className="flex gap-2">
+                  {approvedEmails.includes(editingUser.email.toLowerCase()) && (
+                    <Button
+                      variant="outline"
+                      disabled={revoking || editingUser.id === currentUser.id}
+                      onClick={() => handleRevokeAccess(editingUser)}
+                    >
+                      Revoke access
+                    </Button>
+                  )}
                   <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
                   <Button onClick={handleSaveEditUser}>Save Changes</Button>
                 </div>
