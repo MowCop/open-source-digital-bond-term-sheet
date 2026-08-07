@@ -216,7 +216,7 @@
 .toolbar-btn {
   height: 2.5rem;
   min-width: 140px;
-  background: hsl(var(--info) / 0.15);
+  background: hsl(var(--info) / 0.28);
   border: 1px solid hsl(var(--toolbar-btn-border) / 0.6);
   color: hsl(var(--foreground));
   border-radius: 0.375rem;
@@ -225,13 +225,13 @@
 .toolbar-btn:hover {
   border-width: 2px;
   border-color: hsl(var(--toolbar-btn-border) / 0.95);
-  background: hsl(var(--info) / 0.22);
+  background: hsl(var(--info) / 0.40);
 }
 .toolbar-btn-selected,
 .toolbar-btn[aria-pressed="true"] {
   border-width: 2px;
   border-color: hsl(var(--toolbar-btn-border) / 0.95);
-  background: hsl(var(--info) / 0.25);
+  background: hsl(var(--info) / 0.45);
 }
 
 .toolbar-btn-ai {
