@@ -269,7 +269,7 @@ export default function MessagesPage() {
   // Filter by publish status (primary) and stage (secondary)
   const stageFiltered = filterStage === 'all'
     ? alertGroups
-    : alertGroups.filter(g => g.stage === filterStage);
+    : alertGroups.filter(g => filterStage === 'Pipeline' ? (g.stage === 'Mandate' || g.stage === 'Launched') : g.stage === filterStage);
   const filtered = filterPublish === 'all'
     ? stageFiltered
     : stageFiltered.filter(g => g.publishStatus === filterPublish);
@@ -776,7 +776,7 @@ export default function MessagesPage() {
           </div>
           {/* Stage filter — secondary */}
           <div className="flex items-center gap-1 bg-card rounded-lg p-1 border border-border">
-            {['all', 'Mandate', 'Launched', 'Priced'].map(s => (
+            {['all', 'Pipeline', 'Priced'].map(s => (
               <button
                 key={s}
                 onClick={() => setFilterStage(s)}
