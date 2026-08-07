@@ -138,9 +138,6 @@ export default function MessagesPage() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (document.querySelector('[role="dialog"][data-state="open"]')) return;
-      cancelHover();
-      // Don't let the row under the cursor immediately re-open Focus Mode.
-      escapedKeyRef.current = focusedKey;
       setFocusedKey(null);
     };
     window.addEventListener('keydown', onKey);
@@ -808,25 +805,13 @@ export default function MessagesPage() {
                     role="button"
                     tabIndex={0}
                     aria-label={`Open deal ${group.borrower}: ${group.headline}`}
-                    className={`grid grid-cols-12 gap-2 px-4 py-3 items-center cursor-pointer hover:bg-card/60 transition-colors ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
+                    className={`grid grid-cols-12 gap-2 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
                     onClick={(e) => {
                       // Don't toggle when interacting with the inline headline editor
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
                       if ((e.target as HTMLElement).closest('[data-borrower-editor]')) return;
                       returnFocusRef.current = e.currentTarget as HTMLElement;
-                      escapedKeyRef.current = null;
                       openFocus(groupKey);
-                    }}
-                    onMouseEnter={(e) => hoverSelect(groupKey, e.currentTarget as HTMLElement)}
-                    onMouseMove={(e) => {
-                      // Fallback: if mouseenter was missed (re-render, overlay
-                      // close, pointer already inside), arm the hover select.
-                      if (focusedKey === groupKey || hoverTimerRef.current !== null) return;
-                      hoverSelect(groupKey, e.currentTarget as HTMLElement);
-                    }}
-                    onMouseLeave={() => {
-                      cancelHover();
-                      if (escapedKeyRef.current === groupKey) escapedKeyRef.current = null;
                     }}
                     onKeyDown={(e) => {
                       if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -1050,8 +1035,6 @@ export default function MessagesPage() {
                   else if (e.key === 'Home') next = 0;
                   else next = keys.length - 1;
                   if (next !== i && keys[next]) {
-                    keyboardNavRef.current = true;
-                    cancelHover();
                     setActivePanel('history');
                     setFocusedKey(keys[next]);
                     requestAnimationFrame(() => activeListItemRef.current?.focus());
@@ -1070,12 +1053,10 @@ export default function MessagesPage() {
                       tabIndex={active ? 0 : -1}
                       ref={active ? (el) => { activeListItemRef.current = el; el?.scrollIntoView({ block: 'nearest' }); } : undefined}
                       onClick={() => openFocus(key)}
-                      onMouseEnter={() => hoverSelect(key)}
-                      onMouseLeave={cancelHover}
                       className={`w-full text-left rounded-md px-2.5 py-2 transition-colors ${
                         active
                           ? 'border-2 border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/50'
-                          : 'border-2 border-transparent hover:bg-sidebar-accent/50'
+                          : 'border-2 border-transparent hover:border-amber-400/40 hover:bg-amber-500/5'
                       }`}
                     >
                       <div className={`text-xs ${active ? 'font-bold text-amber-300' : 'font-medium'}`}>{g.borrower}</div>
