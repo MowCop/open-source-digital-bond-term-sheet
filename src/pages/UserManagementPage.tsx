@@ -85,6 +85,15 @@ export default function UserManagementPage() {
     return () => { cancelled = true; };
   }, [isAdmin, currentUser.role]);
 
+  useEffect(() => {
+    if (!isAdmin && currentUser.role !== 'master_admin') return;
+    let cancelled = false;
+    supabase.from('profiles').select('email').eq('status', 'approved').then(({ data }) => {
+      if (!cancelled && data) setApprovedEmails(data.map((r: any) => String(r.email).toLowerCase()));
+    });
+    return () => { cancelled = true; };
+  }, [isAdmin, currentUser.role]);
+
   const formatRelative = (iso: string | null): string => {
     if (!iso) return 'Never';
     const then = new Date(iso).getTime();
