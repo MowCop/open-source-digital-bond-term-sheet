@@ -90,6 +90,7 @@ export default function MessagesPage() {
   const [editSignals, setEditSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<AlertGroup | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [docsGroup, setDocsGroup] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [filterPublish, setFilterPublish] = useState<'all' | PublishStatus>('all');
@@ -130,6 +131,11 @@ export default function MessagesPage() {
       window.removeEventListener('alert-editor-closed', onEditorClosed);
     };
   }, [expandedAlertId]);
+
+  // Reset the delete confirmation input whenever the dialog opens or closes.
+  useEffect(() => {
+    setDeleteConfirmText('');
+  }, [pendingDelete]);
 
   // Esc from Focus Mode returns to the full New Issue Board. Any open dialog
   // or expanded alert card owns Esc first (existing cascade preserved).
@@ -1133,11 +1139,26 @@ export default function MessagesPage() {
               the Deal Data entry, and any notifications. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="py-4 space-y-2">
+            <label htmlFor="delete-confirm" className="text-sm font-medium">
+              Type <strong>Delete</strong> to confirm
+            </label>
+            <Input
+              id="delete-confirm"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Delete"
+              className="w-full"
+              autoComplete="off"
+              autoFocus
+            />
+          </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeleteConfirmText('')}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteThread}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteConfirmText.trim() !== 'Delete'}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Delete deal
             </AlertDialogAction>
