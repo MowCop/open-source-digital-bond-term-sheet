@@ -476,12 +476,12 @@ export default function UserManagementPage() {
           {!showAddUser && isMaster && (
             <div className="mb-8">
               <ApprovedUsersSection
-                onOpenProfile={(email) => {
+                onOpenProfile={(email, name) => {
                   const u = users.find(x => x.email.toLowerCase() === email.toLowerCase());
                   if (u) openEditUser(u);
                   else {
                     // No Address Book record yet — open a blank "Add New User" template pre-filled with the email
-                    setNewName('');
+                    setNewName(name || '');
                     setNewEmail(email);
                     setNewPhone('');
                     setNewOrg('');
