@@ -139,6 +139,8 @@ export default function MessagesPage() {
       if (e.key !== 'Escape') return;
       if (document.querySelector('[role="dialog"][data-state="open"]')) return;
       cancelHover();
+      // Don't let the row under the cursor immediately re-open Focus Mode.
+      escapedKeyRef.current = focusedKey;
       setFocusedKey(null);
     };
     window.addEventListener('keydown', onKey);
@@ -153,6 +155,7 @@ export default function MessagesPage() {
   // --- Hover-to-select ------------------------------------------------------
   const hoverTimerRef = useRef<number | null>(null);
   const keyboardNavRef = useRef(false);
+  const escapedKeyRef = useRef<string | null>(null);
   const cancelHover = () => {
     if (hoverTimerRef.current !== null) {
       window.clearTimeout(hoverTimerRef.current);
@@ -373,6 +376,10 @@ export default function MessagesPage() {
   // through every deal.
   const hoverSelect = (key: string, el?: HTMLElement | null) => {
     if (keyboardNavRef.current) return;
+    // After Esc, the deal that was just closed stays inert until the cursor
+    // moves to a different row (or the user clicks it again).
+    if (escapedKeyRef.current === key) return;
+    escapedKeyRef.current = null;
     cancelHover();
     hoverTimerRef.current = window.setTimeout(() => {
       hoverTimerRef.current = null;
@@ -842,10 +849,14 @@ export default function MessagesPage() {
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
                       if ((e.target as HTMLElement).closest('[data-borrower-editor]')) return;
                       returnFocusRef.current = e.currentTarget as HTMLElement;
+                      escapedKeyRef.current = null;
                       openFocus(groupKey);
                     }}
                     onMouseEnter={(e) => hoverSelect(groupKey, e.currentTarget as HTMLElement)}
-                    onMouseLeave={cancelHover}
+                    onMouseLeave={() => {
+                      cancelHover();
+                      if (escapedKeyRef.current === groupKey) escapedKeyRef.current = null;
+                    }}
                     onKeyDown={(e) => {
                       if (e.key !== 'Enter' && e.key !== ' ') return;
                       const t = e.target as HTMLElement;
