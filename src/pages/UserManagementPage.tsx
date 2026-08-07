@@ -645,8 +645,34 @@ export default function UserManagementPage() {
                   </Select>
                 </div>
               </div>
-              <div className="rounded-md bg-muted/40 border border-border px-3 py-2 text-xs text-muted-foreground">
-                Created: {formatDate(editingUser.createdAt)} by {creatorName(editingUser.createdBy || 'System')}
+              <div className="grid grid-cols-2 gap-0 border border-border rounded-md overflow-hidden">
+                {(() => {
+                  const status = loginStatusFor(editingUser.email);
+                  const dotClass =
+                    status.tone === 'active' ? 'bg-green-500' :
+                    status.tone === 'dormant' ? 'bg-amber-500' :
+                    status.tone === 'unconfirmed' ? 'bg-blue-500' :
+                    'bg-muted-foreground/40';
+                  return (
+                    <div className="px-4 py-4 border-r border-border">
+                      <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-3">
+                        <Activity className="h-3 w-3" /> Login Activity
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`h-2.5 w-2.5 rounded-full ${dotClass}`} />
+                        <span className="text-sm font-medium">{status.label}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1" title={formatFullTimestamp(status.lastIso)}>
+                        {loginStatsLoading ? '…' : `Last: ${formatRelative(status.lastIso)}`}
+                      </div>
+                    </div>
+                  );
+                })()}
+                <div className="px-4 py-4">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Created Details</div>
+                  <div className="text-sm font-medium">{formatDate(editingUser.createdAt)}</div>
+                  <div className="text-xs text-muted-foreground mt-1">by {creatorName(editingUser.createdBy || 'System')}</div>
+                </div>
               </div>
               {/* Authorised deals for this user */}
               {(() => {
