@@ -599,16 +599,30 @@ export default function MessagesPage() {
         <History className="h-3 w-3 mr-1" />
         Update History ({group.messages.length})
       </Button>
-      {canManageMessages && (
+      {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && group.latestMessage.status !== 'draft' && (
         <Button
           size="sm"
+          variant="destructive"
+          className="text-xs"
+          onClick={(e) => {
+            e.stopPropagation();
+            retractMessage(group.latestMessage.id);
+            toast({ title: 'Alert Retracted', description: 'The latest alert has been retracted.' });
+          }}
+        >
+          <RotateCcw className="h-3 w-3 mr-1" />
+          Retract
+        </Button>
+      )}
+      {canManageMessages && (
+        <Button
+          size="icon"
           variant="outline"
-          className="text-xs ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+          className="h-8 w-8 ml-auto border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
           onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
           title="Delete duplicate deal and all related data"
         >
-          <Trash2 className="h-3 w-3 mr-1" />
-          Delete
+          <Trash2 className="h-3.5 w-3.5" />
         </Button>
       )}
     </div>
