@@ -671,14 +671,29 @@ export default function AlertHistoryCard({
               </Button>
             )}
           </div>
-          {isSent && !isRetracted && (
-            <Button
-              variant="destructive"
-              className="h-10 px-4 absolute right-5 top-1/2 -translate-y-1/2"
-              onClick={() => onRetract(message.id)}
-            >
-              <RotateCcw className="h-4 w-4 mr-1" /> Retract
-            </Button>
+          {(isSent || isDraft) && !isRetracted && (
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <Button
+                variant="destructive"
+                className="h-10 px-4"
+                onClick={() => onRetract(message.id)}
+              >
+                <RotateCcw className="h-4 w-4 mr-1" /> Retract
+              </Button>
+              <Button
+                variant="destructive"
+                size="icon"
+                className="h-10 w-10"
+                title={`Delete this alert`}
+                onClick={() => {
+                  if (confirm(`Delete this alert "${message.subject}"? This cannot be undone.`)) {
+                    onDelete(message.id);
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           )}
         </div>
       </DialogContent>
