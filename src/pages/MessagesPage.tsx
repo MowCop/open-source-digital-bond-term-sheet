@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Trash2, Database, History, Edit2, BookOpen, FileText, Paperclip, RotateCcw } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
@@ -14,16 +14,6 @@ import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction, detectStage } from '@/lib/alertParsing';
 import { stripHtml } from '@/lib/htmlText';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -84,13 +74,11 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteDeal, chatChannels, chatMessages } = useScopedApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, chatChannels, chatMessages } = useScopedApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'history' | 'data' | null>('history');
   const [editSignals, setEditSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<AlertGroup | null>(null);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [docsGroup, setDocsGroup] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
   const [filterPublish, setFilterPublish] = useState<'all' | PublishStatus>('all');
@@ -132,10 +120,6 @@ export default function MessagesPage() {
     };
   }, [expandedAlertId]);
 
-  // Reset the delete confirmation input whenever the dialog opens or closes.
-  useEffect(() => {
-    setDeleteConfirmText('');
-  }, [pendingDelete]);
 
   // Esc from Focus Mode returns to the full New Issue Board. Any open dialog
   // or expanded alert card owns Esc first (existing cascade preserved).
@@ -493,17 +477,6 @@ export default function MessagesPage() {
     toast({ title: 'Update Sent', description: `Sent to ${original.recipients.length} recipient${original.recipients.length !== 1 ? 's' : ''}.` });
   };
 
-  const handleDeleteThread = (group: AlertGroup) => {
-    setPendingDelete(group);
-  };
-
-  const confirmDeleteThread = () => {
-    if (!pendingDelete) return;
-    pendingDelete.dealIds.forEach(id => deleteDeal(id));
-    toast({ title: 'Deal Deleted', description: `${pendingDelete.borrower} and all related data removed.` });
-    setExpandedAlertId(null);
-    setPendingDelete(null);
-  };
 
   const renderDealActions = (group: AlertGroup, groupKey: string) => (
     <div className="flex items-center gap-2 pb-3 mb-3 border-b border-border/50 flex-wrap">
@@ -608,32 +581,6 @@ export default function MessagesPage() {
         <History className="h-4 w-4 mr-1" />
         History ({group.messages.length})
       </Button>
-      {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && group.latestMessage.status !== 'draft' && (
-        <Button
-          size="default"
-          variant="destructive"
-          className="toolbar-btn-danger"
-          onClick={(e) => {
-            e.stopPropagation();
-            retractMessage(group.latestMessage.id);
-            toast({ title: 'Alert Retracted', description: 'The latest alert has been retracted.' });
-          }}
-        >
-          <RotateCcw className="h-4 w-4 mr-1" />
-          Retract
-        </Button>
-      )}
-      {canManageMessages && (
-        <Button
-          size="icon"
-          variant="outline"
-          className="toolbar-icon-btn ml-auto"
-          onClick={(e) => { e.stopPropagation(); handleDeleteThread(group); }}
-          title="Delete duplicate deal and all related data"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   );
 
@@ -1131,43 +1078,6 @@ export default function MessagesPage() {
         onCollapseToPanel={() => setChatView('floating')}
       />
 
-      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open) setPendingDelete(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete this deal?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently remove the deal
-              {pendingDelete ? ` "${pendingDelete.borrower}"` : ''}, its
-              {pendingDelete ? ` ${pendingDelete.messages.length}` : ''} alert(s), all related chat messages on My Deal Chats,
-              the Deal Data entry, and any notifications. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-4 space-y-2">
-            <label htmlFor="delete-confirm" className="text-sm font-medium">
-              Type <strong>Delete</strong> to confirm
-            </label>
-            <Input
-              id="delete-confirm"
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              placeholder="Delete"
-              className="w-full"
-              autoComplete="off"
-              autoFocus
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteConfirmText('')}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteThread}
-              disabled={deleteConfirmText.trim() !== 'Delete'}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Delete deal
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Dialog open={!!docsGroup} onOpenChange={(o) => !o && setDocsGroup(null)}>
         <DialogContent className="max-w-lg">
