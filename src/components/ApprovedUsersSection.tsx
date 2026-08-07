@@ -37,7 +37,6 @@ export default function ApprovedUsersSection({
   onOpenProfile,
 }: Props) {
   const { toast } = useToast();
-  const { isMaster } = useAuth();
   const [rows, setRows] = useState<ApprovedProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [roleByUser, setRoleByUser] = useState<Record<string, string>>({});
