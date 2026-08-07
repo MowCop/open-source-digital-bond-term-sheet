@@ -244,7 +244,7 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
   const { chatMessages, messages } = useScopedApp();
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  // Alert Update History for this deal (newest first). Matches New Issue Board grouping.
+  // Alert History for this deal (newest first). Matches New Issue Board grouping.
   const dealAlerts = useMemo(() => {
     return messages
       .filter(m => m.dealIds.includes(deal.id))
@@ -325,7 +325,7 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
             >
               {historyOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
               <History className="h-3 w-3 text-muted-foreground" />
-              <span>Alert Update History ({alertsNewestFirst.length})</span>
+              <span>Alert History ({alertsNewestFirst.length})</span>
             </button>
             {historyOpen && (
               <div className="px-4 pb-3 space-y-2">

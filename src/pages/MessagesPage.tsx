@@ -606,7 +606,7 @@ export default function MessagesPage() {
         onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
       >
         <History className="h-4 w-4 mr-1" />
-        Update History ({group.messages.length})
+        History ({group.messages.length})
       </Button>
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && group.latestMessage.status !== 'draft' && (
         <Button
