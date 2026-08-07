@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Pencil, Trash2, ArrowLeft, Users, ListTree, UserPlus, ListPlus, MessageSquare, Activity } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/context/AuthContext';
-import { KeyRound, UserCheck } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import GuestsTab from '@/components/GuestsTab';
 import ApprovedUsersSection from '@/components/ApprovedUsersSection';
 import RoleBadge from '@/components/RoleBadge';
