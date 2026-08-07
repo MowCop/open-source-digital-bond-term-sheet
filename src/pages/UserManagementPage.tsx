@@ -597,12 +597,12 @@ export default function UserManagementPage() {
 
       {/* Edit User Dialog */}
       <Dialog open={!!editingUser} onOpenChange={(o) => !o && setEditingUser(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle>Profile</DialogTitle>
           </DialogHeader>
           {editingUser && (
-            <div className="space-y-5">
+            <div className="flex-1 overflow-y-auto px-6 pb-2 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-xs uppercase tracking-wider text-muted-foreground">Full Name</Label>
