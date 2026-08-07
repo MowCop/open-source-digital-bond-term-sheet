@@ -135,7 +135,9 @@ export default function BondConsolePage() {
             </div>
             <div className="space-y-1.5">
               <Label>Role</Label>
-              <Input value={currentUser.role.replace('_', ' ')} disabled />
+              <div className="h-9 flex items-center">
+                <RoleBadge role={currentUser.role} className="text-xs px-2 py-0.5" />
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-2">
