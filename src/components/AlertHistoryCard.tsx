@@ -460,6 +460,21 @@ export default function AlertHistoryCard({
                   Delete
                 </Button>
               )}
+              {!isRetracted && (
+                <div className="ml-auto flex items-center gap-2">
+                  <Button size="sm" variant="ghost" className="text-xs" onClick={attemptClose}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" variant="outline" className="text-xs" onClick={handleSave}>
+                    <Save className="h-3 w-3 mr-1" /> Save
+                  </Button>
+                  {isSent && (
+                    <Button size="sm" className="text-xs" onClick={handleSaveAndSend}>
+                      <Send className="h-3 w-3 mr-1" /> Save &amp; Send
+                    </Button>
+                  )}
+                </div>
+              )}
             </>
         </div>
       )}
