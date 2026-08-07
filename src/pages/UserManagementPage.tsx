@@ -801,6 +801,24 @@ export default function UserManagementPage() {
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
                 <div className="flex gap-2">
+                  {loginProfiles[editingUser.email.toLowerCase()]?.status === 'pending' && (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="border-orange-500 text-orange-400 hover:bg-orange-500/10"
+                        disabled={approving}
+                        onClick={() => setRegistrationStatus(editingUser, 'rejected')}
+                      >
+                        Reject
+                      </Button>
+                      <Button
+                        disabled={approving}
+                        onClick={() => setRegistrationStatus(editingUser, 'approved')}
+                      >
+                        Approve
+                      </Button>
+                    </>
+                  )}
                   {approvedEmails.includes(editingUser.email.toLowerCase()) && (
                     <Button
                       variant="outline"
