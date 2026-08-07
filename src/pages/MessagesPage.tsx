@@ -139,6 +139,8 @@ export default function MessagesPage() {
       if (e.key !== 'Escape') return;
       if (document.querySelector('[role="dialog"][data-state="open"]')) return;
       cancelHover();
+      // Don't let the row under the cursor immediately re-open Focus Mode.
+      escapedKeyRef.current = focusedKey;
       setFocusedKey(null);
     };
     window.addEventListener('keydown', onKey);
@@ -153,6 +155,7 @@ export default function MessagesPage() {
   // --- Hover-to-select ------------------------------------------------------
   const hoverTimerRef = useRef<number | null>(null);
   const keyboardNavRef = useRef(false);
+  const escapedKeyRef = useRef<string | null>(null);
   const cancelHover = () => {
     if (hoverTimerRef.current !== null) {
       window.clearTimeout(hoverTimerRef.current);
