@@ -73,6 +73,7 @@
   .stage-priced { @apply bg-amber-900/40 text-amber-400; }
   .stage-closed { @apply bg-gray-800/40 text-gray-400; }
   .text-timestamp { color: hsl(var(--timestamp)); }
+  .border-timestamp { border-color: hsl(var(--timestamp)); }
   .gold-glow {
     box-shadow: 0 0 20px -5px hsl(43 96% 56% / 0.3);
   }
