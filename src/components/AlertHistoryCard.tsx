@@ -503,12 +503,12 @@ export default function AlertHistoryCard({
           {bulletinOpen && chatOpen ? (
             <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
               <ResizablePanel defaultSize={42} minSize={0} collapsible collapsedSize={0}>
-                <div className="h-full px-5 pt-3 pb-2 flex flex-col min-h-0">
+                <div className="h-full px-5 pt-2 pb-1 flex flex-col min-h-0">
                   <button
                     type="button"
                     onClick={() => setBulletinOpen(false)}
                     aria-expanded={bulletinOpen}
-                    className="mb-2 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                    className="mb-1 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0"
                     title="Collapse bulletin"
                   >
                     <span>Bulletin</span>
