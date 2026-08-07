@@ -576,7 +576,7 @@ export default function UserManagementPage() {
                       {u.phone && <div className="text-xs text-muted-foreground">{u.phone}</div>}
                     </TableCell>
                     <TableCell className="text-center">
-                       <div className="flex justify-end">
+                       <div className="flex justify-center">
                          <Button variant="ghost" size="icon" onClick={() => openEditUser(u)}><Pencil className="h-4 w-4" /></Button>
                        </div>
                     </TableCell>
