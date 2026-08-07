@@ -545,8 +545,8 @@ export default function UserManagementPage() {
                 <TableRow className="border-border">
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Name & Contact</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Organization</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
                   <TableHead className="text-xs uppercase tracking-wider text-muted-foreground text-center">Profile</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider text-muted-foreground">Role</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -564,18 +564,18 @@ export default function UserManagementPage() {
                       {u.phone && <div className="text-xs text-muted-foreground">{u.phone}</div>}
                     </TableCell>
                     <TableCell>{u.organization}</TableCell>
-                    <TableCell>
-                      <Badge variant={u.role === 'master_admin' ? 'default' : u.role === 'syndicate_admin' ? 'secondary' : 'outline'}>
-                        {roleLabels[u.role]}
-                      </Badge>
-                    </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex justify-center gap-2">
+                      <div className="flex justify-end gap-4">
                         <Button variant="ghost" size="icon" onClick={() => openEditUser(u)}><Pencil className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(u)} disabled={u.id === currentUser.id}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={u.role === 'master_admin' ? 'default' : u.role === 'syndicate_admin' ? 'secondary' : 'outline'}>
+                        {roleLabels[u.role]}
+                      </Badge>
                     </TableCell>
                   </TableRow>
                   );
