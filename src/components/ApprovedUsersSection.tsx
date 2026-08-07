@@ -54,7 +54,7 @@ export default function ApprovedUsersSection({
       .from('profiles')
       .select('user_id, email, name, organization, created_at')
       .eq('status', 'approved')
-      .order('created_at', { ascending: false });
+      .order('name', { ascending: true, nullsFirst: false });
     if (error) toast({ title: 'Failed', description: error.message, variant: 'destructive' });
     const profiles = (data as any[]) ?? [];
     setRows(profiles as any);
