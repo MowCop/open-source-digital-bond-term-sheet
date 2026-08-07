@@ -706,6 +706,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_deal: { Args: { _deal_id: string }; Returns: boolean }
+      current_app_user_ids: { Args: never; Returns: string[] }
+      current_user_org: { Args: never; Returns: string }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
