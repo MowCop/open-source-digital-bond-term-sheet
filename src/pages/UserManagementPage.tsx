@@ -29,9 +29,6 @@ const UM_LABELS = {
   createList: 'Create List',
   tabLists: 'Distribution Lists',
   tabUsers: 'Users',
-  colNameContact: 'Name & Contact',
-  colOrganization: 'Organization',
-  colRole: 'Role',
   colCreated: 'Created Details',
   colActions: 'Actions',
 };

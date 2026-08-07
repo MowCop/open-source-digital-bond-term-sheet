@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import RoleBadge from '@/components/RoleBadge';
 import {
