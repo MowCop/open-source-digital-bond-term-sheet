@@ -22,11 +22,11 @@ import {
 } from '@/components/ui/dialog';
 
 const stageBadge: Record<DealStage, { label: string; className: string }> = {
-  Mandate: { label: 'Mandate', className: 'bg-blue-900/50 text-blue-400 border-blue-800' },
-  Announced: { label: 'Announced', className: 'bg-blue-900/50 text-blue-400 border-blue-800' },
-  Launched: { label: 'Launched', className: 'bg-green-900/50 text-green-400 border-green-800' },
-  'Books Open': { label: 'Books Open', className: 'bg-green-900/50 text-green-400 border-green-800' },
-  'Books Closed': { label: 'Books Closed', className: 'bg-green-900/50 text-green-400 border-green-800' },
+  Mandate: { label: 'Mandate', className: 'bg-blue-900/50 text-green-400 border-green-800' },
+  Announced: { label: 'Announced', className: 'bg-blue-900/50 text-green-400 border-green-800' },
+  Launched: { label: 'Launched', className: 'bg-blue-900/50 text-green-400 border-green-800' },
+  'Books Open': { label: 'Books Open', className: 'bg-blue-900/50 text-green-400 border-green-800' },
+  'Books Closed': { label: 'Books Closed', className: 'bg-blue-900/50 text-green-400 border-green-800' },
   Priced: { label: 'Priced', className: 'bg-card text-timestamp border-timestamp' },
   Settled: { label: 'Settled', className: 'bg-card text-timestamp border-timestamp' },
 };
