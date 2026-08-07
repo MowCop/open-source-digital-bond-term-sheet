@@ -514,16 +514,7 @@ export default function MessagesPage() {
         }}
       >
         <Database className="h-3 w-3 mr-1" />
-        Deal Alert Data
-      </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        className={`text-xs ${activePanel === 'history' ? 'bg-accent text-accent-foreground' : ''} ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
-        onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
-      >
-        <History className="h-3 w-3 mr-1" />
-        Update History ({group.messages.length})
+        Deal Data
       </Button>
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
         <Button
@@ -559,7 +550,7 @@ export default function MessagesPage() {
             size="sm"
             variant="outline"
             className={`text-xs ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
-            title={unread > 0 ? `Open Deal Chat — ${unread} unread` : 'Open Deal Chat'}
+            title={unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat'}
             onClick={(e) => {
               e.stopPropagation();
               flash(`${groupKey}:openchat`);
@@ -567,7 +558,7 @@ export default function MessagesPage() {
             }}
           >
             <MessageSquare className="h-3 w-3 mr-1" />
-            Deal Chat{unread > 0 ? ` (${unread})` : ''}
+            Chat{unread > 0 ? ` (${unread})` : ''}
           </Button>
         );
       })()}
@@ -599,6 +590,15 @@ export default function MessagesPage() {
           </Button>
         );
       })()}
+      <Button
+        size="sm"
+        variant="outline"
+        className={`text-xs ${activePanel === 'history' ? 'bg-accent text-accent-foreground' : ''} ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
+        onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
+      >
+        <History className="h-3 w-3 mr-1" />
+        Update History ({group.messages.length})
+      </Button>
       {canManageMessages && (
         <Button
           size="sm"

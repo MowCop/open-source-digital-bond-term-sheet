@@ -149,12 +149,12 @@ export default function ExtractDealFromChatButton(props: Props) {
         className={`btn-champagne ${popping ? 'is-popping' : ''} ${className ?? ''}`}
         onClick={handleClick}
         disabled={loading}
-        title="Extract bond deal info from this conversation"
+        title="Parse bond deal info from this conversation"
       >
         {loading
           ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
           : <Sparkles className="h-3.5 w-3.5 mr-1" style={{ color: '#f3d98a' }} />}
-        AI Extract
+        AI DataParse
       </Button>
       <ExtractDealReviewModal
         open={open}
