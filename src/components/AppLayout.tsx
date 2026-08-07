@@ -79,7 +79,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Button variant="ghost" className="w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent text-xs h-auto py-2">
                 <div className="text-left">
                   <div className="font-medium">{profileName || currentUser.name}</div>
-                  <div className="text-sidebar-foreground/60">{currentUser.role.replace('_', ' ')}</div>
+                  <RoleBadge role={currentUser.role} className="mt-0.5 text-[10px] px-1.5 py-0" />
                 </div>
                 <ChevronDown className="h-3 w-3" />
               </Button>
@@ -88,7 +88,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <DropdownMenuItem disabled>
                 <div>
                   <div className="font-medium">{profileName || currentUser.name}</div>
-                  <div className="text-xs text-muted-foreground">{currentUser.role.replace('_', ' ')} — {currentUser.organization}</div>
+                  <div className="text-xs text-muted-foreground">{currentUser.organization}</div>
+                  <RoleBadge role={currentUser.role} className="mt-1 text-[10px] px-1.5 py-0" />
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={signOut}>
