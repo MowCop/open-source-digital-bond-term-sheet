@@ -127,6 +127,9 @@ export default function UserManagementPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [approvedEmails, setApprovedEmails] = useState<string[]>([]);
   const [revoking, setRevoking] = useState(false);
+  const [loginProfiles, setLoginProfiles] = useState<Record<string, { user_id: string; status: string }>>({});
+  const [usersReloadKey, setUsersReloadKey] = useState(0);
+  const [approving, setApproving] = useState(false);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
@@ -219,6 +222,43 @@ export default function UserManagementPage() {
     });
     setApprovedEmails(prev => prev.filter(e => e !== u.email.toLowerCase()));
     toast({ title: 'Access revoked', description: `${u.email} moved back to Pending Approvals.` });
+    setLoginProfiles(prev => ({ ...prev, [u.email.toLowerCase()]: { user_id: prof.user_id, status: 'rejected' } }));
+    setUsersReloadKey(k => k + 1);
+  };
+
+  const loadLoginProfiles = async () => {
+    const { data } = await supabase.from('profiles').select('user_id, email, status');
+    const map: Record<string, { user_id: string; status: string }> = {};
+    (data ?? []).forEach((p: any) => { map[String(p.email).toLowerCase()] = { user_id: p.user_id, status: p.status }; });
+    setLoginProfiles(map);
+    setApprovedEmails(Object.entries(map).filter(([, v]) => v.status === 'approved').map(([e]) => e));
+  };
+
+  useEffect(() => { loadLoginProfiles(); }, [usersReloadKey]);
+
+  const setRegistrationStatus = async (u: User, status: 'approved' | 'rejected') => {
+    const entry = loginProfiles[u.email.toLowerCase()];
+    if (!entry) return toast({ title: 'Not found', description: 'No registration for this email.', variant: 'destructive' });
+    setApproving(true);
+    const { error } = await supabase.from('profiles').update({ status }).eq('user_id', entry.user_id);
+    if (!error && status === 'rejected') {
+      await supabase.from('user_roles').delete().eq('user_id', entry.user_id);
+    }
+    if (!error && status === 'approved') {
+      await supabase.from('user_roles').insert({ user_id: entry.user_id, role: (u.role as any) }).then(() => {}, () => {});
+    }
+    setApproving(false);
+    if (error) return toast({ title: 'Failed', description: error.message, variant: 'destructive' });
+    await supabase.from('audit_log').insert({
+      id: crypto.randomUUID(),
+      action: status === 'approved' ? 'USER_APPROVED' : 'USER_REJECTED',
+      entity_type: 'user',
+      entity_id: entry.user_id,
+      user_id: 'admin',
+      details: `Registration ${status} for ${u.email}`,
+    });
+    toast({ title: status === 'approved' ? 'User approved' : 'Registration rejected', description: u.email });
+    setUsersReloadKey(k => k + 1);
   };
 
   const handleSaveList = () => {
@@ -463,6 +503,7 @@ export default function UserManagementPage() {
           {!showAddUser && isMaster && (
             <div className="mb-8">
               <ApprovedUsersSection
+                reloadKey={usersReloadKey}
                 onOpenProfile={(email, name) => {
                   const u = users.find(x => x.email.toLowerCase() === email.toLowerCase());
                   if (u) openEditUser(u);
@@ -760,6 +801,24 @@ export default function UserManagementPage() {
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
                 <div className="flex gap-2">
+                  {loginProfiles[editingUser.email.toLowerCase()]?.status === 'pending' && (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="border-orange-500 text-orange-400 hover:bg-orange-500/10"
+                        disabled={approving}
+                        onClick={() => setRegistrationStatus(editingUser, 'rejected')}
+                      >
+                        Reject
+                      </Button>
+                      <Button
+                        disabled={approving}
+                        onClick={() => setRegistrationStatus(editingUser, 'approved')}
+                      >
+                        Approve
+                      </Button>
+                    </>
+                  )}
                   {approvedEmails.includes(editingUser.email.toLowerCase()) && (
                     <Button
                       variant="outline"
