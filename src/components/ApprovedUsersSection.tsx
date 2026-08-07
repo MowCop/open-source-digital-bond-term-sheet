@@ -2,11 +2,9 @@ import { useEffect, useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/AuthContext';
+import RoleBadge from '@/components/RoleBadge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,13 +24,6 @@ interface ApprovedProfile {
   created_at: string;
 }
 
-const ALL_ROLES = [
-  { value: 'syndicate_admin', label: 'Syndicate Admin' },
-  { value: 'syndicate_readonly', label: 'Syndicate – Read Only' },
-  { value: 'sales_readonly', label: 'Sales – Read Only' },
-  { value: 'master_admin', label: 'Master Admin' },
-];
-
 interface Props {
   title?: string;
   subtitle?: string;
@@ -45,8 +36,6 @@ export default function ApprovedUsersSection({
   onOpenProfile,
 }: Props) {
   const { toast } = useToast();
-  const { isMaster } = useAuth();
-  const ROLES = isMaster ? ALL_ROLES : ALL_ROLES.filter(r => r.value !== 'master_admin');
   const [rows, setRows] = useState<ApprovedProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [roleByUser, setRoleByUser] = useState<Record<string, string>>({});
@@ -148,14 +137,7 @@ export default function ApprovedUsersSection({
               </TableCell>
               <TableCell>{p.organization || '—'}</TableCell>
               <TableCell>
-                <Badge
-                  variant="secondary"
-                  className={(roleByUser[p.user_id] || 'syndicate_readonly').includes('admin')
-                    ? 'bg-secondary text-secondary-foreground hover:bg-secondary hover:text-white focus:bg-secondary focus:text-white focus:outline-none border-transparent'
-                    : 'bg-transparent text-foreground border border-border hover:bg-muted focus:bg-muted focus:outline-none'}
-                >
-                  {ALL_ROLES.find(r => r.value === (roleByUser[p.user_id] || 'syndicate_readonly'))?.label ?? 'Read Only'}
-                </Badge>
+                <RoleBadge role={roleByUser[p.user_id]} />
               </TableCell>
             </TableRow>
           ))}

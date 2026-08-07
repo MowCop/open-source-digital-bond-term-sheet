@@ -8,15 +8,7 @@ import { useState } from 'react';
 import { UserRole } from '@/types/bond';
 import { useToast } from '@/hooks/use-toast';
 import ApprovedUsersSection from '@/components/ApprovedUsersSection';
-
-const roleBadge: Record<UserRole, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
-  master_admin: { label: 'Master Admin', variant: 'default' },
-  syndicate_admin: { label: 'Syndicate Admin', variant: 'secondary' },
-  vendor_user: { label: 'Read Only', variant: 'outline' },
-  syndicate_readonly: { label: 'Syndicate – Read Only', variant: 'outline' },
-  sales_readonly: { label: 'Sales – Read Only', variant: 'outline' },
-  guest_readonly: { label: 'Guest Read Only', variant: 'outline' },
-};
+import RoleBadge from '@/components/RoleBadge';
 
 export default function AdminPage() {
   const { users, currentUser, addAuditEntry, updateUser } = useApp();
@@ -78,7 +70,7 @@ export default function AdminPage() {
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.organization}</TableCell>
-                  <TableCell><Badge variant={roleBadge[user.role].variant}>{roleBadge[user.role].label}</Badge></TableCell>
+                  <TableCell><RoleBadge role={user.role} /></TableCell>
                   <TableCell>
                     {editingUser === user.id ? (
                       <div className="flex items-center gap-2">
@@ -118,7 +110,7 @@ export default function AdminPage() {
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.organization}</TableCell>
-                  <TableCell><Badge variant="outline">{roleBadge[user.role].label}</Badge></TableCell>
+                  <TableCell><RoleBadge role={user.role} /></TableCell>
                   <TableCell><Badge className="bg-success text-success-foreground">Active</Badge></TableCell>
                 </TableRow>
               ))}
