@@ -503,6 +503,7 @@ export default function UserManagementPage() {
           {!showAddUser && isMaster && (
             <div className="mb-8">
               <ApprovedUsersSection
+                reloadKey={usersReloadKey}
                 onOpenProfile={(email, name) => {
                   const u = users.find(x => x.email.toLowerCase() === email.toLowerCase());
                   if (u) openEditUser(u);
