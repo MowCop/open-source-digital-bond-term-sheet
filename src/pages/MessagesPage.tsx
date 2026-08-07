@@ -386,7 +386,7 @@ export default function MessagesPage() {
       if (keyboardNavRef.current) return;
       if (el) returnFocusRef.current = el;
       openFocus(key);
-    }, 200);
+    }, 120);
   };
 
   const flash = (key: string) => {
