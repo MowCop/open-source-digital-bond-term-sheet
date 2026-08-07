@@ -495,7 +495,7 @@ export default function AlertHistoryCard({
             value={editSubject}
             onChange={e => setEditSubject(e.target.value)}
             placeholder="Subject"
-            className="w-full bg-background border border-border rounded px-3 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full bg-background border border-border rounded px-3 py-1.5 text-sm font-bold text-amber-300 placeholder:text-amber-300/40 focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </DialogHeader>
 
