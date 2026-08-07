@@ -1069,12 +1069,12 @@ export default function MessagesPage() {
             </aside>
             {/* Focused deal */}
             <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="h-12 shrink-0 border-b border-border bg-card flex items-center gap-3 px-4">
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold truncate">{fg.borrower}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">{fg.headline}</div>
+              <div className="h-12 shrink-0 border-b border-border bg-card flex items-center gap-3 px-4 overflow-hidden">
+                <div className="min-w-0 flex flex-col justify-center h-full">
+                  <div className="text-lg leading-6 font-bold text-foreground truncate">{fg.borrower}</div>
+                  <div className="text-sm leading-5 font-bold text-amber-300 truncate">{fg.headline}</div>
                 </div>
-                <Badge className={`text-[10px] border ${stageBadge[fg.stage].className}`}>{stageBadge[fg.stage].label}</Badge>
+                <Badge className={`text-sm border ${stageBadge[fg.stage].className}`}>{stageBadge[fg.stage].label}</Badge>
                 <Button
                   size="sm"
                   variant="outline"
