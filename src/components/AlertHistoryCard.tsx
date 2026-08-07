@@ -518,12 +518,12 @@ export default function AlertHistoryCard({
           {bulletinOpen && chatOpen ? (
             <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
               <ResizablePanel defaultSize={42} minSize={0} collapsible collapsedSize={0}>
-                <div className="h-full px-5 pt-2 pb-1 flex flex-col min-h-0">
+                <div className="h-full flex flex-col min-h-0 border border-dashed border-primary/40 rounded-md overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setBulletinOpen(false)}
                     aria-expanded={bulletinOpen}
-                    className="mb-1 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                    className="flex items-center justify-between gap-2 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors shrink-0 border-b border-border/50"
                     title="Collapse bulletin"
                   >
                     <span>Bulletin</span>
@@ -534,7 +534,8 @@ export default function AlertHistoryCard({
                       value={editBody}
                       onChange={setEditBody}
                       placeholder="Write the alert body…"
-                      className="h-full"
+                      className="h-full border-0 rounded-none"
+                      contentClassName="px-5 py-3"
                     />
                   </div>
                 </div>
@@ -567,23 +568,24 @@ export default function AlertHistoryCard({
           ) : (
             <>
               {/* Bulletin (collapsed header bar when chat fills) or full bulletin when chat collapsed */}
-              <div className={bulletinOpen ? 'flex-1 min-h-0 px-5 pt-2 pb-1 flex flex-col' : 'shrink-0'}>
+              <div className={bulletinOpen ? 'flex-1 min-h-0 flex flex-col' : 'shrink-0'}>
                 <button
                   type="button"
                   onClick={() => setBulletinOpen(o => !o)}
                   aria-expanded={bulletinOpen}
-                  className={`flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0 ${bulletinOpen ? 'mb-1' : 'px-5 py-2 w-full hover:bg-muted/30'}`}
+                  className={`flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0 ${bulletinOpen ? 'px-5 py-2 border-b border-border/50' : 'px-5 py-2 w-full hover:bg-muted/30'}`}
                 >
                   <span>Bulletin</span>
                   {bulletinOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                 </button>
                 {bulletinOpen && (
-                  <div className="flex-1 min-h-0 rounded-md border border-dashed border-primary/40 overflow-hidden">
+                  <div className="flex-1 min-h-0 overflow-hidden border border-dashed border-primary/40 rounded-md">
                     <RichTextEditor
                       value={editBody}
                       onChange={setEditBody}
                       placeholder="Write the alert body…"
-                      className="h-full"
+                      className="h-full border-0 rounded-none"
+                      contentClassName="px-5 py-3"
                     />
                   </div>
                 )}
