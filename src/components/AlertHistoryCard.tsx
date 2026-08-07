@@ -475,7 +475,7 @@ export default function AlertHistoryCard({
       <DialogContent
         className="max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg p-0 gap-0 flex flex-col"
       >
-        <DialogHeader className="px-5 pt-4 pb-2 border-b border-border shrink-0 space-y-1">
+        <DialogHeader className="px-5 pt-2 pb-1 border-b border-border shrink-0 space-y-0.5">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -495,7 +495,7 @@ export default function AlertHistoryCard({
             value={editSubject}
             onChange={e => setEditSubject(e.target.value)}
             placeholder="Subject"
-            className="mt-1 w-full bg-background border border-border rounded px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="w-full bg-background border border-border rounded px-3 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </DialogHeader>
 
@@ -503,12 +503,12 @@ export default function AlertHistoryCard({
           {bulletinOpen && chatOpen ? (
             <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
               <ResizablePanel defaultSize={42} minSize={0} collapsible collapsedSize={0}>
-                <div className="h-full px-5 pt-3 pb-2 flex flex-col min-h-0">
+                <div className="h-full px-5 pt-2 pb-1 flex flex-col min-h-0">
                   <button
                     type="button"
                     onClick={() => setBulletinOpen(false)}
                     aria-expanded={bulletinOpen}
-                    className="mb-2 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                    className="mb-1 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0"
                     title="Collapse bulletin"
                   >
                     <span>Bulletin</span>
@@ -552,12 +552,12 @@ export default function AlertHistoryCard({
           ) : (
             <>
               {/* Bulletin (collapsed header bar when chat fills) or full bulletin when chat collapsed */}
-              <div className={bulletinOpen ? 'flex-1 min-h-0 px-5 pt-3 pb-2 flex flex-col' : 'shrink-0'}>
+              <div className={bulletinOpen ? 'flex-1 min-h-0 px-5 pt-2 pb-1 flex flex-col' : 'shrink-0'}>
                 <button
                   type="button"
                   onClick={() => setBulletinOpen(o => !o)}
                   aria-expanded={bulletinOpen}
-                  className={`flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0 ${bulletinOpen ? 'mb-2' : 'px-5 py-2 w-full hover:bg-muted/30'}`}
+                  className={`flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0 ${bulletinOpen ? 'mb-1' : 'px-5 py-2 w-full hover:bg-muted/30'}`}
                 >
                   <span>Bulletin</span>
                   {bulletinOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
