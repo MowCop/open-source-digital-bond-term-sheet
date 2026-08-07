@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { RoleBadge } from '@/components/RoleBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -166,13 +167,13 @@ export default function MasterAdminPage() {
                   <TableHead>Organization</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-center">
-                    <div className="inline-flex items-center gap-1">
-                      <span>Syndicate Admin</span>
+                    <div className="inline-flex items-center justify-center gap-1">
+                      <RoleBadge role="syndicate_admin" className="text-[10px] px-2 py-0.5" />
                       <TooltipProvider delayDuration={150}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <button type="button" className="text-muted-foreground hover:text-foreground">
-                              <Info className="h-3.5 w-3.5" />
+                            <button type="button" className="role-admin-icon inline-flex items-center justify-center rounded-full h-5 w-5 focus:outline-none">
+                              <Info className="h-3 w-3" />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent className="max-w-sm text-xs leading-relaxed">
