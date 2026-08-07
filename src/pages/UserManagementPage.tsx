@@ -127,6 +127,9 @@ export default function UserManagementPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [approvedEmails, setApprovedEmails] = useState<string[]>([]);
   const [revoking, setRevoking] = useState(false);
+  const [loginProfiles, setLoginProfiles] = useState<Record<string, { user_id: string; status: string }>>({});
+  const [usersReloadKey, setUsersReloadKey] = useState(0);
+  const [approving, setApproving] = useState(false);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
