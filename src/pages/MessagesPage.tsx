@@ -1070,7 +1070,7 @@ export default function MessagesPage() {
             {/* Focused deal */}
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="h-12 shrink-0 border-b border-border bg-card flex items-center gap-3 px-4 overflow-hidden">
-                <div className="min-w-0 flex flex-col justify-center h-full">
+                <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
                   <div className="text-lg leading-6 font-bold text-foreground truncate">{fg.borrower}</div>
                   <div className="text-sm leading-5 font-bold text-amber-300 truncate">{fg.headline}</div>
                 </div>
@@ -1078,7 +1078,7 @@ export default function MessagesPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="ml-auto text-xs"
+                  className="text-xs"
                   onClick={() => setFocusedKey(null)}
                 >
                   Back to board (Esc)
