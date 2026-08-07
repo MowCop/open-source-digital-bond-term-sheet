@@ -161,16 +161,17 @@ export default function UserManagementPage() {
     );
   }
 
-  const handleCreateUser = () => {
+  const handleCreateUser = (keepOpen = false) => {
     if (!newName || !newEmail || !newOrg) {
       toast({ title: 'Error', description: 'Please fill in all required fields', variant: 'destructive' });
       return;
     }
     const orgType: 'vendor' | 'bank' = newRole === 'vendor_user' ? 'vendor' : 'bank';
     addUser({ name: newName, email: newEmail, phone: newPhone, role: newRole, organization: newOrg, organizationType: orgType, category: newCategory });
-    toast({ title: 'User Created', description: `${newName} added to the Address Book (top of the list).` });
+    toast({ title: keepOpen ? 'Profile Saved' : 'User Created', description: `${newName} added to the Address Book (top of the list).` });
     setJustAddedEmail(newEmail.toLowerCase());
     setTimeout(() => setJustAddedEmail(null), 3500);
+    if (keepOpen) return;
     setShowAddUser(false);
     setNewName(''); setNewEmail(''); setNewPhone(''); setNewOrg('');
     setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 0);
@@ -542,7 +543,8 @@ export default function UserManagementPage() {
                 </div>
                 <div className="flex justify-end gap-3 pt-2">
                   <Button variant="outline" onClick={() => setShowAddUser(false)}>Cancel</Button>
-                  <Button onClick={handleCreateUser}>Create User</Button>
+                  <Button variant="outline" onClick={() => handleCreateUser(true)}>Save</Button>
+                  <Button onClick={() => handleCreateUser()}>Create User</Button>
                 </div>
               </CardContent>
             </Card>
