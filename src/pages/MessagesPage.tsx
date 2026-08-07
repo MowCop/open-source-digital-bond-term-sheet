@@ -376,6 +376,10 @@ export default function MessagesPage() {
   // through every deal.
   const hoverSelect = (key: string, el?: HTMLElement | null) => {
     if (keyboardNavRef.current) return;
+    // After Esc, the deal that was just closed stays inert until the cursor
+    // moves to a different row (or the user clicks it again).
+    if (escapedKeyRef.current === key) return;
+    escapedKeyRef.current = null;
     cancelHover();
     hoverTimerRef.current = window.setTimeout(() => {
       hoverTimerRef.current = null;
