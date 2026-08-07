@@ -36,7 +36,7 @@ const ALL_ROLES = [
 interface Props {
   title?: string;
   subtitle?: string;
-  onOpenProfile?: (email: string) => void;
+  onOpenProfile?: (email: string, name?: string) => void;
 }
 
 export default function ApprovedUsersSection({
@@ -141,7 +141,7 @@ export default function ApprovedUsersSection({
                   variant="ghost"
                   size="icon"
                   aria-label={`Open profile for ${p.email}`}
-                  onClick={() => onOpenProfile?.(p.email)}
+                  onClick={() => onOpenProfile?.(p.email, p.name)}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
