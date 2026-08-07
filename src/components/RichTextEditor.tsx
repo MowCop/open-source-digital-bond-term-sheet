@@ -9,10 +9,10 @@ import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Bold, Italic, Strikethrough, List, ListOrdered, Quote,
-  Heading1, Heading2, Link2, Undo, Redo, Code,
+  Heading1, Heading2, Link2, Undo, Redo, Code, ChevronDown, ChevronRight,
 } from 'lucide-react';
 
 interface RichTextEditorProps {
