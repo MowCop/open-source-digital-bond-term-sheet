@@ -38,7 +38,6 @@ export default function ApprovedUsersSection({
 }: Props) {
   const { toast } = useToast();
   const { isMaster } = useAuth();
-  const ROLES = isMaster ? ALL_ROLES : ALL_ROLES.filter(r => r.value !== 'master_admin');
   const [rows, setRows] = useState<ApprovedProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [roleByUser, setRoleByUser] = useState<Record<string, string>>({});
