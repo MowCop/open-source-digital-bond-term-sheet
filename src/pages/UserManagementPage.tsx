@@ -581,10 +581,6 @@ export default function UserManagementPage() {
             </Card>
           ) : (
             <>
-            <div className="mb-3">
-              <h3 className="font-semibold">Address Book <span className="text-xs font-normal text-muted-foreground">(manually added contacts)</span></h3>
-              <p className="text-xs text-muted-foreground">Contacts added here appear in distribution lists and message recipients. They do not create login accounts — new sign-ups appear in “Approved Login Users” above.</p>
-            </div>
             <Table>
               <TableHeader>
                 <TableRow className="border-border">
