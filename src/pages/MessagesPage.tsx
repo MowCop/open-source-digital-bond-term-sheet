@@ -265,7 +265,7 @@ export default function MessagesPage() {
     retracted: alertGroups.filter(g => g.publishStatus === 'retracted').length,
   };
 
-  // Auto-expand deal when arriving from Deal Data panel via ?dealId=
+  // Auto-expand deal when arriving from Termsheet Data panel via ?dealId=
   useEffect(() => {
     const dealId = searchParams.get('dealId');
     if (!dealId) return;
@@ -493,7 +493,7 @@ export default function MessagesPage() {
         }}
       >
         <Database className="h-4 w-4 mr-1" />
-        Deal Data
+        Termsheet Data
       </Button>
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
         <Button
