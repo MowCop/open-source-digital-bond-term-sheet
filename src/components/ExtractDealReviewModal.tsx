@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -93,6 +93,11 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
   const [accepted, setAccepted] = useState<Record<string, boolean>>({});
   const [bookrunnerAccepted, setBookrunnerAccepted] = useState<Record<string, boolean>>({});
   const [stageAccepted, setStageAccepted] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  useEffect(() => {
+    if (open) setHasInteracted(false);
+  }, [open]);
 
   const effectiveMode = modeOverride ?? extraction?.mode ?? 'new_deal';
   const effectiveDealId = matchOverride ?? extraction?.matchedDealId ?? '';
@@ -138,6 +143,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
     for (const b of extraction.bookrunners) br[b.name.toLowerCase()] = true;
     setBookrunnerAccepted(br);
     if (extraction.suggestedStage) setStageAccepted(true);
+    setHasInteracted(true);
     toast({ title: 'All AI suggestions accepted', description: `${suggestedFields.length} field(s) selected.` });
   };
 
@@ -303,7 +309,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
         "max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border-2 border-primary/60 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.15)]",
-        suggestedFields.length > 0 && !allAccepted && "animate-border-glow-pulse"
+        suggestedFields.length > 0 && !hasInteracted && "animate-border-glow-pulse"
       )}>
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
@@ -384,7 +390,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                 <Checkbox
                   id="stage-accept"
                   checked={stageAccepted}
-                  onCheckedChange={(v) => setStageAccepted(Boolean(v))}
+                  onCheckedChange={(v) => { setStageAccepted(Boolean(v)); setHasInteracted(true); }}
                 />
                 <label htmlFor="stage-accept" className="cursor-pointer">
                   Set stage to <Badge variant="outline">{extraction.suggestedStage}</Badge>
@@ -414,7 +420,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                     <Checkbox
                       disabled={!hasSuggestion}
                       checked={Boolean(accepted[f.aiKey])}
-                      onCheckedChange={(v) => setAccepted(s => ({ ...s, [f.aiKey]: Boolean(v) }))}
+                      onCheckedChange={(v) => { setAccepted(s => ({ ...s, [f.aiKey]: Boolean(v) })); setHasInteracted(true); }}
                     />
                     <span className="font-medium">{f.label}</span>
                     <span className="text-muted-foreground truncate" title={cur}>{cur || '—'}</span>
@@ -470,7 +476,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                   <div key={b.name} className="flex items-center gap-2 text-xs">
                     <Checkbox
                       checked={Boolean(bookrunnerAccepted[b.name.toLowerCase()])}
-                      onCheckedChange={(v) => setBookrunnerAccepted(s => ({ ...s, [b.name.toLowerCase()]: Boolean(v) }))}
+                      onCheckedChange={(v) => { setBookrunnerAccepted(s => ({ ...s, [b.name.toLowerCase()]: Boolean(v) })); setHasInteracted(true); }}
                     />
                     <span className="font-medium">{b.name}</span>
                     <Badge variant="outline" className="text-[10px]">{b.role}</Badge>
