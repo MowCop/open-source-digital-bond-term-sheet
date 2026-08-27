@@ -7,7 +7,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Download, CheckCheck, FileText } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import jsPDF from 'jspdf';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import type { Deal, DealStage, Bookrunner } from '@/types/bond';
@@ -18,6 +22,7 @@ export interface AIExtraction {
   matchReason: string;
   confidence: number;
   keyTerms: Record<string, string>;
+  fieldConfidence?: Record<string, number>;
   bookrunners: Bookrunner[];
   suggestedStage: string;
   alerts: string[];
@@ -47,6 +52,26 @@ const FIELD_MAP: Array<{ label: string; key: keyof Deal; aiKey: string }> = [
   { label: 'Day Count',       key: 'dayCountFraction', aiKey: 'Day Count' },
   { label: 'Interest Type',   key: 'interestType',   aiKey: 'Interest Type' },
 ];
+
+function confidenceFor(extraction: AIExtraction, aiKey: string): number {
+  const v = extraction.fieldConfidence?.[aiKey];
+  return typeof v === 'number' && isFinite(v) ? v : extraction.confidence;
+}
+
+function confidenceClass(c: number): string {
+  if (c >= 0.85) return 'border-emerald-500/50 text-emerald-400 bg-emerald-500/10';
+  if (c >= 0.6) return 'border-amber-500/50 text-amber-300 bg-amber-500/10';
+  return 'border-destructive/50 text-destructive bg-destructive/10';
+}
+
+function downloadBlob(content: BlobPart, filename: string, type: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const STAGES: DealStage[] = ['Mandate','Announced','Launched','Books Open','Books Closed','Priced','Settled'];
 
@@ -98,6 +123,102 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
   }, [defaultAcceptanceKey]);
 
   if (!extraction) return null;
+
+  const suggestedFields = FIELD_MAP.filter(f => (extraction.keyTerms[f.aiKey] ?? '').trim().length > 0);
+  const allAccepted = suggestedFields.length > 0
+    && suggestedFields.every(f => accepted[f.aiKey])
+    && extraction.bookrunners.every(b => bookrunnerAccepted[b.name.toLowerCase()])
+    && (!extraction.suggestedStage || stageAccepted);
+
+  const acceptAll = () => {
+    const next: Record<string, boolean> = {};
+    for (const f of suggestedFields) next[f.aiKey] = true;
+    setAccepted(next);
+    const br: Record<string, boolean> = {};
+    for (const b of extraction.bookrunners) br[b.name.toLowerCase()] = true;
+    setBookrunnerAccepted(br);
+    if (extraction.suggestedStage) setStageAccepted(true);
+    toast({ title: 'All AI suggestions accepted', description: `${suggestedFields.length} field(s) selected.` });
+  };
+
+  const fileBase = `ai-extraction-${(conversationLabel || 'chat').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`;
+
+  const exportRows = () => FIELD_MAP.map(f => {
+    const aiVal = (extraction.keyTerms[f.aiKey] ?? '').trim();
+    const cur = String((existingDeal?.[f.key] as string | undefined) ?? '').trim();
+    if (!aiVal && !cur) return null;
+    return {
+      field: f.label,
+      current: cur || '—',
+      suggested: aiVal || '—',
+      confidence: aiVal ? `${Math.round(confidenceFor(extraction, f.aiKey) * 100)}%` : '—',
+      accepted: accepted[f.aiKey] ? 'Yes' : 'No',
+    };
+  }).filter(Boolean) as Array<Record<string, string>>;
+
+  const exportCSV = () => {
+    const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const lines = [
+      ['Field', 'Current', 'AI suggests', 'Confidence', 'Accepted'].map(esc).join(','),
+      ...exportRows().map(r => [r.field, r.current, r.suggested, r.confidence, r.accepted].map(esc).join(',')),
+      '',
+      esc('Bookrunners') + ',' + esc(extraction.bookrunners.map(b => `${b.name} (${b.role}${b.isGlobalCoordinator ? ', GC' : ''})`).join('; ')),
+      esc('Suggested stage') + ',' + esc(extraction.suggestedStage || '—'),
+      esc('Overall confidence') + ',' + esc(`${Math.round(extraction.confidence * 100)}%`),
+    ];
+    downloadBlob(lines.join('\n'), `${fileBase}.csv`, 'text/csv;charset=utf-8');
+    toast({ title: 'CSV exported' });
+  };
+
+  const exportPDF = () => {
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const margin = 40;
+    let y = margin;
+    doc.setFontSize(14);
+    doc.text('AI Deal Extraction — Review', margin, y); y += 18;
+    doc.setFontSize(9);
+    doc.text(`Source: ${conversationLabel || 'chat'}`, margin, y); y += 12;
+    doc.text(`Overall confidence: ${Math.round(extraction.confidence * 100)}%`, margin, y); y += 12;
+    doc.text(`Generated: ${new Date().toLocaleString()}`, margin, y); y += 20;
+
+    const cols = [margin, margin + 120, margin + 250, margin + 380, margin + 445];
+    doc.setFont('helvetica', 'bold');
+    doc.text('Field', cols[0], y); doc.text('Current', cols[1], y);
+    doc.text('AI suggests', cols[2], y); doc.text('Conf.', cols[3], y);
+    doc.text('Accepted', cols[4], y);
+    doc.setFont('helvetica', 'normal');
+    y += 6; doc.line(margin, y, 555, y); y += 12;
+
+    for (const r of exportRows()) {
+      if (y > 780) { doc.addPage(); y = margin; }
+      doc.text(doc.splitTextToSize(r.field, 115), cols[0], y);
+      doc.text(doc.splitTextToSize(r.current, 125), cols[1], y);
+      doc.text(doc.splitTextToSize(r.suggested, 125), cols[2], y);
+      doc.text(r.confidence, cols[3], y);
+      doc.text(r.accepted, cols[4], y);
+      y += 14;
+    }
+
+    if (extraction.bookrunners.length) {
+      y += 10; if (y > 760) { doc.addPage(); y = margin; }
+      doc.setFont('helvetica', 'bold'); doc.text('Bookrunners', margin, y); doc.setFont('helvetica', 'normal'); y += 14;
+      for (const b of extraction.bookrunners) {
+        if (y > 780) { doc.addPage(); y = margin; }
+        doc.text(`• ${b.name} — ${b.role}${b.isGlobalCoordinator ? ' (GC)' : ''}`, margin, y); y += 12;
+      }
+    }
+    if (extraction.alerts.length) {
+      y += 10; if (y > 760) { doc.addPage(); y = margin; }
+      doc.setFont('helvetica', 'bold'); doc.text('Lifecycle events observed', margin, y); doc.setFont('helvetica', 'normal'); y += 14;
+      for (const a of extraction.alerts) {
+        const lines = doc.splitTextToSize(`• ${a}`, 515) as string[];
+        if (y + lines.length * 12 > 790) { doc.addPage(); y = margin; }
+        doc.text(lines, margin, y); y += lines.length * 12;
+      }
+    }
+    doc.save(`${fileBase}.pdf`);
+    toast({ title: 'PDF exported' });
+  };
 
   const candidateDeals = deals.slice().sort((a, b) => a.issuerName.localeCompare(b.issuerName));
 
@@ -190,6 +311,28 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
             From <span className="font-medium">{conversationLabel || 'chat'}</span>. Confidence{' '}
             <Badge variant="outline" className="ml-1">{(extraction.confidence * 100).toFixed(0)}%</Badge>
           </DialogDescription>
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            <Button size="sm" variant="secondary" className="h-7 text-xs" onClick={acceptAll} disabled={allAccepted}>
+              <CheckCheck className="h-3.5 w-3.5 mr-1" />
+              Accept all AI suggestions
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="h-7 text-xs">
+                  <Download className="h-3.5 w-3.5 mr-1" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={exportCSV}>
+                  <FileText className="h-4 w-4 mr-2" /> Download CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportPDF}>
+                  <FileText className="h-4 w-4 mr-2" /> Download PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </DialogHeader>
 
         <ScrollArea className="flex-1 pr-4 -mr-4">
@@ -251,8 +394,8 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
 
             {/* Fields diff table */}
             <div className="rounded-md border border-border">
-              <div className="grid grid-cols-[24px_1fr_1fr_1fr] gap-2 px-3 py-2 text-[11px] uppercase tracking-wide text-muted-foreground border-b border-border bg-muted/30">
-                <span></span><span>Field</span><span>Current</span><span>AI suggests</span>
+              <div className="grid grid-cols-[24px_1fr_1fr_1fr_56px] gap-2 px-3 py-2 text-[11px] uppercase tracking-wide text-muted-foreground border-b border-border bg-muted/30">
+                <span></span><span>Field</span><span>Current</span><span>AI suggests</span><span className="text-right">Conf.</span>
               </div>
               {FIELD_MAP.map(f => {
                 const aiVal = (extraction.keyTerms[f.aiKey] ?? '').trim();
@@ -263,7 +406,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                 return (
                   <div
                     key={f.aiKey}
-                    className={`grid grid-cols-[24px_1fr_1fr_1fr] gap-2 px-3 py-1.5 text-xs items-center border-b border-border/40 last:border-b-0 ${changed ? '' : 'opacity-60'}`}
+                    className={`grid grid-cols-[24px_1fr_1fr_1fr_56px] gap-2 px-3 py-1.5 text-xs items-center border-b border-border/40 last:border-b-0 ${changed ? '' : 'opacity-60'}`}
                   >
                     <Checkbox
                       disabled={!hasSuggestion}
@@ -284,9 +427,36 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                     >
                       {aiVal || '—'}
                     </span>
+                    <span className="text-right">
+                      {hasSuggestion ? (
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] px-1 py-0 font-semibold ${confidenceClass(confidenceFor(extraction, f.aiKey))}`}
+                          title="AI confidence in this value"
+                        >
+                          {Math.round(confidenceFor(extraction, f.aiKey) * 100)}%
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-[10px]">—</span>
+                      )}
+                    </span>
                   </div>
                 );
               })}
+            </div>
+
+            {/* Legend */}
+            <div className="rounded-md border border-border/60 bg-muted/20 p-3 text-[11px] text-muted-foreground space-y-1">
+              <div className="uppercase tracking-wide">Legend</div>
+              <div><span className="text-accent font-bold">Bold accent value</span> — AI suggests a value that differs from the current deal record (a change).</div>
+              <div><span className="text-foreground font-semibold">Bold plain value</span> — AI value matches what is already stored (no change needed).</div>
+              <div><span className="opacity-60">Dimmed row</span> — nothing new to apply from this field.</div>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span>Confidence:</span>
+                <Badge variant="outline" className={`text-[10px] px-1 py-0 font-semibold ${confidenceClass(0.95)}`}>85–100%</Badge><span>stated explicitly</span>
+                <Badge variant="outline" className={`text-[10px] px-1 py-0 font-semibold ${confidenceClass(0.7)}`}>60–84%</Badge><span>some ambiguity</span>
+                <Badge variant="outline" className={`text-[10px] px-1 py-0 font-semibold ${confidenceClass(0.3)}`}>&lt;60%</Badge><span>inferred — verify</span>
+              </div>
             </div>
 
             {/* Bookrunners */}
