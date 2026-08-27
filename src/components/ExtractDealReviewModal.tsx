@@ -175,7 +175,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
     const margin = 40;
     let y = margin;
     doc.setFontSize(14);
-    doc.text('AI Deal Extraction — Review', margin, y); y += 18;
+    doc.text('AI Termsheet Data Extraction — Review', margin, y); y += 18;
     doc.setFontSize(9);
     doc.text(`Source: ${conversationLabel || 'chat'}`, margin, y); y += 12;
     doc.text(`Overall confidence: ${Math.round(extraction.confidence * 100)}%`, margin, y); y += 12;
@@ -305,7 +305,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-accent" />
-            AI Deal Extraction — Review
+            AI Termsheet Data Extraction — Review
           </DialogTitle>
           <DialogDescription>
             From <span className="font-medium">{conversationLabel || 'chat'}</span>. Confidence{' '}
