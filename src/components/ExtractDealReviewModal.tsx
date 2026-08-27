@@ -139,6 +139,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
     for (const b of extraction.bookrunners) br[b.name.toLowerCase()] = true;
     setBookrunnerAccepted(br);
     if (extraction.suggestedStage) setStageAccepted(true);
+    setHasInteracted(true);
     toast({ title: 'All AI suggestions accepted', description: `${suggestedFields.length} field(s) selected.` });
   };
 
