@@ -93,6 +93,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
   const [accepted, setAccepted] = useState<Record<string, boolean>>({});
   const [bookrunnerAccepted, setBookrunnerAccepted] = useState<Record<string, boolean>>({});
   const [stageAccepted, setStageAccepted] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   const effectiveMode = modeOverride ?? extraction?.mode ?? 'new_deal';
   const effectiveDealId = matchOverride ?? extraction?.matchedDealId ?? '';
