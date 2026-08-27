@@ -300,7 +300,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border-2 border-primary/60 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.15)]">
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-accent" />
