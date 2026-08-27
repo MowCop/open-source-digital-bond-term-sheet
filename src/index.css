@@ -111,16 +111,25 @@
 .animate-border-flash { animation: border-flash 450ms ease-out; }
 
 @keyframes border-glow-pulse {
-  0%, 100% {
+  0%, 25%, 100% {
     border-color: hsl(var(--primary) / 0.45);
-    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.05), 0 0 30px -8px hsl(var(--primary) / 0.1);
+    box-shadow: 0 0 30px -8px hsl(var(--primary) / 0.1);
   }
-  50% {
+  12.5% {
     border-color: hsl(var(--primary) / 0.95);
-    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15), 0 0 45px -6px hsl(var(--primary) / 0.35);
+    box-shadow: 0 0 42px -6px hsl(var(--primary) / 0.35);
   }
 }
-.animate-border-glow-pulse { animation: border-glow-pulse 2s ease-in-out infinite; }
+.animate-border-glow-pulse {
+  animation-name: border-glow-pulse !important;
+  animation-duration: 2000ms !important;
+  animation-timing-function: ease-in-out !important;
+  animation-iteration-count: infinite !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-border-glow-pulse { animation: none !important; }
+}
 
 /* Tiptap rich-text editor */
 .tiptap p.is-editor-empty:first-child::before {
