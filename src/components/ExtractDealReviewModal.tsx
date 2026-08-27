@@ -300,7 +300,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border-2 border-primary/60 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.15)]">
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-accent" />
@@ -419,8 +419,8 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                         !hasSuggestion
                           ? 'text-muted-foreground'
                           : changed
-                            ? 'text-accent font-bold'
-                            : 'text-foreground font-semibold'
+                            ? 'text-primary font-bold'
+                            : 'text-foreground font-extrabold'
                       }
                       title={aiVal}
                     >
@@ -447,8 +447,8 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
             {/* Legend */}
             <div className="rounded-md border border-border/60 bg-muted/20 p-3 text-[11px] text-muted-foreground space-y-1">
               <div className="uppercase tracking-wide">Legend</div>
-              <div><span className="text-accent font-bold">Bold accent value</span> — AI suggests a value that differs from the current deal record (a change).</div>
-              <div><span className="text-foreground font-semibold">Bold plain value</span> — AI value matches what is already stored (no change needed).</div>
+              <div><span className="text-primary font-bold">Bold primary value</span> — AI suggests a value that differs from the current deal record (a change).</div>
+              <div><span className="text-foreground font-extrabold">Bold bright value</span> — AI value matches what is already stored (no change needed).</div>
               <div><span className="opacity-60">Dimmed row</span> — nothing new to apply from this field.</div>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 <span>Confidence:</span>
