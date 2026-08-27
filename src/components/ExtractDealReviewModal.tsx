@@ -386,7 +386,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                 <Checkbox
                   id="stage-accept"
                   checked={stageAccepted}
-                  onCheckedChange={(v) => setStageAccepted(Boolean(v))}
+                  onCheckedChange={(v) => { setStageAccepted(Boolean(v)); setHasInteracted(true); }}
                 />
                 <label htmlFor="stage-accept" className="cursor-pointer">
                   Set stage to <Badge variant="outline">{extraction.suggestedStage}</Badge>
