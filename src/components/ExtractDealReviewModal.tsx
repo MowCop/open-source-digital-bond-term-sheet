@@ -278,7 +278,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
         userId: currentUser.id,
         details: `Created deal from chat extraction (${conversationLabel}). Confidence ${(extraction.confidence * 100).toFixed(0)}%.`,
       });
-      toast({ title: 'Deal created', description: `${issuerName} — review in Deal Data.` });
+      toast({ title: 'Deal created', description: `${issuerName} — review in Termsheet Data.` });
     } else if (existingDeal) {
       if (Object.keys(patch).length > 0) {
         updateDeal(existingDeal.id, patch);
