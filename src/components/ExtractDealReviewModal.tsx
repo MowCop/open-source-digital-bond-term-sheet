@@ -305,7 +305,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
         "max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border-2 border-primary/60 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.15)]",
-        suggestedFields.length > 0 && !allAccepted && "animate-border-glow-pulse"
+        suggestedFields.length > 0 && !hasInteracted && "animate-border-glow-pulse"
       )}>
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
