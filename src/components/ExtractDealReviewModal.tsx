@@ -419,8 +419,8 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                         !hasSuggestion
                           ? 'text-muted-foreground'
                           : changed
-                            ? 'text-accent font-bold'
-                            : 'text-foreground font-semibold'
+                            ? 'text-primary font-bold'
+                            : 'text-foreground font-extrabold'
                       }
                       title={aiVal}
                     >
