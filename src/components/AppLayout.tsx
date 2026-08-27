@@ -13,7 +13,7 @@ const navItems = [
   { path: '/inbox', label: 'My Deal Chats', icon: Inbox },
   { path: '/ai-draft', label: 'Create New Issue', icon: PenSquare },
   { path: '/admin', label: 'Address Book & User Admin', icon: Users, adminOnly: true },
-  { path: '/deals', label: 'Deal Data', icon: FileText },
+  { path: '/deals', label: 'Termsheet Data', icon: FileText },
   { path: '/bond-console', label: 'Bond Console', icon: Settings },
   { path: '/master-admin', label: 'Master Admin', icon: Shield, masterOnly: true },
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
