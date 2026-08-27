@@ -416,7 +416,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                     <Checkbox
                       disabled={!hasSuggestion}
                       checked={Boolean(accepted[f.aiKey])}
-                      onCheckedChange={(v) => setAccepted(s => ({ ...s, [f.aiKey]: Boolean(v) }))}
+                      onCheckedChange={(v) => { setAccepted(s => ({ ...s, [f.aiKey]: Boolean(v) })); setHasInteracted(true); }}
                     />
                     <span className="font-medium">{f.label}</span>
                     <span className="text-muted-foreground truncate" title={cur}>{cur || '—'}</span>
