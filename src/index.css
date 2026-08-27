@@ -120,7 +120,7 @@
     box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15), 0 0 45px -6px hsl(var(--primary) / 0.35);
   }
 }
-.animate-border-glow-pulse { animation: border-glow-pulse 2.4s ease-in-out infinite; }
+.animate-border-glow-pulse { animation: border-glow-pulse 2s ease-in-out infinite; }
 
 /* Tiptap rich-text editor */
 .tiptap p.is-editor-empty:first-child::before {
