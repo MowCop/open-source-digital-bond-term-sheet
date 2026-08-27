@@ -472,7 +472,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                   <div key={b.name} className="flex items-center gap-2 text-xs">
                     <Checkbox
                       checked={Boolean(bookrunnerAccepted[b.name.toLowerCase()])}
-                      onCheckedChange={(v) => setBookrunnerAccepted(s => ({ ...s, [b.name.toLowerCase()]: Boolean(v) }))}
+                      onCheckedChange={(v) => { setBookrunnerAccepted(s => ({ ...s, [b.name.toLowerCase()]: Boolean(v) })); setHasInteracted(true); }}
                     />
                     <span className="font-medium">{b.name}</span>
                     <Badge variant="outline" className="text-[10px]">{b.role}</Badge>
