@@ -95,6 +95,10 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
   const [stageAccepted, setStageAccepted] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
 
+  useEffect(() => {
+    if (open) setHasInteracted(false);
+  }, [open]);
+
   const effectiveMode = modeOverride ?? extraction?.mode ?? 'new_deal';
   const effectiveDealId = matchOverride ?? extraction?.matchedDealId ?? '';
   const existingDeal: Deal | undefined = useMemo(
