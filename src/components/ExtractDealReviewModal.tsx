@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sparkles, Download, CheckCheck, FileText } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -302,7 +301,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-accent" />
             AI Termsheet Data Extraction — Review
@@ -335,7 +334,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pr-2 -mr-2">
           <div className="space-y-4">
             {/* Mode selector */}
             <div className="rounded-md border border-border bg-card/40 p-3 space-y-2">
@@ -487,9 +486,9 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button
             onClick={handleConfirm}
