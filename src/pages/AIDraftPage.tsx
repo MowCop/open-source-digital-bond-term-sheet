@@ -832,7 +832,7 @@ export default function AIDraftPage() {
               </label>
             </div>
             <div className="px-4 py-2 text-[11px] text-muted-foreground border-b border-border">
-              Grants screen + deal data access only. Chat is managed separately below.
+              Grants screen + Termsheet Data access only. Chat is managed separately below.
             </div>
             <div className="divide-y divide-border">
               {vendorUsers.map(v => (
