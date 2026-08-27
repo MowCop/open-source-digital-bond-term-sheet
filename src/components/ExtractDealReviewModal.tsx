@@ -13,6 +13,7 @@ import {
 import jsPDF from 'jspdf';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 import type { Deal, DealStage, Bookrunner } from '@/types/bond';
 
 export interface AIExtraction {
