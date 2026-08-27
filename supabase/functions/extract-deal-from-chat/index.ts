@@ -67,6 +67,9 @@ Return STRICT JSON matching this TypeScript type — no markdown, no commentary:
   "bookrunners": [
     { "name": string, "role": "active" | "passive", "isGlobalCoordinator": boolean }
   ],
+  "fieldConfidence": {                  // 0..1 confidence for each key in keyTerms that you filled; omit empty fields
+    "<field name exactly as in keyTerms>": number
+  },
   "suggestedStage": "" | "Mandate" | "Announced" | "Launched" | "Books Open" | "Books Closed" | "Priced" | "Settled",
   "alerts": string[]                    // short bullets of lifecycle events found, e.g. "Books opened at MS+90 area", "Priced at MS+72 on 12 Jun"
 }
@@ -77,7 +80,8 @@ Rules:
 - Never put a bank name in "Issuer Name".
 - Preserve the document's own date format.
 - Do not invent ISINs, LEIs or ratings.
-- alerts must be concise factual observations, max ~10 items.`;
+- alerts must be concise factual observations, max ~10 items.
+- fieldConfidence must contain an entry for every non-empty keyTerms field: 1.0 = stated explicitly and unambiguously in the chat, 0.7 = stated but with some ambiguity or superseded values, 0.4 = inferred/derived.`;
 
 const EMPTY_KEY_TERMS: Record<string,string> = {
   'Issuer Name': '', Currency: '', Size: '', Tenor: '',
@@ -245,6 +249,16 @@ Deno.serve(async (req) => {
         isGlobalCoordinator: Boolean(b.isGlobalCoordinator),
       })) : [];
 
+    const fieldConfidence: Record<string, number> = {};
+    if (obj.fieldConfidence && typeof obj.fieldConfidence === 'object') {
+      for (const k of Object.keys(EMPTY_KEY_TERMS)) {
+        const v = (obj.fieldConfidence as any)[k];
+        if (typeof v === 'number' && isFinite(v) && keyTerms[k]) {
+          fieldConfidence[k] = Math.min(1, Math.max(0, v));
+        }
+      }
+    }
+
     const suggestedStage = typeof obj.suggestedStage === 'string' && (STAGES as readonly string[]).includes(obj.suggestedStage)
       ? obj.suggestedStage : '';
 
@@ -261,6 +275,7 @@ Deno.serve(async (req) => {
       matchReason: typeof obj.matchReason === 'string' ? obj.matchReason.trim() : '',
       confidence,
       keyTerms,
+      fieldConfidence,
       bookrunners,
       suggestedStage,
       alerts,
