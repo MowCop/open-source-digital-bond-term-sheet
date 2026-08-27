@@ -487,7 +487,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
               </div>
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
