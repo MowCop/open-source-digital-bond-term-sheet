@@ -272,7 +272,16 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                     />
                     <span className="font-medium">{f.label}</span>
                     <span className="text-muted-foreground truncate" title={cur}>{cur || '—'}</span>
-                    <span className={changed ? 'text-accent' : 'text-muted-foreground'} title={aiVal}>
+                    <span
+                      className={
+                        !hasSuggestion
+                          ? 'text-muted-foreground'
+                          : changed
+                            ? 'text-accent font-bold'
+                            : 'text-foreground font-semibold'
+                      }
+                      title={aiVal}
+                    >
                       {aiVal || '—'}
                     </span>
                   </div>
