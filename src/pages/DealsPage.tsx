@@ -566,7 +566,7 @@ function GenerateBulletinDialog({
         </DialogHeader>
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
-            <Loader2 className="h-4 w-4 animate-spin" /> Drafting bulletin from deal data…
+            <Loader2 className="h-4 w-4 animate-spin" /> Drafting bulletin from Termsheet Data…
           </div>
         ) : error ? (
           <div className="text-sm text-destructive py-6">{error}</div>
