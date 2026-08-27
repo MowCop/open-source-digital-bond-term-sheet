@@ -302,7 +302,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-accent" />
             AI Termsheet Data Extraction — Review
@@ -489,7 +489,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button
             onClick={handleConfirm}
