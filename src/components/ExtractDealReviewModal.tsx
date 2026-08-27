@@ -335,7 +335,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain pr-2 -mr-2">
           <div className="space-y-4">
             {/* Mode selector */}
             <div className="rounded-md border border-border bg-card/40 p-3 space-y-2">
