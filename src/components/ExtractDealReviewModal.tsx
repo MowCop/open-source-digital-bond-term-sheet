@@ -403,8 +403,11 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
 
             {/* Fields diff table */}
             <div className="rounded-md border border-border">
-              <div className="grid grid-cols-[24px_1fr_1fr_1fr_56px] gap-2 px-3 py-2 text-[11px] uppercase tracking-wide text-muted-foreground border-b border-border bg-muted/30">
-                <span></span><span>Field</span><span>Current</span><span>AI suggests</span><span className="text-right">Conf.</span>
+              <div className="grid grid-cols-[24px_1fr_1fr_1fr_56px] gap-2 px-3 py-2 text-[11px] uppercase tracking-wide border-b border-border bg-muted/30">
+                <span></span><span className="text-muted-foreground">Field</span>
+                <span className="text-info font-bold">Current</span>
+                <span className="text-info font-bold">AI suggests</span>
+                <span className="text-right text-muted-foreground">Conf.</span>
               </div>
               {FIELD_MAP.map(f => {
                 const aiVal = (extraction.keyTerms[f.aiKey] ?? '').trim();
