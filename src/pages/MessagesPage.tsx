@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, Shield } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, Shield, Save, Send, RotateCcw } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
@@ -80,6 +80,8 @@ export default function MessagesPage() {
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'history' | 'data' | 'checker' | null>('history');
   const [editSignals, setEditSignals] = useState<Record<string, number>>({});
+  const [saveSignals, setSaveSignals] = useState<Record<string, number>>({});
+  const [saveSendSignals, setSaveSendSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [docsGroup, setDocsGroup] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
@@ -597,6 +599,55 @@ export default function MessagesPage() {
         <History className="h-4 w-4 mr-1" />
         History ({group.messages.length})
       </Button>
+      {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
+        <>
+          <Button
+            size="default"
+            variant="outline"
+            className="toolbar-btn"
+            title="Save the latest update"
+            onClick={(e) => {
+              e.stopPropagation();
+              const id = group.latestMessage.id;
+              setActivePanel('history');
+              setSaveSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+              toast({ title: 'Saved', description: 'The latest update has been saved.' });
+            }}
+          >
+            <Save className="h-4 w-4 mr-1" />
+            Save
+          </Button>
+          <Button
+            size="default"
+            variant="outline"
+            className="toolbar-btn"
+            title="Save and send the latest update"
+            onClick={(e) => {
+              e.stopPropagation();
+              const id = group.latestMessage.id;
+              setActivePanel('history');
+              setSaveSendSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+            }}
+          >
+            <Send className="h-4 w-4 mr-1" />
+            Save &amp; Send
+          </Button>
+          <Button
+            size="default"
+            variant="outline"
+            className="toolbar-btn"
+            title="Retract the latest update"
+            onClick={(e) => {
+              e.stopPropagation();
+              retractMessage(group.latestMessage.id);
+              toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+            }}
+          >
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Retract
+          </Button>
+        </>
+      )}
     </div>
   );
 
@@ -643,6 +694,8 @@ export default function MessagesPage() {
                                 versionLabel={versionLabel}
                                 isLatest={idx === 0}
                                 editSignal={editSignals[msg.id] || 0}
+                                saveSignal={idx === 0 ? (saveSignals[msg.id] || 0) : 0}
+                                saveSendSignal={idx === 0 ? (saveSendSignals[msg.id] || 0) : 0}
                                 onUpdate={updateMessage}
                                 onRetract={(id) => {
                                   retractMessage(id);
@@ -684,6 +737,8 @@ export default function MessagesPage() {
                                     isLatest
                                     embedded
                                     editSignal={editSignals[latest.id] || 0}
+                                    saveSignal={saveSignals[latest.id] || 0}
+                                    saveSendSignal={saveSendSignals[latest.id] || 0}
                                     onUpdate={updateMessage}
                                     onRetract={(id) => {
                                       retractMessage(id);
