@@ -478,6 +478,7 @@ function checkGoverningLawCurrency(
 export function validateDeal(
   deal: Partial<Deal>,
   overrideContext?: OverrideContext,
+  stage?: DealStage,
 ): { results: ValidationResult[]; auditEntries: DealCheckerAuditEntry[] } {
   const results: ValidationResult[] = [];
   const auditEntries: DealCheckerAuditEntry[] = [];
