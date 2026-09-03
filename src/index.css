@@ -284,6 +284,14 @@
   background: hsl(var(--info) / 0.65);
 }
 
+.toolbar-btn-action {
+  border-color: hsl(30 95% 55% / 0.75) !important;
+}
+.toolbar-btn-action:hover,
+.toolbar-btn-action[aria-pressed="true"] {
+  border-color: hsl(35 95% 65%) !important;
+}
+
 .toolbar-btn-ai {
   height: 2.5rem;
   min-width: 140px;
