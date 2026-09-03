@@ -39,7 +39,9 @@ import type { UserRole } from '@/types/bond';
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface DealCheckerProps {
-  aiFields: Record<string, string> | null;
+  aiFields?: Record<string, string> | null;
+  /** Live deal record — used instead of aiFields once a deal exists */
+  deal?: Deal;
   aiBookrunners?: Bookrunner[];
   /** Role of the currently logged-in user */
   userRole?: UserRole;
@@ -322,7 +324,8 @@ function OverrideModal({ result, onConfirm, onCancel }: OverrideModalProps) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function DealChecker({
-  aiFields,
+  aiFields = null,
+  deal,
   aiBookrunners = [],
   userRole,
   currentUserId = 'unknown',
@@ -344,7 +347,7 @@ export default function DealChecker({
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      const partial = aiFieldsToPartialDeal(aiFields, aiBookrunners);
+      const partial: Partial<Deal> = deal ?? aiFieldsToPartialDeal(aiFields, aiBookrunners);
       const ctx: OverrideContext | undefined = overrides.length > 0 && isMasterAdmin
         ? {
             adminUserId: currentUserId,
@@ -353,12 +356,12 @@ export default function DealChecker({
             overriddenRuleIds: overrides,
           }
         : undefined;
-      const { results: r, auditEntries } = validateDeal(partial, ctx);
+      const { results: r, auditEntries } = validateDeal(partial, ctx, deal?.stage);
       setResults(r);
       if (auditEntries.length > 0) onAuditEntries?.(auditEntries);
     }, 400);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [aiFields, aiBookrunners, overrides, overrideReasons, isMasterAdmin, currentUserId, currentUserName, onAuditEntries, refreshTick]);
+  }, [deal, aiFields, aiBookrunners, overrides, overrideReasons, isMasterAdmin, currentUserId, currentUserName, onAuditEntries, refreshTick]);
 
   function handleRefresh() {
     setRefreshing(true);
@@ -369,7 +372,9 @@ export default function DealChecker({
   const counts = useMemo(() => countBySeverity(results), [results]);
   const ready  = useMemo(() => isReadyToPublish(results), [results]);
 
-  const fieldCount = aiFields
+  const fieldCount = deal
+    ? Object.values(deal as Record<string, unknown>).filter(v => typeof v === 'string' && v.trim()).length
+    : aiFields
     ? Object.values(aiFields).filter(v => v && v.trim()).length
     : 0;
 
