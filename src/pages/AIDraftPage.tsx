@@ -17,6 +17,7 @@ import type { Editor } from '@tiptap/react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import DraftChatStrip from '@/components/DraftChatStrip';
+import FieldDiffDialog, { buildDiffRows } from '@/components/FieldDiffDialog';
 
 // Trigger mode for AI extraction in the bulletin builder. Persisted in
 // localStorage from Bond Console > AI Bulletin Extraction.
@@ -92,6 +93,13 @@ export default function AIDraftPage() {
   // differs from a non-empty value the user already had. Append-by-default:
   // we keep the existing value and let the user explicitly Replace.
   const [aiConflicts, setAiConflicts] = useState<Record<string, string>>({});
+  // Raw, unedited AI output kept alongside the confirmed values so the user can
+  // diff "what the AI parsed" against "what I am about to send".
+  const [aiRawFields, setAiRawFields] = useState<Record<string, string> | null>(null);
+  const [aiRawBookrunners, setAiRawBookrunners] = useState<Bookrunner[]>([]);
+  const [diffOpen, setDiffOpen] = useState(false);
+  // When true, the diff dialog was opened by Send and confirming it sends.
+  const [diffFromSend, setDiffFromSend] = useState(false);
   const [triggerMode, setTriggerMode] = useState<AITriggerMode>(() => getAITriggerMode());
   // Re-read trigger mode when window regains focus, so changing it in
   // Bond Console takes effect without a reload.
@@ -210,6 +218,8 @@ export default function AIDraftPage() {
     setAiFields(prev => mergeFieldsWithConflicts(prev, baseline.keyTerms));
     setAiConfidence(baseline.confidence);
     setAiBookrunners(baselineBookrunners);
+    setAiRawFields(prev => ({ ...(prev || {}), ...baseline.keyTerms }));
+    if (baselineBookrunners.length > 0) setAiRawBookrunners(baselineBookrunners);
 
     if (opts?.skipAI) return;
 
@@ -228,6 +238,8 @@ export default function AIDraftPage() {
         setAiConflicts(prev => ({ ...prev, ...diffConflicts(aiFields ?? baseline.keyTerms, aiKeyTerms || {}) }));
         setAiFields(prev => mergeFieldsWithConflicts(prev ?? baseline.keyTerms, aiKeyTerms || {}));
         if (Array.isArray(aiBks) && aiBks.length > 0) setAiBookrunners(aiBks);
+        setAiRawFields(prev => ({ ...(prev || {}), ...(aiKeyTerms || {}) }));
+        if (Array.isArray(aiBks) && aiBks.length > 0) setAiRawBookrunners(aiBks);
 
         // If AI gave us a stronger issuer, refresh the auto-headline.
         const aiIssuer = (aiKeyTerms?.['Issuer Name'] || '').trim();
