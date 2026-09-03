@@ -1090,10 +1090,14 @@ export default function MessagesPage() {
           >
             {/* Deal list — takes the place of the app menu */}
             <aside className="w-60 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
-              <div className="p-3 border-b border-sidebar-border">
+              <button
+                type="button"
+                onClick={() => setFocusedKey(null)}
+                className="w-full text-left p-3 border-b border-sidebar-border hover:bg-sidebar-accent/50 transition-colors"
+              >
                 <div className="text-sm font-bold">New Issue Board</div>
                 <div className="text-[11px] text-sidebar-foreground/60">↑↓ to browse · Esc to return to the board</div>
-              </div>
+              </button>
               <div
                 role="listbox"
                 aria-label="Deals on the New Issue Board"
