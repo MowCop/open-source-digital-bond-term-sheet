@@ -52,7 +52,7 @@ const publishStatusBadge: Record<PublishStatus, { label: string; className: stri
     dot: 'bg-amber-400',
   },
   published: {
-    label: 'Needs to be Published',
+    label: 'Published',
     className: 'bg-card text-timestamp border-timestamp',
     dot: 'bg-green-400',
   },
@@ -791,7 +791,7 @@ export default function MessagesPage() {
                 const labels = {
                   all: 'All',
                   pre_published: 'Pre-Published',
-                  published: 'Needs to be Published',
+                  published: 'Published',
                   retracted: 'Retracted',
                 } as const;
                 const count = publishCounts[s];
