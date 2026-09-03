@@ -461,7 +461,6 @@ export default function AlertHistoryCard({
             )}
             {!isRetracted && (
               <>
-                <Button variant="ghost" className="btn-footer-action" onClick={attemptClose}>Cancel</Button>
                 <Button variant="outline" className="btn-footer-action" onClick={handleSave}>
                   <Save className="h-4 w-4 mr-1" /> Save
                 </Button>
@@ -676,7 +675,7 @@ export default function AlertHistoryCard({
 
         <div className="relative flex items-center justify-center gap-2 px-5 py-2 border-t border-border shrink-0 bg-card/40">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" className="btn-footer-action" onClick={attemptClose}>Cancel</Button>
+            
             <Button variant="outline" className="btn-footer-action" onClick={handleSave}>
               <Save className="h-4 w-4 mr-1" /> Save
             </Button>
