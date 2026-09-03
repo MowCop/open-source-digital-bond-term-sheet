@@ -373,7 +373,7 @@ export default function DealChecker({
   const ready  = useMemo(() => isReadyToPublish(results), [results]);
 
   const fieldCount = deal
-    ? Object.values(deal as Record<string, unknown>).filter(v => typeof v === 'string' && v.trim()).length
+    ? Object.values(deal as unknown as Record<string, unknown>).filter(v => typeof v === 'string' && v.trim()).length
     : aiFields
     ? Object.values(aiFields).filter(v => v && v.trim()).length
     : 0;
