@@ -39,6 +39,8 @@ interface AlertHistoryCardProps {
   versionLabel?: string;
   isLatest?: boolean;
   editSignal?: number;
+  saveSignal?: number;
+  saveSendSignal?: number;
   /**
    * When true, render the card without its own header chrome (chevron,
    * version chip, sender, timestamp, status badge) and skip the outer
