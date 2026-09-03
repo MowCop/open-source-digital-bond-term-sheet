@@ -1092,7 +1092,7 @@ export default function MessagesPage() {
             <aside className="w-60 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
               <button
                 type="button"
-                onClick={() => setFocusedDealId(null)}
+                onClick={() => setFocusedKey(null)}
                 className="w-full text-left p-3 border-b border-sidebar-border hover:bg-sidebar-accent/50 transition-colors"
               >
                 <div className="text-sm font-bold">New Issue Board</div>
