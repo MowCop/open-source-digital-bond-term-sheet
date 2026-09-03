@@ -108,8 +108,19 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
 
   // Default-accept all fields where AI returned a non-empty value that differs
   // from the existing deal (or always for new_deal).
-  const defaultAcceptanceKey = `${extraction ? 'x' : 'n'}-${effectiveMode}-${effectiveDealId}`;
-  useMemo(() => {
+  // Key must change whenever a *new* extraction arrives, otherwise a second
+  // AI DataParse run with the same mode/match would keep the previous ticks.
+  const defaultAcceptanceKey = extraction
+    ? JSON.stringify({
+        m: effectiveMode,
+        d: effectiveDealId,
+        k: extraction.keyTerms,
+        b: extraction.bookrunners.map(b => b.name),
+        s: extraction.suggestedStage ?? '',
+        c: extraction.confidence,
+      })
+    : 'none';
+  useEffect(() => {
     if (!extraction) return;
     const next: Record<string, boolean> = {};
     for (const f of FIELD_MAP) {
