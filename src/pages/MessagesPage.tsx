@@ -586,7 +586,7 @@ export default function MessagesPage() {
         >
           <ShieldCheck className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} />
           Deal Checker
-          <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} className="ml-1.5" />
+          <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} className="ml-1.5 border border-white/70" />
         </Button>
       )}
       <Button
