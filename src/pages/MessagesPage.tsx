@@ -1219,6 +1219,56 @@ export default function MessagesPage() {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Delete deal — typed confirmation */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) { setDeleteTarget(null); setDeleteConfirmText(''); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm text-destructive">Delete this deal permanently?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              This removes <span className="font-medium text-foreground">{deleteTarget?.label}</span> from the platform, including its
+              termsheet data, alerts, chat rooms, chat messages and notifications. The Audit Log record is retained. This cannot be undone.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Type <span className="font-mono font-semibold text-foreground">delete</span> to confirm.
+            </p>
+            <Input
+              autoFocus
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="delete"
+              className="h-8"
+            />
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="ghost" size="sm" onClick={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={deleteConfirmText.trim().toLowerCase() !== 'delete'}
+                onClick={() => {
+                  if (!deleteTarget) return;
+                  if (deleteTarget.dealIds.length > 0) {
+                    deleteTarget.dealIds.forEach(id => deleteDeal(id));
+                    deleteMessageThread(deleteTarget.dealIds);
+                  } else {
+                    deleteMessage(deleteTarget.messageId);
+                  }
+                  if (expandedAlertId === deleteTarget.key) setExpandedAlertId(null);
+                  if (focusedKey === deleteTarget.key) closeFocus();
+                  setDeleteTarget(null);
+                  setDeleteConfirmText('');
+                }}
+              >
+                Delete deal
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
