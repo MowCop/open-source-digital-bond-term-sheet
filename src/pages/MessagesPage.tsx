@@ -597,6 +597,55 @@ export default function MessagesPage() {
         <History className="h-4 w-4 mr-1" />
         History ({group.messages.length})
       </Button>
+      {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
+        <>
+          <Button
+            size="default"
+            variant="outline"
+            className="toolbar-btn"
+            title="Save the latest update"
+            onClick={(e) => {
+              e.stopPropagation();
+              const id = group.latestMessage.id;
+              setActivePanel('history');
+              setSaveSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+              toast({ title: 'Saved', description: 'The latest update has been saved.' });
+            }}
+          >
+            <Save className="h-4 w-4 mr-1" />
+            Save
+          </Button>
+          <Button
+            size="default"
+            variant="outline"
+            className="toolbar-btn"
+            title="Save and send the latest update"
+            onClick={(e) => {
+              e.stopPropagation();
+              const id = group.latestMessage.id;
+              setActivePanel('history');
+              setSaveSendSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+            }}
+          >
+            <Send className="h-4 w-4 mr-1" />
+            Save &amp; Send
+          </Button>
+          <Button
+            size="default"
+            variant="outline"
+            className="toolbar-btn"
+            title="Retract the latest update"
+            onClick={(e) => {
+              e.stopPropagation();
+              retractMessage(group.latestMessage.id);
+              toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+            }}
+          >
+            <RotateCcw className="h-4 w-4 mr-1" />
+            Retract
+          </Button>
+        </>
+      )}
     </div>
   );
 
