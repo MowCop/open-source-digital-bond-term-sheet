@@ -774,60 +774,62 @@ export default function MessagesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">New Issue Board</h1>
-        <div className="flex items-center gap-3 flex-wrap">
-          {canManageMessages && (
-            <Button
-              onClick={() => navigate('/ai-draft')}
-              className="px-3 py-1 h-auto rounded text-xs font-medium bg-accent hover:bg-accent/90 text-accent-foreground"
-            >
-              <Plus className="h-3.5 w-3.5 mr-1.5" />
-              Create New Issue
-            </Button>
-          )}
-          {/* Publish status filter — primary partition between Pre-Published and Published */}
-          <div className="flex items-center gap-1 bg-card rounded-lg p-1 border border-border">
-            {(['all', 'pre_published', 'published', 'retracted'] as const).map(s => {
-              const labels = {
-                all: 'All',
-                pre_published: 'Pre-Published',
-                published: 'Published',
-                retracted: 'Retracted',
-              } as const;
-              const count = publishCounts[s];
-              const active = filterPublish === s;
-              if (s === 'retracted' && count === 0) return null;
-              return (
+        {!focusedKey && (
+          <div className="flex items-center gap-3 flex-wrap">
+            {canManageMessages && (
+              <Button
+                onClick={() => navigate('/ai-draft')}
+                className="px-3 py-1 h-auto rounded text-xs font-medium bg-accent hover:bg-accent/90 text-accent-foreground"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                Create New Issue
+              </Button>
+            )}
+            {/* Publish status filter — primary partition between Pre-Published and Published */}
+            <div className="flex items-center gap-1 bg-card rounded-lg p-1 border border-border">
+              {(['all', 'pre_published', 'published', 'retracted'] as const).map(s => {
+                const labels = {
+                  all: 'All',
+                  pre_published: 'Pre-Published',
+                  published: 'Published',
+                  retracted: 'Retracted',
+                } as const;
+                const count = publishCounts[s];
+                const active = filterPublish === s;
+                if (s === 'retracted' && count === 0) return null;
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setFilterPublish(s)}
+                    className={`px-3 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                      active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {s !== 'all' && (
+                      <span className={`h-1.5 w-1.5 rounded-full ${publishStatusBadge[s].dot}`} />
+                    )}
+                    {labels[s]}
+                    <span className={`text-[10px] ${active ? 'opacity-80' : 'opacity-60'}`}>{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {/* Stage filter — secondary */}
+            <div className="flex items-center gap-1 bg-card rounded-lg p-1 border border-border">
+              {['all', 'Pipeline', 'Priced'].map(s => (
                 <button
                   key={s}
-                  onClick={() => setFilterPublish(s)}
-                  className={`px-3 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                    active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                  onClick={() => setFilterStage(s)}
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                    filterStage === s ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {s !== 'all' && (
-                    <span className={`h-1.5 w-1.5 rounded-full ${publishStatusBadge[s].dot}`} />
-                  )}
-                  {labels[s]}
-                  <span className={`text-[10px] ${active ? 'opacity-80' : 'opacity-60'}`}>{count}</span>
+                  {s === 'all' ? 'All stages' : s}
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
-          {/* Stage filter — secondary */}
-          <div className="flex items-center gap-1 bg-card rounded-lg p-1 border border-border">
-            {['all', 'Pipeline', 'Priced'].map(s => (
-              <button
-                key={s}
-                onClick={() => setFilterStage(s)}
-                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                  filterStage === s ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {s === 'all' ? 'All stages' : s}
-              </button>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="grid gap-4 grid-cols-1">
