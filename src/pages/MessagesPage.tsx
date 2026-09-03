@@ -604,7 +604,7 @@ export default function MessagesPage() {
           <Button
             size="default"
             variant="outline"
-            className="toolbar-btn"
+            className="toolbar-btn toolbar-btn-action"
             title="Save the latest update"
             onClick={(e) => {
               e.stopPropagation();
@@ -620,7 +620,7 @@ export default function MessagesPage() {
           <Button
             size="default"
             variant="outline"
-            className="toolbar-btn"
+            className="toolbar-btn toolbar-btn-action"
             title="Save and send the latest update"
             onClick={(e) => {
               e.stopPropagation();
@@ -635,7 +635,7 @@ export default function MessagesPage() {
           <Button
             size="default"
             variant="outline"
-            className="toolbar-btn"
+            className="toolbar-btn toolbar-btn-action"
             title="Retract the latest update"
             onClick={(e) => {
               e.stopPropagation();
