@@ -809,11 +809,12 @@ export default function MessagesPage() {
                         )}
                       </button>
                     </div>
-                    <div className="col-span-1 flex justify-center items-center">
+                    <div className="col-span-1 flex justify-center items-center gap-1.5">
                       <span
                         className={`h-2.5 w-2.5 rounded-full ${pubBadge.dot}`}
                         title={pubBadge.label}
                       />
+                      <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} />
                     </div>
                     <div className="col-span-1" onClick={(e) => e.stopPropagation()}>
                       {(() => {
