@@ -65,6 +65,8 @@ export default function AlertHistoryCard({
   versionLabel,
   isLatest = false,
   editSignal = 0,
+  saveSignal = 0,
+  saveSendSignal = 0,
   embedded = false,
   onUpdate,
   onRetract,
