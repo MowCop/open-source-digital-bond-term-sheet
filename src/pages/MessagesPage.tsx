@@ -13,7 +13,6 @@ import AlertHistoryCard from '@/components/AlertHistoryCard';
 import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
 import DealChecker from '@/components/DealChecker';
 import DealCheckFlag from '@/components/DealCheckFlag';
-import { useDealChecker } from '@/hooks/useDealChecker';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction, detectStage } from '@/lib/alertParsing';
 import { stripHtml } from '@/lib/htmlText';
