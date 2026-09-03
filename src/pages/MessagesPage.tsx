@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, Shield } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, Shield, Save, Send, RotateCcw } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
@@ -80,6 +80,8 @@ export default function MessagesPage() {
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'history' | 'data' | 'checker' | null>('history');
   const [editSignals, setEditSignals] = useState<Record<string, number>>({});
+  const [saveSignals, setSaveSignals] = useState<Record<string, number>>({});
+  const [saveSendSignals, setSaveSendSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [docsGroup, setDocsGroup] = useState<AlertGroup | null>(null);
   const [filterStage, setFilterStage] = useState<string>('all');
@@ -692,6 +694,8 @@ export default function MessagesPage() {
                                 versionLabel={versionLabel}
                                 isLatest={idx === 0}
                                 editSignal={editSignals[msg.id] || 0}
+                                saveSignal={idx === 0 ? (saveSignals[msg.id] || 0) : 0}
+                                saveSendSignal={idx === 0 ? (saveSendSignals[msg.id] || 0) : 0}
                                 onUpdate={updateMessage}
                                 onRetract={(id) => {
                                   retractMessage(id);
@@ -733,6 +737,8 @@ export default function MessagesPage() {
                                     isLatest
                                     embedded
                                     editSignal={editSignals[latest.id] || 0}
+                                    saveSignal={saveSignals[latest.id] || 0}
+                                    saveSendSignal={saveSendSignals[latest.id] || 0}
                                     onUpdate={updateMessage}
                                     onRetract={(id) => {
                                       retractMessage(id);
