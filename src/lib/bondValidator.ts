@@ -27,7 +27,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { Deal, DayCountFraction, InterestType, InterestPaymentFrequency } from '@/types/bond';
+import { Deal, DealStage, DayCountFraction, InterestType, InterestPaymentFrequency } from '@/types/bond';
 
 // ─── Result & audit types ─────────────────────────────────────────────────────
 
@@ -478,6 +478,7 @@ function checkGoverningLawCurrency(
 export function validateDeal(
   deal: Partial<Deal>,
   overrideContext?: OverrideContext,
+  stage?: DealStage,
 ): { results: ValidationResult[]; auditEntries: DealCheckerAuditEntry[] } {
   const results: ValidationResult[] = [];
   const auditEntries: DealCheckerAuditEntry[] = [];
@@ -873,6 +874,27 @@ export function validateDeal(
       icmaRef: 'ICMA BDT / Prospectus Regulation',
     });
   }
+
+  // ── Stage awareness ─────────────────────────────────────────────────────────
+  // Pricing-dependent checks cannot be satisfied before the book is closed, so
+  // they are reported as informational until the deal reaches Books Closed.
+  const EARLY_STAGES: DealStage[] = ['Mandate', 'Announced', 'Launched', 'Books Open'];
+  const PRICING_DEPENDENT_RULES = new Set([
+    'isin-invalid', 'isin-country-mismatch', 'cusip-invalid', 'common-code-format',
+    'settlement-convention', 'settlement-non-business', 'pricing-after-issue',
+    'pricing-non-business', 'yield-coupon-gap', 'spread-yield-inconsistent',
+    'reoffer-price-extreme', 'floating-no-spread', 'frn-no-reference-rate',
+    'denomination-below-minimum',
+  ]);
+  const softened = stage && EARLY_STAGES.includes(stage)
+    ? results.map(r =>
+        r.severity !== 'info' && PRICING_DEPENDENT_RULES.has(r.id)
+          ? { ...r, severity: 'info' as Severity, detail: `${r.detail} (Informational until pricing — deal is at ${stage}.)` }
+          : r,
+      )
+    : results;
+  results.length = 0;
+  results.push(...softened);
 
   // Sort: errors first, then warnings, then info
   const order: Record<Severity, number> = { error: 0, warning: 1, info: 2 };
