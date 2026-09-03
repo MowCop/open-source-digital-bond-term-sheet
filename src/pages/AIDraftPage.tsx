@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Bookrunner } from '@/types/bond';
 import { extractBookrunners, extractSubjectLine, simulateAIExtraction } from '@/lib/alertParsing';
 import DealChecker from '@/components/DealChecker';
-import { Sparkles, Paperclip, Send, Save, ChevronDown, Download, Replace, Trash2 } from 'lucide-react';
+import { Sparkles, Paperclip, Send, Save, ChevronDown, Download, Replace, Trash2, ArrowLeftRight } from 'lucide-react';
 import RichTextEditor from '@/components/RichTextEditor';
 import { stripHtml } from '@/lib/htmlText';
 import { docxFileToHtml } from '@/lib/docxToHtml';
@@ -17,6 +17,7 @@ import type { Editor } from '@tiptap/react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import DraftChatStrip from '@/components/DraftChatStrip';
+import FieldDiffDialog, { buildDiffRows } from '@/components/FieldDiffDialog';
 
 // Trigger mode for AI extraction in the bulletin builder. Persisted in
 // localStorage from Bond Console > AI Bulletin Extraction.
@@ -92,6 +93,13 @@ export default function AIDraftPage() {
   // differs from a non-empty value the user already had. Append-by-default:
   // we keep the existing value and let the user explicitly Replace.
   const [aiConflicts, setAiConflicts] = useState<Record<string, string>>({});
+  // Raw, unedited AI output kept alongside the confirmed values so the user can
+  // diff "what the AI parsed" against "what I am about to send".
+  const [aiRawFields, setAiRawFields] = useState<Record<string, string> | null>(null);
+  const [aiRawBookrunners, setAiRawBookrunners] = useState<Bookrunner[]>([]);
+  const [diffOpen, setDiffOpen] = useState(false);
+  // When true, the diff dialog was opened by Send and confirming it sends.
+  const [diffFromSend, setDiffFromSend] = useState(false);
   const [triggerMode, setTriggerMode] = useState<AITriggerMode>(() => getAITriggerMode());
   // Re-read trigger mode when window regains focus, so changing it in
   // Bond Console takes effect without a reload.
@@ -210,6 +218,8 @@ export default function AIDraftPage() {
     setAiFields(prev => mergeFieldsWithConflicts(prev, baseline.keyTerms));
     setAiConfidence(baseline.confidence);
     setAiBookrunners(baselineBookrunners);
+    setAiRawFields(prev => ({ ...(prev || {}), ...baseline.keyTerms }));
+    if (baselineBookrunners.length > 0) setAiRawBookrunners(baselineBookrunners);
 
     if (opts?.skipAI) return;
 
@@ -228,6 +238,8 @@ export default function AIDraftPage() {
         setAiConflicts(prev => ({ ...prev, ...diffConflicts(aiFields ?? baseline.keyTerms, aiKeyTerms || {}) }));
         setAiFields(prev => mergeFieldsWithConflicts(prev ?? baseline.keyTerms, aiKeyTerms || {}));
         if (Array.isArray(aiBks) && aiBks.length > 0) setAiBookrunners(aiBks);
+        setAiRawFields(prev => ({ ...(prev || {}), ...(aiKeyTerms || {}) }));
+        if (Array.isArray(aiBks) && aiBks.length > 0) setAiRawBookrunners(aiBks);
 
         // If AI gave us a stronger issuer, refresh the auto-headline.
         const aiIssuer = (aiKeyTerms?.['Issuer Name'] || '').trim();
@@ -511,6 +523,11 @@ export default function AIDraftPage() {
     toast({ title: 'Draft Saved', description: 'Issue saved as draft in New Issue Board.' });
   };
 
+  const pendingDiffCount = useMemo(
+    () => buildDiffRows(aiRawFields, aiFields).filter(r => r.status !== 'match').length,
+    [aiRawFields, aiFields],
+  );
+
   const handleSend = async () => {
     if (!headline.trim()) {
       toast({ title: 'Missing headline', description: 'Please enter a deal headline', variant: 'destructive' });
@@ -520,6 +537,8 @@ export default function AIDraftPage() {
       toast({ title: 'No recipients', description: 'Select at least one distribution recipient', variant: 'destructive' });
       return;
     }
+    setDiffOpen(false);
+    setDiffFromSend(false);
     const { deal, draftChannel } = createDealFromFields();
     const uploaded = await uploadPendingAttachments();
     attachDraftChannelToDeal(draftKey, deal.id, headline);
@@ -536,6 +555,17 @@ export default function AIDraftPage() {
     });
     toast({ title: 'Alert Sent', description: `Sent to ${selectedRecipients.length} recipient(s)` });
     setHeadline(''); setBody(''); setAttachments([]); setSelectedRecipients([]); setAiFields(null); setAiBookrunners([]); setScpIds([]);
+    setAiRawFields(null); setAiRawBookrunners([]); setAiConflicts({});
+  };
+
+  /** Send button: if AI-parsed values differ from confirmed values, review first. */
+  const requestSend = () => {
+    if (pendingDiffCount > 0) {
+      setDiffFromSend(true);
+      setDiffOpen(true);
+      return;
+    }
+    void handleSend();
   };
 
   return (
@@ -681,7 +711,21 @@ export default function AIDraftPage() {
             <Button variant="outline" size="sm" onClick={handleSave}>
               <Save className="h-4 w-4 mr-1" /> Save
             </Button>
-            <Button size="sm" onClick={handleSend} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setDiffFromSend(false); setDiffOpen(true); }}
+              disabled={!aiRawFields}
+              title="Compare AI-parsed fields with your confirmed values"
+            >
+              <ArrowLeftRight className="h-4 w-4 mr-1" /> Compare
+              {pendingDiffCount > 0 && (
+                <Badge variant="outline" className="ml-1.5 h-4 px-1 text-[10px] border-amber-500/50 text-amber-300">
+                  {pendingDiffCount}
+                </Badge>
+              )}
+            </Button>
+            <Button size="sm" onClick={requestSend} className="bg-accent text-accent-foreground hover:bg-accent/90">
               <Send className="h-4 w-4 mr-1" /> Send
             </Button>
           </div>
@@ -863,6 +907,25 @@ export default function AIDraftPage() {
           </div>
         </div>
       </div>
+
+      <FieldDiffDialog
+        open={diffOpen}
+        onOpenChange={(o) => { setDiffOpen(o); if (!o) setDiffFromSend(false); }}
+        aiParsed={aiRawFields}
+        confirmed={aiFields}
+        aiBookrunners={aiRawBookrunners}
+        confirmedBookrunners={aiBookrunners}
+        onUseAiValue={(field, value) => {
+          setAiFields(prev => ({ ...(prev || {}), [field]: value }));
+          setAiConflicts(prev => { const next = { ...prev }; delete next[field]; return next; });
+        }}
+        onUseAllAiValues={(values) => {
+          setAiFields(prev => ({ ...(prev || {}), ...values }));
+          setAiConflicts({});
+        }}
+        confirmLabel={diffFromSend ? 'Confirm & Send' : undefined}
+        onConfirm={diffFromSend ? () => { void handleSend(); } : undefined}
+      />
     </div>
   );
 }
