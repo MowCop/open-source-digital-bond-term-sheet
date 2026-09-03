@@ -76,7 +76,9 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, chatChannels, chatMessages } = useScopedApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteMessageThread, deleteDeal, chatChannels, chatMessages } = useScopedApp();
+  const [deleteTarget, setDeleteTarget] = useState<{ key: string; dealIds: string[]; messageId: string; label: string } | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'history' | 'data' | 'checker' | null>('history');
   const [editSignals, setEditSignals] = useState<Record<string, number>>({});
