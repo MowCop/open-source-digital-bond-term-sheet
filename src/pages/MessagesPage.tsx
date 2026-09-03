@@ -52,7 +52,7 @@ const publishStatusBadge: Record<PublishStatus, { label: string; className: stri
     dot: 'bg-amber-400',
   },
   published: {
-    label: 'Published',
+    label: 'Needs to be Published',
     className: 'bg-card text-timestamp border-timestamp',
     dot: 'bg-green-400',
   },
@@ -791,7 +791,7 @@ export default function MessagesPage() {
                 const labels = {
                   all: 'All',
                   pre_published: 'Pre-Published',
-                  published: 'Published',
+                  published: 'Needs to be Published',
                   retracted: 'Retracted',
                 } as const;
                 const count = publishCounts[s];
@@ -899,7 +899,6 @@ export default function MessagesPage() {
                         className={`h-2.5 w-2.5 rounded-full ${pubBadge.dot}`}
                         title={pubBadge.label}
                       />
-                      <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} />
                     </div>
                     <div className="col-span-1" onClick={(e) => e.stopPropagation()}>
                       {(() => {
