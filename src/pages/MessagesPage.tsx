@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, Shield, Save, Send, RotateCcw } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, ShieldCheck, Save, Send, RotateCcw } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
@@ -580,13 +580,13 @@ export default function MessagesPage() {
           size="default"
           variant="outline"
           aria-pressed={activePanel === 'checker'}
-          className={`toolbar-btn ${activePanel === 'checker' ? 'toolbar-btn-selected' : ''}`}
+          className={`btn-champagne h-10 min-w-[140px] ${activePanel === 'checker' ? 'ring-2 ring-primary brightness-110' : ''}`}
           title="AI Deal Checker"
           onClick={(e) => { e.stopPropagation(); setActivePanel(p => p === 'checker' ? null : 'checker'); }}
         >
-          <Shield className="h-4 w-4 mr-1" />
+          <ShieldCheck className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} />
           Deal Checker
-          <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} className="ml-1.5" />
+          <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} className="ml-1.5 border border-white/70" />
         </Button>
       )}
       <Button
