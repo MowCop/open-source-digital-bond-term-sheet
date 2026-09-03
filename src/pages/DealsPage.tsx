@@ -202,7 +202,7 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
 }
 
 export default function DealsPage() {
-  const { deals, messages, createDeal, updateDealStage, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser } = useScopedApp();
+  const { deals, messages, createDeal, updateDealStage, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser, addAuditEntry } = useScopedApp();
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -505,6 +505,18 @@ export default function DealsPage() {
                     fromBoard={!!searchParams.get('dealId')}
                     hasBulletin={bulletinByDeal.has(deal.id)}
                     onGenerateBulletin={() => setBulletinDealId(deal.id)}
+                    currentUser={currentUser}
+                    onCheckerAudit={(entries) =>
+                      entries.forEach((e) =>
+                        addAuditEntry({
+                          action: 'deal_checker_override',
+                          entityType: 'deal_checker_override',
+                          entityId: deal.id,
+                          userId: e.adminUserId,
+                          details: JSON.stringify(e),
+                        })
+                      )
+                    }
                   />
                 </CardContent>
               )}
