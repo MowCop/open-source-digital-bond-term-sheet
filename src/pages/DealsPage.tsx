@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Deal, DealStage, BookrunnerRole } from '@/types/bond';
+import { Deal, DealStage, BookrunnerRole, UserRole } from '@/types/bond';
+import type { DealCheckerAuditEntry } from '@/lib/bondValidator';
 import { format } from 'date-fns';
 import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2, Undo2 } from 'lucide-react';
 import {
@@ -17,6 +18,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
+import DealChecker from '@/components/DealChecker';
+import DealCheckFlag from '@/components/DealCheckFlag';
 import { toast } from 'sonner';
 
 const STAGES: DealStage[] = ['Mandate', 'Announced', 'Launched', 'Books Open', 'Books Closed', 'Priced', 'Settled'];
@@ -40,6 +43,8 @@ const getNextStage = (current: DealStage): DealStage | null => {
 
 interface DealDetailProps {
   deal: Deal;
+  currentUser?: { id: string; name: string; role: UserRole };
+  onCheckerAudit?: (entries: DealCheckerAuditEntry[]) => void;
   canManage: boolean;
   onAdvance: (next: DealStage, note?: string) => void;
   fromBoard?: boolean;
@@ -47,7 +52,7 @@ interface DealDetailProps {
   onGenerateBulletin: () => void;
 }
 
-function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGenerateBulletin }: DealDetailProps) {
+function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGenerateBulletin, currentUser, onCheckerAudit }: DealDetailProps) {
   const [stageNote, setStageNote] = useState('');
   const next = getNextStage(deal.stage);
   const navigate = useNavigate();
@@ -164,6 +169,15 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
         </div>
       </div>
 
+      {/* AI Deal Checker — live, runs through to pricing */}
+      <DealChecker
+        deal={deal}
+        userRole={currentUser?.role}
+        currentUserId={currentUser?.id}
+        currentUserName={currentUser?.name}
+        onAuditEntries={onCheckerAudit}
+      />
+
       {/* Stage History */}
       <div className="space-y-2">
         <h3 className="font-medium text-sm border-b pb-1">Stage History</h3>
@@ -188,7 +202,7 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
 }
 
 export default function DealsPage() {
-  const { deals, messages, createDeal, updateDealStage, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser } = useScopedApp();
+  const { deals, messages, createDeal, updateDealStage, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser, addAuditEntry } = useScopedApp();
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -380,6 +394,7 @@ export default function DealsPage() {
                   <span className="text-muted-foreground shrink-0">
                     {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </span>
+                  <DealCheckFlag deal={deal} />
                   <span className="font-semibold text-sm truncate">{deal.issuerName}</span>
                   <span className="text-xs text-muted-foreground truncate">
                     {deal.currency} {deal.size} · {deal.tenor}
@@ -490,6 +505,18 @@ export default function DealsPage() {
                     fromBoard={!!searchParams.get('dealId')}
                     hasBulletin={bulletinByDeal.has(deal.id)}
                     onGenerateBulletin={() => setBulletinDealId(deal.id)}
+                    currentUser={currentUser}
+                    onCheckerAudit={(entries) =>
+                      entries.forEach((e) =>
+                        addAuditEntry({
+                          action: 'deal_checker_override',
+                          entityType: 'deal_checker_override',
+                          entityId: deal.id,
+                          userId: e.adminUserId,
+                          details: JSON.stringify(e),
+                        })
+                      )
+                    }
                   />
                 </CardContent>
               )}
