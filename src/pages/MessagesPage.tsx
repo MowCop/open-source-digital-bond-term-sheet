@@ -840,8 +840,8 @@ export default function MessagesPage() {
             <div className="col-span-1">Chat</div>
             <div className="col-span-2">Last Updated</div>
             <div className="col-span-2">Borrower</div>
-            <div className="col-span-4">Headline</div>
-            <div className="col-span-1">Stage</div>
+            <div className="col-span-3">Headline</div>
+            <div className="col-span-2 text-right pr-1">Stage</div>
           </div>
 
 
@@ -960,7 +960,7 @@ export default function MessagesPage() {
                       )}
                     </div>
 
-                    <div className="col-span-4 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
+                    <div className="col-span-3 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
                         <div className="relative">
                           <Input
@@ -1008,15 +1008,15 @@ export default function MessagesPage() {
                         </span>
                       )}
                     </div>
-                    <div className="col-span-1 flex items-center gap-1">
-                      <Badge className={`text-[10px] border ${badge.className}`}>
+                    <div className="col-span-2 flex items-center justify-end gap-1 pr-1 min-w-0">
+                      <Badge className={`text-[10px] border shrink-0 ${badge.className}`}>
                         {badge.label}
                       </Badge>
                       {isExpanded && canManageMessages && group.latestMessage.status !== 'retracted' && (
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-6 w-6 ml-auto"
+                          className="h-6 w-6 shrink-0"
                           title="Edit latest update (E)"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1032,7 +1032,7 @@ export default function MessagesPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
                           title="Delete deal"
                           aria-label="Delete deal"
                           onClick={(e) => {
