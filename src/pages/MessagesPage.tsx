@@ -1028,6 +1028,27 @@ export default function MessagesPage() {
                           <Edit2 className="h-3.5 w-3.5" />
                         </Button>
                       )}
+                      {canManageMessages && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          title="Delete deal"
+                          aria-label="Delete deal"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirmText('');
+                            setDeleteTarget({
+                              key: groupKey,
+                              dealIds: group.dealIds,
+                              messageId: group.latestMessage.id,
+                              label: `${group.borrower} — ${group.headline}`,
+                            });
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </div>
 
