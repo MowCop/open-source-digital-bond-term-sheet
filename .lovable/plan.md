@@ -26,3 +26,28 @@ Today the Deal Checker only runs inside Create New Issue (AI Draft page), agains
 
 - No change to existing validation rules' logic beyond stage-sensitivity.
 - No persistence of check results to the database (overrides continue to go to the audit log only).
+
+---
+
+# Deck slide 4 — replacement screenshot
+
+Slide 4 of `NewIssueVault-Workflow-Deck.pptx` currently shows an empty "Create New Issue" screen (blank headline field, empty chat panel). It demonstrates nothing.
+
+## Replacement image
+
+Capture the Kingdom of Nania deal chat with a live thread visible:
+
+- Real chat thread with multiple messages from different bookrunners, timestamps and sender names visible.
+- Message body text Gaussian-blurred so no actual wording is legible, while the shape and rhythm of a live inter-bank conversation reads clearly.
+- Sender names, timestamps and chat header left sharp (or lightly blurred) so the reader sees who is talking.
+- The green **AI DataParse** button left fully sharp and visually centred/emphasised in the crop — it is the point of the slide.
+- Cropped to the chat panel plus toolbar, 16:9-friendly, no browser chrome.
+
+## Process
+
+1. Playwright: log in, open the Kingdom of Nania deal chat, screenshot the chat panel region at high DPI.
+2. Post-process with PIL: blur only the message-body rectangles, keep the AI DataParse button sharp, optionally add a soft highlight ring around it.
+3. Save the draft to `/mnt/documents/deck-slide04-draft.png` and present it in chat for review.
+4. Only after approval: swap the image into `/tmp/deck/build.js`, rebuild, re-validate the PPTX, re-render slide 4 and deliver `NewIssueVault-Workflow-Deck-v2.pptx`.
+
+Slide 4 caption and speaker notes update to describe a live bookrunner chat feeding AI DataParse rather than the create-issue form.
