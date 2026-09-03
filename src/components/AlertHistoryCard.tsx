@@ -124,6 +124,17 @@ export default function AlertHistoryCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editSignal]);
 
+  // External Save / Save & Send triggers from the deal toolbar.
+  useEffect(() => {
+    if (saveSignal > 0 && canManage && message.status !== 'retracted') handleSave();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saveSignal]);
+
+  useEffect(() => {
+    if (saveSendSignal > 0 && canManage && message.status !== 'retracted') handleSaveAndSend();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saveSendSignal]);
+
   // Esc collapses any expanded alert card (including the force-expanded
   // latest one). Skip when the edit modal is open — Radix Dialog owns Esc.
   useEffect(() => {
