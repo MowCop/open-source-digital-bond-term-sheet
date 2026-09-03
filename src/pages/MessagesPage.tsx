@@ -6,11 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, Shield } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
 import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
+import DealChecker from '@/components/DealChecker';
+import DealCheckFlag from '@/components/DealCheckFlag';
+import { useDealChecker } from '@/hooks/useDealChecker';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction, detectStage } from '@/lib/alertParsing';
 import { stripHtml } from '@/lib/htmlText';
@@ -76,7 +79,7 @@ interface AlertGroup {
 export default function MessagesPage() {
   const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, chatChannels, chatMessages } = useScopedApp();
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
-  const [activePanel, setActivePanel] = useState<'history' | 'data' | null>('history');
+  const [activePanel, setActivePanel] = useState<'history' | 'data' | 'checker' | null>('history');
   const [editSignals, setEditSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [docsGroup, setDocsGroup] = useState<AlertGroup | null>(null);
@@ -571,6 +574,20 @@ export default function MessagesPage() {
           </Button>
         );
       })()}
+      {group.dealIds[0] && (
+        <Button
+          size="default"
+          variant="outline"
+          aria-pressed={activePanel === 'checker'}
+          className={`toolbar-btn ${activePanel === 'checker' ? 'toolbar-btn-selected' : ''}`}
+          title="AI Deal Checker"
+          onClick={(e) => { e.stopPropagation(); setActivePanel(p => p === 'checker' ? null : 'checker'); }}
+        >
+          <Shield className="h-4 w-4 mr-1" />
+          Deal Checker
+          <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} className="ml-1.5" />
+        </Button>
+      )}
       <Button
         size="default"
         variant="outline"
@@ -598,6 +615,16 @@ export default function MessagesPage() {
                     }}
                   >
                     {renderDealActions(group, groupKey)}
+                    {activePanel === 'checker' && group.dealIds[0] && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <DealChecker
+                          deal={deals.find(d => d.id === group.dealIds[0])}
+                          userRole={currentUser?.role}
+                          currentUserId={currentUser?.id}
+                          currentUserName={currentUser?.name}
+                        />
+                      </div>
+                    )}
                     {activePanel === 'history' && (
                       <div className="space-y-4">
                         {(() => {
