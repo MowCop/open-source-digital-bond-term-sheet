@@ -1258,7 +1258,7 @@ export default function MessagesPage() {
                     deleteMessage(deleteTarget.messageId);
                   }
                   if (expandedAlertId === deleteTarget.key) setExpandedAlertId(null);
-                  if (focusedKey === deleteTarget.key) closeFocus();
+                  if (focusedKey === deleteTarget.key) setFocusedKey(null);
                   setDeleteTarget(null);
                   setDeleteConfirmText('');
                 }}
