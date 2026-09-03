@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, ShieldCheck, Save, Send, RotateCcw } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, ShieldCheck, Save, Send, RotateCcw, Trash2 } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
@@ -76,7 +76,9 @@ interface AlertGroup {
 }
 
 export default function MessagesPage() {
-  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, chatChannels, chatMessages } = useScopedApp();
+  const { messages, deals, users, sendMessage, retractMessage, updateMessage, currentUser, createMessage, updateDeal, updateDealStage, deleteMessage, deleteMessageThread, deleteDeal, chatChannels, chatMessages } = useScopedApp();
+  const [deleteTarget, setDeleteTarget] = useState<{ key: string; dealIds: string[]; messageId: string; label: string } | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
   const [activePanel, setActivePanel] = useState<'history' | 'data' | 'checker' | null>('history');
   const [editSignals, setEditSignals] = useState<Record<string, number>>({});
@@ -1026,6 +1028,27 @@ export default function MessagesPage() {
                           <Edit2 className="h-3.5 w-3.5" />
                         </Button>
                       )}
+                      {canManageMessages && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                          title="Delete deal"
+                          aria-label="Delete deal"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirmText('');
+                            setDeleteTarget({
+                              key: groupKey,
+                              dealIds: group.dealIds,
+                              messageId: group.latestMessage.id,
+                              label: `${group.borrower} — ${group.headline}`,
+                            });
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -1194,6 +1217,56 @@ export default function MessagesPage() {
               </div>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete deal — typed confirmation */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) { setDeleteTarget(null); setDeleteConfirmText(''); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm text-destructive">Delete this deal permanently?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              This removes <span className="font-medium text-foreground">{deleteTarget?.label}</span> from the platform, including its
+              termsheet data, alerts, chat rooms, chat messages and notifications. The Audit Log record is retained. This cannot be undone.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Type <span className="font-mono font-semibold text-foreground">delete</span> to confirm.
+            </p>
+            <Input
+              autoFocus
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="delete"
+              className="h-8"
+            />
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="ghost" size="sm" onClick={() => { setDeleteTarget(null); setDeleteConfirmText(''); }}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={deleteConfirmText.trim().toLowerCase() !== 'delete'}
+                onClick={() => {
+                  if (!deleteTarget) return;
+                  if (deleteTarget.dealIds.length > 0) {
+                    deleteTarget.dealIds.forEach(id => deleteDeal(id));
+                    deleteMessageThread(deleteTarget.dealIds);
+                  } else {
+                    deleteMessage(deleteTarget.messageId);
+                  }
+                  if (expandedAlertId === deleteTarget.key) setExpandedAlertId(null);
+                  if (focusedKey === deleteTarget.key) setFocusedKey(null);
+                  setDeleteTarget(null);
+                  setDeleteConfirmText('');
+                }}
+              >
+                Delete deal
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
