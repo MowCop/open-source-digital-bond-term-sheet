@@ -381,7 +381,7 @@ export default function MessagesPage() {
   };
 
   const shouldIgnorePanelCloseGesture = (target: HTMLElement) =>
-    !!target.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap, [role="dialog"], [data-headline-editor], [data-borrower-editor]');
+    !!target.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap, [role="dialog"], [data-headline-editor]');
 
   const handlePanelTapClose = (groupKey: string, e: MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
