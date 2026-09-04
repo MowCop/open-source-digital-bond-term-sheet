@@ -879,6 +879,9 @@ export default function MessagesPage() {
                       openFocus(groupKey);
                     }}
                   >
+                    <div className="col-span-2 text-timestamp text-sm">
+                      {format(group.latestMessage.updatedAt, 'MMM d')}
+                    </div>
                     <div className="col-span-1 flex items-center gap-1">
                       <button
                         type="button"
@@ -929,9 +932,6 @@ export default function MessagesPage() {
                           </button>
                         );
                       })()}
-                    </div>
-                    <div className="col-span-2 text-timestamp text-sm">
-                      {format(group.latestMessage.updatedAt, 'MMM d, hh:mm a')}
                     </div>
                     <div className="col-span-2 font-medium text-sm" data-borrower-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingBorrowerKey === groupKey ? (
