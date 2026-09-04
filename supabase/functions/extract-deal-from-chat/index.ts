@@ -70,6 +70,9 @@ Return STRICT JSON matching this TypeScript type — no markdown, no commentary:
   "fieldConfidence": {                  // 0..1 confidence for each key in keyTerms that you filled; omit empty fields
     "<field name exactly as in keyTerms>": number
   },
+  "corrections": [                      // fields whose value was superseded later in the chat; [] if none
+    { "field": string, "from": string, "to": string, "evidence": string }
+  ],
   "suggestedStage": "" | "Mandate" | "Announced" | "Launched" | "Books Open" | "Books Closed" | "Priced" | "Settled",
   "alerts": string[]                    // short bullets of lifecycle events found, e.g. "Books opened at MS+90 area", "Priced at MS+72 on 12 Jun"
 }
@@ -81,7 +84,15 @@ Rules:
 - Preserve the document's own date format.
 - Do not invent ISINs, LEIs or ratings.
 - alerts must be concise factual observations, max ~10 items.
-- fieldConfidence must contain an entry for every non-empty keyTerms field: 1.0 = stated explicitly and unambiguously in the chat, 0.7 = stated but with some ambiguity or superseded values, 0.4 = inferred/derived.`;
+- fieldConfidence must contain an entry for every non-empty keyTerms field: 1.0 = stated explicitly and unambiguously in the chat, 0.7 = stated but with some ambiguity or superseded values, 0.4 = inferred/derived.
+
+RECENCY AND CORRECTIONS (critical — terms evolve during execution):
+- The transcript is strictly ordered oldest → newest. It may start mid-conversation because older messages can be truncated.
+- When a field has more than one value across the chat, ALWAYS return the value from the LATEST message that states it. Never return the most frequently repeated value.
+- Treat "correction", "corrected", "amend", "amended", "revised", "update", "should be", "not X", "instead of" as explicit supersessions: the newer value wins and the older value must be discarded entirely.
+- A correction to "maturity" or "years" changes "Tenor" (and "Maturity Date" if a date is given). E.g. "Correction: maturity will be 9 years not 10 years" ⇒ "Tenor": "9Y".
+- The existing-deal list is BACKGROUND CONTEXT ONLY, never evidence. If the chat contradicts a stored deal value, the chat wins — the whole purpose of this extraction is to update stale stored values.
+- For every superseded field: add an entry to "corrections", cap its fieldConfidence at 0.7, and add an alerts bullet naming the change (e.g. "Tenor corrected from 10Y to 9Y").`;
 
 const EMPTY_KEY_TERMS: Record<string,string> = {
   'Issuer Name': '', Currency: '', Size: '', Tenor: '',
@@ -266,6 +277,25 @@ Deno.serve(async (req) => {
       ? obj.alerts.filter((s: any) => typeof s === 'string' && s.trim()).slice(0, 12).map((s: string) => s.trim())
       : [];
 
+    const corrections = Array.isArray(obj.corrections)
+      ? obj.corrections
+          .filter((c: any) => c && typeof c.field === 'string' && c.field.trim())
+          .slice(0, 12)
+          .map((c: any) => ({
+            field: String(c.field).trim(),
+            from: typeof c.from === 'string' ? c.from.trim() : '',
+            to: typeof c.to === 'string' ? c.to.trim() : '',
+            evidence: typeof c.evidence === 'string' ? c.evidence.trim().slice(0, 300) : '',
+          }))
+      : [];
+
+    // A corrected field must never be presented as fully certain.
+    for (const c of corrections) {
+      if (fieldConfidence[c.field] !== undefined) {
+        fieldConfidence[c.field] = Math.min(fieldConfidence[c.field], 0.7);
+      }
+    }
+
     const confidence = typeof obj.confidence === 'number' && isFinite(obj.confidence)
       ? Math.min(1, Math.max(0, obj.confidence)) : 0.5;
 
@@ -276,6 +306,7 @@ Deno.serve(async (req) => {
       confidence,
       keyTerms,
       fieldConfidence,
+      corrections,
       bookrunners,
       suggestedStage,
       alerts,
