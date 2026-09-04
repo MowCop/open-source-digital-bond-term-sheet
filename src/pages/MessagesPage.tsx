@@ -923,35 +923,7 @@ export default function MessagesPage() {
                         );
                       })()}
                     </div>
-                    <div className="col-span-2 font-medium text-sm" data-borrower-editor onClick={(e) => e.stopPropagation()}>
-                      {canManageMessages && editingBorrowerKey === groupKey ? (
-                        <Input
-                          autoFocus
-                          value={borrowerDraft}
-                          onChange={(e) => setBorrowerDraft(e.target.value)}
-                          onBlur={() => saveBorrower(group)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') { e.preventDefault(); saveBorrower(group); }
-                            if (e.key === 'Escape') { setEditingBorrowerKey(null); }
-                          }}
-                          className="h-7 text-sm"
-                        />
-                      ) : (
-                        <span
-                          className={canManageMessages ? 'cursor-text hover:bg-background/50 rounded px-1 -mx-1' : ''}
-                          onClick={() => {
-                            if (!canManageMessages || !group.dealIds[0]) return;
-                            setEditingBorrowerKey(groupKey);
-                            setBorrowerDraft(group.borrower);
-                          }}
-                          title={canManageMessages ? 'Click to edit borrower name' : ''}
-                        >
-                          {group.borrower}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="col-span-3 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
+                    <div className="col-span-6 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
                         <div className="relative">
                           <Input
