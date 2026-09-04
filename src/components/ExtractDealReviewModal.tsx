@@ -23,6 +23,7 @@ export interface AIExtraction {
   confidence: number;
   keyTerms: Record<string, string>;
   fieldConfidence?: Record<string, number>;
+  corrections?: Array<{ field: string; from: string; to: string; evidence: string }>;
   bookrunners: Bookrunner[];
   suggestedStage: string;
   alerts: string[];
@@ -118,6 +119,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
         b: extraction.bookrunners.map(b => b.name),
         s: extraction.suggestedStage ?? '',
         c: extraction.confidence,
+        x: extraction.corrections ?? [],
       })
     : 'none';
   useEffect(() => {
@@ -129,6 +131,10 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
       if (effectiveMode === 'new_deal') { next[f.aiKey] = true; continue; }
       const cur = String((existingDeal?.[f.key] as string | undefined) ?? '').trim();
       next[f.aiKey] = cur !== aiVal;
+    }
+    // Never let a correction found in the chat be silently dropped.
+    for (const c of extraction.corrections ?? []) {
+      if ((extraction.keyTerms[c.field] ?? '').trim()) next[c.field] = true;
     }
     setAccepted(next);
     const brAcc: Record<string, boolean> = {};
@@ -409,6 +415,21 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
                     <span className="text-muted-foreground"> (currently {existingDeal.stage})</span>
                   )}
                 </label>
+              </div>
+            )}
+
+            {/* Corrections detected later in the chat */}
+            {(extraction.corrections?.length ?? 0) > 0 && (
+              <div className="rounded-md border border-amber-500/60 bg-amber-500/10 p-3 space-y-1">
+                <div className="text-xs uppercase tracking-wide text-amber-300 font-semibold">Corrections detected in chat</div>
+                <ul className="text-xs list-disc pl-4 space-y-0.5 text-amber-100">
+                  {extraction.corrections!.map((c, i) => (
+                    <li key={i}>
+                      <span className="font-semibold">{c.field}</span>: {c.from || '—'} → <span className="font-semibold">{c.to || '—'}</span>
+                      {c.evidence && <span className="text-amber-200/70"> — “{c.evidence}”</span>}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
