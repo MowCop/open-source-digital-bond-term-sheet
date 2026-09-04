@@ -92,7 +92,7 @@ RECENCY AND CORRECTIONS (critical — terms evolve during execution):
 - Treat "correction", "corrected", "amend", "amended", "revised", "update", "should be", "not X", "instead of" as explicit supersessions: the newer value wins and the older value must be discarded entirely.
 - A correction to "maturity" or "years" changes "Tenor" (and "Maturity Date" if a date is given). E.g. "Correction: maturity will be 9 years not 10 years" ⇒ "Tenor": "9Y".
 - The existing-deal list is BACKGROUND CONTEXT ONLY, never evidence. If the chat contradicts a stored deal value, the chat wins — the whole purpose of this extraction is to update stale stored values.
-- For every superseded field: add an entry to "corrections", cap its fieldConfidence at 0.7, and add an alerts bullet naming the change (e.g. "Tenor corrected from 10Y to 9Y").
+- For every superseded field: add an entry to "corrections", cap its fieldConfidence at 0.7, and add an alerts bullet naming the change (e.g. "Tenor corrected from 10Y to 9Y").`;
 
 const EMPTY_KEY_TERMS: Record<string,string> = {
   'Issuer Name': '', Currency: '', Size: '', Tenor: '',
