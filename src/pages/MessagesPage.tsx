@@ -95,8 +95,6 @@ export default function MessagesPage() {
   const [editingHeadlineId, setEditingHeadlineId] = useState<string | null>(null);
   const [headlineDraft, setHeadlineDraft] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [editingBorrowerKey, setEditingBorrowerKey] = useState<string | null>(null);
-  const [borrowerDraft, setBorrowerDraft] = useState('');
   const [editingBookrunnersKey, setEditingBookrunnersKey] = useState<string | null>(null);
   const [bookrunnersDraft, setBookrunnersDraft] = useState('');
   const panelTapRef = useRef<{ key: string; time: number; x: number; y: number } | null>(null);
@@ -383,7 +381,7 @@ export default function MessagesPage() {
   };
 
   const shouldIgnorePanelCloseGesture = (target: HTMLElement) =>
-    !!target.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap, [role="dialog"], [data-headline-editor], [data-borrower-editor]');
+    !!target.closest('button, a, input, textarea, select, [contenteditable="true"], .tiptap, [role="dialog"], [data-headline-editor]');
 
   const handlePanelTapClose = (groupKey: string, e: MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
@@ -430,14 +428,6 @@ export default function MessagesPage() {
     }
     setEditingHeadlineId(null);
     setShowSuggestions(false);
-  };
-
-  const saveBorrower = (group: AlertGroup) => {
-    const trimmed = borrowerDraft.trim();
-    if (trimmed && trimmed !== group.borrower && group.dealIds[0]) {
-      updateDeal(group.dealIds[0], { issuerName: trimmed });
-    }
-    setEditingBorrowerKey(null);
   };
 
   const saveBookrunners = (group: AlertGroup) => {
@@ -836,13 +826,12 @@ export default function MessagesPage() {
         <div>
           {/* Table header */}
 
-          <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
-            <div className="col-span-2">Last Updated</div>
+          <div className="grid grid-cols-12 gap-1 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
+            <div className="col-span-1">Last Updated</div>
             <div className="col-span-1"></div>
             <div className="col-span-1 text-center">Public Status</div>
             <div className="col-span-1">Chat</div>
-            <div className="col-span-2">Borrower</div>
-            <div className="col-span-3">Headline</div>
+            <div className="col-span-6">Headline</div>
             <div className="col-span-2 text-right pr-1">Stage</div>
           </div>
 
@@ -862,11 +851,10 @@ export default function MessagesPage() {
                     role="button"
                     tabIndex={0}
                     aria-label={`Open deal ${group.borrower}: ${group.headline}`}
-                    className={`grid grid-cols-12 gap-2 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
+                    className={`grid grid-cols-12 gap-1 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
                     onClick={(e) => {
                       // Don't toggle when interacting with the inline headline editor
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
-                      if ((e.target as HTMLElement).closest('[data-borrower-editor]')) return;
                       returnFocusRef.current = e.currentTarget as HTMLElement;
                       openFocus(groupKey);
                     }}
@@ -879,7 +867,7 @@ export default function MessagesPage() {
                       openFocus(groupKey);
                     }}
                   >
-                    <div className="col-span-2 text-timestamp text-sm">
+                    <div className="col-span-1 text-timestamp text-sm">
                       {format(group.latestMessage.updatedAt, 'MMM d')}
                     </div>
                     <div className="col-span-1 flex items-center gap-1">
@@ -933,35 +921,7 @@ export default function MessagesPage() {
                         );
                       })()}
                     </div>
-                    <div className="col-span-2 font-medium text-sm" data-borrower-editor onClick={(e) => e.stopPropagation()}>
-                      {canManageMessages && editingBorrowerKey === groupKey ? (
-                        <Input
-                          autoFocus
-                          value={borrowerDraft}
-                          onChange={(e) => setBorrowerDraft(e.target.value)}
-                          onBlur={() => saveBorrower(group)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') { e.preventDefault(); saveBorrower(group); }
-                            if (e.key === 'Escape') { setEditingBorrowerKey(null); }
-                          }}
-                          className="h-7 text-sm"
-                        />
-                      ) : (
-                        <span
-                          className={canManageMessages ? 'cursor-text hover:bg-background/50 rounded px-1 -mx-1' : ''}
-                          onClick={() => {
-                            if (!canManageMessages || !group.dealIds[0]) return;
-                            setEditingBorrowerKey(groupKey);
-                            setBorrowerDraft(group.borrower);
-                          }}
-                          title={canManageMessages ? 'Click to edit borrower name' : ''}
-                        >
-                          {group.borrower}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="col-span-3 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
+                    <div className="col-span-6 text-sm text-muted-foreground truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
                         <div className="relative">
                           <Input
