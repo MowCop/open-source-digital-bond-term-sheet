@@ -1153,14 +1153,9 @@ export default function MessagesPage() {
                   <div className="text-sm leading-5 font-bold text-amber-300 truncate">{fg.headline}</div>
                 </div>
                 <Badge className={`text-sm border ${stageBadge[fg.stage].className}`}>{stageBadge[fg.stage].label}</Badge>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs"
-                  onClick={() => setFocusedKey(null)}
-                >
-                  Back to board (Esc)
-                </Button>
+                <div className="text-sm text-timestamp whitespace-nowrap">
+                  {format(fg.latestMessage.updatedAt, 'MMM d, hh:mm a')}
+                </div>
               </div>
               <div className="flex-1 overflow-auto">
                 {renderDealDetail(fg, focusedKey)}
