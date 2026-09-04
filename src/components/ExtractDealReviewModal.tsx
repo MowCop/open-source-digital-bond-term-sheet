@@ -23,6 +23,7 @@ export interface AIExtraction {
   confidence: number;
   keyTerms: Record<string, string>;
   fieldConfidence?: Record<string, number>;
+  corrections?: Array<{ field: string; from: string; to: string; evidence: string }>;
   bookrunners: Bookrunner[];
   suggestedStage: string;
   alerts: string[];
