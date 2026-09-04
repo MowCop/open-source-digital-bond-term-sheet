@@ -412,6 +412,21 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
               </div>
             )}
 
+            {/* Corrections detected later in the chat */}
+            {(extraction.corrections?.length ?? 0) > 0 && (
+              <div className="rounded-md border border-amber-500/60 bg-amber-500/10 p-3 space-y-1">
+                <div className="text-xs uppercase tracking-wide text-amber-300 font-semibold">Corrections detected in chat</div>
+                <ul className="text-xs list-disc pl-4 space-y-0.5 text-amber-100">
+                  {extraction.corrections!.map((c, i) => (
+                    <li key={i}>
+                      <span className="font-semibold">{c.field}</span>: {c.from || '—'} → <span className="font-semibold">{c.to || '—'}</span>
+                      {c.evidence && <span className="text-amber-200/70"> — “{c.evidence}”</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Fields diff table */}
             <div className="rounded-md border border-border">
               <div className="grid grid-cols-[24px_1fr_1fr_1fr_56px] gap-2 px-3 py-2 text-[11px] uppercase tracking-wide border-b border-border bg-muted/30">
