@@ -119,6 +119,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
         b: extraction.bookrunners.map(b => b.name),
         s: extraction.suggestedStage ?? '',
         c: extraction.confidence,
+        x: extraction.corrections ?? [],
       })
     : 'none';
   useEffect(() => {
@@ -130,6 +131,10 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
       if (effectiveMode === 'new_deal') { next[f.aiKey] = true; continue; }
       const cur = String((existingDeal?.[f.key] as string | undefined) ?? '').trim();
       next[f.aiKey] = cur !== aiVal;
+    }
+    // Never let a correction found in the chat be silently dropped.
+    for (const c of extraction.corrections ?? []) {
+      if ((extraction.keyTerms[c.field] ?? '').trim()) next[c.field] = true;
     }
     setAccepted(next);
     const brAcc: Record<string, boolean> = {};
