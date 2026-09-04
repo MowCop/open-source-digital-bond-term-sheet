@@ -277,6 +277,25 @@ Deno.serve(async (req) => {
       ? obj.alerts.filter((s: any) => typeof s === 'string' && s.trim()).slice(0, 12).map((s: string) => s.trim())
       : [];
 
+    const corrections = Array.isArray(obj.corrections)
+      ? obj.corrections
+          .filter((c: any) => c && typeof c.field === 'string' && c.field.trim())
+          .slice(0, 12)
+          .map((c: any) => ({
+            field: String(c.field).trim(),
+            from: typeof c.from === 'string' ? c.from.trim() : '',
+            to: typeof c.to === 'string' ? c.to.trim() : '',
+            evidence: typeof c.evidence === 'string' ? c.evidence.trim().slice(0, 300) : '',
+          }))
+      : [];
+
+    // A corrected field must never be presented as fully certain.
+    for (const c of corrections) {
+      if (fieldConfidence[c.field] !== undefined) {
+        fieldConfidence[c.field] = Math.min(fieldConfidence[c.field], 0.7);
+      }
+    }
+
     const confidence = typeof obj.confidence === 'number' && isFinite(obj.confidence)
       ? Math.min(1, Math.max(0, obj.confidence)) : 0.5;
 
@@ -287,6 +306,7 @@ Deno.serve(async (req) => {
       confidence,
       keyTerms,
       fieldConfidence,
+      corrections,
       bookrunners,
       suggestedStage,
       alerts,
