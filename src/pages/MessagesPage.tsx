@@ -430,14 +430,6 @@ export default function MessagesPage() {
     setShowSuggestions(false);
   };
 
-  const saveBorrower = (group: AlertGroup) => {
-    const trimmed = borrowerDraft.trim();
-    if (trimmed && trimmed !== group.borrower && group.dealIds[0]) {
-      updateDeal(group.dealIds[0], { issuerName: trimmed });
-    }
-    setEditingBorrowerKey(null);
-  };
-
   const saveBookrunners = (group: AlertGroup) => {
     const dealId = group.dealIds[0];
     if (!dealId) { setEditingBookrunnersKey(null); return; }
