@@ -867,7 +867,7 @@ export default function MessagesPage() {
                       openFocus(groupKey);
                     }}
                   >
-                    <div className="col-span-2 text-timestamp text-sm">
+                    <div className="col-span-1 text-timestamp text-sm">
                       {format(group.latestMessage.updatedAt, 'MMM d')}
                     </div>
                     <div className="col-span-1 flex items-center gap-1">
