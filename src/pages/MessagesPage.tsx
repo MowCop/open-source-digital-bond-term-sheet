@@ -851,11 +851,10 @@ export default function MessagesPage() {
                     role="button"
                     tabIndex={0}
                     aria-label={`Open deal ${group.borrower}: ${group.headline}`}
-                    className={`grid grid-cols-12 gap-2 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
+                    className={`grid grid-cols-12 gap-1 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
                     onClick={(e) => {
                       // Don't toggle when interacting with the inline headline editor
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
-                      if ((e.target as HTMLElement).closest('[data-borrower-editor]')) return;
                       returnFocusRef.current = e.currentTarget as HTMLElement;
                       openFocus(groupKey);
                     }}
