@@ -837,10 +837,10 @@ export default function MessagesPage() {
           {/* Table header */}
 
           <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
+            <div className="col-span-2">Last Updated</div>
             <div className="col-span-1"></div>
             <div className="col-span-1 text-center">Public Status</div>
             <div className="col-span-1">Chat</div>
-            <div className="col-span-2">Last Updated</div>
             <div className="col-span-2">Borrower</div>
             <div className="col-span-3">Headline</div>
             <div className="col-span-2 text-right pr-1">Stage</div>
@@ -879,6 +879,9 @@ export default function MessagesPage() {
                       openFocus(groupKey);
                     }}
                   >
+                    <div className="col-span-2 text-timestamp text-sm">
+                      {format(group.latestMessage.updatedAt, 'MMM d')}
+                    </div>
                     <div className="col-span-1 flex items-center gap-1">
                       <button
                         type="button"
@@ -929,9 +932,6 @@ export default function MessagesPage() {
                           </button>
                         );
                       })()}
-                    </div>
-                    <div className="col-span-2 text-timestamp text-sm">
-                      {format(group.latestMessage.updatedAt, 'MMM d, hh:mm a')}
                     </div>
                     <div className="col-span-2 font-medium text-sm" data-borrower-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingBorrowerKey === groupKey ? (
