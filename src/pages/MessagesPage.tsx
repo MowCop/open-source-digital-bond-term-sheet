@@ -95,8 +95,6 @@ export default function MessagesPage() {
   const [editingHeadlineId, setEditingHeadlineId] = useState<string | null>(null);
   const [headlineDraft, setHeadlineDraft] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [editingBorrowerKey, setEditingBorrowerKey] = useState<string | null>(null);
-  const [borrowerDraft, setBorrowerDraft] = useState('');
   const [editingBookrunnersKey, setEditingBookrunnersKey] = useState<string | null>(null);
   const [bookrunnersDraft, setBookrunnersDraft] = useState('');
   const panelTapRef = useRef<{ key: string; time: number; x: number; y: number } | null>(null);
