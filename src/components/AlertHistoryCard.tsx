@@ -80,6 +80,7 @@ export default function AlertHistoryCard({
   embedded = false,
   chatUnread = 0,
   chatOpenOnBoard = false,
+  defaultExpanded = false,
   onUpdate,
   onRetract,
   onSend,
@@ -89,7 +90,7 @@ export default function AlertHistoryCard({
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [isOpen, setIsOpen] = useState(false);
   const [collapsedOverride, setCollapsedOverride] = useState(false);
-  const expanded = embedded ? true : (collapsedOverride ? false : (isOpen || isLatest));
+  const expanded = embedded ? true : (collapsedOverride ? false : (isOpen || isLatest || defaultExpanded));
   const [editSubject, setEditSubject] = useState(message.subject);
   const [editBody, setEditBody] = useState(message.body);
   const [previewAttachment, setPreviewAttachment] = useState<Attachment | null>(null);
