@@ -503,9 +503,9 @@ export default function MessagesPage() {
       <div className="flex items-center gap-2 flex-wrap">
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
         <Button
-          size="default"
+          size="icon"
           variant="outline"
-          className="toolbar-btn"
+          className="toolbar-square-btn"
           title="Edit the latest update"
           onClick={(e) => {
             e.stopPropagation();
@@ -514,25 +514,30 @@ export default function MessagesPage() {
             setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
           }}
         >
-          <Edit2 className="h-4 w-4 mr-1" />
-          Edit Latest
+          <Edit2 className="h-4 w-4" />
         </Button>
       )}
       {group.dealIds.length > 0 && (
-        <Button
-          size="default"
-          variant="outline"
-          className={`toolbar-btn ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
-          title={unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat'}
-          onClick={(e) => {
-            e.stopPropagation();
-            flash(`${groupKey}:openchat`);
-            handleOpenChat(group.dealIds, { modal: true });
-          }}
-        >
-          <MessageSquare className="h-4 w-4 mr-1" />
-          Chat{unread > 0 ? ` (${unread})` : ''}
-        </Button>
+        <span className="relative">
+          <Button
+            size="icon"
+            variant="outline"
+            className={`toolbar-square-btn ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
+            title={unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat'}
+            onClick={(e) => {
+              e.stopPropagation();
+              flash(`${groupKey}:openchat`);
+              handleOpenChat(group.dealIds, { modal: true });
+            }}
+          >
+            <MessageSquare className="h-4 w-4" />
+          </Button>
+          {unread > 0 && (
+            <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-0.5 rounded-full bg-destructive text-[10px] text-white font-medium flex items-center justify-center">
+              {unread > 9 ? '9+' : unread}
+            </span>
+          )}
+        </span>
       )}
       {showParse && (
         <div onClick={(e) => e.stopPropagation()}>
@@ -543,12 +548,13 @@ export default function MessagesPage() {
             <PopoverTrigger asChild>
               <div>
                 <ExtractDealFromChatButton
-                  size="default"
+                  size="icon"
                   source="thread"
                   messages={group.messages}
                   conversationLabel={group.headline || group.borrower}
                   targetDealIds={group.dealIds}
-                  className="toolbar-btn-ai"
+                  className="toolbar-square-btn-ai"
+                  iconOnly
                   armed={armed}
                   runSignal={parseRunSignals[groupKey] ?? 0}
                   onArmToggle={() => setParseOpen(s => ({ ...s, [groupKey]: !s[groupKey] }))}
@@ -591,48 +597,54 @@ export default function MessagesPage() {
         </div>
       )}
       {group.dealIds[0] && (
-        <Button
-          size="default"
-          variant="outline"
-          aria-pressed={activePanel === 'checker'}
-          className={`btn-champagne h-10 min-w-[140px] ${activePanel === 'checker' ? 'ring-2 ring-primary brightness-110' : ''}`}
-          title="AI Deal Checker"
-          onClick={(e) => { e.stopPropagation(); setActivePanel(p => p === 'checker' ? null : 'checker'); }}
-        >
-          <ShieldCheck className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} />
-          Deal Checker
-          <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} className="ml-1.5 border border-white/70" />
-        </Button>
+        <span className="relative">
+          <Button
+            size="icon"
+            variant="outline"
+            aria-pressed={activePanel === 'checker'}
+            className={`btn-champagne toolbar-square-btn-ai ${activePanel === 'checker' ? 'ring-2 ring-primary brightness-110' : ''}`}
+            title="AI Deal Checker"
+            onClick={(e) => { e.stopPropagation(); setActivePanel(p => p === 'checker' ? null : 'checker'); }}
+          >
+            <ShieldCheck className="h-4 w-4" style={{ color: '#f3d98a' }} />
+          </Button>
+          <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} className="absolute -top-1 -right-1 border border-white/70" />
+        </span>
       )}
       <Button
-        size="default"
+        size="icon"
         variant="outline"
-        className="toolbar-btn"
+        className="toolbar-square-btn"
         title="OrderBook (coming soon)"
         onClick={(e) => {
           e.stopPropagation();
           toast({ title: 'OrderBook', description: 'OrderBook module coming soon.' });
         }}
       >
-        <BookOpen className="h-4 w-4 mr-1" />
-        OrderBook
+        <BookOpen className="h-4 w-4" />
       </Button>
-      <Button
-        size="default"
-        variant="outline"
-        className="toolbar-btn"
-        title="View attached documentation"
-        onClick={(e) => { e.stopPropagation(); setDocsGroup(group); }}
-      >
-        <FileText className="h-4 w-4 mr-1" />
-        Docs{docCount > 0 ? ` (${docCount})` : ''}
-      </Button>
+      <span className="relative">
+        <Button
+          size="icon"
+          variant="outline"
+          className="toolbar-square-btn"
+          title="View attached documentation"
+          onClick={(e) => { e.stopPropagation(); setDocsGroup(group); }}
+        >
+          <FileText className="h-4 w-4" />
+        </Button>
+        {docCount > 0 && (
+          <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-0.5 rounded-full bg-primary text-[10px] text-primary-foreground font-medium flex items-center justify-center">
+            {docCount > 9 ? '9+' : docCount}
+          </span>
+        )}
+      </span>
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
         <div className="ml-auto flex items-center gap-2 flex-wrap bg-muted/40 border border-border/60 rounded-md px-2 py-1">
           <Button
-            size="default"
+            size="icon"
             variant="outline"
-            className="toolbar-btn toolbar-btn-action"
+            className="toolbar-square-btn toolbar-square-btn-action"
             title="Save the latest update"
             onClick={(e) => {
               e.stopPropagation();
@@ -642,13 +654,12 @@ export default function MessagesPage() {
               toast({ title: 'Saved', description: 'The latest update has been saved.' });
             }}
           >
-            <Save className="h-4 w-4 mr-1" />
-            Save
+            <Save className="h-4 w-4" />
           </Button>
           <Button
-            size="default"
+            size="icon"
             variant="outline"
-            className="toolbar-btn toolbar-btn-action"
+            className="toolbar-square-btn toolbar-square-btn-action"
             title="Save and send the latest update"
             onClick={(e) => {
               e.stopPropagation();
@@ -657,13 +668,12 @@ export default function MessagesPage() {
               setSaveSendSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
             }}
           >
-            <Send className="h-4 w-4 mr-1" />
-            Save &amp; Send
+            <Send className="h-4 w-4" />
           </Button>
           <Button
-            size="default"
+            size="icon"
             variant="outline"
-            className="toolbar-btn toolbar-btn-action"
+            className="toolbar-square-btn toolbar-square-btn-action"
             title="Retract the latest update"
             onClick={(e) => {
               e.stopPropagation();
@@ -671,8 +681,7 @@ export default function MessagesPage() {
               toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
             }}
           >
-            <RotateCcw className="h-4 w-4 mr-1" />
-            Retract
+            <RotateCcw className="h-4 w-4" />
           </Button>
         </div>
       )}
