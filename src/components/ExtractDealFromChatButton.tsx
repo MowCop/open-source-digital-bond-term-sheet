@@ -14,6 +14,11 @@ interface CommonProps {
   className?: string;
   size?: 'sm' | 'default' | 'icon';
   variant?: 'default' | 'outline' | 'ghost';
+  /** When provided, clicking the button toggles "armed" state instead of running immediately. */
+  onArmToggle?: () => void;
+  armed?: boolean;
+  /** Increment to trigger a run externally (used with onArmToggle). */
+  runSignal?: number;
 }
 
 interface FromThreadProps extends CommonProps {
