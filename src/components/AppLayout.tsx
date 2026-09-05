@@ -17,7 +17,7 @@ const navItems = [
   { path: '/bond-console', label: 'Bond Console', icon: Settings },
   { path: '/master-admin', label: 'Master Admin', icon: Shield, masterOnly: true },
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
-  { path: '/sync-log', label: 'Sync Log', icon: RefreshCw, adminOnly: true },
+  
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -44,7 +44,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <aside className="w-60 bg-sidebar text-sidebar-foreground flex flex-col shrink-0">
-        <div className="flex items-center border-b border-sidebar-border px-4 pt-16 pb-4">
+        <div className="flex items-center border-b border-sidebar-border px-4 pt-[72px] pb-4">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 rounded-sm shrink-0">
               <div className="w-3.5 h-3.5 bg-sidebar rotate-45" />
@@ -64,7 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             if (!visible) return null;
             return (
               <Link key={item.path} to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground font-bold' : 'hover:bg-sidebar-accent/50'}`}>
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white transition-colors ${isActive ? 'bg-sidebar-accent font-bold' : 'hover:bg-sidebar-accent/50'}`}>
                 <Icon className="h-4 w-4" />
                 {item.label}
               </Link>
