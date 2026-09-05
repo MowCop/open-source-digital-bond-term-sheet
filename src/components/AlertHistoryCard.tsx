@@ -75,6 +75,8 @@ export default function AlertHistoryCard({
   saveSignal = 0,
   saveSendSignal = 0,
   embedded = false,
+  chatUnread = 0,
+  chatOpenOnBoard = false,
   onUpdate,
   onRetract,
   onSend,
