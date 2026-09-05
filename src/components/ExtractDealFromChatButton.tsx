@@ -163,22 +163,31 @@ export default function ExtractDealFromChatButton(props: Props) {
 
   runRef.current = handleClick;
 
+  const button = (
+    <Button
+      size={iconOnly ? 'icon' : size}
+      variant={variant}
+      aria-pressed={props.onArmToggle ? !!props.armed : undefined}
+      className={`btn-champagne ${iconOnly ? 'toolbar-square-btn-ai' : ''} ${popping ? 'is-popping' : ''} ${props.armed ? 'ring-2 ring-primary brightness-110' : ''} ${className ?? ''}`}
+      onClick={props.onArmToggle ? (e) => { e.stopPropagation(); props.onArmToggle!(); } : handleClick}
+      disabled={loading}
+      title={props.onArmToggle ? 'Choose a source, then run AI DataParse' : 'Parse bond deal info from this conversation'}
+    >
+      {loading
+        ? <Loader2 className={`${iconOnly ? 'h-4 w-4' : 'h-3.5 w-3.5 mr-1'} animate-spin`} />
+        : <Sparkles className={`${iconOnly ? 'h-4 w-4' : 'h-3.5 w-3.5 mr-1'}`} style={{ color: '#f3d98a' }} />}
+      {!iconOnly && 'AI DataParse'}
+    </Button>
+  );
+
   return (
     <>
-      <Button
-        size={iconOnly ? 'icon' : size}
-        variant={variant}
-        aria-pressed={props.onArmToggle ? !!props.armed : undefined}
-        className={`btn-champagne ${iconOnly ? 'toolbar-square-btn-ai' : ''} ${popping ? 'is-popping' : ''} ${props.armed ? 'ring-2 ring-primary brightness-110' : ''} ${className ?? ''}`}
-        onClick={props.onArmToggle ? (e) => { e.stopPropagation(); props.onArmToggle!(); } : handleClick}
-        disabled={loading}
-        title={props.onArmToggle ? 'Choose a source, then run AI DataParse' : 'Parse bond deal info from this conversation'}
-      >
-        {loading
-          ? <Loader2 className={`${iconOnly ? 'h-4 w-4' : 'h-3.5 w-3.5 mr-1'} animate-spin`} />
-          : <Sparkles className={`${iconOnly ? 'h-4 w-4' : 'h-3.5 w-3.5 mr-1'}`} style={{ color: '#f3d98a' }} />}
-        {!iconOnly && 'AI DataParse'}
-      </Button>
+      {tooltip ? (
+        <Tooltip>
+          <TooltipTrigger asChild>{button}</TooltipTrigger>
+          <TooltipContent side="bottom">{tooltip}</TooltipContent>
+        </Tooltip>
+      ) : button}
       <ExtractDealReviewModal
         open={open}
         onOpenChange={setOpen}
