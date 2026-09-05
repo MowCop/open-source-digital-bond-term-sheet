@@ -100,7 +100,7 @@ export default function AlertHistoryCard({
   const [attachmentsHover, setAttachmentsHover] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [bulletinOpen, setBulletinOpen] = useState(true);
+  
   const { deals } = useApp();
   const editDeal = message.dealIds?.[0]
     ? deals.find(d => d.id === message.dealIds[0]) || null
