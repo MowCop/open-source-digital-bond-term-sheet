@@ -156,15 +156,18 @@ export default function ExtractDealFromChatButton(props: Props) {
     }
   };
 
+  runRef.current = handleClick;
+
   return (
     <>
       <Button
         size={size}
         variant={variant}
-        className={`btn-champagne ${popping ? 'is-popping' : ''} ${className ?? ''}`}
-        onClick={handleClick}
+        aria-pressed={props.onArmToggle ? !!props.armed : undefined}
+        className={`btn-champagne ${popping ? 'is-popping' : ''} ${props.armed ? 'ring-2 ring-primary brightness-110' : ''} ${className ?? ''}`}
+        onClick={props.onArmToggle ? (e) => { e.stopPropagation(); props.onArmToggle!(); } : handleClick}
         disabled={loading}
-        title="Parse bond deal info from this conversation"
+        title={props.onArmToggle ? 'Choose a source, then run AI DataParse' : 'Parse bond deal info from this conversation'}
       >
         {loading
           ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
