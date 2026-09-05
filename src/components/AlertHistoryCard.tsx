@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Message, Attachment } from '@/types/bond';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -98,6 +99,7 @@ export default function AlertHistoryCard({
   const [docsOpen, setDocsOpen] = useState(true);
   const [attachmentsHover, setAttachmentsHover] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [bulletinOpen, setBulletinOpen] = useState(true);
   const { deals } = useApp();
   const editDeal = message.dealIds?.[0]
@@ -190,6 +192,14 @@ export default function AlertHistoryCard({
     // Signal parent (MessagesPage) to also collapse the deal row so a single
     // Esc inside the editor returns the user all the way to the Issue Board.
     window.dispatchEvent(new CustomEvent('alert-editor-closed'));
+  };
+
+  const handleBackToMenu = () => {
+    if (isDirty && !window.confirm('You have unsaved changes. Discard and return to Main Menu?')) {
+      return;
+    }
+    handleCancel();
+    navigate('/messages');
   };
 
   const inferType = (name: string): Attachment['type'] => {
@@ -579,10 +589,10 @@ export default function AlertHistoryCard({
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={attemptClose}
+              onClick={handleBackToMenu}
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              <ArrowLeft className="h-3 w-3" /> Back to Issue Board
+              <ArrowLeft className="h-3 w-3" /> Main Menu
             </button>
             {editDeal && (
               <Badge className={`text-[10px] mr-8 ${editStageColor[editDeal.stage]}`}>
