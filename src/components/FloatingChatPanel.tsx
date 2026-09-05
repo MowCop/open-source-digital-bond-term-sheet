@@ -18,12 +18,17 @@ interface FloatingChatPanelProps {
  */
 const DRAG_HANDLE_HEIGHT = 64; // px from top of panel that act as drag region
 const EDGE_MARGIN = 80; // keep at least this much of the panel on-screen
+const MIN_W = 300;
+const MIN_H = 260;
 
 export default function FloatingChatPanel({ activeDealId, onClose, onExpandToModal }: FloatingChatPanelProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [resizing, setResizing] = useState(false);
   const dragState = useRef<{ pointerId: number; offsetX: number; offsetY: number } | null>(null);
+
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
