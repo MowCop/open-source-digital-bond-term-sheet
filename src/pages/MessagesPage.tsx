@@ -503,36 +503,44 @@ export default function MessagesPage() {
     <div className="pb-3 mb-3 border-b border-border/50 space-y-2">
       <div className="flex items-center gap-2 flex-wrap">
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
-        <Button
-          size="icon"
-          variant="outline"
-          className="toolbar-square-btn"
-          title="Edit the latest update"
-          onClick={(e) => {
-            e.stopPropagation();
-            const id = group.latestMessage.id;
-            setActivePanel('history');
-            setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
-          }}
-        >
-          <Edit2 className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="outline"
+              className="toolbar-square-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                const id = group.latestMessage.id;
+                setActivePanel('history');
+                setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+              }}
+            >
+              <Edit2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Edit Latest</TooltipContent>
+        </Tooltip>
       )}
       {group.dealIds.length > 0 && (
         <span className="relative">
-          <Button
-            size="icon"
-            variant="outline"
-            className={`toolbar-square-btn ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
-            title={unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat'}
-            onClick={(e) => {
-              e.stopPropagation();
-              flash(`${groupKey}:openchat`);
-              handleOpenChat(group.dealIds, { modal: true });
-            }}
-          >
-            <MessageSquare className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                className={`toolbar-square-btn ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  flash(`${groupKey}:openchat`);
+                  handleOpenChat(group.dealIds, { modal: true });
+                }}
+              >
+                <MessageSquare className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{unread > 0 ? `Chat — ${unread} unread` : 'Chat'}</TooltipContent>
+          </Tooltip>
           {unread > 0 && (
             <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-0.5 rounded-full bg-destructive text-[10px] text-white font-medium flex items-center justify-center">
               {unread > 9 ? '9+' : unread}
@@ -556,6 +564,7 @@ export default function MessagesPage() {
                   targetDealIds={group.dealIds}
                   className="toolbar-square-btn-ai"
                   iconOnly
+                  tooltip="AI DataParse"
                   armed={armed}
                   runSignal={parseRunSignals[groupKey] ?? 0}
                   onArmToggle={() => setParseOpen(s => ({ ...s, [groupKey]: !s[groupKey] }))}
@@ -599,41 +608,53 @@ export default function MessagesPage() {
       )}
       {group.dealIds[0] && (
         <span className="relative">
-          <Button
-            size="icon"
-            variant="outline"
-            aria-pressed={activePanel === 'checker'}
-            className={`btn-champagne toolbar-square-btn-ai ${activePanel === 'checker' ? 'ring-2 ring-primary brightness-110' : ''}`}
-            title="AI Deal Checker"
-            onClick={(e) => { e.stopPropagation(); setActivePanel(p => p === 'checker' ? null : 'checker'); }}
-          >
-            <ShieldCheck className="h-4 w-4" style={{ color: '#f3d98a' }} />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                aria-pressed={activePanel === 'checker'}
+                className={`btn-champagne toolbar-square-btn-ai ${activePanel === 'checker' ? 'ring-2 ring-primary brightness-110' : ''}`}
+                onClick={(e) => { e.stopPropagation(); setActivePanel(p => p === 'checker' ? null : 'checker'); }}
+              >
+                <ShieldCheck className="h-4 w-4" style={{ color: '#f3d98a' }} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">AI Deal Checker</TooltipContent>
+          </Tooltip>
           <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} className="absolute -top-1 -right-1 border border-white/70" />
         </span>
       )}
-      <Button
-        size="icon"
-        variant="outline"
-        className="toolbar-square-btn"
-        title="OrderBook (coming soon)"
-        onClick={(e) => {
-          e.stopPropagation();
-          toast({ title: 'OrderBook', description: 'OrderBook module coming soon.' });
-        }}
-      >
-        <BookOpen className="h-4 w-4" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            size="icon"
+            variant="outline"
+            className="toolbar-square-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              toast({ title: 'OrderBook', description: 'OrderBook module coming soon.' });
+            }}
+          >
+            <BookOpen className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">OrderBook</TooltipContent>
+      </Tooltip>
       <span className="relative">
-        <Button
-          size="icon"
-          variant="outline"
-          className="toolbar-square-btn"
-          title="View attached documentation"
-          onClick={(e) => { e.stopPropagation(); setDocsGroup(group); }}
-        >
-          <FileText className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="outline"
+              className="toolbar-square-btn"
+              onClick={(e) => { e.stopPropagation(); setDocsGroup(group); }}
+            >
+              <FileText className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Docs</TooltipContent>
+        </Tooltip>
         {docCount > 0 && (
           <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-0.5 rounded-full bg-primary text-[10px] text-primary-foreground font-medium flex items-center justify-center">
             {docCount > 9 ? '9+' : docCount}
@@ -642,48 +663,60 @@ export default function MessagesPage() {
       </span>
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
         <div className="ml-auto flex items-center gap-2 flex-wrap bg-muted/40 border border-border/60 rounded-md px-2 py-1">
-          <Button
-            size="icon"
-            variant="outline"
-            className="toolbar-square-btn toolbar-square-btn-action"
-            title="Save the latest update"
-            onClick={(e) => {
-              e.stopPropagation();
-              const id = group.latestMessage.id;
-              setActivePanel('history');
-              setSaveSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
-              toast({ title: 'Saved', description: 'The latest update has been saved.' });
-            }}
-          >
-            <Save className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            className="toolbar-square-btn toolbar-square-btn-action"
-            title="Save and send the latest update"
-            onClick={(e) => {
-              e.stopPropagation();
-              const id = group.latestMessage.id;
-              setActivePanel('history');
-              setSaveSendSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
-            }}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            className="toolbar-square-btn toolbar-square-btn-action"
-            title="Retract the latest update"
-            onClick={(e) => {
-              e.stopPropagation();
-              retractMessage(group.latestMessage.id);
-              toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
-            }}
-          >
-            <RotateCcw className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                className="toolbar-square-btn toolbar-square-btn-action"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const id = group.latestMessage.id;
+                  setActivePanel('history');
+                  setSaveSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+                  toast({ title: 'Saved', description: 'The latest update has been saved.' });
+                }}
+              >
+                <Save className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Save</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                className="toolbar-square-btn toolbar-square-btn-action"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const id = group.latestMessage.id;
+                  setActivePanel('history');
+                  setSaveSendSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+                }}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Save & Send</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                className="toolbar-square-btn toolbar-square-btn-action"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  retractMessage(group.latestMessage.id);
+                  toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+                }}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Retract</TooltipContent>
+          </Tooltip>
         </div>
       )}
       </div>
