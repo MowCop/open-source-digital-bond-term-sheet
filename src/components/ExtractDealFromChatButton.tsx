@@ -163,18 +163,18 @@ export default function ExtractDealFromChatButton(props: Props) {
   return (
     <>
       <Button
-        size={size}
+        size={iconOnly ? 'icon' : size}
         variant={variant}
         aria-pressed={props.onArmToggle ? !!props.armed : undefined}
-        className={`btn-champagne ${popping ? 'is-popping' : ''} ${props.armed ? 'ring-2 ring-primary brightness-110' : ''} ${className ?? ''}`}
+        className={`btn-champagne ${iconOnly ? 'toolbar-square-btn-ai' : ''} ${popping ? 'is-popping' : ''} ${props.armed ? 'ring-2 ring-primary brightness-110' : ''} ${className ?? ''}`}
         onClick={props.onArmToggle ? (e) => { e.stopPropagation(); props.onArmToggle!(); } : handleClick}
         disabled={loading}
         title={props.onArmToggle ? 'Choose a source, then run AI DataParse' : 'Parse bond deal info from this conversation'}
       >
         {loading
-          ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-          : <Sparkles className="h-3.5 w-3.5 mr-1" style={{ color: '#f3d98a' }} />}
-        AI DataParse
+          ? <Loader2 className={`${iconOnly ? 'h-4 w-4' : 'h-3.5 w-3.5 mr-1'} animate-spin`} />
+          : <Sparkles className={`${iconOnly ? 'h-4 w-4' : 'h-3.5 w-3.5 mr-1'}`} style={{ color: '#f3d98a' }} />}
+        {!iconOnly && 'AI DataParse'}
       </Button>
       <ExtractDealReviewModal
         open={open}
