@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +22,8 @@ interface CommonProps {
   runSignal?: number;
   /** Render as a square icon-only button. */
   iconOnly?: boolean;
+  /** Tooltip label shown on hover. */
+  tooltip?: string;
 }
 
 interface FromThreadProps extends CommonProps {
@@ -67,7 +70,7 @@ function buildChannelTranscript(msgs: ChatMessage[]): string {
 }
 
 export default function ExtractDealFromChatButton(props: Props) {
-  const { conversationLabel, targetDealIds, className, size = 'sm', variant = 'outline', iconOnly = false } = props;
+  const { conversationLabel, targetDealIds, className, size = 'sm', variant = 'outline', iconOnly = false, tooltip } = props;
   const { deals, currentUser } = useApp();
   const { toast } = useToast();
 
@@ -160,22 +163,31 @@ export default function ExtractDealFromChatButton(props: Props) {
 
   runRef.current = handleClick;
 
+  const button = (
+    <Button
+      size={iconOnly ? 'icon' : size}
+      variant={variant}
+      aria-pressed={props.onArmToggle ? !!props.armed : undefined}
+      className={`btn-champagne ${iconOnly ? 'toolbar-square-btn-ai' : ''} ${popping ? 'is-popping' : ''} ${props.armed ? 'ring-2 ring-primary brightness-110' : ''} ${className ?? ''}`}
+      onClick={props.onArmToggle ? (e) => { e.stopPropagation(); props.onArmToggle!(); } : handleClick}
+      disabled={loading}
+      title={props.onArmToggle ? 'Choose a source, then run AI DataParse' : 'Parse bond deal info from this conversation'}
+    >
+      {loading
+        ? <Loader2 className={`${iconOnly ? 'h-4 w-4' : 'h-3.5 w-3.5 mr-1'} animate-spin`} />
+        : <Sparkles className={`${iconOnly ? 'h-4 w-4' : 'h-3.5 w-3.5 mr-1'}`} style={{ color: '#f3d98a' }} />}
+      {!iconOnly && 'AI DataParse'}
+    </Button>
+  );
+
   return (
     <>
-      <Button
-        size={iconOnly ? 'icon' : size}
-        variant={variant}
-        aria-pressed={props.onArmToggle ? !!props.armed : undefined}
-        className={`btn-champagne ${iconOnly ? 'toolbar-square-btn-ai' : ''} ${popping ? 'is-popping' : ''} ${props.armed ? 'ring-2 ring-primary brightness-110' : ''} ${className ?? ''}`}
-        onClick={props.onArmToggle ? (e) => { e.stopPropagation(); props.onArmToggle!(); } : handleClick}
-        disabled={loading}
-        title={props.onArmToggle ? 'Choose a source, then run AI DataParse' : 'Parse bond deal info from this conversation'}
-      >
-        {loading
-          ? <Loader2 className={`${iconOnly ? 'h-4 w-4' : 'h-3.5 w-3.5 mr-1'} animate-spin`} />
-          : <Sparkles className={`${iconOnly ? 'h-4 w-4' : 'h-3.5 w-3.5 mr-1'}`} style={{ color: '#f3d98a' }} />}
-        {!iconOnly && 'AI DataParse'}
-      </Button>
+      {tooltip ? (
+        <Tooltip>
+          <TooltipTrigger asChild>{button}</TooltipTrigger>
+          <TooltipContent side="bottom">{tooltip}</TooltipContent>
+        </Tooltip>
+      ) : button}
       <ExtractDealReviewModal
         open={open}
         onOpenChange={setOpen}
