@@ -22,6 +22,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const stageBadge: Record<DealStage, { label: string; className: string }> = {
   Mandate: { label: 'Mandate', className: 'bg-blue-900/50 text-green-400' },
