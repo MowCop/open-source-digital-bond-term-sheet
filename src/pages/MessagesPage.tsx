@@ -801,7 +801,7 @@ export default function MessagesPage() {
                                 <div className="space-y-2">
                                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                     {group.messages.length > 1 && (
-                                      <span className="text-[10px] font-semibold uppercase text-accent bg-accent/10 px-1.5 py-0.5 rounded">
+                                    <span className="text-[11px] font-bold uppercase text-sky-300 bg-sky-400/15 px-2 py-0.5 rounded whitespace-nowrap shadow-[0_0_6px_rgba(125,211,252,0.35)]">
                                         Update #{group.messages.length - 1}
                                       </span>
                                     )}
