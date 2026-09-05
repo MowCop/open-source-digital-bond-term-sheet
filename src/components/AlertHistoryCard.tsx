@@ -53,6 +53,10 @@ interface AlertHistoryCardProps {
    * expanded.
    */
   embedded?: boolean;
+  /** Unread chat count for this deal, shown on the edit-screen Chat icon. */
+  chatUnread?: number;
+  /** True when the deal chat is already open on the board; keeps it open in edit. */
+  chatOpenOnBoard?: boolean;
   onUpdate: (id: string, updates: Partial<Message>) => void;
   onRetract: (id: string) => void;
   onSend: (id: string) => void;
