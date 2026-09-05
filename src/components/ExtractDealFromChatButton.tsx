@@ -19,6 +19,8 @@ interface CommonProps {
   armed?: boolean;
   /** Increment to trigger a run externally (used with onArmToggle). */
   runSignal?: number;
+  /** Render as a square icon-only button. */
+  iconOnly?: boolean;
 }
 
 interface FromThreadProps extends CommonProps {
