@@ -105,7 +105,7 @@ export default function FloatingChatPanel({ activeDealId, onClose, onExpandToMod
     if (!node) return;
     const rect = node.getBoundingClientRect();
     if (e.clientY - rect.top > DRAG_HANDLE_HEIGHT) return;
-    setPos(null);
+    setPos(null); setSize(null);
   };
 
   const positioned = pos !== null;
