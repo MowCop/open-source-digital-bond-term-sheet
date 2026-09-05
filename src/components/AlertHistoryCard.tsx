@@ -865,14 +865,19 @@ export default function AlertHistoryCard({
             </Button>
           )}
           {(isSent || isDraft) && !isRetracted && (
-            <Button
-              size="icon"
-              variant="destructive"
-              className="h-10 w-10"
-              onClick={() => onRetract(message.id)}
-            >
-              <RotateCcw className="h-4 w-4 text-red-500" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="toolbar-square-btn toolbar-square-btn-action"
+                  onClick={() => onRetract(message.id)}
+                >
+                  <RotateCcw className="h-4 w-4 text-red-500" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Retract</TooltipContent>
+            </Tooltip>
           )}
           {(isSent || isDraft) && !isRetracted && (
             <Button
