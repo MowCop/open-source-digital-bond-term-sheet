@@ -938,10 +938,11 @@ export default function MessagesPage() {
                     aria-label={`Open deal ${group.borrower}: ${group.headline}`}
                     className={`grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
                     onClick={(e) => {
-                      // Don't toggle when interacting with the inline headline editor
-                      if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
                       returnFocusRef.current = e.currentTarget as HTMLElement;
                       openFocus(groupKey);
+                      // Open the latest alert directly in edit mode inside Focus Mode.
+                      const id = group.latestMessage.id;
+                      setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
                     }}
                     onKeyDown={(e) => {
                       if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -950,6 +951,8 @@ export default function MessagesPage() {
                       e.preventDefault();
                       returnFocusRef.current = e.currentTarget as HTMLElement;
                       openFocus(groupKey);
+                      const id = group.latestMessage.id;
+                      setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
                     }}
                   >
                     <div className="text-timestamp text-sm whitespace-nowrap">
