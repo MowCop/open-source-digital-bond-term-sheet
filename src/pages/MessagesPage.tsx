@@ -22,6 +22,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const stageBadge: Record<DealStage, { label: string; className: string }> = {
   Mandate: { label: 'Mandate', className: 'bg-blue-900/50 text-green-400' },
@@ -86,7 +88,7 @@ export default function MessagesPage() {
   const [saveSendSignals, setSaveSendSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [docsGroup, setDocsGroup] = useState<AlertGroup | null>(null);
-  const [parseArmed, setParseArmed] = useState<Record<string, boolean>>({});
+  const [parseOpen, setParseOpen] = useState<Record<string, boolean>>({});
   const [parseSources, setParseSources] = useState<Record<string, { chat: boolean; docs: boolean }>>({});
   const [parseRunSignals, setParseRunSignals] = useState<Record<string, number>>({});
   const [filterStage, setFilterStage] = useState<string>('all');
@@ -478,7 +480,7 @@ export default function MessagesPage() {
 
 
   const renderDealActions = (group: AlertGroup, groupKey: string) => {
-    const armed = !!parseArmed[groupKey];
+    const armed = !!parseOpen[groupKey];
     const sources = parseSources[groupKey] ?? { chat: true, docs: false };
     const docCount = group.messages.reduce((n, m) => n + (m.attachments?.length ?? 0), 0);
     const unread = getUnreadChatCount(group.dealIds);
@@ -533,17 +535,58 @@ export default function MessagesPage() {
       )}
       {showParse && (
         <div onClick={(e) => e.stopPropagation()}>
-          <ExtractDealFromChatButton
-            size="default"
-            source="thread"
-            messages={group.messages}
-            conversationLabel={group.headline || group.borrower}
-            targetDealIds={group.dealIds}
-            className="toolbar-btn-ai"
-            armed={armed}
-            runSignal={parseRunSignals[groupKey] ?? 0}
-            onArmToggle={() => setParseArmed(s => ({ ...s, [groupKey]: !s[groupKey] }))}
-          />
+          <Popover
+            open={armed}
+            onOpenChange={(o) => setParseOpen(s => ({ ...s, [groupKey]: o }))}
+          >
+            <PopoverTrigger asChild>
+              <div>
+                <ExtractDealFromChatButton
+                  size="default"
+                  source="thread"
+                  messages={group.messages}
+                  conversationLabel={group.headline || group.borrower}
+                  targetDealIds={group.dealIds}
+                  className="toolbar-btn-ai"
+                  armed={armed}
+                  runSignal={parseRunSignals[groupKey] ?? 0}
+                  onArmToggle={() => setParseOpen(s => ({ ...s, [groupKey]: !s[groupKey] }))}
+                />
+              </div>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-72 p-3 space-y-3" onClick={(e) => e.stopPropagation()}>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Parse deal data from:</p>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <Checkbox checked={sources.chat} onCheckedChange={() => toggleSource('chat')} className="mt-0.5" />
+                <span className="text-sm leading-tight">
+                  Chat thread
+                  <span className="block text-xs text-muted-foreground">{group.messages.length} message{group.messages.length === 1 ? '' : 's'} in this deal</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <Checkbox checked={sources.docs} onCheckedChange={() => toggleSource('docs')} className="mt-0.5" />
+                <span className="text-sm leading-tight">
+                  Documents <span className="text-xs text-muted-foreground">(coming soon)</span>
+                  <span className="block text-xs text-muted-foreground">{docCount} attached</span>
+                </span>
+              </label>
+              <div className="flex justify-end pt-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="toolbar-btn toolbar-btn-action"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setParseRunSignals(s => ({ ...s, [groupKey]: (s[groupKey] || 0) + 1 }));
+                    setParseOpen(s => ({ ...s, [groupKey]: false }));
+                  }}
+                >
+                  <Sparkles className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} />
+                  Run AI Parse
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       )}
       <Button
@@ -575,21 +618,15 @@ export default function MessagesPage() {
       )}
       </div>
 
-      {/* Sources for AI DataParse — Chat and Docs live here */}
-      <div className="flex items-center gap-2 flex-wrap pl-1">
-        {armed && (
-          <span className="text-xs uppercase tracking-wide text-muted-foreground mr-1">From:</span>
-        )}
+      <div className="flex items-center gap-2 flex-wrap">
         {group.dealIds.length > 0 && (
           <Button
             size="default"
             variant="outline"
-            aria-pressed={armed ? sources.chat : undefined}
-            className={`toolbar-btn ${armed && sources.chat ? 'toolbar-btn-selected' : ''} ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
-            title={armed ? 'Use the deal chat as the parse source' : (unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat')}
+            className={`toolbar-btn ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
+            title={unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat'}
             onClick={(e) => {
               e.stopPropagation();
-              if (armed) { toggleSource('chat'); return; }
               flash(`${groupKey}:openchat`);
               handleOpenChat(group.dealIds, { modal: true });
             }}
@@ -601,36 +638,13 @@ export default function MessagesPage() {
         <Button
           size="default"
           variant="outline"
-          aria-pressed={armed ? sources.docs : undefined}
-          className={`toolbar-btn ${armed && sources.docs ? 'toolbar-btn-selected' : ''}`}
-          title={armed ? 'Use attached documents as the parse source (coming soon)' : 'View attached documentation'}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (armed) { toggleSource('docs'); return; }
-            setDocsGroup(group);
-          }}
+          className="toolbar-btn"
+          title="View attached documentation"
+          onClick={(e) => { e.stopPropagation(); setDocsGroup(group); }}
         >
           <FileText className="h-4 w-4 mr-1" />
           Docs{docCount > 0 ? ` (${docCount})` : ''}
         </Button>
-        {armed && showParse && (
-          <Button
-            size="default"
-            variant="outline"
-            className="toolbar-btn toolbar-btn-action"
-            title="Run AI DataParse using the selected sources"
-            onClick={(e) => {
-              e.stopPropagation();
-              setParseRunSignals(s => ({ ...s, [groupKey]: (s[groupKey] || 0) + 1 }));
-            }}
-          >
-            <Sparkles className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} />
-            Run
-          </Button>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 flex-wrap">
       <Button
         size="default"
         variant="outline"
