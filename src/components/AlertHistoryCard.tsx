@@ -199,6 +199,36 @@ export default function AlertHistoryCard({
     return 'docx';
   };
 
+  const dragDepth = useRef(0);
+  const isFileDrag = (e: React.DragEvent) => Array.from(e.dataTransfer?.types || []).includes('Files');
+  const dropZoneProps = {
+    onDragEnter: (e: React.DragEvent) => {
+      if (!isFileDrag(e)) return;
+      e.preventDefault();
+      dragDepth.current += 1;
+      setDragOver(true);
+    },
+    onDragOver: (e: React.DragEvent) => {
+      if (!isFileDrag(e)) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      setDragOver(true);
+    },
+    onDragLeave: (e: React.DragEvent) => {
+      if (!isFileDrag(e)) return;
+      dragDepth.current = Math.max(0, dragDepth.current - 1);
+      if (dragDepth.current === 0) setDragOver(false);
+    },
+    onDrop: (e: React.DragEvent) => {
+      if (!isFileDrag(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dragDepth.current = 0;
+      setDragOver(false);
+      handleFiles(e.dataTransfer.files);
+    },
+  };
+
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const accepted = Array.from(files).filter(f => /\.(pdf|docx?|pptx?)$/i.test(f.name));
@@ -383,7 +413,9 @@ export default function AlertHistoryCard({
         className="space-y-1.5"
         onMouseEnter={() => setAttachmentsHover(true)}
         onMouseLeave={() => setAttachmentsHover(false)}
+        {...dropZoneProps}
       >
+
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
             Attachments ({message.attachments.length})
@@ -409,9 +441,7 @@ export default function AlertHistoryCard({
               {(attachmentsHover || dragOver) && (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
+
                   className={`flex-1 border border-dashed rounded px-2 py-1 text-center text-xs text-muted-foreground transition-colors cursor-pointer hover:border-primary hover:bg-primary/5 ${dragOver ? 'border-primary bg-primary/10' : 'border-border'}`}
                 >
                   Drop PDF, DOCX, or PPTX here
@@ -740,7 +770,9 @@ export default function AlertHistoryCard({
           className="px-5 py-2 border-t border-border shrink-0 relative"
           onMouseEnter={() => setAttachmentsHover(true)}
           onMouseLeave={() => setAttachmentsHover(false)}
+          {...dropZoneProps}
         >
+
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
               Attachments ({message.attachments.length})
@@ -766,9 +798,7 @@ export default function AlertHistoryCard({
                 {(attachmentsHover || dragOver) && (
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
+
                     className={`flex-1 border border-dashed rounded px-2 py-1 text-center text-xs text-muted-foreground transition-colors cursor-pointer hover:border-primary hover:bg-primary/5 ${dragOver ? 'border-primary bg-primary/10' : 'border-border'}`}
                   >
                     Drop PDF, DOCX, or PPTX here
