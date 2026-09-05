@@ -738,7 +738,7 @@ export default function AlertHistoryCard({
             <Button variant="outline" className="btn-footer-action" onClick={handleSave}>
               <Save className="h-4 w-4 mr-1" /> Save
             </Button>
-            {isSent && !isRetracted && (
+            {!isRetracted && (
               <Button className="btn-footer-action" onClick={handleSaveAndSend}>
                 <Send className="h-4 w-4 mr-1" /> Save &amp; Send
               </Button>
