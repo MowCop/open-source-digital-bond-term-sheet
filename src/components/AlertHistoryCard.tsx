@@ -602,6 +602,15 @@ export default function AlertHistoryCard({
           </div>
         </DialogHeader>
 
+        {/* Update number — top, centered, bright blue */}
+        {versionLabel && (
+          <div className="flex justify-center px-5 py-1 border-b border-border/50 shrink-0 bg-card/20">
+            <span className="text-sm font-bold text-blue-400 tracking-wide">
+              {versionLabel}
+            </span>
+          </div>
+        )}
+
         {/* Functional icon toolbar */}
         <div className="flex items-center gap-2 px-5 py-2 border-b border-border shrink-0 bg-card/30">
           <Tooltip>
