@@ -88,7 +88,7 @@ export default function MessagesPage() {
   const [saveSendSignals, setSaveSendSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [docsGroup, setDocsGroup] = useState<AlertGroup | null>(null);
-  const [parseArmed, setParseArmed] = useState<Record<string, boolean>>({});
+  const [parseOpen, setParseOpen] = useState<Record<string, boolean>>({});
   const [parseSources, setParseSources] = useState<Record<string, { chat: boolean; docs: boolean }>>({});
   const [parseRunSignals, setParseRunSignals] = useState<Record<string, number>>({});
   const [filterStage, setFilterStage] = useState<string>('all');
