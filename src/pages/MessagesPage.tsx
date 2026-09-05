@@ -760,7 +760,7 @@ export default function MessagesPage() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">New Issue Board</h1>
