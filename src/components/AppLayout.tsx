@@ -45,7 +45,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside className="w-60 bg-sidebar text-sidebar-foreground flex flex-col shrink-0">
         <div className="flex items-center justify-center min-h-[100px] border-b border-sidebar-border px-4">
-          <p className="text-center text-2xl font-extrabold text-success text-logo-depth">Virtual Deal Room</p>
+          <p className="text-center text-2xl font-extrabold text-logo text-logo-depth">Virtual Deal Room</p>
         </div>
         <nav className={`flex-1 p-2 space-y-1 ${location.pathname === '/messages' ? 'pt-11' : ''}`}>
           {visibleNav.map(item => {
