@@ -44,9 +44,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <aside className="w-60 bg-sidebar text-sidebar-foreground flex flex-col shrink-0">
-        <div className="p-4 border-b border-sidebar-border">
-          <h1 className="text-lg font-bold text-sidebar-primary-foreground">BondVDR</h1>
-          <p className="text-xs text-sidebar-foreground/60">Virtual Deal Room</p>
+        <div className="flex items-center justify-center min-h-[100px] border-b border-sidebar-border px-4">
+          <p className="text-center text-2xl font-extrabold text-success text-logo-depth">Virtual Deal Room</p>
         </div>
         <nav className={`flex-1 p-2 space-y-1 ${location.pathname === '/messages' ? 'pt-11' : ''}`}>
           {visibleNav.map(item => {
