@@ -385,7 +385,7 @@ export default function AlertHistoryCard({
         onMouseLeave={() => setAttachmentsHover(false)}
       >
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
             Attachments ({message.attachments.length})
           </span>
           {canManage && !isRetracted && (
@@ -400,25 +400,25 @@ export default function AlertHistoryCard({
               />
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => fileInputRef.current?.click()}>
+                  <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => fileInputRef.current?.click()}>
                     <Upload className="h-3.5 w-3.5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top">Add files</TooltipContent>
               </Tooltip>
+              {(attachmentsHover || dragOver) && (
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
+                  className={`flex-1 border border-dashed rounded px-2 py-1 text-center text-xs text-muted-foreground transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-border'}`}
+                >
+                  Drop PDF, DOCX, or PPTX here
+                </div>
+              )}
             </>
           )}
         </div>
-        {(attachmentsHover || dragOver) && canManage && !isRetracted && (
-          <div
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
-            className={`border border-dashed rounded px-2 py-1 text-center text-xs text-muted-foreground transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-border'}`}
-          >
-            Drop PDF, DOCX, or PPTX here
-          </div>
-        )}
         {message.attachments.length > 0 && (
           <div className="flex flex-col gap-1">
             {message.attachments.map(a => (
