@@ -105,6 +105,56 @@ export default function FloatingChatPanel({ activeDealId, onClose, onExpandToMod
 
   const positioned = pos !== null;
 
+  // ---- Resizing (edges + corners) ----
+  const startResize = (dir: string) => (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isMobile) return;
+    const node = ref.current;
+    if (!node) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = node.getBoundingClientRect();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const start = { top: rect.top, left: rect.left, w: rect.width, h: rect.height };
+    setPos({ top: rect.top, left: rect.left });
+    setSize({ w: rect.width, h: rect.height });
+    setResizing(true);
+
+    const onMove = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      let { top, left, w, h } = start;
+      if (dir.includes('e')) w = start.w + dx;
+      if (dir.includes('s')) h = start.h + dy;
+      if (dir.includes('w')) { w = start.w - dx; left = start.left + dx; }
+      if (dir.includes('n')) { h = start.h - dy; top = start.top + dy; }
+      if (w < MIN_W) { if (dir.includes('w')) left = start.left + (start.w - MIN_W); w = MIN_W; }
+      if (h < MIN_H) { if (dir.includes('n')) top = start.top + (start.h - MIN_H); h = MIN_H; }
+      w = Math.min(w, window.innerWidth - 16);
+      h = Math.min(h, window.innerHeight - 16);
+      setSize({ w, h });
+      setPos({ top: Math.max(0, top), left });
+    };
+    const onUp = () => {
+      setResizing(false);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+
+  const handles: { dir: string; cls: string }[] = [
+    { dir: 'n', cls: 'top-0 left-3 right-3 h-1.5 cursor-ns-resize' },
+    { dir: 's', cls: 'bottom-0 left-3 right-3 h-1.5 cursor-ns-resize' },
+    { dir: 'w', cls: 'left-0 top-3 bottom-3 w-1.5 cursor-ew-resize' },
+    { dir: 'e', cls: 'right-0 top-3 bottom-3 w-1.5 cursor-ew-resize' },
+    { dir: 'nw', cls: 'top-0 left-0 h-3 w-3 cursor-nwse-resize' },
+    { dir: 'ne', cls: 'top-0 right-0 h-3 w-3 cursor-nesw-resize' },
+    { dir: 'sw', cls: 'bottom-0 left-0 h-3 w-3 cursor-nesw-resize' },
+    { dir: 'se', cls: 'bottom-0 right-0 h-3 w-3 cursor-nwse-resize' },
+  ];
+
   return (
     <div
       ref={ref}
@@ -115,12 +165,23 @@ export default function FloatingChatPanel({ activeDealId, onClose, onExpandToMod
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
       onDoubleClick={onDoubleClick}
-      style={positioned ? { top: pos!.top, left: pos!.left, bottom: 'auto', right: 'auto' } : undefined}
+      style={{
+        ...(positioned ? { top: pos!.top, left: pos!.left, bottom: 'auto', right: 'auto' } : {}),
+        ...(size && !isMobile ? { width: size.w, height: size.h, maxWidth: 'none', maxHeight: 'none' } : {}),
+      }}
       className={`fixed z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[70vh] max-h-[640px] rounded-lg chat-panel-border bg-background animate-in fade-in-0 zoom-in-95 origin-bottom-right
-        ${dragging ? 'shadow-[0_30px_80px_-10px_rgba(0,0,0,0.6)] select-none' : 'shadow-2xl'}
+        ${dragging || resizing ? 'shadow-[0_30px_80px_-10px_rgba(0,0,0,0.6)] select-none' : 'shadow-2xl'}
         ${positioned ? '' : 'bottom-4 right-4'}
         max-[900px]:inset-x-2 max-[900px]:bottom-2 max-[900px]:top-auto max-[900px]:left-auto max-[900px]:w-auto max-[900px]:h-[70vh]`}
     >
+      {!isMobile && handles.map(h => (
+        <div
+          key={h.dir}
+          aria-hidden
+          onPointerDown={startResize(h.dir)}
+          className={`absolute z-20 ${h.cls}`}
+        />
+      ))}
       {!isMobile && (
         <div
           aria-hidden
@@ -130,6 +191,7 @@ export default function FloatingChatPanel({ activeDealId, onClose, onExpandToMod
           <GripHorizontal className="h-3.5 w-3.5" />
         </div>
       )}
+
       <SecureChat
         key={activeDealId || 'all-chats'}
         activeDealId={activeDealId}
