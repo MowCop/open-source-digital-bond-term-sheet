@@ -760,7 +760,7 @@ export default function MessagesPage() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">New Issue Board</h1>
@@ -826,13 +826,13 @@ export default function MessagesPage() {
         <div>
           {/* Table header */}
 
-          <div className="grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
+          <div className="grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
             <div></div>
             <div className="min-w-[28px]"></div>
             <div className="pr-2"></div>
             <div className="pr-2"></div>
             <div></div>
-            <div className="text-right pr-1">Stage</div>
+            <div className="text-right pr-1"></div>
           </div>
 
 
