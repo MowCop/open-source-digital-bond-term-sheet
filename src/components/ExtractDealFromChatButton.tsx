@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
@@ -14,6 +14,11 @@ interface CommonProps {
   className?: string;
   size?: 'sm' | 'default' | 'icon';
   variant?: 'default' | 'outline' | 'ghost';
+  /** When provided, clicking the button toggles "armed" state instead of running immediately. */
+  onArmToggle?: () => void;
+  armed?: boolean;
+  /** Increment to trigger a run externally (used with onArmToggle). */
+  runSignal?: number;
 }
 
 interface FromThreadProps extends CommonProps {
@@ -68,6 +73,16 @@ export default function ExtractDealFromChatButton(props: Props) {
   const [extraction, setExtraction] = useState<AIExtraction | null>(null);
   const [open, setOpen] = useState(false);
   const [popping, setPopping] = useState(false);
+
+  const runRef = useRef<() => void>(() => {});
+  const lastRunSignal = useRef(props.runSignal ?? 0);
+  useEffect(() => {
+    const sig = props.runSignal ?? 0;
+    if (sig !== lastRunSignal.current) {
+      lastRunSignal.current = sig;
+      if (sig > 0) runRef.current();
+    }
+  }, [props.runSignal]);
 
   const canRun = currentUser.role === 'master_admin' || currentUser.role === 'syndicate_admin';
   if (!canRun) return null;
@@ -141,15 +156,18 @@ export default function ExtractDealFromChatButton(props: Props) {
     }
   };
 
+  runRef.current = handleClick;
+
   return (
     <>
       <Button
         size={size}
         variant={variant}
-        className={`btn-champagne ${popping ? 'is-popping' : ''} ${className ?? ''}`}
-        onClick={handleClick}
+        aria-pressed={props.onArmToggle ? !!props.armed : undefined}
+        className={`btn-champagne ${popping ? 'is-popping' : ''} ${props.armed ? 'ring-2 ring-primary brightness-110' : ''} ${className ?? ''}`}
+        onClick={props.onArmToggle ? (e) => { e.stopPropagation(); props.onArmToggle!(); } : handleClick}
         disabled={loading}
-        title="Parse bond deal info from this conversation"
+        title={props.onArmToggle ? 'Choose a source, then run AI DataParse' : 'Parse bond deal info from this conversation'}
       >
         {loading
           ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
