@@ -1066,8 +1066,37 @@ export default function MessagesPage() {
                     </div>
                   </div>
 
-                  {/* Expanded content */}
-                  {isExpanded && renderDealDetail(group, groupKey)}
+                  {/* Expanded content — headline list of every update version */}
+                  {isExpanded && (
+                    <div className="border-t border-border bg-card/30">
+                      {group.messages.map((msg, idx) => {
+                        const total = group.messages.length;
+                        const versionNum = total - idx;
+                        const label = versionNum === 1 ? 'Original' : `Update #${versionNum - 1}`;
+                        return (
+                          <button
+                            key={msg.id}
+                            type="button"
+                            className="w-full flex items-center gap-3 px-12 py-2 text-left hover:bg-amber-500/10 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              returnFocusRef.current = e.currentTarget as HTMLElement;
+                              openFocus(groupKey);
+                              setEditSignals(s => ({ ...s, [msg.id]: (s[msg.id] || 0) + 1 }));
+                            }}
+                          >
+                            <span className="text-[10px] font-semibold uppercase text-accent bg-accent/10 px-1.5 py-0.5 rounded whitespace-nowrap">
+                              {label}
+                            </span>
+                            <span className="text-sm text-amber-300 truncate">{msg.subject}</span>
+                            <span className="ml-auto text-xs text-timestamp whitespace-nowrap">
+                              {format(msg.updatedAt, 'MMM d, hh:mm a')}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}
