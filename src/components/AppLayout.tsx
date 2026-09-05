@@ -55,7 +55,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             if (!visible) return null;
             return (
               <Link key={item.path} to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'hover:bg-sidebar-accent/50'}`}>
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground font-bold' : 'hover:bg-sidebar-accent/50'}`}>
                 <Icon className="h-4 w-4" />
                 {item.label}
               </Link>
