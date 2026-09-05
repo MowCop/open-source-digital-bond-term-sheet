@@ -826,13 +826,13 @@ export default function MessagesPage() {
         <div>
           {/* Table header */}
 
-          <div className="grid grid-cols-12 gap-0 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
-            <div className="col-span-1">Last Updated</div>
-            <div className="col-span-1"></div>
-            <div className="col-span-1">Public Status</div>
-            <div className="col-span-1">Chat</div>
-            <div className="col-span-7">Headline</div>
-            <div className="col-span-1 text-right pr-1">Stage</div>
+          <div className="grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
+            <div>Last Updated</div>
+            <div className="min-w-[28px]"></div>
+            <div className="pr-2">Public Status</div>
+            <div className="pr-2">Chat</div>
+            <div>Headline</div>
+            <div className="text-right pr-1">Stage</div>
           </div>
 
 
@@ -851,7 +851,7 @@ export default function MessagesPage() {
                     role="button"
                     tabIndex={0}
                     aria-label={`Open deal ${group.borrower}: ${group.headline}`}
-                    className={`grid grid-cols-12 gap-0 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
+                    className={`grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
                     onClick={(e) => {
                       // Don't toggle when interacting with the inline headline editor
                       if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
@@ -867,10 +867,10 @@ export default function MessagesPage() {
                       openFocus(groupKey);
                     }}
                   >
-                    <div className="col-span-1 text-timestamp text-sm">
+                    <div className="text-timestamp text-sm whitespace-nowrap">
                       {format(group.latestMessage.updatedAt, 'MMM d')}
                     </div>
-                    <div className="col-span-1 flex items-center gap-1">
+                    <div className="flex items-center justify-center min-w-[28px]">
                       <button
                         type="button"
                         title={isExpanded ? 'Collapse inline preview' : 'Expand inline preview'}
@@ -885,13 +885,13 @@ export default function MessagesPage() {
                         )}
                       </button>
                     </div>
-                    <div className="col-span-1 flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5">
                       <span
                         className={`h-2.5 w-2.5 rounded-full ${pubBadge.dot}`}
                         title={pubBadge.label}
                       />
                     </div>
-                    <div className="col-span-1" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
                       {(() => {
                         const unread = getUnreadChatCount(group.dealIds);
                         const isActive = showChat && activeDealId === group.dealIds[0];
@@ -921,7 +921,7 @@ export default function MessagesPage() {
                         );
                       })()}
                     </div>
-                    <div className="col-span-7 text-sm text-primary font-semibold truncate relative" data-headline-editor onClick={(e) => e.stopPropagation()}>
+                    <div className="text-sm text-primary font-semibold truncate relative px-1" data-headline-editor onClick={(e) => e.stopPropagation()}>
                       {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
                         <div className="relative">
                           <Input
@@ -969,7 +969,7 @@ export default function MessagesPage() {
                         </span>
                       )}
                     </div>
-                    <div className="col-span-1 flex items-center justify-end gap-1 pr-1 min-w-0">
+                    <div className="flex items-center justify-end gap-1 pr-1 min-w-0">
                       <Badge className={`text-[10px] border shrink-0 ${badge.className}`}>
                         {badge.label}
                       </Badge>
