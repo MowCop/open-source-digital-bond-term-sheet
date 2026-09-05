@@ -53,6 +53,10 @@ interface AlertHistoryCardProps {
    * expanded.
    */
   embedded?: boolean;
+  /** Unread chat count for this deal, shown on the edit-screen Chat icon. */
+  chatUnread?: number;
+  /** True when the deal chat is already open on the board; keeps it open in edit. */
+  chatOpenOnBoard?: boolean;
   onUpdate: (id: string, updates: Partial<Message>) => void;
   onRetract: (id: string) => void;
   onSend: (id: string) => void;
@@ -71,6 +75,8 @@ export default function AlertHistoryCard({
   saveSignal = 0,
   saveSendSignal = 0,
   embedded = false,
+  chatUnread = 0,
+  chatOpenOnBoard = false,
   onUpdate,
   onRetract,
   onSend,
@@ -248,6 +254,13 @@ export default function AlertHistoryCard({
   const isSent = message.status === 'sent';
   const isDraft = message.status === 'draft';
   const editing = mode !== 'view';
+  // Carry the board's open chat into the edit screen.
+  useEffect(() => {
+    if (editing && chatOpenOnBoard) {
+      setChatOpen(true);
+      setChatMinimized(false);
+    }
+  }, [editing, chatOpenOnBoard]);
   const bodyHasHtml = isHtml(message.body);
   const latestEditable = isLatest && canManage && !isRetracted;
 
@@ -531,17 +544,24 @@ export default function AlertHistoryCard({
         <div className="flex items-center gap-2 px-5 py-2 border-b border-border shrink-0 bg-card/30">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                aria-pressed={chatOpen}
-                className="toolbar-square-btn"
-                onClick={() => { setChatOpen(o => !o); setChatMinimized(false); }}
-              >
-                <MessageSquare className="h-4 w-4" />
-              </Button>
+              <span className="relative inline-flex">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  aria-pressed={chatOpen}
+                  className="toolbar-square-btn"
+                  onClick={() => { setChatOpen(o => !o); setChatMinimized(false); }}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                </Button>
+                {chatUnread > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-0.5 rounded-full bg-destructive text-[10px] text-white font-medium flex items-center justify-center">
+                    {chatUnread > 9 ? '9+' : chatUnread}
+                  </span>
+                )}
+              </span>
             </TooltipTrigger>
-            <TooltipContent>Chat</TooltipContent>
+            <TooltipContent>{chatUnread > 0 ? `Chat — ${chatUnread} unread` : 'Chat'}</TooltipContent>
           </Tooltip>
 
           <ExtractDealFromChatButton
