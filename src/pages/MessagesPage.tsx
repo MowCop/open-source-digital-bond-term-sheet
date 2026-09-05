@@ -501,21 +501,6 @@ export default function MessagesPage() {
     return (
     <div className="pb-3 mb-3 border-b border-border/50 space-y-2">
       <div className="flex items-center gap-2 flex-wrap">
-      <Button
-        size="default"
-        variant="outline"
-        className={`toolbar-btn ${flashingBtn === `${groupKey}:data` ? 'animate-border-flash' : ''}`}
-        disabled={!group.dealIds[0]}
-        onClick={(e) => {
-          e.stopPropagation();
-          flash(`${groupKey}:data`);
-          const did = group.dealIds[0];
-          if (did) setTimeout(() => navigate(`/deals?dealId=${did}`), 150);
-        }}
-      >
-        <Database className="h-4 w-4 mr-1" />
-        Termsheet Data
-      </Button>
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
         <Button
           size="default"
@@ -531,6 +516,22 @@ export default function MessagesPage() {
         >
           <Edit2 className="h-4 w-4 mr-1" />
           Edit Latest
+        </Button>
+      )}
+      {group.dealIds.length > 0 && (
+        <Button
+          size="default"
+          variant="outline"
+          className={`toolbar-btn ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
+          title={unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat'}
+          onClick={(e) => {
+            e.stopPropagation();
+            flash(`${groupKey}:openchat`);
+            handleOpenChat(group.dealIds, { modal: true });
+          }}
+        >
+          <MessageSquare className="h-4 w-4 mr-1" />
+          Chat{unread > 0 ? ` (${unread})` : ''}
         </Button>
       )}
       {showParse && (
@@ -589,19 +590,6 @@ export default function MessagesPage() {
           </Popover>
         </div>
       )}
-      <Button
-        size="default"
-        variant="outline"
-        className="toolbar-btn"
-        title="OrderBook (coming soon)"
-        onClick={(e) => {
-          e.stopPropagation();
-          toast({ title: 'OrderBook', description: 'OrderBook module coming soon.' });
-        }}
-      >
-        <BookOpen className="h-4 w-4 mr-1" />
-        OrderBook
-      </Button>
       {group.dealIds[0] && (
         <Button
           size="default"
@@ -616,37 +604,31 @@ export default function MessagesPage() {
           <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} className="ml-1.5 border border-white/70" />
         </Button>
       )}
-      </div>
-
-      <div className="flex items-center gap-2 flex-wrap">
-        {group.dealIds.length > 0 && (
-          <Button
-            size="default"
-            variant="outline"
-            className={`toolbar-btn ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
-            title={unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat'}
-            onClick={(e) => {
-              e.stopPropagation();
-              flash(`${groupKey}:openchat`);
-              handleOpenChat(group.dealIds, { modal: true });
-            }}
-          >
-            <MessageSquare className="h-4 w-4 mr-1" />
-            Chat{unread > 0 ? ` (${unread})` : ''}
-          </Button>
-        )}
-        <Button
-          size="default"
-          variant="outline"
-          className="toolbar-btn"
-          title="View attached documentation"
-          onClick={(e) => { e.stopPropagation(); setDocsGroup(group); }}
-        >
-          <FileText className="h-4 w-4 mr-1" />
-          Docs{docCount > 0 ? ` (${docCount})` : ''}
-        </Button>
+      <Button
+        size="default"
+        variant="outline"
+        className="toolbar-btn"
+        title="OrderBook (coming soon)"
+        onClick={(e) => {
+          e.stopPropagation();
+          toast({ title: 'OrderBook', description: 'OrderBook module coming soon.' });
+        }}
+      >
+        <BookOpen className="h-4 w-4 mr-1" />
+        OrderBook
+      </Button>
+      <Button
+        size="default"
+        variant="outline"
+        className="toolbar-btn"
+        title="View attached documentation"
+        onClick={(e) => { e.stopPropagation(); setDocsGroup(group); }}
+      >
+        <FileText className="h-4 w-4 mr-1" />
+        Docs{docCount > 0 ? ` (${docCount})` : ''}
+      </Button>
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
-        <>
+        <div className="ml-auto flex items-center gap-2 flex-wrap bg-muted/40 border border-border/60 rounded-md px-2 py-1">
           <Button
             size="default"
             variant="outline"
@@ -692,7 +674,7 @@ export default function MessagesPage() {
             <RotateCcw className="h-4 w-4 mr-1" />
             Retract
           </Button>
-        </>
+        </div>
       )}
       </div>
     </div>
