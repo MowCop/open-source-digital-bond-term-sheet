@@ -116,7 +116,7 @@ export default function FloatingChatPanel({ activeDealId, onClose, onExpandToMod
       onPointerCancel={endDrag}
       onDoubleClick={onDoubleClick}
       style={positioned ? { top: pos!.top, left: pos!.left, bottom: 'auto', right: 'auto' } : undefined}
-      className={`fixed z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[70vh] max-h-[640px] rounded-lg border border-border bg-background animate-in fade-in-0 zoom-in-95 origin-bottom-right
+      className={`fixed z-50 w-[380px] max-w-[calc(100vw-2rem)] h-[70vh] max-h-[640px] rounded-lg chat-panel-border bg-background animate-in fade-in-0 zoom-in-95 origin-bottom-right
         ${dragging ? 'shadow-[0_30px_80px_-10px_rgba(0,0,0,0.6)] select-none' : 'shadow-2xl'}
         ${positioned ? '' : 'bottom-4 right-4'}
         max-[900px]:inset-x-2 max-[900px]:bottom-2 max-[900px]:top-auto max-[900px]:left-auto max-[900px]:w-auto max-[900px]:h-[70vh]`}
