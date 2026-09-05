@@ -74,6 +74,16 @@ export default function ExtractDealFromChatButton(props: Props) {
   const [open, setOpen] = useState(false);
   const [popping, setPopping] = useState(false);
 
+  const runRef = useRef<() => void>(() => {});
+  const lastRunSignal = useRef(props.runSignal ?? 0);
+  useEffect(() => {
+    const sig = props.runSignal ?? 0;
+    if (sig !== lastRunSignal.current) {
+      lastRunSignal.current = sig;
+      if (sig > 0) runRef.current();
+    }
+  }, [props.runSignal]);
+
   const canRun = currentUser.role === 'master_admin' || currentUser.role === 'syndicate_admin';
   if (!canRun) return null;
 
