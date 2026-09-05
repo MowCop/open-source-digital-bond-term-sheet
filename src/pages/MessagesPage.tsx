@@ -938,10 +938,11 @@ export default function MessagesPage() {
                     aria-label={`Open deal ${group.borrower}: ${group.headline}`}
                     className={`grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
                     onClick={(e) => {
-                      // Don't toggle when interacting with the inline headline editor
-                      if ((e.target as HTMLElement).closest('[data-headline-editor]')) return;
                       returnFocusRef.current = e.currentTarget as HTMLElement;
                       openFocus(groupKey);
+                      // Open the latest alert directly in edit mode inside Focus Mode.
+                      const id = group.latestMessage.id;
+                      setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
                     }}
                     onKeyDown={(e) => {
                       if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -950,6 +951,8 @@ export default function MessagesPage() {
                       e.preventDefault();
                       returnFocusRef.current = e.currentTarget as HTMLElement;
                       openFocus(groupKey);
+                      const id = group.latestMessage.id;
+                      setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
                     }}
                   >
                     <div className="text-timestamp text-sm whitespace-nowrap">
@@ -1006,53 +1009,13 @@ export default function MessagesPage() {
                         );
                       })()}
                     </div>
-                    <div className="text-sm text-primary font-semibold truncate relative px-1" data-headline-editor onClick={(e) => e.stopPropagation()}>
-                      {canManageMessages && editingHeadlineId === group.latestMessage.id ? (
-                        <div className="relative">
-                          <Input
-                            autoFocus
-                            value={headlineDraft}
-                            onChange={(e) => { setHeadlineDraft(e.target.value); setShowSuggestions(true); }}
-                            onBlur={() => setTimeout(() => saveHeadline(), 150)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') { e.preventDefault(); saveHeadline(); }
-                              if (e.key === 'Escape') { setEditingHeadlineId(null); setShowSuggestions(false); }
-                            }}
-                            className="h-7 text-sm"
-                          />
-                          {showSuggestions && (() => {
-                            const sugs = buildSuggestions(group.latestMessage).slice(0, 4);
-                            if (sugs.length === 0) return null;
-                            return (
-                              <div className="absolute z-10 left-0 right-0 top-full mt-1 bg-popover border border-border rounded-md shadow-lg overflow-hidden">
-                                {sugs.map((s, i) => (
-                                  <button
-                                    key={i}
-                                    type="button"
-                                    onMouseDown={(e) => { e.preventDefault(); setHeadlineDraft(s); }}
-                                    className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent hover:text-accent-foreground"
-                                  >
-                                    {s}
-                                  </button>
-                                ))}
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      ) : (
-                        <span
-                          className={canManageMessages ? 'cursor-text hover:bg-background/50 rounded px-1 -mx-1' : ''}
-                          onClick={() => {
-                            if (!canManageMessages) return;
-                            setEditingHeadlineId(group.latestMessage.id);
-                            setHeadlineDraft(group.headline);
-                            setShowSuggestions(true);
-                          }}
-                          title={canManageMessages ? 'Click to edit headline' : ''}
-                        >
-                          {group.headline}
-                        </span>
-                      )}
+                    <div className="text-sm text-primary font-semibold truncate relative px-1">
+                      <span
+                        className={canManageMessages ? 'cursor-text hover:bg-background/50 rounded px-1 -mx-1' : ''}
+                        title={canManageMessages ? 'Click to edit' : ''}
+                      >
+                        {group.headline}
+                      </span>
                     </div>
                     <div className="flex items-center justify-end gap-1 pr-1 min-w-0">
                       <Badge className={`text-[10px] border shrink-0 ${badge.className}`}>
