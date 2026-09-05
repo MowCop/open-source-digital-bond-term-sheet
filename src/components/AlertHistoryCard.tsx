@@ -88,6 +88,9 @@ export default function AlertHistoryCard({
   const clickEditTimerRef = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatMinimized, setChatMinimized] = useState(false);
+  const [docsOpen, setDocsOpen] = useState(true);
+  const { toast } = useToast();
   const [bulletinOpen, setBulletinOpen] = useState(true);
   const { deals } = useApp();
   const editDeal = message.dealIds?.[0]
