@@ -827,12 +827,12 @@ export default function MessagesPage() {
           {/* Table header */}
 
           <div className="grid grid-cols-[auto_auto_auto_auto_minmax(0,1fr)_auto] gap-0 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
-            <div className="whitespace-nowrap">Last Updated</div>
+            <div>Last Updated</div>
             <div className="min-w-[28px]"></div>
-            <div className="whitespace-nowrap">Public Status</div>
-            <div className="whitespace-nowrap">Chat</div>
-            <div className="whitespace-nowrap">Headline</div>
-            <div className="text-right pr-1 whitespace-nowrap">Stage</div>
+            <div>Public Status</div>
+            <div>Chat</div>
+            <div>Headline</div>
+            <div className="text-right pr-1">Stage</div>
           </div>
 
 
