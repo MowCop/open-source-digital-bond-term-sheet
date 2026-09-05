@@ -58,6 +58,8 @@ interface AlertHistoryCardProps {
   chatUnread?: number;
   /** True when the deal chat is already open on the board; keeps it open in edit. */
   chatOpenOnBoard?: boolean;
+  /** Open the card body by default (e.g. full history expansion on the board). */
+  defaultExpanded?: boolean;
   onUpdate: (id: string, updates: Partial<Message>) => void;
   onRetract: (id: string) => void;
   onSend: (id: string) => void;
