@@ -1085,7 +1085,7 @@ export default function MessagesPage() {
                               setEditSignals(s => ({ ...s, [msg.id]: (s[msg.id] || 0) + 1 }));
                             }}
                           >
-                            <span className="text-[10px] font-semibold uppercase text-accent bg-accent/10 px-1.5 py-0.5 rounded whitespace-nowrap">
+                            <span className="text-[11px] font-bold uppercase text-sky-300 bg-sky-400/15 px-2 py-0.5 rounded whitespace-nowrap shadow-[0_0_6px_rgba(125,211,252,0.35)]">
                               {label}
                             </span>
                             <span className="text-sm text-amber-300 truncate">{msg.subject}</span>
