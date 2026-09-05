@@ -768,6 +768,7 @@ export default function MessagesPage() {
                                 chatOpenOnBoard={showChat && activeDealId === group.dealIds[0]}
                                 versionLabel={versionLabel}
                                 isLatest={idx === 0}
+                                defaultExpanded
                                 editSignal={editSignals[msg.id] || 0}
                                 saveSignal={idx === 0 ? (saveSignals[msg.id] || 0) : 0}
                                 saveSendSignal={idx === 0 ? (saveSendSignals[msg.id] || 0) : 0}
