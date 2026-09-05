@@ -328,3 +328,49 @@
   background: hsl(var(--destructive) / 0.15);
 }
 
+/* ─── Square icon-only toolbar buttons ──────────────────────────────── */
+.toolbar-square-btn {
+  height: 2.5rem;
+  width: 2.5rem;
+  min-width: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--info) / 0.45);
+  border: 1px solid hsl(var(--toolbar-btn-border) / 0.65);
+  color: hsl(var(--foreground));
+  border-radius: 0.375rem;
+  transition: border-width 120ms ease, border-color 120ms ease, background-color 120ms ease;
+}
+.toolbar-square-btn:hover {
+  border-width: 2px;
+  border-color: hsl(var(--toolbar-btn-border) / 0.95);
+  background: hsl(var(--info) / 0.58);
+}
+.toolbar-square-btn[aria-pressed="true"] {
+  border-width: 2px;
+  border-color: hsl(var(--toolbar-btn-border) / 0.95);
+  background: hsl(var(--info) / 0.65);
+}
+.toolbar-square-btn-action {
+  border-color: hsl(30 95% 55% / 0.75) !important;
+}
+.toolbar-square-btn-action:hover,
+.toolbar-square-btn-action[aria-pressed="true"] {
+  border-color: hsl(35 95% 65%) !important;
+}
+.toolbar-square-btn-ai {
+  height: 2.5rem;
+  width: 2.5rem;
+  min-width: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.toolbar-square-btn .lucide,
+.toolbar-square-btn-ai .lucide {
+  margin: 0;
+}
+
