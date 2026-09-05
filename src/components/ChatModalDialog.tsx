@@ -18,7 +18,7 @@ interface ChatModalDialogProps {
 export default function ChatModalDialog({ open, activeDealId, onClose, onCollapseToPanel }: ChatModalDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="!flex !flex-col gap-0 p-0 max-w-5xl w-[min(1120px,95vw)] h-[min(88vh,820px)] overflow-hidden">
+      <DialogContent className="!flex !flex-col gap-0 p-0 max-w-5xl w-[min(1120px,95vw)] h-[min(88vh,820px)] overflow-hidden chat-panel-border">
         <SecureChat
           key={activeDealId || 'all-chats'}
           activeDealId={activeDealId}
