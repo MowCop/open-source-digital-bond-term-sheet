@@ -485,8 +485,8 @@ export default function AlertHistoryCard({
 
       {/* Action buttons */}
       {canManage && (
-        <div className="relative flex items-center justify-center gap-2 pt-2 pb-1 px-5 border-t border-border/50">
-          <div className="flex items-center gap-2 flex-wrap justify-center">
+        <div className="relative flex items-center justify-between gap-2 pt-2 pb-1 px-5 border-t border-border/50">
+          <div className="flex items-center gap-2 flex-wrap">
             {!isRetracted && !isLatest && (
               <Button variant="outline" className="btn-footer-action" onClick={enterEdit}>
                 <Edit2 className="h-4 w-4 mr-1" /> Edit
@@ -504,6 +504,8 @@ export default function AlertHistoryCard({
                 <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
               </Button>
             )}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
             {!isRetracted && (
               <>
                 <Button variant="outline" className="btn-footer-action" onClick={handleSave}>
@@ -516,18 +518,18 @@ export default function AlertHistoryCard({
                 )}
               </>
             )}
+            {(isSent || isDraft) && !isRetracted && (
+              <Button
+                variant="destructive"
+                className="h-10 px-4"
+                disabled={isDraft}
+                title={isDraft ? 'Retract is only available for Published alerts' : undefined}
+                onClick={() => onRetract(message.id)}
+              >
+                <RotateCcw className="h-4 w-4 mr-1" /> Retract
+              </Button>
+            )}
           </div>
-          {(isSent || isDraft) && !isRetracted && (
-            <Button
-              variant="destructive"
-              className="h-10 px-4 absolute right-5 top-1/2 -translate-y-1/2"
-              disabled={isDraft}
-              title={isDraft ? 'Retract is only available for Published alerts' : undefined}
-              onClick={() => onRetract(message.id)}
-            >
-              <RotateCcw className="h-4 w-4 mr-1" /> Retract
-            </Button>
-          )}
         </div>
       )}
       </>
@@ -815,41 +817,38 @@ export default function AlertHistoryCard({
         </div>
         )}
 
-        <div className="relative flex items-center justify-center gap-2 px-5 py-2 border-t border-border shrink-0 bg-card/40">
-          <div className="flex items-center gap-2">
-            
-            <Button variant="outline" className="btn-footer-action" onClick={handleSave}>
-              <Save className="h-4 w-4 mr-1" /> Save
+        <div className="flex items-center justify-end gap-2 px-5 py-2 border-t border-border shrink-0 bg-card/40">
+          <Button variant="outline" className="btn-footer-action" onClick={handleSave}>
+            <Save className="h-4 w-4 mr-1" /> Save
+          </Button>
+          {!isRetracted && (
+            <Button className="btn-footer-action" onClick={handleSaveAndSend}>
+              <Send className="h-4 w-4 mr-1" /> Save &amp; Send
             </Button>
-            {!isRetracted && (
-              <Button className="btn-footer-action" onClick={handleSaveAndSend}>
-                <Send className="h-4 w-4 mr-1" /> Save &amp; Send
-              </Button>
-            )}
-          </div>
+          )}
           {(isSent || isDraft) && !isRetracted && (
-            <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <Button
-                variant="destructive"
-                className="h-10 px-4"
-                onClick={() => onRetract(message.id)}
-              >
-                <RotateCcw className="h-4 w-4 mr-1" /> Retract
-              </Button>
-              <Button
-                variant="destructive"
-                size="icon"
-                className="h-10 w-10"
-                title={`Delete this alert`}
-                onClick={() => {
-                  if (confirm(`Delete this alert "${message.subject}"? This cannot be undone.`)) {
-                    onDelete(message.id);
-                  }
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
+            <Button
+              variant="destructive"
+              className="h-10 px-4"
+              onClick={() => onRetract(message.id)}
+            >
+              <RotateCcw className="h-4 w-4 mr-1" /> Retract
+            </Button>
+          )}
+          {(isSent || isDraft) && !isRetracted && (
+            <Button
+              variant="destructive"
+              size="icon"
+              className="h-10 w-10"
+              title={`Delete this alert`}
+              onClick={() => {
+                if (confirm(`Delete this alert "${message.subject}"? This cannot be undone.`)) {
+                  onDelete(message.id);
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           )}
         </div>
       </DialogContent>
