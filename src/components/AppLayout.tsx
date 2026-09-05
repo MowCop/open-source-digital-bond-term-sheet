@@ -44,9 +44,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <aside className="w-60 bg-sidebar text-sidebar-foreground flex flex-col shrink-0">
-        <div className="p-4 border-b border-sidebar-border">
-          <h1 className="text-lg font-bold text-sidebar-primary-foreground">BondVDR</h1>
-          <p className="text-xs text-sidebar-foreground/60">Virtual Deal Room</p>
+        <div className="flex items-center justify-center min-h-[100px] border-b border-sidebar-border px-4">
+          <p className="text-center text-2xl font-extrabold text-logo text-logo-depth">Virtual Deal Room</p>
         </div>
         <nav className={`flex-1 p-2 space-y-1 ${location.pathname === '/messages' ? 'pt-11' : ''}`}>
           {visibleNav.map(item => {
@@ -56,7 +55,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             if (!visible) return null;
             return (
               <Link key={item.path} to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'hover:bg-sidebar-accent/50'}`}>
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground font-bold' : 'hover:bg-sidebar-accent/50'}`}>
                 <Icon className="h-4 w-4" />
                 {item.label}
               </Link>
