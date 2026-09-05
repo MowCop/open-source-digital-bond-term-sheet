@@ -439,9 +439,7 @@ export default function AlertHistoryCard({
               {(attachmentsHover || dragOver) && (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
+
                   className={`flex-1 border border-dashed rounded px-2 py-1 text-center text-xs text-muted-foreground transition-colors cursor-pointer hover:border-primary hover:bg-primary/5 ${dragOver ? 'border-primary bg-primary/10' : 'border-border'}`}
                 >
                   Drop PDF, DOCX, or PPTX here
