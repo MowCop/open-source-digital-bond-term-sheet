@@ -544,17 +544,24 @@ export default function AlertHistoryCard({
         <div className="flex items-center gap-2 px-5 py-2 border-b border-border shrink-0 bg-card/30">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                aria-pressed={chatOpen}
-                className="toolbar-square-btn"
-                onClick={() => { setChatOpen(o => !o); setChatMinimized(false); }}
-              >
-                <MessageSquare className="h-4 w-4" />
-              </Button>
+              <span className="relative inline-flex">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  aria-pressed={chatOpen}
+                  className="toolbar-square-btn"
+                  onClick={() => { setChatOpen(o => !o); setChatMinimized(false); }}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                </Button>
+                {chatUnread > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-0.5 rounded-full bg-destructive text-[10px] text-white font-medium flex items-center justify-center">
+                    {chatUnread > 9 ? '9+' : chatUnread}
+                  </span>
+                )}
+              </span>
             </TooltipTrigger>
-            <TooltipContent>Chat</TooltipContent>
+            <TooltipContent>{chatUnread > 0 ? `Chat — ${chatUnread} unread` : 'Chat'}</TooltipContent>
           </Tooltip>
 
           <ExtractDealFromChatButton
