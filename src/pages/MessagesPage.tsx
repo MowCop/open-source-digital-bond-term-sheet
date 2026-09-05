@@ -791,6 +791,9 @@ export default function MessagesPage() {
                           };
                           const latest = group.messages[0];
                           const rest = group.messages.slice(1);
+                          const latestVersionLabel = total > 1
+                            ? (total === 1 ? 'Original' : `Update #${total - 1}`)
+                            : undefined;
                           return (
                             <>
                               {latest && (
@@ -803,10 +806,6 @@ export default function MessagesPage() {
                                     )}
                                     <span>{getUserName(latest.senderId)}</span>
                                   </div>
-                                  const latestVersionLabel = total > 1
-                                    ? (total === 1 ? 'Original' : `Update #${total - 1}`)
-                                    : undefined;
-                                  return (
                                   <AlertHistoryCard
                                     key={latest.id}
                                     message={latest}
