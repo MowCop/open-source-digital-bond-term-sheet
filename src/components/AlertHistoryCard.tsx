@@ -605,14 +605,28 @@ export default function AlertHistoryCard({
           </div>
         </DialogHeader>
 
-        {/* Update number — top, centered, bright blue */}
-        {versionLabel && (
-          <div className="flex justify-center px-5 py-1 border-b border-border/50 shrink-0 bg-card/20">
-            <span className="text-sm font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)]">
-              {versionLabel}
+        {/* Borrower · update number · stage + timestamp */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-1.5 border-b border-border/50 shrink-0 bg-card/20">
+          <div className="min-w-0 text-sm font-bold text-foreground truncate">
+            {editDeal?.issuerName || ''}
+          </div>
+          <div className="justify-self-center">
+            {versionLabel && (
+              <span className="text-sm font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)]">
+                {versionLabel}
+              </span>
+            )}
+          </div>
+          <div className="justify-self-end flex items-center gap-3 whitespace-nowrap">
+            {editDeal && (
+              <span className="text-sm font-semibold text-foreground">{editDeal.stage}</span>
+            )}
+            <span className="text-timestamp text-xs">
+              {format(message.updatedAt, 'MMM d, hh:mm a')}
             </span>
           </div>
-        )}
+        </div>
+
 
         {/* Functional icon toolbar */}
         <div className="flex items-center gap-2 px-5 py-2 border-b border-border shrink-0 bg-card/30">
