@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut, Settings, RefreshCw } from 'lucide-react';
+import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut, Settings } from 'lucide-react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,7 @@ const navItems = [
   { path: '/bond-console', label: 'Bond Console', icon: Settings },
   { path: '/master-admin', label: 'Master Admin', icon: Shield, masterOnly: true },
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
-  { path: '/sync-log', label: 'Sync Log', icon: RefreshCw, adminOnly: true },
+  
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -44,7 +44,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <aside className="w-60 bg-sidebar text-sidebar-foreground flex flex-col shrink-0">
-        <div className="flex items-center border-b border-sidebar-border px-4 pt-16 pb-4">
+        <div className="flex items-center border-b border-sidebar-border px-4 pt-[72px] pb-4">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 rounded-sm shrink-0">
               <div className="w-3.5 h-3.5 bg-sidebar rotate-45" />
@@ -64,7 +64,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             if (!visible) return null;
             return (
               <Link key={item.path} to={item.path}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground font-bold' : 'hover:bg-sidebar-accent/50'}`}>
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white transition-colors ${isActive ? 'bg-sidebar-accent font-bold' : 'hover:bg-sidebar-accent/50'}`}>
                 <Icon className="h-4 w-4" />
                 {item.label}
               </Link>
@@ -86,8 +86,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent text-xs h-auto py-2">
                 <div className="text-left">
-                  <div className="font-medium">{profileName || currentUser.name}</div>
-                  <RoleBadge role={currentUser.role} className="mt-0.5 text-[10px] px-1.5 py-0" />
+                  <RoleBadge role={currentUser.role} className="text-[10px] px-1.5 py-0" />
+
                 </div>
                 <ChevronDown className="h-3 w-3" />
               </Button>
