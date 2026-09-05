@@ -550,13 +550,14 @@ export default function AlertHistoryCard({
             )}
             {(isSent || isDraft) && !isRetracted && (
               <Button
+                size="icon"
                 variant="destructive"
-                className="h-10 px-4"
+                className="h-10 w-10"
                 disabled={isDraft}
                 title={isDraft ? 'Retract is only available for Published alerts' : undefined}
                 onClick={() => onRetract(message.id)}
               >
-                <RotateCcw className="h-4 w-4 mr-1 text-red-500" /> Retract
+                <RotateCcw className="h-4 w-4 text-red-500" />
               </Button>
             )}
           </div>
@@ -858,11 +859,12 @@ export default function AlertHistoryCard({
           )}
           {(isSent || isDraft) && !isRetracted && (
             <Button
+              size="icon"
               variant="destructive"
-              className="h-10 px-4"
+              className="h-10 w-10"
               onClick={() => onRetract(message.id)}
             >
-              <RotateCcw className="h-4 w-4 mr-1 text-red-500" /> Retract
+              <RotateCcw className="h-4 w-4 text-red-500" />
             </Button>
           )}
           {(isSent || isDraft) && !isRetracted && (
