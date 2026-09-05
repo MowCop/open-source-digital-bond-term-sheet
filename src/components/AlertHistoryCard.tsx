@@ -248,6 +248,13 @@ export default function AlertHistoryCard({
   const isSent = message.status === 'sent';
   const isDraft = message.status === 'draft';
   const editing = mode !== 'view';
+  // Carry the board's open chat into the edit screen.
+  useEffect(() => {
+    if (editing && chatOpenOnBoard) {
+      setChatOpen(true);
+      setChatMinimized(false);
+    }
+  }, [editing, chatOpenOnBoard]);
   const bodyHasHtml = isHtml(message.body);
   const latestEditable = isLatest && canManage && !isRetracted;
 
