@@ -594,11 +594,6 @@ export default function AlertHistoryCard({
             >
               <ArrowLeft className="h-3 w-3" /> Main Menu
             </button>
-            {editDeal && (
-              <Badge className={`text-[10px] mr-8 ${editStageColor[editDeal.stage]}`}>
-                {editDeal.stage}
-              </Badge>
-            )}
           </div>
         </DialogHeader>
 
