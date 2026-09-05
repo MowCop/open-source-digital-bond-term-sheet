@@ -44,10 +44,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <aside className="w-60 bg-sidebar text-sidebar-foreground flex flex-col shrink-0">
-        <div className="flex items-center justify-center min-h-[100px] border-b border-sidebar-border px-4">
-          <p className="text-center text-2xl font-extrabold text-logo text-logo-depth">Virtual Deal Room</p>
+        <div className="flex items-start justify-center border-b border-sidebar-border px-4 pt-[72px] pb-4">
+          <p className="text-center text-2xl font-extrabold leading-8 text-logo text-logo-depth">Virtual Deal Room</p>
         </div>
-        <nav className={`flex-1 p-2 space-y-1 ${location.pathname === '/messages' ? 'pt-11' : ''}`}>
+        <nav className={`flex-1 p-2 space-y-1 ${location.pathname === '/messages' ? 'pt-6' : ''}`}>
+
           {visibleNav.map(item => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
