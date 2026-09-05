@@ -182,8 +182,8 @@
 
 /* ─── Deal Chat panel border ────────────────────────────────────────── */
 .chat-panel-border {
-  border: 3px solid #0f3a24 !important;
-  box-shadow: 0 0 0 1px rgba(15, 58, 36, 0.45), 0 18px 50px -12px rgba(0, 0, 0, 0.55);
+  border: 3px solid #4ade80 !important;
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.45), 0 18px 50px -12px rgba(0, 0, 0, 0.55);
 }
 
 /* ─── AI Extract: bottle-green champagne-pop button ─────────────────── */
