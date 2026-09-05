@@ -559,16 +559,21 @@ export default function AlertHistoryCard({
               </>
             )}
             {(isSent || isDraft) && !isRetracted && (
-              <Button
-                size="icon"
-                variant="destructive"
-                className="h-10 w-10"
-                disabled={isDraft}
-                title={isDraft ? 'Retract is only available for Published alerts' : undefined}
-                onClick={() => onRetract(message.id)}
-              >
-                <RotateCcw className="h-4 w-4 text-red-500" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="toolbar-square-btn toolbar-square-btn-action"
+                    disabled={isDraft}
+                    title={isDraft ? 'Retract is only available for Published alerts' : undefined}
+                    onClick={() => onRetract(message.id)}
+                  >
+                    <RotateCcw className="h-4 w-4 text-red-500" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Retract</TooltipContent>
+              </Tooltip>
             )}
           </div>
         </div>
