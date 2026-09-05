@@ -770,7 +770,9 @@ export default function AlertHistoryCard({
           className="px-5 py-2 border-t border-border shrink-0 relative"
           onMouseEnter={() => setAttachmentsHover(true)}
           onMouseLeave={() => setAttachmentsHover(false)}
+          {...dropZoneProps}
         >
+
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
               Attachments ({message.attachments.length})
