@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, Edit2, BookOpen, FileText, Paperclip, ShieldCheck, Save, Send, RotateCcw, Trash2, Sparkles } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Edit2, BookOpen, FileText, Paperclip, ShieldCheck, Save, Send, RotateCcw, Trash2, Sparkles } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
