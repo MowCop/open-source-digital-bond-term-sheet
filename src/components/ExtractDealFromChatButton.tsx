@@ -22,6 +22,8 @@ interface CommonProps {
   runSignal?: number;
   /** Render as a square icon-only button. */
   iconOnly?: boolean;
+  /** Tooltip label shown on hover. */
+  tooltip?: string;
 }
 
 interface FromThreadProps extends CommonProps {
