@@ -379,11 +379,15 @@ export default function AlertHistoryCard({
       </Collapsible>
 
       {/* Attachments panel */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <div
+        className="space-y-1.5"
+        onMouseEnter={() => setAttachmentsHover(true)}
+        onMouseLeave={() => setAttachmentsHover(false)}
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Attachments ({message.attachments.length})
-          </div>
+          </span>
           {canManage && !isRetracted && (
             <>
               <input
@@ -394,39 +398,59 @@ export default function AlertHistoryCard({
                 className="hidden"
                 onChange={(e) => { handleFiles(e.target.files); e.target.value = ''; }}
               />
-              <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => fileInputRef.current?.click()}>
-                <Upload className="h-3 w-3 mr-1" /> Add files
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Add files</TooltipContent>
+              </Tooltip>
             </>
           )}
         </div>
-        {canManage && !isRetracted && (
+        {(attachmentsHover || dragOver) && canManage && !isRetracted && (
           <div
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
-            className={`border border-dashed rounded p-2 text-center text-xs text-muted-foreground transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-border'}`}
+            className={`border border-dashed rounded px-2 py-1 text-center text-xs text-muted-foreground transition-colors ${dragOver ? 'border-primary bg-primary/5' : 'border-border'}`}
           >
             Drop PDF, DOCX, or PPTX here
           </div>
         )}
         {message.attachments.length > 0 && (
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1">
             {message.attachments.map(a => (
-              <div key={a.id} className="flex items-center gap-2 text-xs bg-background border border-border rounded px-2 py-1.5">
+              <div key={a.id} className="flex items-center gap-2 text-xs bg-background border border-border rounded px-2 py-1">
                 <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <span className="flex-1 truncate">{a.name}</span>
                 <span className="text-muted-foreground">{formatBytes(a.size)}</span>
-                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewAttachment(a)} title="Preview">
-                  <Eye className="h-3 w-3" />
-                </Button>
-                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => downloadAttachment(a)} title="Download">
-                  <Download className="h-3 w-3" />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setPreviewAttachment(a)}>
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Preview</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => downloadAttachment(a)}>
+                      <Download className="h-3 w-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Download</TooltipContent>
+                </Tooltip>
                 {canManage && !isRetracted && (
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeAttachment(a.id)} title="Remove">
-                    <X className="h-3 w-3 text-destructive" />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeAttachment(a.id)}>
+                        <X className="h-3 w-3 text-destructive" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Remove</TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             ))}
