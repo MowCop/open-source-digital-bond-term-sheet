@@ -585,7 +585,7 @@ export default function AlertHistoryCard({
       <DialogContent
         className="max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg p-0 gap-0 flex flex-col"
       >
-        <DialogHeader className="px-5 pt-2 pb-1 border-b border-border shrink-0 space-y-0.5">
+        <DialogHeader className="px-5 py-1.5 border-b border-border shrink-0">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -600,7 +600,6 @@ export default function AlertHistoryCard({
               </Badge>
             )}
           </div>
-          <DialogTitle className="text-base">Edit alert</DialogTitle>
         </DialogHeader>
 
         {/* Functional icon toolbar */}
