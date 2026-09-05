@@ -48,7 +48,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <h1 className="text-lg font-bold text-sidebar-primary-foreground">BondVDR</h1>
           <p className="text-xs text-sidebar-foreground/60">Virtual Deal Room</p>
         </div>
-        <nav className="flex-1 p-2 space-y-1">
+        <nav className={`flex-1 p-2 space-y-1 ${location.pathname === '/messages' ? 'pt-24' : ''}`}>
           {visibleNav.map(item => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
