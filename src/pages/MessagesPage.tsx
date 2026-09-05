@@ -764,6 +764,8 @@ export default function MessagesPage() {
                                 senderName={getUserName(msg.senderId)}
                                 recipientNames={getRecipientNames(msg.recipients)}
                                 canManage={canManageMessages}
+                                chatUnread={getUnreadChatCount(group.dealIds)}
+                                chatOpenOnBoard={showChat && activeDealId === group.dealIds[0]}
                                 versionLabel={versionLabel}
                                 isLatest={idx === 0}
                                 editSignal={editSignals[msg.id] || 0}
@@ -807,6 +809,8 @@ export default function MessagesPage() {
                                     senderName={getUserName(latest.senderId)}
                                     recipientNames={getRecipientNames(latest.recipients)}
                                     canManage={canManageMessages}
+                                    chatUnread={getUnreadChatCount(group.dealIds)}
+                                    chatOpenOnBoard={showChat && activeDealId === group.dealIds[0]}
                                     isLatest
                                     embedded
                                     editSignal={editSignals[latest.id] || 0}
