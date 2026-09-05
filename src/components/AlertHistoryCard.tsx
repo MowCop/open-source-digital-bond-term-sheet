@@ -521,111 +521,164 @@ export default function AlertHistoryCard({
           />
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          {bulletinOpen && chatOpen ? (
-            <ResizablePanelGroup direction="vertical" className="flex-1 min-h-0">
-              <ResizablePanel defaultSize={42} minSize={0} collapsible collapsedSize={0}>
-                <div className="h-full flex flex-col min-h-0 px-5 pt-2 pb-1">
-                  <div className="h-full flex flex-col min-h-0 border border-dashed border-primary/40 rounded-md overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => setBulletinOpen(false)}
-                      aria-expanded={bulletinOpen}
-                      className="flex items-center justify-between gap-2 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors shrink-0 border-b border-border/50"
-                      title="Collapse bulletin"
-                    >
-                      <span>Bulletin</span>
-                      <ChevronUp className="h-3.5 w-3.5" />
-                    </button>
-                    <div className="flex-1 min-h-0">
-                      <RichTextEditor
-                        value={editBody}
-                        onChange={setEditBody}
-                        placeholder="Write the alert body…"
-                        className="h-full border-0 rounded-none"
-                        contentClassName="px-3 py-3"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </ResizablePanel>
-              <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={58} minSize={10}>
-                <div className="h-full border-t border-border bg-muted/20 flex flex-col min-h-0">
-                  <button
-                    type="button"
-                    onClick={() => setChatOpen(false)}
-                    aria-expanded={chatOpen}
-                    className="flex items-center justify-between gap-2 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors shrink-0"
-                  >
-                    <span>Associated Chat Thread</span>
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
-                  <div className="flex-1 min-h-0 px-5 pb-3">
-                    <SecureChat
-                      key={message.dealIds?.[0] ?? 'no-deal'}
-                      activeDealId={message.dealIds?.[0] ?? null}
-                      heightClass="h-full"
-                      allowDealAccess
-                      hideStageBadge
-                      fallbackThreadLabel={message.subject}
-                    />
-                  </div>
-                </div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          ) : (
-            <>
-              {/* Bulletin (collapsed header bar when chat fills) or full bulletin when chat collapsed */}
-              <div className={bulletinOpen ? 'flex-1 min-h-0 flex flex-col px-5 pt-2 pb-1' : 'shrink-0'}>
-                <button
-                  type="button"
-                  onClick={() => setBulletinOpen(o => !o)}
-                  aria-expanded={bulletinOpen}
-                  className={`flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0 ${bulletinOpen ? 'px-3 py-2 border-b border-border/50' : 'px-5 py-2 w-full hover:bg-muted/30'}`}
-                >
-                  <span>Bulletin</span>
-                  {bulletinOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                </button>
-                {bulletinOpen && (
-                  <div className="flex-1 min-h-0 overflow-hidden border border-dashed border-primary/40 rounded-md">
-                    <RichTextEditor
-                      value={editBody}
-                      onChange={setEditBody}
-                      placeholder="Write the alert body…"
-                      className="h-full border-0 rounded-none"
-                      contentClassName="px-3 py-3"
-                    />
-                  </div>
-                )}
-              </div>
+        {/* Functional icon toolbar */}
+        <div className="flex items-center gap-2 px-5 py-2 border-b border-border shrink-0 bg-card/30">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                aria-pressed={chatOpen}
+                className="toolbar-square-btn"
+                onClick={() => { setChatOpen(o => !o); setChatMinimized(false); }}
+              >
+                <MessageSquare className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Chat</TooltipContent>
+          </Tooltip>
 
-              <div className={`border-t border-border bg-muted/20 flex flex-col min-h-0 ${chatOpen ? 'flex-1' : 'shrink-0'}`}>
-                <button
-                  type="button"
-                  onClick={() => setChatOpen(o => !o)}
-                  aria-expanded={chatOpen}
-                  className="flex items-center justify-between gap-2 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors shrink-0"
+          <ExtractDealFromChatButton
+            size="icon"
+            source="thread"
+            messages={[message]}
+            conversationLabel={message.subject}
+            targetDealIds={message.dealIds}
+            className="toolbar-square-btn-ai"
+            iconOnly
+            tooltip="AI DataParse"
+          />
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                className="toolbar-square-btn"
+                onClick={() => toast({ title: 'OrderBook', description: 'OrderBook module coming soon.' })}
+              >
+                <BookOpen className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>OrderBook</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="relative inline-flex">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  aria-pressed={docsOpen}
+                  className="toolbar-square-btn"
+                  onClick={() => setDocsOpen(o => !o)}
                 >
-                  <span>Associated Chat Thread</span>
-                  {chatOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-                </button>
-                {chatOpen && (
-                  <div className="flex-1 min-h-0 px-5 pb-3">
-                    <SecureChat
-                      key={message.dealIds?.[0] ?? 'no-deal'}
-                      activeDealId={message.dealIds?.[0] ?? null}
-                      heightClass="h-full"
-                      allowDealAccess
-                      hideStageBadge
-                      fallbackThreadLabel={message.subject}
-                    />
-                  </div>
+                  <FileText className="h-4 w-4" />
+                </Button>
+                {message.attachments.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 min-w-[16px] px-0.5 rounded-full bg-primary text-[10px] text-primary-foreground font-medium flex items-center justify-center">
+                    {message.attachments.length > 9 ? '9+' : message.attachments.length}
+                  </span>
                 )}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Docs</TooltipContent>
+          </Tooltip>
+
+          <div className="ml-auto flex items-center gap-2 bg-muted/40 border border-border/60 rounded-md px-2 py-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="outline" className="toolbar-square-btn toolbar-square-btn-action" onClick={handleSave}>
+                  <Save className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Save</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="outline" className="toolbar-square-btn toolbar-square-btn-action" onClick={handleSaveAndSend}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Save &amp; Send</TooltipContent>
+            </Tooltip>
+            {(isSent || isDraft) && !isRetracted && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="icon" variant="outline" className="toolbar-square-btn toolbar-square-btn-action" onClick={() => onRetract(message.id)}>
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Retract</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        </div>
+
+        <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col px-5 pt-2 pb-1">
+            <button
+              type="button"
+              onClick={() => setBulletinOpen(o => !o)}
+              aria-expanded={bulletinOpen}
+              className="flex items-center justify-between gap-2 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors shrink-0 border-b border-border/50"
+            >
+              <span>Bulletin</span>
+              {bulletinOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            </button>
+            {bulletinOpen && (
+              <div className="flex-1 min-h-0 overflow-hidden border border-dashed border-primary/40 rounded-md">
+                <RichTextEditor
+                  value={editBody}
+                  onChange={setEditBody}
+                  placeholder="Write the alert body…"
+                  className="h-full border-0 rounded-none"
+                  contentClassName="px-3 py-3"
+                />
               </div>
-            </>
+            )}
+          </div>
+
+          {/* Hovering associated chat — collapsible / minimisable */}
+          {chatOpen && (
+            <div
+              className={`chat-panel-border absolute bottom-3 right-4 z-30 w-[380px] max-w-[92%] rounded-lg bg-card shadow-2xl flex flex-col overflow-hidden ${chatMinimized ? 'h-11' : 'h-[60%] min-h-[280px]'}`}
+            >
+              <div className="flex items-center justify-between gap-2 px-3 py-2 shrink-0 border-b border-border/50 bg-muted/40">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">
+                  Associated Chat Thread
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6"
+                    title={chatMinimized ? 'Expand chat' : 'Minimise chat'}
+                    onClick={() => setChatMinimized(m => !m)}
+                  >
+                    {chatMinimized ? <ChevronUp className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-6 w-6" title="Close chat" onClick={() => setChatOpen(false)}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+              {!chatMinimized && (
+                <div className="flex-1 min-h-0 p-2">
+                  <SecureChat
+                    key={message.dealIds?.[0] ?? 'no-deal'}
+                    activeDealId={message.dealIds?.[0] ?? null}
+                    heightClass="h-full"
+                    allowDealAccess
+                    hideStageBadge
+                    fallbackThreadLabel={message.subject}
+                  />
+                </div>
+              )}
+            </div>
           )}
         </div>
+
 
         {/* Attachments panel */}
         <div className="px-5 pb-2 space-y-1.5 border-t border-border shrink-0">
