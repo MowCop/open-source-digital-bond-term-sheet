@@ -803,6 +803,10 @@ export default function MessagesPage() {
                                     )}
                                     <span>{getUserName(latest.senderId)}</span>
                                   </div>
+                                  const latestVersionLabel = total > 1
+                                    ? (total === 1 ? 'Original' : `Update #${total - 1}`)
+                                    : undefined;
+                                  return (
                                   <AlertHistoryCard
                                     key={latest.id}
                                     message={latest}
@@ -811,6 +815,7 @@ export default function MessagesPage() {
                                     canManage={canManageMessages}
                                     chatUnread={getUnreadChatCount(group.dealIds)}
                                     chatOpenOnBoard={showChat && activeDealId === group.dealIds[0]}
+                                    versionLabel={latestVersionLabel}
                                     isLatest
                                     embedded
                                     editSignal={editSignals[latest.id] || 0}
