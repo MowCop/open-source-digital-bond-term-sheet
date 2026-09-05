@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, ShieldCheck, Save, Send, RotateCcw, Trash2, Sparkles } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, Edit2, BookOpen, FileText, Paperclip, ShieldCheck, Save, Send, RotateCcw, Trash2, Sparkles } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
@@ -645,16 +645,6 @@ export default function MessagesPage() {
           <FileText className="h-4 w-4 mr-1" />
           Docs{docCount > 0 ? ` (${docCount})` : ''}
         </Button>
-      <Button
-        size="default"
-        variant="outline"
-        aria-pressed={activePanel === 'history'}
-        className={`toolbar-btn ${activePanel === 'history' ? 'toolbar-btn-selected' : ''} ${flashingBtn === `${groupKey}:history` ? 'animate-border-flash' : ''}`}
-        onClick={(e) => { e.stopPropagation(); flash(`${groupKey}:history`); setActivePanel(p => p === 'history' ? null : 'history'); }}
-      >
-        <History className="h-4 w-4 mr-1" />
-        History ({group.messages.length})
-      </Button>
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
         <>
           <Button
