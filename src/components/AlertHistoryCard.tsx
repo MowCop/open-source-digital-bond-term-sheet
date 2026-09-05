@@ -556,7 +556,7 @@ export default function AlertHistoryCard({
                 title={isDraft ? 'Retract is only available for Published alerts' : undefined}
                 onClick={() => onRetract(message.id)}
               >
-                <RotateCcw className="h-4 w-4 mr-1" /> Retract
+                <RotateCcw className="h-4 w-4 mr-1 text-red-500" /> Retract
               </Button>
             )}
           </div>
@@ -690,7 +690,7 @@ export default function AlertHistoryCard({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button size="icon" variant="outline" className="toolbar-square-btn toolbar-square-btn-action" onClick={() => onRetract(message.id)}>
-                    <RotateCcw className="h-4 w-4" />
+                    <RotateCcw className="h-4 w-4 text-red-500" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Retract</TooltipContent>
@@ -862,7 +862,7 @@ export default function AlertHistoryCard({
               className="h-10 px-4"
               onClick={() => onRetract(message.id)}
             >
-              <RotateCcw className="h-4 w-4 mr-1" /> Retract
+              <RotateCcw className="h-4 w-4 mr-1 text-red-500" /> Retract
             </Button>
           )}
           {(isSent || isDraft) && !isRetracted && (
