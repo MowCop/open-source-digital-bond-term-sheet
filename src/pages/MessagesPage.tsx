@@ -480,7 +480,7 @@ export default function MessagesPage() {
 
 
   const renderDealActions = (group: AlertGroup, groupKey: string) => {
-    const armed = !!parseArmed[groupKey];
+    const armed = !!parseOpen[groupKey];
     const sources = parseSources[groupKey] ?? { chat: true, docs: false };
     const docCount = group.messages.reduce((n, m) => n + (m.attachments?.length ?? 0), 0);
     const unread = getUnreadChatCount(group.dealIds);
