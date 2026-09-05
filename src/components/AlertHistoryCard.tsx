@@ -199,6 +199,36 @@ export default function AlertHistoryCard({
     return 'docx';
   };
 
+  const dragDepth = useRef(0);
+  const isFileDrag = (e: React.DragEvent) => Array.from(e.dataTransfer?.types || []).includes('Files');
+  const dropZoneProps = {
+    onDragEnter: (e: React.DragEvent) => {
+      if (!isFileDrag(e)) return;
+      e.preventDefault();
+      dragDepth.current += 1;
+      setDragOver(true);
+    },
+    onDragOver: (e: React.DragEvent) => {
+      if (!isFileDrag(e)) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      setDragOver(true);
+    },
+    onDragLeave: (e: React.DragEvent) => {
+      if (!isFileDrag(e)) return;
+      dragDepth.current = Math.max(0, dragDepth.current - 1);
+      if (dragDepth.current === 0) setDragOver(false);
+    },
+    onDrop: (e: React.DragEvent) => {
+      if (!isFileDrag(e)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dragDepth.current = 0;
+      setDragOver(false);
+      handleFiles(e.dataTransfer.files);
+    },
+  };
+
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     const accepted = Array.from(files).filter(f => /\.(pdf|docx?|pptx?)$/i.test(f.name));
