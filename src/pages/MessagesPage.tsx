@@ -618,21 +618,15 @@ export default function MessagesPage() {
       )}
       </div>
 
-      {/* Sources for AI DataParse — Chat and Docs live here */}
-      <div className="flex items-center gap-2 flex-wrap pl-1">
-        {armed && (
-          <span className="text-xs uppercase tracking-wide text-muted-foreground mr-1">From:</span>
-        )}
+      <div className="flex items-center gap-2 flex-wrap">
         {group.dealIds.length > 0 && (
           <Button
             size="default"
             variant="outline"
-            aria-pressed={armed ? sources.chat : undefined}
-            className={`toolbar-btn ${armed && sources.chat ? 'toolbar-btn-selected' : ''} ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
-            title={armed ? 'Use the deal chat as the parse source' : (unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat')}
+            className={`toolbar-btn ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
+            title={unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat'}
             onClick={(e) => {
               e.stopPropagation();
-              if (armed) { toggleSource('chat'); return; }
               flash(`${groupKey}:openchat`);
               handleOpenChat(group.dealIds, { modal: true });
             }}
@@ -644,36 +638,13 @@ export default function MessagesPage() {
         <Button
           size="default"
           variant="outline"
-          aria-pressed={armed ? sources.docs : undefined}
-          className={`toolbar-btn ${armed && sources.docs ? 'toolbar-btn-selected' : ''}`}
-          title={armed ? 'Use attached documents as the parse source (coming soon)' : 'View attached documentation'}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (armed) { toggleSource('docs'); return; }
-            setDocsGroup(group);
-          }}
+          className="toolbar-btn"
+          title="View attached documentation"
+          onClick={(e) => { e.stopPropagation(); setDocsGroup(group); }}
         >
           <FileText className="h-4 w-4 mr-1" />
           Docs{docCount > 0 ? ` (${docCount})` : ''}
         </Button>
-        {armed && showParse && (
-          <Button
-            size="default"
-            variant="outline"
-            className="toolbar-btn toolbar-btn-action"
-            title="Run AI DataParse using the selected sources"
-            onClick={(e) => {
-              e.stopPropagation();
-              setParseRunSignals(s => ({ ...s, [groupKey]: (s[groupKey] || 0) + 1 }));
-            }}
-          >
-            <Sparkles className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} />
-            Run
-          </Button>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 flex-wrap">
       <Button
         size="default"
         variant="outline"
