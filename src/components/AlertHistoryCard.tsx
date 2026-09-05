@@ -687,6 +687,7 @@ export default function AlertHistoryCard({
 
 
         {/* Attachments panel */}
+        {docsOpen && (
         <div className="px-5 pb-2 space-y-1.5 border-t border-border shrink-0">
           <div className="flex items-center justify-between pt-2">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -731,6 +732,7 @@ export default function AlertHistoryCard({
             </div>
           )}
         </div>
+        )}
 
         <div className="relative flex items-center justify-center gap-2 px-5 py-2 border-t border-border shrink-0 bg-card/40">
           <div className="flex items-center gap-2">
