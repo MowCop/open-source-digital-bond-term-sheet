@@ -485,8 +485,8 @@ export default function AlertHistoryCard({
 
       {/* Action buttons */}
       {canManage && (
-        <div className="relative flex items-center justify-center gap-2 pt-2 pb-1 px-5 border-t border-border/50">
-          <div className="flex items-center gap-2 flex-wrap justify-center">
+        <div className="relative flex items-center justify-between gap-2 pt-2 pb-1 px-5 border-t border-border/50">
+          <div className="flex items-center gap-2 flex-wrap">
             {!isRetracted && !isLatest && (
               <Button variant="outline" className="btn-footer-action" onClick={enterEdit}>
                 <Edit2 className="h-4 w-4 mr-1" /> Edit
@@ -504,6 +504,8 @@ export default function AlertHistoryCard({
                 <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
               </Button>
             )}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
             {!isRetracted && (
               <>
                 <Button variant="outline" className="btn-footer-action" onClick={handleSave}>
@@ -516,18 +518,18 @@ export default function AlertHistoryCard({
                 )}
               </>
             )}
+            {(isSent || isDraft) && !isRetracted && (
+              <Button
+                variant="destructive"
+                className="h-10 px-4"
+                disabled={isDraft}
+                title={isDraft ? 'Retract is only available for Published alerts' : undefined}
+                onClick={() => onRetract(message.id)}
+              >
+                <RotateCcw className="h-4 w-4 mr-1" /> Retract
+              </Button>
+            )}
           </div>
-          {(isSent || isDraft) && !isRetracted && (
-            <Button
-              variant="destructive"
-              className="h-10 px-4 absolute right-5 top-1/2 -translate-y-1/2"
-              disabled={isDraft}
-              title={isDraft ? 'Retract is only available for Published alerts' : undefined}
-              onClick={() => onRetract(message.id)}
-            >
-              <RotateCcw className="h-4 w-4 mr-1" /> Retract
-            </Button>
-          )}
         </div>
       )}
       </>
