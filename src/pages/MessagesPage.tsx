@@ -535,17 +535,58 @@ export default function MessagesPage() {
       )}
       {showParse && (
         <div onClick={(e) => e.stopPropagation()}>
-          <ExtractDealFromChatButton
-            size="default"
-            source="thread"
-            messages={group.messages}
-            conversationLabel={group.headline || group.borrower}
-            targetDealIds={group.dealIds}
-            className="toolbar-btn-ai"
-            armed={armed}
-            runSignal={parseRunSignals[groupKey] ?? 0}
-            onArmToggle={() => setParseArmed(s => ({ ...s, [groupKey]: !s[groupKey] }))}
-          />
+          <Popover
+            open={armed}
+            onOpenChange={(o) => setParseOpen(s => ({ ...s, [groupKey]: o }))}
+          >
+            <PopoverTrigger asChild>
+              <div>
+                <ExtractDealFromChatButton
+                  size="default"
+                  source="thread"
+                  messages={group.messages}
+                  conversationLabel={group.headline || group.borrower}
+                  targetDealIds={group.dealIds}
+                  className="toolbar-btn-ai"
+                  armed={armed}
+                  runSignal={parseRunSignals[groupKey] ?? 0}
+                  onArmToggle={() => setParseOpen(s => ({ ...s, [groupKey]: !s[groupKey] }))}
+                />
+              </div>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-72 p-3 space-y-3" onClick={(e) => e.stopPropagation()}>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Parse deal data from:</p>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <Checkbox checked={sources.chat} onCheckedChange={() => toggleSource('chat')} className="mt-0.5" />
+                <span className="text-sm leading-tight">
+                  Chat thread
+                  <span className="block text-xs text-muted-foreground">{group.messages.length} message{group.messages.length === 1 ? '' : 's'} in this deal</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <Checkbox checked={sources.docs} onCheckedChange={() => toggleSource('docs')} className="mt-0.5" />
+                <span className="text-sm leading-tight">
+                  Documents <span className="text-xs text-muted-foreground">(coming soon)</span>
+                  <span className="block text-xs text-muted-foreground">{docCount} attached</span>
+                </span>
+              </label>
+              <div className="flex justify-end pt-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="toolbar-btn toolbar-btn-action"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setParseRunSignals(s => ({ ...s, [groupKey]: (s[groupKey] || 0) + 1 }));
+                    setParseOpen(s => ({ ...s, [groupKey]: false }));
+                  }}
+                >
+                  <Sparkles className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} />
+                  Run AI Parse
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       )}
       <Button
