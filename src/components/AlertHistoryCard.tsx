@@ -96,6 +96,7 @@ export default function AlertHistoryCard({
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMinimized, setChatMinimized] = useState(false);
   const [docsOpen, setDocsOpen] = useState(true);
+  const [attachmentsHover, setAttachmentsHover] = useState(false);
   const { toast } = useToast();
   const [bulletinOpen, setBulletinOpen] = useState(true);
   const { deals } = useApp();
