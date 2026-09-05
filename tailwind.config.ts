@@ -81,6 +81,9 @@ export default {
           deep: "hsl(var(--navy-deep))",
           light: "hsl(var(--navy-light))",
         },
+        logo: {
+          DEFAULT: "hsl(var(--logo-green))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

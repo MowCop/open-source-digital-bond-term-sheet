@@ -52,6 +52,7 @@
     --gold-glow: 43 96% 56%;
     --navy-deep: 222 47% 6%;
     --navy-light: 217 33% 22%;
+    --logo-green: 142 71% 58%;
 
     --toolbar-btn-border: 0 0% 100%;
   }
@@ -94,6 +95,9 @@
   .stage-closed { @apply bg-gray-800/40 text-gray-400; }
   .text-timestamp { color: hsl(var(--timestamp)); }
   .border-timestamp { border-color: hsl(var(--timestamp)); }
+  .text-logo-depth {
+    text-shadow: 1px 1px 0 hsl(var(--primary)), 2px 2px 10px hsl(var(--primary) / 0.45);
+  }
   .gold-glow {
     box-shadow: 0 0 20px -5px hsl(43 96% 56% / 0.3);
   }
