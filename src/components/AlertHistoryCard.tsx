@@ -442,8 +442,8 @@ export default function AlertHistoryCard({
               />
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="h-3.5 w-3.5" />
+                  <Button size="icon" className="toolbar-square-btn h-6 w-6 shrink-0" onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="h-3.5 w-3.5 text-destructive" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top">Add files</TooltipContent>
@@ -792,8 +792,8 @@ export default function AlertHistoryCard({
                 />
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => fileInputRef.current?.click()}>
-                      <Upload className="h-3.5 w-3.5" />
+                    <Button size="icon" className="toolbar-square-btn h-6 w-6 shrink-0" onClick={() => fileInputRef.current?.click()}>
+                      <Upload className="h-3.5 w-3.5 text-destructive" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="top">Add files</TooltipContent>
