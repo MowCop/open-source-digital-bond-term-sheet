@@ -70,7 +70,7 @@ function buildChannelTranscript(msgs: ChatMessage[]): string {
 }
 
 export default function ExtractDealFromChatButton(props: Props) {
-  const { conversationLabel, targetDealIds, className, size = 'sm', variant = 'outline', iconOnly = false } = props;
+  const { conversationLabel, targetDealIds, className, size = 'sm', variant = 'outline', iconOnly = false, tooltip } = props;
   const { deals, currentUser } = useApp();
   const { toast } = useToast();
 
