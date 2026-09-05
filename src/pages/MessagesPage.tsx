@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Message, DealStage, MessageStatus } from '@/types/bond';
 import { format } from 'date-fns';
-import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, ShieldCheck, Save, Send, RotateCcw, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus, MessageSquare, Database, History, Edit2, BookOpen, FileText, Paperclip, ShieldCheck, Save, Send, RotateCcw, Trash2, Sparkles } from 'lucide-react';
 import FloatingChatPanel from '@/components/FloatingChatPanel';
 import ChatModalDialog from '@/components/ChatModalDialog';
 import AlertHistoryCard from '@/components/AlertHistoryCard';
@@ -86,6 +86,9 @@ export default function MessagesPage() {
   const [saveSendSignals, setSaveSendSignals] = useState<Record<string, number>>({});
   const [flashingBtn, setFlashingBtn] = useState<string | null>(null);
   const [docsGroup, setDocsGroup] = useState<AlertGroup | null>(null);
+  const [parseArmed, setParseArmed] = useState<Record<string, boolean>>({});
+  const [parseSources, setParseSources] = useState<Record<string, { chat: boolean; docs: boolean }>>({});
+  const [parseRunSignals, setParseRunSignals] = useState<Record<string, number>>({});
   const [filterStage, setFilterStage] = useState<string>('all');
   const [filterPublish, setFilterPublish] = useState<'all' | PublishStatus>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
@@ -474,8 +477,28 @@ export default function MessagesPage() {
   };
 
 
-  const renderDealActions = (group: AlertGroup, groupKey: string) => (
-    <div className="flex items-center gap-2 pb-3 mb-3 border-b border-border/50 flex-wrap">
+  const renderDealActions = (group: AlertGroup, groupKey: string) => {
+    const armed = !!parseArmed[groupKey];
+    const sources = parseSources[groupKey] ?? { chat: true, docs: false };
+    const docCount = group.messages.reduce((n, m) => n + (m.attachments?.length ?? 0), 0);
+    const unread = getUnreadChatCount(group.dealIds);
+    const showParse = canManageMessages && group.messages.length > 0;
+
+    const toggleSource = (key: 'chat' | 'docs') => {
+      setParseSources(s => {
+        const cur = s[groupKey] ?? { chat: true, docs: false };
+        const next = { ...cur, [key]: !cur[key] };
+        if (!next.chat && !next.docs) next[key] = true; // keep at least one source
+        return { ...s, [groupKey]: next };
+      });
+      if (key === 'docs') {
+        toast({ title: 'Docs parsing coming soon', description: 'Document parsing is not live yet — the chat thread is used for extraction.' });
+      }
+    };
+
+    return (
+    <div className="pb-3 mb-3 border-b border-border/50 space-y-2">
+      <div className="flex items-center gap-2 flex-wrap">
       <Button
         size="default"
         variant="outline"
@@ -508,7 +531,7 @@ export default function MessagesPage() {
           Edit Latest
         </Button>
       )}
-      {canManageMessages && group.messages.length > 0 && (
+      {showParse && (
         <div onClick={(e) => e.stopPropagation()}>
           <ExtractDealFromChatButton
             size="default"
@@ -517,28 +540,12 @@ export default function MessagesPage() {
             conversationLabel={group.headline || group.borrower}
             targetDealIds={group.dealIds}
             className="toolbar-btn-ai"
+            armed={armed}
+            runSignal={parseRunSignals[groupKey] ?? 0}
+            onArmToggle={() => setParseArmed(s => ({ ...s, [groupKey]: !s[groupKey] }))}
           />
         </div>
       )}
-      {group.dealIds.length > 0 && (() => {
-        const unread = getUnreadChatCount(group.dealIds);
-        return (
-          <Button
-            size="default"
-            variant="outline"
-            className={`toolbar-btn ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
-            title={unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat'}
-            onClick={(e) => {
-              e.stopPropagation();
-              flash(`${groupKey}:openchat`);
-              handleOpenChat(group.dealIds, { modal: true });
-            }}
-          >
-            <MessageSquare className="h-4 w-4 mr-1" />
-            Chat{unread > 0 ? ` (${unread})` : ''}
-          </Button>
-        );
-      })()}
       <Button
         size="default"
         variant="outline"
@@ -552,21 +559,6 @@ export default function MessagesPage() {
         <BookOpen className="h-4 w-4 mr-1" />
         OrderBook
       </Button>
-      {(() => {
-        const docCount = group.messages.reduce((n, m) => n + (m.attachments?.length ?? 0), 0);
-        return (
-          <Button
-            size="default"
-            variant="outline"
-            className="toolbar-btn"
-            title="View attached documentation"
-            onClick={(e) => { e.stopPropagation(); setDocsGroup(group); }}
-          >
-            <FileText className="h-4 w-4 mr-1" />
-            Docs{docCount > 0 ? ` (${docCount})` : ''}
-          </Button>
-        );
-      })()}
       {group.dealIds[0] && (
         <Button
           size="default"
@@ -581,6 +573,64 @@ export default function MessagesPage() {
           <DealCheckFlag deal={deals.find(d => d.id === group.dealIds[0])} className="ml-1.5 border border-white/70" />
         </Button>
       )}
+      </div>
+
+      {/* Sources for AI DataParse — Chat and Docs live here */}
+      <div className="flex items-center gap-2 flex-wrap pl-1">
+        {armed && (
+          <span className="text-xs uppercase tracking-wide text-muted-foreground mr-1">From:</span>
+        )}
+        {group.dealIds.length > 0 && (
+          <Button
+            size="default"
+            variant="outline"
+            aria-pressed={armed ? sources.chat : undefined}
+            className={`toolbar-btn ${armed && sources.chat ? 'toolbar-btn-selected' : ''} ${flashingBtn === `${groupKey}:openchat` ? 'animate-border-flash' : ''}`}
+            title={armed ? 'Use the deal chat as the parse source' : (unread > 0 ? `Open Chat — ${unread} unread` : 'Open Chat')}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (armed) { toggleSource('chat'); return; }
+              flash(`${groupKey}:openchat`);
+              handleOpenChat(group.dealIds, { modal: true });
+            }}
+          >
+            <MessageSquare className="h-4 w-4 mr-1" />
+            Chat{unread > 0 ? ` (${unread})` : ''}
+          </Button>
+        )}
+        <Button
+          size="default"
+          variant="outline"
+          aria-pressed={armed ? sources.docs : undefined}
+          className={`toolbar-btn ${armed && sources.docs ? 'toolbar-btn-selected' : ''}`}
+          title={armed ? 'Use attached documents as the parse source (coming soon)' : 'View attached documentation'}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (armed) { toggleSource('docs'); return; }
+            setDocsGroup(group);
+          }}
+        >
+          <FileText className="h-4 w-4 mr-1" />
+          Docs{docCount > 0 ? ` (${docCount})` : ''}
+        </Button>
+        {armed && showParse && (
+          <Button
+            size="default"
+            variant="outline"
+            className="toolbar-btn toolbar-btn-action"
+            title="Run AI DataParse using the selected sources"
+            onClick={(e) => {
+              e.stopPropagation();
+              setParseRunSignals(s => ({ ...s, [groupKey]: (s[groupKey] || 0) + 1 }));
+            }}
+          >
+            <Sparkles className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} />
+            Run
+          </Button>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap">
       <Button
         size="default"
         variant="outline"
@@ -640,8 +690,10 @@ export default function MessagesPage() {
           </Button>
         </>
       )}
+      </div>
     </div>
-  );
+    );
+  };
 
   const renderDealDetail = (group: AlertGroup, groupKey: string) => (
                   <div
