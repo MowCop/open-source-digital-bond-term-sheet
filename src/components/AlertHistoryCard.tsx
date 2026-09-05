@@ -704,6 +704,16 @@ export default function AlertHistoryCard({
           </div>
         </div>
 
+        {/* Headline */}
+        <div className="px-5 py-2 border-b border-border shrink-0">
+          <input
+            value={editSubject}
+            onChange={e => setEditSubject(e.target.value)}
+            placeholder="Subject"
+            className="w-full bg-background border border-border rounded px-3 py-1.5 text-sm font-bold text-amber-300 placeholder:text-amber-300/40 focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+
         <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
           <div className="flex-1 min-h-0 flex flex-col px-5 pt-2 pb-1">
             <button
