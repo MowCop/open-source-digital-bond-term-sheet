@@ -791,6 +791,9 @@ export default function MessagesPage() {
                           };
                           const latest = group.messages[0];
                           const rest = group.messages.slice(1);
+                          const latestVersionLabel = total > 1
+                            ? (total === 1 ? 'Original' : `Update #${total - 1}`)
+                            : undefined;
                           return (
                             <>
                               {latest && (
@@ -811,6 +814,7 @@ export default function MessagesPage() {
                                     canManage={canManageMessages}
                                     chatUnread={getUnreadChatCount(group.dealIds)}
                                     chatOpenOnBoard={showChat && activeDealId === group.dealIds[0]}
+                                    versionLabel={latestVersionLabel}
                                     isLatest
                                     embedded
                                     editSignal={editSignals[latest.id] || 0}
