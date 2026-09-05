@@ -827,11 +827,11 @@ export default function MessagesPage() {
           {/* Table header */}
 
           <div className="grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
-            <div>Last Updated</div>
+            <div></div>
             <div className="min-w-[28px]"></div>
-            <div className="pr-2">Public Status</div>
-            <div className="pr-2">Chat</div>
-            <div>Headline</div>
+            <div className="pr-2"></div>
+            <div className="pr-2"></div>
+            <div></div>
             <div className="text-right pr-1">Stage</div>
           </div>
 
