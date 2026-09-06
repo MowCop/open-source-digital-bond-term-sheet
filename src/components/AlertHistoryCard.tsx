@@ -642,11 +642,13 @@ export default function AlertHistoryCard({
               <Button
                 size="icon"
                 variant="ghost"
+                aria-label="Back to Main Menu"
                 className="toolbar-square-btn"
                 onClick={handleBackToMenu}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
+
             </TooltipTrigger>
             <TooltipContent>Back to Main Menu</TooltipContent>
           </Tooltip>
