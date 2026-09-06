@@ -59,6 +59,14 @@ interface AlertHistoryCardProps {
   chatOpenOnBoard?: boolean;
   /** Open the card body by default (e.g. full history expansion on the board). */
   defaultExpanded?: boolean;
+  /**
+   * When true, render only the full-screen editor dialog. Used when the
+   * card is opened directly from the New Issue Board as the primary edit/archive
+   * overlay, replacing the previous Focus Mode intermediate view.
+   */
+  fullscreen?: boolean;
+  /** Called when the fullscreen dialog is closed (Esc, back arrow, click outside). */
+  onClose?: () => void;
   onUpdate: (id: string, updates: Partial<Message>) => void;
   onRetract: (id: string) => void;
   onSend: (id: string) => void;
@@ -82,15 +90,18 @@ export default function AlertHistoryCard({
   chatUnread = 0,
   chatOpenOnBoard = false,
   defaultExpanded = false,
+  fullscreen = false,
+  onClose,
   onUpdate,
   onRetract,
   onSend,
   onPostUpdate,
   onDelete,
 }: AlertHistoryCardProps) {
-  // Updates that were already published (Save & Send) and superseded are archive
-  // records: read-only, no edit / save / send / retract controls.
-  const canManage = canManageProp && !readOnly;
+  // Only the latest, non-read-only version is editable. Archive versions and
+  // any version selected from the dropdown that is not the newest are view-only.
+  const latestVersionId = versions?.[0]?.id ?? message.id;
+  const canManageLatest = canManageProp && !readOnly;
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [isOpen, setIsOpen] = useState(false);
   const [collapsedOverride, setCollapsedOverride] = useState(false);
@@ -137,17 +148,6 @@ export default function AlertHistoryCard({
 
   useEffect(() => clearClickEditTimer, []);
 
-  // Keep local draft in sync with the stored message while not editing, so an
-  // external Save never writes back stale content (e.g. after an inline
-  // headline rename on the board).
-  useEffect(() => {
-    if (mode === 'view') {
-      setEditSubject(message.subject);
-      setEditBody(message.body);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [message.subject, message.body, mode]);
-
   const [versionMenuOpen, setVersionMenuOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [viewVersionId, setViewVersionId] = useState<string | null>(null);
@@ -162,22 +162,51 @@ export default function AlertHistoryCard({
     }));
   })();
   const activeVersion = versionOptions.find(v => v.message.id === viewVersionId)?.message ?? message;
-  const viewingArchive = activeVersion.id !== message.id;
+  // The newest version in the deal thread is the editable one; every earlier
+  // sent version is an archive record.
+  const viewingArchive = activeVersion.id !== latestVersionId;
+  const canManage = canManageLatest && !viewingArchive;
   const activeVersionLabel =
     versionOptions.find(v => v.message.id === activeVersion.id)?.label ?? versionLabel;
+
+  // Keep local draft in sync with the active version while not editing, so an
+  // external Save never writes back stale content (e.g. after an inline
+  // headline rename on the board or switching versions in the dropdown).
+  useEffect(() => {
+    if (mode === 'view') {
+      setEditSubject(activeVersion.subject);
+      setEditBody(activeVersion.body);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeVersion.subject, activeVersion.body, mode, activeVersion.id]);
+
+  // Reset draft to the selected version whenever the user switches versions,
+  // regardless of current mode, so the editor always reflects what is being viewed.
+  useEffect(() => {
+    setEditSubject(activeVersion.subject);
+    setEditBody(activeVersion.body);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeVersion.id]);
 
   // Any further edit re-enables Save.
   useEffect(() => { setIsSaved(false); }, [editSubject, editBody]);
 
+  // When the parent switches the message prop (e.g. after Save & Send creates a
+  // new latest update), drop any explicit version selection so the new message
+  // becomes the active version.
+  useEffect(() => {
+    setViewVersionId(null);
+  }, [message.id]);
+
 
   const handleSave = () => {
-    onUpdate(message.id, { subject: editSubject, body: editBody });
-    setMode('view');
+    onUpdate(activeVersion.id, { subject: editSubject, body: editBody });
+    if (!fullscreen) setMode('view');
   };
 
   const handleSaveAndSend = () => {
-    onPostUpdate(message.id, { subject: editSubject, body: editBody });
-    setMode('view');
+    onPostUpdate(activeVersion.id, { subject: editSubject, body: editBody });
+    if (!fullscreen) setMode('view');
   };
 
   const enterEdit = () => {
@@ -186,9 +215,9 @@ export default function AlertHistoryCard({
 
   // Open the editor when the parent fires an external edit signal (latest card only).
   useEffect(() => {
-    if (editSignal && editSignal > 0 && canManage && message.status !== 'retracted') {
-      setEditSubject(message.subject);
-      setEditBody(message.body);
+    if (editSignal && editSignal > 0 && canManage && activeVersion.status !== 'retracted') {
+      setEditSubject(activeVersion.subject);
+      setEditBody(activeVersion.body);
       setMode('edit');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -196,12 +225,12 @@ export default function AlertHistoryCard({
 
   // External Save / Save & Send triggers from the deal toolbar.
   useEffect(() => {
-    if (saveSignal > 0 && canManage && message.status !== 'retracted') handleSave();
+    if (saveSignal > 0 && canManage && activeVersion.status !== 'retracted') handleSave();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saveSignal]);
 
   useEffect(() => {
-    if (saveSendSignal > 0 && canManage && message.status !== 'retracted') handleSaveAndSend();
+    if (saveSendSignal > 0 && canManage && activeVersion.status !== 'retracted') handleSaveAndSend();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saveSendSignal]);
 
@@ -232,21 +261,25 @@ export default function AlertHistoryCard({
   }, [message.id]);
 
   const handleCancel = () => {
-    setEditSubject(message.subject);
-    setEditBody(message.body);
-    setMode('view');
+    setEditSubject(activeVersion.subject);
+    setEditBody(activeVersion.body);
+    if (!fullscreen) setMode('view');
   };
 
-  const isDirty = editSubject !== message.subject || editBody !== message.body;
+  const isDirty = editSubject !== activeVersion.subject || editBody !== activeVersion.body;
 
   const attemptClose = () => {
     if (isDirty && !window.confirm('You have unsaved changes. Discard and return to the Issue Board?')) {
       return;
     }
     handleCancel();
-    // Signal parent (MessagesPage) to also collapse the deal row so a single
-    // Esc inside the editor returns the user all the way to the Issue Board.
-    window.dispatchEvent(new CustomEvent('alert-editor-closed'));
+    if (fullscreen && onClose) {
+      onClose();
+    } else {
+      // Signal parent (MessagesPage) to also collapse the deal row so a single
+      // Esc inside the editor returns the user all the way to the Issue Board.
+      window.dispatchEvent(new CustomEvent('alert-editor-closed'));
+    }
   };
 
   const handleBackToMenu = () => {
@@ -255,6 +288,18 @@ export default function AlertHistoryCard({
     }
     handleCancel();
     navigate('/messages');
+  };
+
+  const handleBack = () => {
+    if (fullscreen && onClose) {
+      if (isDirty && !window.confirm('You have unsaved changes. Discard and return to the Issue Board?')) {
+        return;
+      }
+      handleCancel();
+      onClose();
+    } else {
+      handleBackToMenu();
+    }
   };
 
   const inferType = (name: string): Attachment['type'] => {
@@ -362,6 +407,7 @@ export default function AlertHistoryCard({
 
   return (
     <>
+    {!fullscreen && (
     <div
       data-alert-card-expanded={expanded ? 'true' : undefined}
       className={
@@ -646,14 +692,15 @@ export default function AlertHistoryCard({
       </>
       )}
     </div>
+    )}
 
     {/* Full-screen edit modal */}
     <Dialog
-      open={editing}
+      open={fullscreen || editing}
       onOpenChange={(o) => { if (!o) attemptClose(); }}
     >
       <DialogContent
-        className="max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg p-0 gap-0 flex flex-col"
+        className={`${fullscreen ? 'max-w-[100vw] w-[100vw] h-[100vh] rounded-none' : 'max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg'} p-0 gap-0 flex flex-col`}
       >
 
         {/* Functional icon toolbar */}
@@ -663,15 +710,15 @@ export default function AlertHistoryCard({
               <Button
                 size="icon"
                 variant="ghost"
-                aria-label="Back to Main Menu"
+                aria-label={fullscreen ? 'Back to Issue Board' : 'Back to Main Menu'}
                 className="toolbar-square-btn"
-                onClick={handleBackToMenu}
+                onClick={handleBack}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
 
             </TooltipTrigger>
-            <TooltipContent>Back to Main Menu</TooltipContent>
+            <TooltipContent>{fullscreen ? 'Back to Issue Board' : 'Back to Main Menu'}</TooltipContent>
           </Tooltip>
 
           <Tooltip>
@@ -801,6 +848,7 @@ export default function AlertHistoryCard({
             <TooltipContent>Docs</TooltipContent>
           </Tooltip>
 
+          {canManage && (
           <div className="flex items-center gap-2 bg-muted/40 border border-border/60 rounded-md px-2 py-1">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -821,7 +869,7 @@ export default function AlertHistoryCard({
             {(isSent || isDraft) && !isRetracted && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="icon" variant="outline" className="toolbar-square-btn toolbar-square-btn-action" onClick={() => onRetract(message.id)}>
+                  <Button size="icon" variant="outline" className="toolbar-square-btn toolbar-square-btn-action" onClick={() => onRetract(activeVersion.id)}>
                     <RotateCcw className="h-4 w-4 text-red-500" />
                   </Button>
                 </TooltipTrigger>
@@ -829,6 +877,7 @@ export default function AlertHistoryCard({
               </Tooltip>
             )}
           </div>
+          )}
           {editDeal && (
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[50%] truncate text-xl font-bold text-white tracking-tight pointer-events-none">
               {editDeal.issuerName}
@@ -854,14 +903,14 @@ export default function AlertHistoryCard({
             />
           )}
           <div className="flex items-center gap-1 shrink-0">
-            {versionLabel && (
+            {versionOptions.length > 1 && (
               <Popover open={versionMenuOpen} onOpenChange={setVersionMenuOpen}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
                     className="flex items-center gap-1 rounded px-2 py-0.5 text-sm font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)] hover:bg-sky-400/10"
                   >
-                    {activeVersionLabel}
+                    {activeVersionLabel ?? versionLabel}
                     <ChevronDown className="h-3.5 w-3.5" />
                   </button>
                 </PopoverTrigger>
@@ -1011,7 +1060,7 @@ export default function AlertHistoryCard({
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0">
               Attachments ({message.attachments.length})
             </span>
-            {!isRetracted && (
+            {canManage && !isRetracted && (
               <>
                 <input
                   ref={fileInputRef}
