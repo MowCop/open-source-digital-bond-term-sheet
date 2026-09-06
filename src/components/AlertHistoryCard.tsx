@@ -48,6 +48,8 @@ interface AlertHistoryCardProps {
   /** Archive update (already sent and superseded) — view only, no editing. */
   readOnly?: boolean;
   versionLabel?: string;
+  /** All alert versions for this deal, newest first (for the version dropdown). */
+  versions?: Message[];
   isLatest?: boolean;
   editSignal?: number;
   saveSignal?: number;
@@ -81,6 +83,7 @@ export default function AlertHistoryCard({
   canManage: canManageProp,
   readOnly = false,
   versionLabel,
+  versions,
   isLatest = false,
   editSignal = 0,
   saveSignal = 0,
