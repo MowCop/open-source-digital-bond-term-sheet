@@ -45,6 +45,8 @@ interface AlertHistoryCardProps {
   senderName: string;
   recipientNames: string;
   canManage: boolean;
+  /** Archive update (already sent and superseded) — view only, no editing. */
+  readOnly?: boolean;
   versionLabel?: string;
   isLatest?: boolean;
   editSignal?: number;
@@ -76,7 +78,8 @@ export default function AlertHistoryCard({
   message,
   senderName,
   recipientNames,
-  canManage,
+  canManage: canManageProp,
+  readOnly = false,
   versionLabel,
   isLatest = false,
   editSignal = 0,
@@ -92,6 +95,9 @@ export default function AlertHistoryCard({
   onPostUpdate,
   onDelete,
 }: AlertHistoryCardProps) {
+  // Updates that were already published (Save & Send) and superseded are archive
+  // records: read-only, no edit / save / send / retract controls.
+  const canManage = canManageProp && !readOnly;
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [isOpen, setIsOpen] = useState(false);
   const [collapsedOverride, setCollapsedOverride] = useState(false);
