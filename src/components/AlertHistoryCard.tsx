@@ -863,11 +863,6 @@ export default function AlertHistoryCard({
             />
           )}
           <div className="flex items-center gap-1 shrink-0">
-            {editDeal && (
-              <Badge className={`text-[10px] ${editStageColor[editDeal.stage]}`}>
-                {editDeal.stage}
-              </Badge>
-            )}
             {versionLabel && (
               <Popover open={versionMenuOpen} onOpenChange={setVersionMenuOpen}>
                 <PopoverTrigger asChild>
