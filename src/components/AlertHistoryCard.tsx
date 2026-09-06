@@ -800,17 +800,6 @@ export default function AlertHistoryCard({
             {format(message.updatedAt, 'MMM d, hh:mm a')}
           </span>
         </div>
-        <DialogHeader className="px-5 py-1.5 border-b border-border shrink-0">
-          <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={handleBackToMenu}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-3 w-3" /> Main Menu
-            </button>
-          </div>
-        </DialogHeader>
 
         {/* Update number only — borrower is centered in the toolbar row, stage lives on the headline row */}
         <div className="flex items-center justify-center px-5 py-1.5 border-b border-border/50 shrink-0 bg-card/20">
