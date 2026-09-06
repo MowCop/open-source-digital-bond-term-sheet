@@ -157,9 +157,24 @@ export default function AlertHistoryCard({
 
   const [versionMenuOpen, setVersionMenuOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [viewVersionId, setViewVersionId] = useState<string | null>(null);
+
+  // All published versions of this deal, oldest first, labelled Original, Update #1…
+  const versionOptions = (() => {
+    const list = (versions && versions.length ? versions : [message]).slice().reverse();
+    return list.map((m, i) => ({
+      message: m,
+      label: i === 0 ? 'Original' : `Update #${i}`,
+    }));
+  })();
+  const activeVersion = versionOptions.find(v => v.message.id === viewVersionId)?.message ?? message;
+  const viewingArchive = activeVersion.id !== message.id;
+  const activeVersionLabel =
+    versionOptions.find(v => v.message.id === activeVersion.id)?.label ?? versionLabel;
 
   // Any further edit re-enables Save.
   useEffect(() => { setIsSaved(false); }, [editSubject, editBody]);
+
 
   const handleSave = () => {
     onUpdate(message.id, { subject: editSubject, body: editBody });
