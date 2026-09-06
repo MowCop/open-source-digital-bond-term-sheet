@@ -455,14 +455,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updatedAt: new Date(),
     };
     setMessages(prev => [newMsg, ...prev]);
-    insertMessage(newMsg).catch(e => {
+    const insertPromise = insertMessage(newMsg).catch(e => {
       console.error('[Cloud] insertMessage failed', e);
       setMessages(prev => prev.filter(m => m.id !== newMsg.id));
       toast.error('Could not save message', { description: e?.message ?? 'Please retry.' });
     });
+    pendingInserts.current.set(newMsg.id, insertPromise);
+    insertPromise.finally(() => pendingInserts.current.delete(newMsg.id));
     addAuditEntry({ action: 'MESSAGE_CREATED', entityType: 'message', entityId: newMsg.id, userId: currentUser.id, details: `Draft created: ${msg.subject}` });
     return newMsg;
   }, [currentUser.id, effectiveSenderId, addAuditEntry]);
+
 
   const updateMessage = useCallback((id: string, updates: Partial<Message>) => {
     setMessages(prev => prev.map(m => m.id === id ? { ...m, ...updates, updatedAt: new Date() } : m));
