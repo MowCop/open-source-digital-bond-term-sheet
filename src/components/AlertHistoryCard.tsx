@@ -17,7 +17,7 @@ import PdfEditor from '@/components/PdfEditor';
 import DOMPurify from 'dompurify';
 import SecureChat from '@/components/SecureChat';
 import { useApp } from '@/context/AppContext';
-import type { DealStage } from '@/types/bond';
+
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
