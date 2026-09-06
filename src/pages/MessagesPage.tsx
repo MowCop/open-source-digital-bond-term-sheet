@@ -324,13 +324,18 @@ export default function MessagesPage() {
       const group = alertGroups.find(g => g.dealIds.join(',') === expandedAlertId);
       if (!group || group.latestMessage.status === 'retracted') return;
       e.preventDefault();
-      const id = group.latestMessage.id;
+      const id = openTargetId(group);
       setActivePanel('history');
       setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [expandedAlertId, canManageMessages, alertGroups]);
+
+  // The row headline opens the most recent published (sent) update — the one
+  // recipients last received — falling back to the latest record.
+  const openTargetId = (g: { messages: Message[]; latestMessage: Message }) =>
+    (g.messages.find(m => m.status === 'sent') ?? g.latestMessage).id;
 
   const toggleExpand = (id: string) => {
     setExpandedAlertId(prev => {
@@ -764,6 +769,7 @@ export default function MessagesPage() {
                                 senderName={getUserName(msg.senderId)}
                                 recipientNames={getRecipientNames(msg.recipients)}
                                 canManage={canManageMessages}
+                                readOnly={idx !== 0 && msg.status === 'sent'}
                                 chatUnread={getUnreadChatCount(group.dealIds)}
                                 chatOpenOnBoard={showChat && activeDealId === group.dealIds[0]}
                                 versionLabel={versionLabel}
@@ -948,8 +954,8 @@ export default function MessagesPage() {
                     onClick={(e) => {
                       returnFocusRef.current = e.currentTarget as HTMLElement;
                       openFocus(groupKey);
-                      // Open the latest alert directly in edit mode inside Focus Mode.
-                      const id = group.latestMessage.id;
+                      // Open the last published update directly in edit mode.
+                      const id = openTargetId(group);
                       setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
                     }}
                     onKeyDown={(e) => {
@@ -959,7 +965,7 @@ export default function MessagesPage() {
                       e.preventDefault();
                       returnFocusRef.current = e.currentTarget as HTMLElement;
                       openFocus(groupKey);
-                      const id = group.latestMessage.id;
+                      const id = openTargetId(group);
                       setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
                     }}
                   >
