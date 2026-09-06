@@ -152,12 +152,13 @@ export default function AlertHistoryCard({
   const [isSaved, setIsSaved] = useState(false);
   const [viewVersionId, setViewVersionId] = useState<string | null>(null);
 
-  // All published versions of this deal, oldest first, labelled Original, Update #1…
+  // All published versions of this deal, newest first, labelled Update #N … Original.
   const versionOptions = (() => {
-    const list = (versions && versions.length ? versions : [message]).slice().reverse();
+    const list = (versions && versions.length ? versions : [message]).slice();
+    const total = list.length;
     return list.map((m, i) => ({
       message: m,
-      label: i === 0 ? 'Original' : `Update #${i}`,
+      label: i === total - 1 ? 'Original' : `Update #${total - 1 - i}`,
     }));
   })();
   const activeVersion = versionOptions.find(v => v.message.id === viewVersionId)?.message ?? message;
