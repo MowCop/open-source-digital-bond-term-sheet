@@ -321,6 +321,17 @@ function OverrideModal({ result, onConfirm, onCancel }: OverrideModalProps) {
   );
 }
 
+// ─── Rule groups shown when everything passes ────────────────────────────────
+
+const RULE_GROUPS = [
+  'Dates and business-day conventions',
+  'Pricing consistency (spread, yield, price)',
+  'Identifiers (ISIN, LEI)',
+  'Ratings and issuer details',
+  'Bookrunners and syndicate roles',
+  'Stage completeness',
+];
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function DealChecker({
@@ -340,12 +351,15 @@ export default function DealChecker({
   const [overrideReasons, setOverrideReasons] = useState<Record<string, string>>({});
   const [refreshTick, setRefreshTick] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'running' | 'done'>('idle');
+  const [lastRunAt, setLastRunAt] = useState<Date | null>(null);
 
   const isMasterAdmin = userRole === 'master_admin';
 
   // Re-run validation whenever fields, bookrunners, or active overrides change
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
+    setStatus('running');
     timerRef.current = setTimeout(() => {
       const partial: Partial<Deal> = deal ?? aiFieldsToPartialDeal(aiFields, aiBookrunners);
       const ctx: OverrideContext | undefined = overrides.length > 0 && isMasterAdmin
@@ -358,6 +372,8 @@ export default function DealChecker({
         : undefined;
       const { results: r, auditEntries } = validateDeal(partial, ctx, deal?.stage);
       setResults(r);
+      setLastRunAt(new Date());
+      setStatus('done');
       if (auditEntries.length > 0) onAuditEntries?.(auditEntries);
     }, 400);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
@@ -368,6 +384,7 @@ export default function DealChecker({
     setRefreshTick(t => t + 1);
     setTimeout(() => setRefreshing(false), 600);
   }
+
 
   const counts = useMemo(() => countBySeverity(results), [results]);
   const ready  = useMemo(() => isReadyToPublish(results), [results]);
@@ -439,11 +456,33 @@ export default function DealChecker({
                 Start typing or drop a document — deal terms will be validated automatically.
               </p>
             </div>
-          ) : results.length === 0 ? (
+          ) : status !== 'done' ? (
             <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-              <CheckCircle2 className="h-4 w-4 text-green-400" />
+              <RefreshCw className="h-4 w-4 text-green-400 animate-spin" />
               Analysing {fieldCount} extracted field{fieldCount > 1 ? 's' : ''}…
             </div>
+          ) : results.length === 0 ? (
+            <div className="space-y-2">
+              <div className="rounded-md border border-green-800/60 bg-green-900/20 p-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-400 shrink-0" />
+                  <span className="text-xs font-semibold text-green-300">All checks passed</span>
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {fieldCount} field{fieldCount === 1 ? '' : 's'} checked
+                  {lastRunAt ? ` · last run ${lastRunAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                </p>
+              </div>
+              <div className="space-y-1">
+                {RULE_GROUPS.map(g => (
+                  <div key={g} className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
+                    {g}
+                  </div>
+                ))}
+              </div>
+            </div>
+
           ) : (
             <>
               <SummaryBar counts={counts} ready={ready} fieldCount={fieldCount} />
