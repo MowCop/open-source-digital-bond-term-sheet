@@ -149,6 +149,12 @@ export default function AlertHistoryCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message.subject, message.body, mode]);
 
+  const [versionMenuOpen, setVersionMenuOpen] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Any further edit re-enables Save.
+  useEffect(() => { setIsSaved(false); }, [editSubject, editBody]);
+
   const handleSave = () => {
     onUpdate(message.id, { subject: editSubject, body: editBody });
     setMode('view');
