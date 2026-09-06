@@ -1086,15 +1086,19 @@ export default function MessagesPage() {
 
       {/* Full-screen edit/archive overlay */}
       {overlayGroup && overlayMessageId && (() => {
-        const msg = overlayGroup.messages.find(m => m.id === overlayMessageId) ?? overlayGroup.messages[0];
+        // Re-resolve the group from live data so newly sent updates appear immediately.
+        const overlayKey = overlayGroup.dealIds.join(',');
+        const liveGroup = alertGroups.find(g => g.dealIds.join(',') === overlayKey) ?? overlayGroup;
+        const msg = liveGroup.messages.find(m => m.id === overlayMessageId) ?? liveGroup.messages[0];
         if (!msg) return null;
-        const isLatest = overlayGroup.messages[0]?.id === msg.id;
+        const isLatest = liveGroup.messages[0]?.id === msg.id;
+
         return (
           <div
             ref={overlayRef}
             role="dialog"
             aria-modal="true"
-            aria-label={`Deal edit view: ${overlayGroup.borrower}`}
+            aria-label={`Deal edit view: ${liveGroup.borrower}`}
             tabIndex={-1}
             className="fixed inset-0 z-40 bg-background outline-none"
           >
@@ -1104,9 +1108,9 @@ export default function MessagesPage() {
               recipientNames={getRecipientNames(msg.recipients)}
               canManage={canManageMessages}
               readOnly={overlayReadOnly || !isLatest}
-              chatUnread={getUnreadChatCount(overlayGroup.dealIds)}
-              chatOpenOnBoard={showChat && activeDealId === overlayGroup.dealIds[0]}
-              versions={overlayGroup.messages}
+              chatUnread={getUnreadChatCount(liveGroup.dealIds)}
+              chatOpenOnBoard={showChat && activeDealId === liveGroup.dealIds[0]}
+              versions={liveGroup.messages}
               isLatest={isLatest}
               fullscreen
               onClose={closeOverlay}

@@ -446,6 +446,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addAuditEntry({ action: 'DEAL_STAGE_CHANGED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Stage changed to ${newStage}${note ? `: ${note}` : ''}` });
   }, [currentUser.id, addAuditEntry]);
 
+  // Tracks in-flight message inserts so a follow-up send waits for the row to exist.
+  const pendingInserts = useRef<Map<string, Promise<void>>>(new Map());
+
   const createMessage = useCallback((msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newMsg: Message = {
       ...msg,
@@ -455,14 +458,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updatedAt: new Date(),
     };
     setMessages(prev => [newMsg, ...prev]);
-    insertMessage(newMsg).catch(e => {
+    const insertPromise = insertMessage(newMsg).catch(e => {
       console.error('[Cloud] insertMessage failed', e);
       setMessages(prev => prev.filter(m => m.id !== newMsg.id));
       toast.error('Could not save message', { description: e?.message ?? 'Please retry.' });
     });
+    pendingInserts.current.set(newMsg.id, insertPromise);
+    insertPromise.finally(() => pendingInserts.current.delete(newMsg.id));
     addAuditEntry({ action: 'MESSAGE_CREATED', entityType: 'message', entityId: newMsg.id, userId: currentUser.id, details: `Draft created: ${msg.subject}` });
     return newMsg;
   }, [currentUser.id, effectiveSenderId, addAuditEntry]);
+
 
   const updateMessage = useCallback((id: string, updates: Partial<Message>) => {
     setMessages(prev => prev.map(m => m.id === id ? { ...m, ...updates, updatedAt: new Date() } : m));
@@ -474,14 +480,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const sendMessageAction = useCallback((id: string) => {
     const now = new Date();
-    const msg = messages.find(m => m.id === id);
-    setMessages(prev => prev.map(m => m.id === id ? { ...m, status: 'sent' as MessageStatus, sentAt: now, updatedAt: now } : m));
-    updateMessageRow(id, { status: 'sent', sentAt: now, updatedAt: now }).catch(e => {
-      console.error('[Cloud] sendMessage failed', e);
-      toast.error('Could not send message', { description: e?.message ?? 'Please retry.' });
+    let msg = messages.find(m => m.id === id);
+    setMessages(prev => {
+      if (!msg) msg = prev.find(m => m.id === id);
+      return prev.map(m => m.id === id ? { ...m, status: 'sent' as MessageStatus, sentAt: now, updatedAt: now } : m);
     });
+    // Wait for any in-flight insert of this message so the update matches a row.
+    const pending = pendingInserts.current.get(id) ?? Promise.resolve();
+    pending
+      .then(() => updateMessageRow(id, { status: 'sent', sentAt: now, updatedAt: now }))
+      .catch(e => {
+        console.error('[Cloud] sendMessage failed', e);
+        toast.error('Could not send message', { description: e?.message ?? 'Please retry.' });
+      });
     addAuditEntry({ action: 'MESSAGE_SENT', entityType: 'message', entityId: id, userId: currentUser.id, details: `Message sent` });
     if (msg) {
+
       for (const dealId of msg.dealIds) {
         const deal = deals.find(d => d.id === dealId);
         const channel = chatChannels.find(ch => ch.dealId === dealId);
