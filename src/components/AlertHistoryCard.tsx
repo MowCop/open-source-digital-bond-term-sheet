@@ -791,6 +791,9 @@ export default function AlertHistoryCard({
               </Tooltip>
             )}
           </div>
+          <span className="ml-auto text-timestamp text-xs whitespace-nowrap">
+            {format(message.updatedAt, 'MMM d, hh:mm a')}
+          </span>
         </div>
         <DialogHeader className="px-5 py-1.5 border-b border-border shrink-0">
           <div className="flex items-center justify-between gap-3">
@@ -820,9 +823,6 @@ export default function AlertHistoryCard({
             {editDeal && (
               <span className="text-sm font-semibold text-foreground">{editDeal.stage}</span>
             )}
-            <span className="text-timestamp text-xs">
-              {format(message.updatedAt, 'MMM d, hh:mm a')}
-            </span>
           </div>
         </div>
 
