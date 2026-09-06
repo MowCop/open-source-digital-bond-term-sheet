@@ -773,6 +773,7 @@ export default function MessagesPage() {
                                 chatUnread={getUnreadChatCount(group.dealIds)}
                                 chatOpenOnBoard={showChat && activeDealId === group.dealIds[0]}
                                 versionLabel={versionLabel}
+                                versions={group.messages}
                                 isLatest={idx === 0}
                                 defaultExpanded
                                 editSignal={editSignals[msg.id] || 0}
@@ -824,6 +825,7 @@ export default function MessagesPage() {
                                     chatUnread={getUnreadChatCount(group.dealIds)}
                                     chatOpenOnBoard={showChat && activeDealId === group.dealIds[0]}
                                     versionLabel={latestVersionLabel}
+                                    versions={group.messages}
                                     isLatest
                                     embedded
                                     editSignal={editSignals[latest.id] || 0}
