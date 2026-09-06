@@ -500,8 +500,7 @@ export default function MessagesPage() {
     };
 
     return (
-    <div className="pb-3 mb-3 border-b border-border/50 space-y-2">
-      <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-2 flex-wrap">
       {canManageMessages && group.messages.length > 0 && group.latestMessage.status !== 'retracted' && (
         <Tooltip>
           <TooltipTrigger asChild>
@@ -719,12 +718,13 @@ export default function MessagesPage() {
           </Tooltip>
         </div>
       )}
-      </div>
     </div>
-    );
-  };
+  );
+};
 
-  const renderDealDetail = (group: AlertGroup, groupKey: string) => (
+  const renderDealDetail = (group: AlertGroup, groupKey: string) => {
+    const isFocusMode = groupKey === focusedKey;
+    return (
                   <div
                     className="bg-card/40 border-t border-border px-8 py-4 space-y-4"
                     title="Double-click or double-tap empty area to close"
@@ -737,7 +737,7 @@ export default function MessagesPage() {
                       setExpandedAlertId(null);
                     }}
                   >
-                    {renderDealActions(group, groupKey)}
+                    {!isFocusMode && renderDealActions(group, groupKey)}
                     {activePanel === 'checker' && group.dealIds[0] && (
                       <div onClick={(e) => e.stopPropagation()}>
                         <DealChecker
@@ -848,6 +848,7 @@ export default function MessagesPage() {
 
                   </div>
   );
+  };
 
   return (
     <div className="space-y-2">
@@ -1189,6 +1190,9 @@ export default function MessagesPage() {
             </aside>
             {/* Focused deal */}
             <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="h-12 shrink-0 border-b border-border/50 bg-card/30 flex items-center px-4 overflow-hidden">
+                {renderDealActions(fg, focusedKey)}
+              </div>
               <div className="h-12 shrink-0 border-b border-border bg-card flex items-center gap-3 px-4 overflow-hidden">
                 <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
                   <div className="text-lg leading-6 font-bold text-foreground truncate">{fg.borrower}</div>
