@@ -653,10 +653,6 @@ export default function AlertHistoryCard({
             <TooltipContent>Back to Main Menu</TooltipContent>
           </Tooltip>
 
-          <Badge variant="outline" className="bg-amber-500/10 text-amber-300 border-amber-500/30 text-[10px] uppercase tracking-wider px-2 py-0.5 h-6">
-            Edit Mode
-          </Badge>
-
           <Tooltip>
 
             <TooltipTrigger asChild>
