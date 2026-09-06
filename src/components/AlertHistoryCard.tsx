@@ -830,42 +830,6 @@ export default function AlertHistoryCard({
           </span>
         </div>
 
-        {/* Update label acts as a dropdown with Save / Save & Send */}
-        <div className="flex items-center justify-center px-5 py-1.5 border-b border-border/50 shrink-0 bg-card/20">
-          {versionLabel && (
-            <Popover open={versionMenuOpen} onOpenChange={setVersionMenuOpen}>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className="flex items-center gap-1 rounded px-2 py-0.5 text-sm font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)] hover:bg-sky-400/10"
-                >
-                  {versionLabel}
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="center" className="w-52 p-1">
-                <button
-                  type="button"
-                  disabled={isSaved}
-                  onClick={() => { handleSave(); setIsSaved(true); setVersionMenuOpen(false); }}
-                  className="w-full flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                >
-                  <Save className="h-4 w-4" /> {isSaved ? 'Saved' : 'Save'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { handleSaveAndSend(); setIsSaved(false); setVersionMenuOpen(false); }}
-                  className="w-full flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted"
-                >
-                  <Send className="h-4 w-4" /> Save &amp; Send
-                </button>
-              </PopoverContent>
-            </Popover>
-          )}
-        </div>
-
-
-
         {/* Headline */}
         <div className="flex items-center gap-3 px-5 py-2 border-b border-border shrink-0">
           <input
@@ -874,11 +838,43 @@ export default function AlertHistoryCard({
             placeholder="Subject"
             className="flex-1 min-w-0 bg-background border border-border rounded px-3 py-1.5 text-sm font-bold text-amber-300 placeholder:text-amber-300/40 focus:outline-none focus:ring-1 focus:ring-primary"
           />
-          {editDeal && (
-            <Badge className={`text-[10px] shrink-0 ${editStageColor[editDeal.stage]}`}>
-              {editDeal.stage}
-            </Badge>
-          )}
+          <div className="flex items-center gap-1 shrink-0">
+            {editDeal && (
+              <Badge className={`text-[10px] ${editStageColor[editDeal.stage]}`}>
+                {editDeal.stage}
+              </Badge>
+            )}
+            {versionLabel && (
+              <Popover open={versionMenuOpen} onOpenChange={setVersionMenuOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 rounded px-2 py-0.5 text-sm font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)] hover:bg-sky-400/10"
+                  >
+                    {versionLabel}
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-52 p-1">
+                  <button
+                    type="button"
+                    disabled={isSaved}
+                    onClick={() => { handleSave(); setIsSaved(true); setVersionMenuOpen(false); }}
+                    className="w-full flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  >
+                    <Save className="h-4 w-4" /> {isSaved ? 'Saved' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { handleSaveAndSend(); setIsSaved(false); setVersionMenuOpen(false); }}
+                    className="w-full flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted"
+                  >
+                    <Send className="h-4 w-4" /> Save &amp; Send
+                  </button>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
         </div>
 
         <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
