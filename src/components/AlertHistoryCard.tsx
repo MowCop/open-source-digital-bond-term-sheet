@@ -879,7 +879,7 @@ export default function AlertHistoryCard({
           </div>
           )}
           {editDeal && (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[50%] truncate text-xl font-bold text-white tracking-tight pointer-events-none">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[50%] truncate text-2xl font-bold text-white tracking-tight pointer-events-none">
               {editDeal.issuerName}
             </div>
           )}
