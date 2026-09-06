@@ -914,8 +914,14 @@ export default function AlertHistoryCard({
                     <ChevronDown className="h-5 w-5" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-64 p-1">
-                  <div className="max-h-64 overflow-auto">
+                <PopoverContent
+                  align="end"
+                  collisionPadding={12}
+                  avoidCollisions
+                  className="w-[min(92vw,26rem)] p-1 max-h-[var(--radix-popover-content-available-height)] overflow-y-auto"
+                >
+                  <div>
+
                     {versionOptions.map(v => (
                       <button
                         key={v.message.id}
