@@ -95,7 +95,6 @@ export default function MessagesPage() {
   const [filterStage, setFilterStage] = useState<string>('all');
   const [filterPublish, setFilterPublish] = useState<'all' | PublishStatus>('all');
   const [activeDealId, setActiveDealId] = useState<string | null>(null);
-  const [focusedKey, setFocusedKey] = useState<string | null>(null);
   const [chatView, setChatView] = useState<'closed' | 'floating' | 'modal'>('closed');
   const showChat = chatView !== 'closed';
   const [editingHeadlineId, setEditingHeadlineId] = useState<string | null>(null);
@@ -103,6 +102,10 @@ export default function MessagesPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [editingBookrunnersKey, setEditingBookrunnersKey] = useState<string | null>(null);
   const [bookrunnersDraft, setBookrunnersDraft] = useState('');
+  // Full-screen edit/archive overlay: a single deal/message replaces Focus Mode.
+  const [overlayGroup, setOverlayGroup] = useState<AlertGroup | null>(null);
+  const [overlayMessageId, setOverlayMessageId] = useState<string | null>(null);
+  const [overlayReadOnly, setOverlayReadOnly] = useState(false);
   const panelTapRef = useRef<{ key: string; time: number; x: number; y: number } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -131,27 +134,13 @@ export default function MessagesPage() {
   }, [expandedAlertId]);
 
 
-  // Esc from Focus Mode returns to the full New Issue Board. Any open dialog
-  // or expanded alert card owns Esc first (existing cascade preserved).
-  useEffect(() => {
-    if (!focusedKey) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      if (document.querySelector('[role="dialog"][data-state="open"]')) return;
-      setFocusedKey(null);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [focusedKey]);
-
-  // --- Focus Mode: focus management + keyboard navigation -------------------
+  // --- Full-screen overlay focus management ---------------------------------
   const overlayRef = useRef<HTMLDivElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
-  const activeListItemRef = useRef<HTMLButtonElement | null>(null);
 
   // Move focus into the overlay on open; restore it to the trigger on close.
   useEffect(() => {
-    if (!focusedKey) {
+    if (!overlayGroup) {
       const el = returnFocusRef.current;
       returnFocusRef.current = null;
       if (el && document.contains(el)) {
@@ -160,50 +149,25 @@ export default function MessagesPage() {
       return;
     }
     const t = requestAnimationFrame(() => {
-      (activeListItemRef.current || overlayRef.current)?.focus();
+      overlayRef.current?.focus();
     });
     return () => cancelAnimationFrame(t);
-    // Only run on enter/exit of Focus Mode, not on every deal switch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusedKey === null]);
+  }, [overlayGroup === null]);
 
-  // Trap Tab inside the overlay while Focus Mode is open.
+  // Esc from the full-screen overlay returns to the New Issue Board.
   useEffect(() => {
-    if (!focusedKey) return;
+    if (!overlayGroup) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const root = overlayRef.current;
-      if (!root) return;
+      if (e.key !== 'Escape') return;
       if (document.querySelector('[role="dialog"][data-state="open"]')) return;
-      const nodes = Array.from(
-        root.querySelectorAll<HTMLElement>(
-          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]'
-        )
-      ).filter(el => el.offsetParent !== null || el === document.activeElement);
-      if (!nodes.length) {
-        e.preventDefault();
-        root.focus();
-        return;
-      }
-      const first = nodes[0];
-      const last = nodes[nodes.length - 1];
-      const current = document.activeElement as HTMLElement | null;
-      if (!current || !root.contains(current)) {
-        e.preventDefault();
-        (e.shiftKey ? last : first).focus();
-        return;
-      }
-      if (e.shiftKey && current === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && current === last) {
-        e.preventDefault();
-        first.focus();
-      }
+      setOverlayGroup(null);
+      setOverlayMessageId(null);
+      setOverlayReadOnly(false);
     };
-    document.addEventListener('keydown', onKey, true);
-    return () => document.removeEventListener('keydown', onKey, true);
-  }, [focusedKey]);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [overlayGroup]);
 
 
   // Group messages by their primary deal (first dealId) to create alert groups
@@ -324,9 +288,7 @@ export default function MessagesPage() {
       const group = alertGroups.find(g => g.dealIds.join(',') === expandedAlertId);
       if (!group || group.latestMessage.status === 'retracted') return;
       e.preventDefault();
-      const id = openTargetId(group);
-      setActivePanel('history');
-      setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+      openOverlay(group, false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -345,15 +307,23 @@ export default function MessagesPage() {
     });
   };
 
-  // Focus Mode: full-screen single-deal view with the board list on the left.
-  const openFocus = (key: string) => {
+  // Open the full-screen edit/archive overlay for a deal.
+  // readOnly=true opens an archived, previously sent update for viewing only.
+  const openOverlay = (group: AlertGroup, readOnly: boolean, messageId?: string) => {
     // Remember where focus came from so Esc can return it to the board row.
-    if (!focusedKey) {
+    if (!overlayGroup) {
       const el = document.activeElement as HTMLElement | null;
       returnFocusRef.current = el && el !== document.body ? el : null;
     }
+    setOverlayGroup(group);
+    setOverlayReadOnly(readOnly);
+    setOverlayMessageId(messageId ?? openTargetId(group));
     setActivePanel('history');
-    setFocusedKey(key);
+  };
+  const closeOverlay = () => {
+    setOverlayGroup(null);
+    setOverlayMessageId(null);
+    setOverlayReadOnly(false);
   };
 
   const flash = (key: string) => {
@@ -482,6 +452,7 @@ export default function MessagesPage() {
     }
     sendMessage(newDraft.id);
     toast({ title: 'Update Sent', description: `Sent to ${original.recipients.length} recipient${original.recipients.length !== 1 ? 's' : ''}.` });
+    return newDraft;
   };
 
 
@@ -515,9 +486,7 @@ export default function MessagesPage() {
               className="toolbar-square-btn"
               onClick={(e) => {
                 e.stopPropagation();
-                const id = group.latestMessage.id;
-                setActivePanel('history');
-                setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+                openOverlay(group, false);
               }}
             >
               <Edit2 className="h-4 w-4" />
@@ -728,7 +697,6 @@ export default function MessagesPage() {
 };
 
   const renderDealDetail = (group: AlertGroup, groupKey: string) => {
-    const isFocusMode = groupKey === focusedKey;
     return (
                   <div
                     className="bg-card/40 border-t border-border px-8 py-4 space-y-4"
@@ -742,7 +710,7 @@ export default function MessagesPage() {
                       setExpandedAlertId(null);
                     }}
                   >
-                    {!isFocusMode && renderDealActions(group, groupKey)}
+                    {renderDealActions(group, groupKey)}
                     {activePanel === 'checker' && group.dealIds[0] && (
                       <div onClick={(e) => e.stopPropagation()}>
                         <DealChecker
@@ -806,16 +774,14 @@ export default function MessagesPage() {
                             <>
                               {latest && (
                                 <div className="space-y-2">
-                                  {!isFocusMode && (
-                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                      {group.messages.length > 1 && (
-                                      <span className="text-[11px] font-bold uppercase text-sky-300 bg-sky-400/15 px-2 py-0.5 rounded whitespace-nowrap shadow-[0_0_6px_rgba(125,211,252,0.35)]">
-                                          Update #{group.messages.length - 1}
-                                        </span>
-                                      )}
-                                      <span>{getUserName(latest.senderId)}</span>
-                                    </div>
-                                  )}
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    {group.messages.length > 1 && (
+                                    <span className="text-[11px] font-bold uppercase text-sky-300 bg-sky-400/15 px-2 py-0.5 rounded whitespace-nowrap shadow-[0_0_6px_rgba(125,211,252,0.35)]">
+                                        Update #{group.messages.length - 1}
+                                      </span>
+                                    )}
+                                    <span>{getUserName(latest.senderId)}</span>
+                                  </div>
                                   <AlertHistoryCard
                                     key={latest.id}
                                     message={latest}
@@ -865,9 +831,8 @@ export default function MessagesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">New Issue Board</h1>
-        {!focusedKey && (
-          <div className="flex items-center gap-3 flex-wrap">
-            {canManageMessages && (
+        <div className="flex items-center gap-3 flex-wrap">
+          {canManageMessages && (
               <Button
                 onClick={() => navigate('/ai-draft')}
                 className="px-3 py-1 h-auto rounded text-xs font-medium bg-accent hover:bg-accent/90 text-accent-foreground"
@@ -920,7 +885,6 @@ export default function MessagesPage() {
               ))}
             </div>
           </div>
-        )}
       </div>
 
       <div className="grid gap-4 grid-cols-1">
@@ -955,10 +919,7 @@ export default function MessagesPage() {
                     className={`grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
                     onClick={(e) => {
                       returnFocusRef.current = e.currentTarget as HTMLElement;
-                      openFocus(groupKey);
-                      // Open the last published update directly in edit mode.
-                      const id = openTargetId(group);
-                      setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+                      openOverlay(group, false);
                     }}
                     onKeyDown={(e) => {
                       if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -966,9 +927,7 @@ export default function MessagesPage() {
                       if (t !== e.currentTarget) return;
                       e.preventDefault();
                       returnFocusRef.current = e.currentTarget as HTMLElement;
-                      openFocus(groupKey);
-                      const id = openTargetId(group);
-                      setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+                      openOverlay(group, false);
                     }}
                   >
                     <div className="text-timestamp text-sm whitespace-nowrap">
@@ -1045,9 +1004,7 @@ export default function MessagesPage() {
                           title="Edit latest update (E)"
                           onClick={(e) => {
                             e.stopPropagation();
-                            const id = group.latestMessage.id;
-                            setActivePanel('history');
-                            setEditSignals(s => ({ ...s, [id]: (s[id] || 0) + 1 }));
+                            openOverlay(group, false);
                           }}
                         >
                           <Edit2 className="h-3.5 w-3.5" />
@@ -1092,8 +1049,9 @@ export default function MessagesPage() {
                             onClick={(e) => {
                               e.stopPropagation();
                               returnFocusRef.current = e.currentTarget as HTMLElement;
-                              openFocus(groupKey);
-                              setEditSignals(s => ({ ...s, [msg.id]: (s[msg.id] || 0) + 1 }));
+                              // Archive versions are read-only; the latest version is editable.
+                              const isArchive = idx !== 0 || msg.status === 'sent' && group.messages[0]?.id !== msg.id;
+                              openOverlay(group, isArchive, msg.id);
                             }}
                           >
                             <span className="text-[11px] font-bold uppercase text-sky-300 bg-sky-400/15 px-2 py-0.5 rounded whitespace-nowrap shadow-[0_0_6px_rgba(125,211,252,0.35)]">
@@ -1126,105 +1084,58 @@ export default function MessagesPage() {
 
       </div>
 
-      {/* Floating chat panel (default) */}
-      {focusedKey && (() => {
-        const fg = (filtered.find(g => g.dealIds.join(',') === focusedKey)
-          || alertGroups.find(g => g.dealIds.join(',') === focusedKey));
-        if (!fg) return null;
-        const list = filtered.length ? filtered : alertGroups;
+      {/* Full-screen edit/archive overlay */}
+      {overlayGroup && overlayMessageId && (() => {
+        const msg = overlayGroup.messages.find(m => m.id === overlayMessageId) ?? overlayGroup.messages[0];
+        if (!msg) return null;
+        const isLatest = overlayGroup.messages[0]?.id === msg.id;
         return (
           <div
             ref={overlayRef}
             role="dialog"
             aria-modal="true"
-            aria-label={`Deal focus view: ${fg.borrower}`}
+            aria-label={`Deal edit view: ${overlayGroup.borrower}`}
             tabIndex={-1}
-            className="fixed inset-0 z-40 flex bg-background outline-none"
+            className="fixed inset-0 z-40 bg-background outline-none"
           >
-            {/* Deal list — takes the place of the app menu */}
-            <aside className="w-60 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
-              <button
-                type="button"
-                onClick={() => setFocusedKey(null)}
-                className="w-full text-left p-3 border-b border-sidebar-border hover:bg-sidebar-accent/50 transition-colors"
-              >
-                <div className="text-sm font-bold">New Issue Board</div>
-                <div className="text-[11px] text-sidebar-foreground/60">↑↓ to browse · Esc to return to the board</div>
-              </button>
-              <div
-                role="listbox"
-                aria-label="Deals on the New Issue Board"
-                className="flex-1 overflow-auto p-2 space-y-1"
-                onKeyDown={(e) => {
-                  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Home' && e.key !== 'End') return;
-                  e.preventDefault();
-                  const keys = list.map(g => g.dealIds.join(','));
-                  const i = keys.indexOf(focusedKey);
-                  let next = i;
-                  if (e.key === 'ArrowDown') next = Math.min(keys.length - 1, i + 1);
-                  else if (e.key === 'ArrowUp') next = Math.max(0, i - 1);
-                  else if (e.key === 'Home') next = 0;
-                  else next = keys.length - 1;
-                  if (next !== i && keys[next]) {
-                    setActivePanel('history');
-                    setFocusedKey(keys[next]);
-                    requestAnimationFrame(() => activeListItemRef.current?.focus());
-                  }
-                }}
-              >
-                {list.map(g => {
-                  const key = g.dealIds.join(',');
-                  const active = key === focusedKey;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      role="option"
-                      aria-selected={active}
-                      tabIndex={active ? 0 : -1}
-                      ref={active ? (el) => { activeListItemRef.current = el; el?.scrollIntoView({ block: 'nearest' }); } : undefined}
-                      onClick={() => openFocus(key)}
-                      className={`w-full text-left rounded-md px-2.5 py-2 transition-colors ${
-                        active
-                          ? 'border-2 border-amber-400 bg-amber-500/10 ring-1 ring-amber-400/50'
-                          : 'border-2 border-transparent hover:border-amber-400/40 hover:bg-amber-500/5'
-                      }`}
-                    >
-                      <div className={`text-xs ${active ? 'font-bold text-amber-300' : 'font-medium'}`}>{g.borrower}</div>
-                      <div className="text-[11px] text-sidebar-foreground/60 line-clamp-2">{g.headline}</div>
-                      <Badge className={`mt-1 text-[9px] border ${stageBadge[g.stage].className}`}>{stageBadge[g.stage].label}</Badge>
-                    </button>
-                  );
-                })}
-              </div>
-            </aside>
-            {/* Focused deal */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="h-12 shrink-0 border-b border-border/50 bg-card/30 flex items-center px-4 overflow-hidden">
-                {renderDealActions(fg, focusedKey)}
-              </div>
-              <div className="h-12 shrink-0 border-b border-border bg-card flex items-center px-4 overflow-hidden">
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full gap-3">
-                  <div className="min-w-0 text-lg leading-6 font-bold text-foreground truncate">{fg.borrower}</div>
-                  <div className="justify-self-center">
-                    {fg.messages.length > 0 && (
-                      <span className="text-sm font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)]">
-                        {fg.messages.length === 1 ? 'Original' : `Update #${fg.messages.length - 1}`}
-                      </span>
-                    )}
-                  </div>
-                  <div className="justify-self-end flex items-center gap-3 whitespace-nowrap">
-                    <Badge className={`text-sm border ${stageBadge[fg.stage].className}`}>{stageBadge[fg.stage].label}</Badge>
-                    <div className="text-sm text-timestamp whitespace-nowrap">
-                      {format(fg.latestMessage.updatedAt, 'MMM d, hh:mm a')}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="flex-1 overflow-auto">
-                {renderDealDetail(fg, focusedKey)}
-              </div>
-            </div>
+            <AlertHistoryCard
+              message={msg}
+              senderName={getUserName(msg.senderId)}
+              recipientNames={getRecipientNames(msg.recipients)}
+              canManage={canManageMessages}
+              readOnly={overlayReadOnly || !isLatest}
+              chatUnread={getUnreadChatCount(overlayGroup.dealIds)}
+              chatOpenOnBoard={showChat && activeDealId === overlayGroup.dealIds[0]}
+              versions={overlayGroup.messages}
+              isLatest={isLatest}
+              fullscreen
+              onClose={closeOverlay}
+              editSignal={editSignals[msg.id] || 0}
+              saveSignal={saveSignals[msg.id] || 0}
+              saveSendSignal={saveSendSignals[msg.id] || 0}
+              onUpdate={updateMessage}
+              onRetract={(id) => {
+                retractMessage(id);
+                toast({ title: 'Alert Retracted', description: 'The alert has been retracted.' });
+              }}
+              onSend={(id) => {
+                sendMessage(id);
+                const m = messages.find(x => x.id === id);
+                toast({ title: 'Alert Sent', description: `Sent to ${m?.recipients.length || 0} recipients` });
+              }}
+              onPostUpdate={(id, edits) => {
+                const created = handlePostUpdate(id, edits);
+                // After Save & Send, switch the overlay to the newly created latest update.
+                if (created) {
+                  setOverlayMessageId(created.id);
+                  setOverlayReadOnly(false);
+                }
+              }}
+              onDelete={(id) => {
+                deleteMessage(id);
+                toast({ title: 'Alert Deleted', description: 'The alert has been removed.' });
+              }}
+            />
           </div>
         );
       })()}
@@ -1322,7 +1233,7 @@ export default function MessagesPage() {
                     deleteMessage(deleteTarget.messageId);
                   }
                   if (expandedAlertId === deleteTarget.key) setExpandedAlertId(null);
-                  if (focusedKey === deleteTarget.key) setFocusedKey(null);
+                  if (overlayGroup?.dealIds.join(',') === deleteTarget.key) closeOverlay();
                   setDeleteTarget(null);
                   setDeleteConfirmText('');
                 }}
