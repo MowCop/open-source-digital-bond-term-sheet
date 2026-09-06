@@ -149,6 +149,12 @@ export default function AlertHistoryCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message.subject, message.body, mode]);
 
+  const [versionMenuOpen, setVersionMenuOpen] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Any further edit re-enables Save.
+  useEffect(() => { setIsSaved(false); }, [editSubject, editBody]);
+
   const handleSave = () => {
     onUpdate(message.id, { subject: editSubject, body: editBody });
     setMode('view');
@@ -818,14 +824,40 @@ export default function AlertHistoryCard({
           </span>
         </div>
 
-        {/* Update number only — borrower is centered in the toolbar row, stage lives on the headline row */}
+        {/* Update label acts as a dropdown with Save / Save & Send */}
         <div className="flex items-center justify-center px-5 py-1.5 border-b border-border/50 shrink-0 bg-card/20">
           {versionLabel && (
-            <span className="text-sm font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)]">
-              {versionLabel}
-            </span>
+            <Popover open={versionMenuOpen} onOpenChange={setVersionMenuOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-1 rounded px-2 py-0.5 text-sm font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)] hover:bg-sky-400/10"
+                >
+                  {versionLabel}
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="center" className="w-52 p-1">
+                <button
+                  type="button"
+                  disabled={isSaved}
+                  onClick={() => { handleSave(); setIsSaved(true); setVersionMenuOpen(false); }}
+                  className="w-full flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                >
+                  <Save className="h-4 w-4" /> {isSaved ? 'Saved' : 'Save'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { handleSaveAndSend(); setIsSaved(false); setVersionMenuOpen(false); }}
+                  className="w-full flex items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted"
+                >
+                  <Send className="h-4 w-4" /> Save &amp; Send
+                </button>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
+
 
 
         {/* Headline */}
