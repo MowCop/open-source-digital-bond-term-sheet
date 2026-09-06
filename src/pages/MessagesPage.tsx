@@ -799,14 +799,16 @@ export default function MessagesPage() {
                             <>
                               {latest && (
                                 <div className="space-y-2">
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    {group.messages.length > 1 && (
-                                    <span className="text-[11px] font-bold uppercase text-sky-300 bg-sky-400/15 px-2 py-0.5 rounded whitespace-nowrap shadow-[0_0_6px_rgba(125,211,252,0.35)]">
-                                        Update #{group.messages.length - 1}
-                                      </span>
-                                    )}
-                                    <span>{getUserName(latest.senderId)}</span>
-                                  </div>
+                                  {!isFocusMode && (
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      {group.messages.length > 1 && (
+                                      <span className="text-[11px] font-bold uppercase text-sky-300 bg-sky-400/15 px-2 py-0.5 rounded whitespace-nowrap shadow-[0_0_6px_rgba(125,211,252,0.35)]">
+                                          Update #{group.messages.length - 1}
+                                        </span>
+                                      )}
+                                      <span>{getUserName(latest.senderId)}</span>
+                                    </div>
+                                  )}
                                   <AlertHistoryCard
                                     key={latest.id}
                                     message={latest}
@@ -1193,14 +1195,22 @@ export default function MessagesPage() {
               <div className="h-12 shrink-0 border-b border-border/50 bg-card/30 flex items-center px-4 overflow-hidden">
                 {renderDealActions(fg, focusedKey)}
               </div>
-              <div className="h-12 shrink-0 border-b border-border bg-card flex items-center gap-3 px-4 overflow-hidden">
-                <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
-                  <div className="text-lg leading-6 font-bold text-foreground truncate">{fg.borrower}</div>
-                  <div className="text-sm leading-5 font-bold text-amber-300 truncate">{fg.headline}</div>
-                </div>
-                <Badge className={`text-sm border ${stageBadge[fg.stage].className}`}>{stageBadge[fg.stage].label}</Badge>
-                <div className="text-sm text-timestamp whitespace-nowrap">
-                  {format(fg.latestMessage.updatedAt, 'MMM d, hh:mm a')}
+              <div className="h-12 shrink-0 border-b border-border bg-card flex items-center px-4 overflow-hidden">
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full gap-3">
+                  <div className="min-w-0 text-lg leading-6 font-bold text-foreground truncate">{fg.borrower}</div>
+                  <div className="justify-self-center">
+                    {fg.messages.length > 0 && (
+                      <span className="text-sm font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)]">
+                        {fg.messages.length === 1 ? 'Original' : `Update #${fg.messages.length - 1}`}
+                      </span>
+                    )}
+                  </div>
+                  <div className="justify-self-end flex items-center gap-3 whitespace-nowrap">
+                    <Badge className={`text-sm border ${stageBadge[fg.stage].className}`}>{stageBadge[fg.stage].label}</Badge>
+                    <div className="text-sm text-timestamp whitespace-nowrap">
+                      {format(fg.latestMessage.updatedAt, 'MMM d, hh:mm a')}
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="flex-1 overflow-auto">
