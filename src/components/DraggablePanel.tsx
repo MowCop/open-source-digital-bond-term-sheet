@@ -2,7 +2,6 @@ import { useCallback, useRef, useState, type ReactNode } from 'react';
 
 interface DraggablePanelProps {
   title: string;
-  onClose: () => void;
   headerActions?: ReactNode;
   children: ReactNode;
   /** Collapse the body, leaving only the title bar. */
@@ -22,7 +21,6 @@ const MIN_H = 240;
  */
 export default function DraggablePanel({
   title,
-  onClose,
   headerActions,
   children,
   collapsed = false,
