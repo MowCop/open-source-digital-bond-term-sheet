@@ -883,7 +883,7 @@ export default function AlertHistoryCard({
               {editDeal.issuerName}
             </div>
           )}
-          <span className="ml-auto text-timestamp text-xs whitespace-nowrap">
+          <span className="ml-auto text-timestamp text-2xl font-semibold whitespace-nowrap">
             {format(activeVersion.updatedAt, 'MMM d, hh:mm a')}
           </span>
         </div>
@@ -908,10 +908,10 @@ export default function AlertHistoryCard({
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center gap-1 rounded px-2 py-0.5 text-sm font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)] hover:bg-sky-400/10"
+                    className="flex items-center gap-1 rounded px-2 py-0.5 text-2xl font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)] hover:bg-sky-400/10"
                   >
                     {activeVersionLabel ?? versionLabel}
-                    <ChevronDown className="h-3.5 w-3.5" />
+                    <ChevronDown className="h-5 w-5" />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-64 p-1">
@@ -926,9 +926,9 @@ export default function AlertHistoryCard({
                         }}
                         className={`w-full flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted ${v.message.id === activeVersion.id ? 'bg-sky-400/10' : ''}`}
                       >
-                        <span className="text-[11px] font-bold uppercase text-sky-300 whitespace-nowrap">{v.label}</span>
-                        <span className="truncate text-xs text-amber-300">{v.message.subject}</span>
-                        <span className="ml-auto text-[10px] text-timestamp whitespace-nowrap">
+                        <span className="text-xl font-bold uppercase text-sky-300 whitespace-nowrap">{v.label}</span>
+                        <span className="truncate text-sm text-amber-300">{v.message.subject}</span>
+                        <span className="ml-auto text-base text-timestamp whitespace-nowrap">
                           {format(v.message.updatedAt, 'MMM d, hh:mm a')}
                         </span>
                       </button>
