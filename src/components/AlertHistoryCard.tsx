@@ -9,7 +9,7 @@ import LinkifiedText from '@/components/LinkifiedText';
 import RichTextEditor from '@/components/RichTextEditor';
 import { isHtml } from '@/lib/htmlText';
 import { format } from 'date-fns';
-import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft, ChevronUp, MessageSquare, BookOpen, Minus } from 'lucide-react';
+import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft, ChevronUp, MessageSquare, BookOpen, Minus, ShieldCheck, Sparkles } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,11 @@ import SecureChat from '@/components/SecureChat';
 import { useApp } from '@/context/AppContext';
 import type { DealStage } from '@/types/bond';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import DealChecker from '@/components/DealChecker';
+import DealCheckFlag from '@/components/DealCheckFlag';
+import DraggablePanel from '@/components/DraggablePanel';
 
 const editStageColor: Record<DealStage, string> = {
   Mandate: 'bg-blue-100 text-blue-800',
@@ -100,6 +105,10 @@ export default function AlertHistoryCard({
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMinimized, setChatMinimized] = useState(false);
   const [docsOpen, setDocsOpen] = useState(true);
+  const [checkerOpen, setCheckerOpen] = useState(false);
+  const [parseOpen, setParseOpen] = useState(false);
+  const [parseSources, setParseSources] = useState<{ chat: boolean; docs: boolean }>({ chat: true, docs: false });
+  const [parseRunSignal, setParseRunSignal] = useState(0);
   const [attachmentsHover, setAttachmentsHover] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -629,16 +638,73 @@ export default function AlertHistoryCard({
             <TooltipContent>{chatUnread > 0 ? `Chat — ${chatUnread} unread` : 'Chat'}</TooltipContent>
           </Tooltip>
 
-          <ExtractDealFromChatButton
-            size="icon"
-            source="thread"
-            messages={[message]}
-            conversationLabel={message.subject}
-            targetDealIds={message.dealIds}
-            className="toolbar-square-btn-ai"
-            iconOnly
-            tooltip="AI DataParse"
-          />
+          <Popover open={parseOpen} onOpenChange={setParseOpen}>
+            <PopoverTrigger asChild>
+              <div>
+                <ExtractDealFromChatButton
+                  size="icon"
+                  source="thread"
+                  messages={[message]}
+                  conversationLabel={message.subject}
+                  targetDealIds={message.dealIds}
+                  className="toolbar-square-btn-ai"
+                  iconOnly
+                  tooltip="AI DataParse"
+                  armed={parseOpen}
+                  runSignal={parseRunSignal}
+                  onArmToggle={() => setParseOpen(o => !o)}
+                />
+              </div>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-72 p-3 space-y-3 z-[70]">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Parse deal data from:</p>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <Checkbox checked={parseSources.chat} onCheckedChange={() => toggleParseSource('chat')} className="mt-0.5" />
+                <span className="text-sm leading-tight">
+                  Chat thread
+                  <span className="block text-xs text-muted-foreground">Messages in this deal</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <Checkbox checked={parseSources.docs} onCheckedChange={() => toggleParseSource('docs')} className="mt-0.5" />
+                <span className="text-sm leading-tight">
+                  Documents <span className="text-xs text-muted-foreground">(coming soon)</span>
+                  <span className="block text-xs text-muted-foreground">{message.attachments.length} attached</span>
+                </span>
+              </label>
+              <div className="flex justify-end pt-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="toolbar-btn toolbar-btn-action"
+                  onClick={() => { setParseRunSignal(n => n + 1); setParseOpen(false); }}
+                >
+                  <Sparkles className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} />
+                  Run AI Parse
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {editDeal && (
+            <span className="relative">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    aria-pressed={checkerOpen}
+                    className={`btn-champagne toolbar-square-btn-ai ${checkerOpen ? 'ring-2 ring-primary brightness-110' : ''}`}
+                    onClick={() => setCheckerOpen(o => !o)}
+                  >
+                    <ShieldCheck className="h-4 w-4" style={{ color: '#f3d98a' }} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">AI Deal Checker</TooltipContent>
+              </Tooltip>
+              <DealCheckFlag deal={editDeal} className="absolute -top-1 -right-1 border border-white/70" />
+            </span>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>
