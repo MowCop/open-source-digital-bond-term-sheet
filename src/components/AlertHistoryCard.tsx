@@ -791,6 +791,11 @@ export default function AlertHistoryCard({
               </Tooltip>
             )}
           </div>
+          {editDeal && (
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[50%] truncate text-xl font-bold text-white tracking-tight pointer-events-none">
+              {editDeal.issuerName}
+            </div>
+          )}
           <span className="ml-auto text-timestamp text-xs whitespace-nowrap">
             {format(message.updatedAt, 'MMM d, hh:mm a')}
           </span>
