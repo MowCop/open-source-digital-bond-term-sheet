@@ -823,9 +823,6 @@ export default function AlertHistoryCard({
             {editDeal && (
               <span className="text-sm font-semibold text-foreground">{editDeal.stage}</span>
             )}
-            <span className="text-timestamp text-xs">
-              {format(message.updatedAt, 'MMM d, hh:mm a')}
-            </span>
           </div>
         </div>
 
