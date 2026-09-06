@@ -118,6 +118,17 @@ export default function AlertHistoryCard({
     ? deals.find(d => d.id === message.dealIds[0]) || null
     : null;
 
+  const toggleParseSource = (key: 'chat' | 'docs') => {
+    setParseSources(cur => {
+      const next = { ...cur, [key]: !cur[key] };
+      if (!next.chat && !next.docs) next[key] = true;
+      return next;
+    });
+    if (key === 'docs') {
+      toast({ title: 'Docs parsing coming soon', description: 'Document parsing is not live yet — the chat thread is used for extraction.' });
+    }
+  };
+
   const clearClickEditTimer = () => {
     if (clickEditTimerRef.current) {
       window.clearTimeout(clickEditTimerRef.current);
