@@ -340,12 +340,15 @@ export default function DealChecker({
   const [overrideReasons, setOverrideReasons] = useState<Record<string, string>>({});
   const [refreshTick, setRefreshTick] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'running' | 'done'>('idle');
+  const [lastRunAt, setLastRunAt] = useState<Date | null>(null);
 
   const isMasterAdmin = userRole === 'master_admin';
 
   // Re-run validation whenever fields, bookrunners, or active overrides change
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
+    setStatus('running');
     timerRef.current = setTimeout(() => {
       const partial: Partial<Deal> = deal ?? aiFieldsToPartialDeal(aiFields, aiBookrunners);
       const ctx: OverrideContext | undefined = overrides.length > 0 && isMasterAdmin
@@ -358,6 +361,8 @@ export default function DealChecker({
         : undefined;
       const { results: r, auditEntries } = validateDeal(partial, ctx, deal?.stage);
       setResults(r);
+      setLastRunAt(new Date());
+      setStatus('done');
       if (auditEntries.length > 0) onAuditEntries?.(auditEntries);
     }, 400);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
@@ -368,6 +373,7 @@ export default function DealChecker({
     setRefreshTick(t => t + 1);
     setTimeout(() => setRefreshing(false), 600);
   }
+
 
   const counts = useMemo(() => countBySeverity(results), [results]);
   const ready  = useMemo(() => isReadyToPublish(results), [results]);
