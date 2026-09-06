@@ -718,10 +718,9 @@ export default function MessagesPage() {
           </Tooltip>
         </div>
       )}
-      </div>
     </div>
-    );
-  };
+  );
+};
 
   const renderDealDetail = (group: AlertGroup, groupKey: string) => {
     const isFocusMode = groupKey === focusedKey;
