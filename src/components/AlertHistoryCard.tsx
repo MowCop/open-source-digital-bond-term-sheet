@@ -992,46 +992,7 @@ export default function AlertHistoryCard({
         </div>
         )}
 
-        <div className="flex items-center justify-end gap-2 px-5 py-2 border-t border-border shrink-0 bg-card/40">
-          <Button variant="outline" className="btn-footer-action" onClick={handleSave}>
-            <Save className="h-4 w-4 mr-1" /> Save
-          </Button>
-          {!isRetracted && (
-            <Button className="btn-footer-action" onClick={handleSaveAndSend}>
-              <Send className="h-4 w-4 mr-1" /> Save &amp; Send
-            </Button>
-          )}
-          {(isSent || isDraft) && !isRetracted && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="toolbar-square-btn toolbar-square-btn-action"
-                  onClick={() => onRetract(message.id)}
-                >
-                  <RotateCcw className="h-4 w-4 text-red-500" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Retract</TooltipContent>
-            </Tooltip>
-          )}
-          {(isSent || isDraft) && !isRetracted && (
-            <Button
-              variant="destructive"
-              size="icon"
-              className="h-10 w-10"
-              title={`Delete this alert`}
-              onClick={() => {
-                if (confirm(`Delete this alert "${message.subject}"? This cannot be undone.`)) {
-                  onDelete(message.id);
-                }
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+        {/* Save / Send / Retract actions now live in the top toolbar */}
       </DialogContent>
     </Dialog>
     </>
