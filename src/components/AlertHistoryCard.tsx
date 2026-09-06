@@ -118,6 +118,17 @@ export default function AlertHistoryCard({
 
   useEffect(() => clearClickEditTimer, []);
 
+  // Keep local draft in sync with the stored message while not editing, so an
+  // external Save never writes back stale content (e.g. after an inline
+  // headline rename on the board).
+  useEffect(() => {
+    if (mode === 'view') {
+      setEditSubject(message.subject);
+      setEditBody(message.body);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [message.subject, message.body, mode]);
+
   const handleSave = () => {
     onUpdate(message.id, { subject: editSubject, body: editBody });
     setMode('view');
