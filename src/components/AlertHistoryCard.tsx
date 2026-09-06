@@ -579,16 +579,26 @@ export default function AlertHistoryCard({
               </Button>
             )}
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap bg-muted/40 border border-border/60 rounded-md px-2 py-1">
             {!isRetracted && (
               <>
-                <Button variant="outline" className="btn-footer-action" onClick={handleSave}>
-                  <Save className="h-4 w-4 mr-1" /> Save
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button size="icon" variant="outline" className="toolbar-square-btn toolbar-square-btn-action" onClick={handleSave}>
+                      <Save className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Save</TooltipContent>
+                </Tooltip>
                 {isSent && (
-                  <Button className="btn-footer-action" onClick={handleSaveAndSend}>
-                    <Send className="h-4 w-4 mr-1" /> Save &amp; Send
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button size="icon" variant="outline" className="toolbar-square-btn toolbar-square-btn-action" onClick={handleSaveAndSend}>
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Save &amp; Send</TooltipContent>
+                  </Tooltip>
                 )}
               </>
             )}
