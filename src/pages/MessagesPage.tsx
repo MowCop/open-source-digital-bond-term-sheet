@@ -1086,9 +1086,13 @@ export default function MessagesPage() {
 
       {/* Full-screen edit/archive overlay */}
       {overlayGroup && overlayMessageId && (() => {
-        const msg = overlayGroup.messages.find(m => m.id === overlayMessageId) ?? overlayGroup.messages[0];
+        // Re-resolve the group from live data so newly sent updates appear immediately.
+        const overlayKey = overlayGroup.dealIds.join(',');
+        const liveGroup = alertGroups.find(g => g.dealIds.join(',') === overlayKey) ?? overlayGroup;
+        const msg = liveGroup.messages.find(m => m.id === overlayMessageId) ?? liveGroup.messages[0];
         if (!msg) return null;
-        const isLatest = overlayGroup.messages[0]?.id === msg.id;
+        const isLatest = liveGroup.messages[0]?.id === msg.id;
+
         return (
           <div
             ref={overlayRef}
