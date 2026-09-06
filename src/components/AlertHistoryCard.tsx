@@ -639,6 +639,27 @@ export default function AlertHistoryCard({
         <div className="relative flex items-center gap-2 px-5 py-2 border-b border-border shrink-0 bg-card/30 overflow-hidden">
           <Tooltip>
             <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                aria-label="Back to Main Menu"
+                className="toolbar-square-btn"
+                onClick={handleBackToMenu}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+
+            </TooltipTrigger>
+            <TooltipContent>Back to Main Menu</TooltipContent>
+          </Tooltip>
+
+          <Badge variant="outline" className="bg-amber-500/10 text-amber-300 border-amber-500/30 text-[10px] uppercase tracking-wider px-2 py-0.5 h-6">
+            Edit Mode
+          </Badge>
+
+          <Tooltip>
+
+            <TooltipTrigger asChild>
               <span className="relative inline-flex">
                 <Button
                   size="icon"
@@ -800,17 +821,6 @@ export default function AlertHistoryCard({
             {format(message.updatedAt, 'MMM d, hh:mm a')}
           </span>
         </div>
-        <DialogHeader className="px-5 py-1.5 border-b border-border shrink-0">
-          <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={handleBackToMenu}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-3 w-3" /> Main Menu
-            </button>
-          </div>
-        </DialogHeader>
 
         {/* Update number only — borrower is centered in the toolbar row, stage lives on the headline row */}
         <div className="flex items-center justify-center px-5 py-1.5 border-b border-border/50 shrink-0 bg-card/20">
