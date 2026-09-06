@@ -48,6 +48,8 @@ interface AlertHistoryCardProps {
   /** Archive update (already sent and superseded) — view only, no editing. */
   readOnly?: boolean;
   versionLabel?: string;
+  /** All alert versions for this deal, newest first (for the version dropdown). */
+  versions?: Message[];
   isLatest?: boolean;
   editSignal?: number;
   saveSignal?: number;
@@ -81,6 +83,7 @@ export default function AlertHistoryCard({
   canManage: canManageProp,
   readOnly = false,
   versionLabel,
+  versions,
   isLatest = false,
   editSignal = 0,
   saveSignal = 0,
@@ -157,9 +160,24 @@ export default function AlertHistoryCard({
 
   const [versionMenuOpen, setVersionMenuOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [viewVersionId, setViewVersionId] = useState<string | null>(null);
+
+  // All published versions of this deal, oldest first, labelled Original, Update #1…
+  const versionOptions = (() => {
+    const list = (versions && versions.length ? versions : [message]).slice().reverse();
+    return list.map((m, i) => ({
+      message: m,
+      label: i === 0 ? 'Original' : `Update #${i}`,
+    }));
+  })();
+  const activeVersion = versionOptions.find(v => v.message.id === viewVersionId)?.message ?? message;
+  const viewingArchive = activeVersion.id !== message.id;
+  const activeVersionLabel =
+    versionOptions.find(v => v.message.id === activeVersion.id)?.label ?? versionLabel;
 
   // Any further edit re-enables Save.
   useEffect(() => { setIsSaved(false); }, [editSubject, editBody]);
+
 
   const handleSave = () => {
     onUpdate(message.id, { subject: editSubject, body: editBody });
@@ -826,18 +844,24 @@ export default function AlertHistoryCard({
             </div>
           )}
           <span className="ml-auto text-timestamp text-xs whitespace-nowrap">
-            {format(message.updatedAt, 'MMM d, hh:mm a')}
+            {format(activeVersion.updatedAt, 'MMM d, hh:mm a')}
           </span>
         </div>
 
         {/* Headline */}
         <div className="flex items-center gap-3 px-5 py-2 border-b border-border shrink-0">
-          <input
-            value={editSubject}
-            onChange={e => setEditSubject(e.target.value)}
-            placeholder="Subject"
-            className="flex-1 min-w-0 bg-background border border-border rounded px-3 py-1.5 text-sm font-bold text-amber-300 placeholder:text-amber-300/40 focus:outline-none focus:ring-1 focus:ring-primary"
-          />
+          {viewingArchive ? (
+            <div className="flex-1 min-w-0 bg-muted/30 border border-border rounded px-3 py-1.5 text-sm font-bold text-amber-300 truncate">
+              {activeVersion.subject}
+            </div>
+          ) : (
+            <input
+              value={editSubject}
+              onChange={e => setEditSubject(e.target.value)}
+              placeholder="Subject"
+              className="flex-1 min-w-0 bg-background border border-border rounded px-3 py-1.5 text-sm font-bold text-amber-300 placeholder:text-amber-300/40 focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          )}
           <div className="flex items-center gap-1 shrink-0">
             {editDeal && (
               <Badge className={`text-[10px] ${editStageColor[editDeal.stage]}`}>
@@ -851,11 +875,33 @@ export default function AlertHistoryCard({
                     type="button"
                     className="flex items-center gap-1 rounded px-2 py-0.5 text-sm font-bold text-sky-300 tracking-wide drop-shadow-[0_0_6px_rgba(125,211,252,0.45)] hover:bg-sky-400/10"
                   >
-                    {versionLabel}
+                    {activeVersionLabel}
                     <ChevronDown className="h-3.5 w-3.5" />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-52 p-1">
+                <PopoverContent align="end" className="w-64 p-1">
+                  <div className="max-h-64 overflow-auto">
+                    {versionOptions.map(v => (
+                      <button
+                        key={v.message.id}
+                        type="button"
+                        onClick={() => {
+                          setViewVersionId(v.message.id === message.id ? null : v.message.id);
+                          setVersionMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-muted ${v.message.id === activeVersion.id ? 'bg-sky-400/10' : ''}`}
+                      >
+                        <span className="text-[11px] font-bold uppercase text-sky-300 whitespace-nowrap">{v.label}</span>
+                        <span className="truncate text-xs text-amber-300">{v.message.subject}</span>
+                        <span className="ml-auto text-[10px] text-timestamp whitespace-nowrap">
+                          {format(v.message.updatedAt, 'MMM d, hh:mm a')}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  {!viewingArchive && (
+                  <>
+                  <div className="my-1 h-px bg-border" />
                   <button
                     type="button"
                     disabled={isSaved}
@@ -871,6 +917,8 @@ export default function AlertHistoryCard({
                   >
                     <Send className="h-4 w-4" /> Save &amp; Send
                   </button>
+                  </>
+                  )}
                 </PopoverContent>
               </Popover>
             )}
@@ -880,6 +928,15 @@ export default function AlertHistoryCard({
         <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
           <div className="flex-1 min-h-0 flex flex-col px-5 pt-2 pb-1">
             <div className="flex-1 min-h-0 overflow-hidden border border-dashed border-primary/40 rounded-md">
+              {viewingArchive ? (
+                <div className="h-full overflow-auto px-3 py-3 text-sm">
+                  {isHtml(activeVersion.body) ? (
+                    <div className="prose-alert" dangerouslySetInnerHTML={{ __html: sanitizeHtml(activeVersion.body) }} />
+                  ) : (
+                    <LinkifiedText text={activeVersion.body} />
+                  )}
+                </div>
+              ) : (
               <RichTextEditor
                 value={editBody}
                 onChange={setEditBody}
@@ -887,6 +944,7 @@ export default function AlertHistoryCard({
                 className="h-full border-0 rounded-none"
                 contentClassName="px-3 py-3"
               />
+              )}
             </div>
           </div>
 
