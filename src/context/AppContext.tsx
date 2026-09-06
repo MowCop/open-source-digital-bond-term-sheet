@@ -446,6 +446,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addAuditEntry({ action: 'DEAL_STAGE_CHANGED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Stage changed to ${newStage}${note ? `: ${note}` : ''}` });
   }, [currentUser.id, addAuditEntry]);
 
+  // Tracks in-flight message inserts so a follow-up send waits for the row to exist.
+  const pendingInserts = useRef<Map<string, Promise<void>>>(new Map());
+
   const createMessage = useCallback((msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newMsg: Message = {
       ...msg,
