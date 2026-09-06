@@ -321,6 +321,17 @@ function OverrideModal({ result, onConfirm, onCancel }: OverrideModalProps) {
   );
 }
 
+// ─── Rule groups shown when everything passes ────────────────────────────────
+
+const RULE_GROUPS = [
+  'Dates and business-day conventions',
+  'Pricing consistency (spread, yield, price)',
+  'Identifiers (ISIN, LEI)',
+  'Ratings and issuer details',
+  'Bookrunners and syndicate roles',
+  'Stage completeness',
+];
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function DealChecker({
