@@ -1098,7 +1098,7 @@ export default function MessagesPage() {
             ref={overlayRef}
             role="dialog"
             aria-modal="true"
-            aria-label={`Deal edit view: ${overlayGroup.borrower}`}
+            aria-label={`Deal edit view: ${liveGroup.borrower}`}
             tabIndex={-1}
             className="fixed inset-0 z-40 bg-background outline-none"
           >
@@ -1108,9 +1108,9 @@ export default function MessagesPage() {
               recipientNames={getRecipientNames(msg.recipients)}
               canManage={canManageMessages}
               readOnly={overlayReadOnly || !isLatest}
-              chatUnread={getUnreadChatCount(overlayGroup.dealIds)}
-              chatOpenOnBoard={showChat && activeDealId === overlayGroup.dealIds[0]}
-              versions={overlayGroup.messages}
+              chatUnread={getUnreadChatCount(liveGroup.dealIds)}
+              chatOpenOnBoard={showChat && activeDealId === liveGroup.dealIds[0]}
+              versions={liveGroup.messages}
               isLatest={isLatest}
               fullscreen
               onClose={closeOverlay}
