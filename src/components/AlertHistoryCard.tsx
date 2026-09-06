@@ -17,23 +17,13 @@ import PdfEditor from '@/components/PdfEditor';
 import DOMPurify from 'dompurify';
 import SecureChat from '@/components/SecureChat';
 import { useApp } from '@/context/AppContext';
-import type { DealStage } from '@/types/bond';
+
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import DealChecker from '@/components/DealChecker';
 import DealCheckFlag from '@/components/DealCheckFlag';
 import DraggablePanel from '@/components/DraggablePanel';
-
-const editStageColor: Record<DealStage, string> = {
-  Mandate: 'bg-blue-100 text-blue-800',
-  Announced: 'bg-blue-100 text-blue-800',
-  Launched: 'bg-green-100 text-green-800',
-  'Books Open': 'bg-green-100 text-green-800',
-  'Books Closed': 'bg-green-100 text-green-800',
-  Priced: 'bg-amber-100 text-amber-800',
-  Settled: 'bg-amber-100 text-amber-800',
-};
 
 const ALLOWED_TAGS = ['p','br','strong','em','u','s','h1','h2','h3','h4','ul','ol','li','blockquote','a','img','table','thead','tbody','tr','td','th','code','pre','span','div'];
 const ALLOWED_ATTR = ['href','target','rel','src','alt','title','class','colspan','rowspan'];
@@ -863,11 +853,6 @@ export default function AlertHistoryCard({
             />
           )}
           <div className="flex items-center gap-1 shrink-0">
-            {editDeal && (
-              <Badge className={`text-[10px] ${editStageColor[editDeal.stage]}`}>
-                {editDeal.stage}
-              </Badge>
-            )}
             {versionLabel && (
               <Popover open={versionMenuOpen} onOpenChange={setVersionMenuOpen}>
                 <PopoverTrigger asChild>
