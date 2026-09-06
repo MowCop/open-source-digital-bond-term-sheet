@@ -845,16 +845,16 @@ export default function AlertHistoryCard({
             </div>
           </div>
 
-          {/* Hovering associated chat — collapsible / minimisable */}
+          {/* Floating associated chat — draggable, resizable, minimisable */}
           {chatOpen && (
-            <div
-              className={`chat-panel-border absolute bottom-3 right-4 z-30 w-[380px] max-w-[92%] rounded-lg bg-card shadow-2xl flex flex-col overflow-hidden ${chatMinimized ? 'h-11' : 'h-[60%] min-h-[280px]'}`}
-            >
-              <div className="flex items-center justify-between gap-2 px-3 py-2 shrink-0 border-b border-border/50 bg-muted/40">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">
-                  Associated Chat Thread
-                </span>
-                <div className="flex items-center gap-1">
+            <DraggablePanel
+              title="Associated Chat Thread"
+              collapsed={chatMinimized}
+              className="chat-panel-border"
+              initialWidth={400}
+              initialHeight={480}
+              headerActions={
+                <>
                   <Button
                     size="icon"
                     variant="ghost"
@@ -867,21 +867,39 @@ export default function AlertHistoryCard({
                   <Button size="icon" variant="ghost" className="h-6 w-6" title="Close chat" onClick={() => setChatOpen(false)}>
                     <X className="h-3.5 w-3.5" />
                   </Button>
-                </div>
+                </>
+              }
+            >
+              <div className="flex-1 min-h-0 p-2">
+                <SecureChat
+                  key={message.dealIds?.[0] ?? 'no-deal'}
+                  activeDealId={message.dealIds?.[0] ?? null}
+                  heightClass="h-full"
+                  allowDealAccess
+                  hideStageBadge
+                  fallbackThreadLabel={message.subject}
+                />
               </div>
-              {!chatMinimized && (
-                <div className="flex-1 min-h-0 p-2">
-                  <SecureChat
-                    key={message.dealIds?.[0] ?? 'no-deal'}
-                    activeDealId={message.dealIds?.[0] ?? null}
-                    heightClass="h-full"
-                    allowDealAccess
-                    hideStageBadge
-                    fallbackThreadLabel={message.subject}
-                  />
-                </div>
-              )}
-            </div>
+            </DraggablePanel>
+          )}
+
+          {/* Floating AI Deal Checker */}
+          {checkerOpen && editDeal && (
+            <DraggablePanel
+              title="AI Deal Checker"
+              initialWidth={440}
+              initialHeight={520}
+              className="border border-border"
+              headerActions={
+                <Button size="icon" variant="ghost" className="h-6 w-6" title="Close" onClick={() => setCheckerOpen(false)}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              }
+            >
+              <div className="flex-1 min-h-0 overflow-auto p-2">
+                <DealChecker deal={editDeal} />
+              </div>
+            </DraggablePanel>
           )}
         </div>
 
