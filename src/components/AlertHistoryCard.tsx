@@ -639,6 +639,25 @@ export default function AlertHistoryCard({
         <div className="relative flex items-center gap-2 px-5 py-2 border-b border-border shrink-0 bg-card/30 overflow-hidden">
           <Tooltip>
             <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="toolbar-square-btn"
+                onClick={handleBackToMenu}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Back to Main Menu</TooltipContent>
+          </Tooltip>
+
+          <Badge variant="outline" className="bg-amber-500/10 text-amber-300 border-amber-500/30 text-[10px] uppercase tracking-wider px-2 py-0.5 h-6">
+            Edit Mode
+          </Badge>
+
+          <Tooltip>
+
+            <TooltipTrigger asChild>
               <span className="relative inline-flex">
                 <Button
                   size="icon"
