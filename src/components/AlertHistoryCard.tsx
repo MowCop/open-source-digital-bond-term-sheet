@@ -636,7 +636,7 @@ export default function AlertHistoryCard({
       >
 
         {/* Functional icon toolbar */}
-        <div className="flex items-center gap-2 px-5 py-2 border-b border-border shrink-0 bg-card/30">
+        <div className="relative flex items-center gap-2 px-5 py-2 border-b border-border shrink-0 bg-card/30 overflow-hidden">
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="relative inline-flex">
