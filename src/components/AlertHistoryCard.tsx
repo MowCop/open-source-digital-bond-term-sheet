@@ -113,7 +113,7 @@ export default function AlertHistoryCard({
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const { deals } = useApp();
+  const { deals, currentUser } = useApp();
   const editDeal = message.dealIds?.[0]
     ? deals.find(d => d.id === message.dealIds[0]) || null
     : null;
@@ -897,7 +897,12 @@ export default function AlertHistoryCard({
               }
             >
               <div className="flex-1 min-h-0 overflow-auto p-2">
-                <DealChecker deal={editDeal} />
+                <DealChecker
+                  deal={editDeal}
+                  userRole={currentUser?.role}
+                  currentUserId={currentUser?.id}
+                  currentUserName={currentUser?.name}
+                />
               </div>
             </DraggablePanel>
           )}
