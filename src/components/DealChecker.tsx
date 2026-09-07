@@ -356,28 +356,42 @@ export default function DealChecker({
 
   const isMasterAdmin = userRole === 'master_admin';
 
+  // Stable signature of the inputs — avoids re-running on new array/object identities
+  const inputSignature = useMemo(
+    () => JSON.stringify([deal ?? null, aiFields ?? null, aiBookrunners ?? [], overrides, overrideReasons]),
+    [deal, aiFields, aiBookrunners, overrides, overrideReasons],
+  );
+
+  const auditCbRef = useRef(onAuditEntries);
+  auditCbRef.current = onAuditEntries;
+  const latestInputs = useRef({ deal, aiFields, aiBookrunners, overrides, overrideReasons });
+  latestInputs.current = { deal, aiFields, aiBookrunners, overrides, overrideReasons };
+
   // Re-run validation whenever fields, bookrunners, or active overrides change
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     setStatus('running');
     timerRef.current = setTimeout(() => {
-      const partial: Partial<Deal> = deal ?? aiFieldsToPartialDeal(aiFields, aiBookrunners);
-      const ctx: OverrideContext | undefined = overrides.length > 0 && isMasterAdmin
+      const cur = latestInputs.current;
+      const partial: Partial<Deal> = cur.deal ?? aiFieldsToPartialDeal(cur.aiFields ?? null, cur.aiBookrunners ?? []);
+      const ctx: OverrideContext | undefined = cur.overrides.length > 0 && isMasterAdmin
         ? {
             adminUserId: currentUserId,
             adminName: currentUserName,
-            reason: overrides.map(id => overrideReasons[id] ?? '').join('; '),
-            overriddenRuleIds: overrides,
+            reason: cur.overrides.map(id => cur.overrideReasons[id] ?? '').join('; '),
+            overriddenRuleIds: cur.overrides,
           }
         : undefined;
-      const { results: r, auditEntries } = validateDeal(partial, ctx, deal?.stage);
+      const { results: r, auditEntries } = validateDeal(partial, ctx, cur.deal?.stage);
       setResults(r);
       setLastRunAt(new Date());
       setStatus('done');
-      if (auditEntries.length > 0) onAuditEntries?.(auditEntries);
+      if (auditEntries.length > 0) auditCbRef.current?.(auditEntries);
     }, 400);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [deal, aiFields, aiBookrunners, overrides, overrideReasons, isMasterAdmin, currentUserId, currentUserName, onAuditEntries, refreshTick]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputSignature, isMasterAdmin, currentUserId, currentUserName, refreshTick]);
+
 
   function handleRefresh() {
     setRefreshing(true);
