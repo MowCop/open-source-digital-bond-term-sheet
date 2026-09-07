@@ -92,15 +92,18 @@
   .stage-launched { @apply bg-green-900/40 text-green-400; }
   .stage-priced { @apply bg-amber-900/40 text-amber-400; }
   .stage-closed { @apply bg-gray-800/40 text-gray-400; }
-  .text-timestamp { color: hsl(var(--timestamp)); }
-  .border-timestamp { border-color: hsl(var(--timestamp)); }
-  .gold-glow {
-    box-shadow: 0 0 20px -5px hsl(43 96% 56% / 0.3);
-  }
-  .card-elevated {
-    box-shadow: 0 4px 24px -4px hsl(222 47% 4% / 0.5),
-                0 0 0 1px hsl(217 30% 18% / 0.5);
-  }
+.text-timestamp { color: hsl(var(--timestamp)); }
+.border-timestamp { border-color: hsl(var(--timestamp)); }
+.gold-glow {
+  box-shadow: 0 0 20px -5px hsl(43 96% 56% / 0.3);
+}
+.card-elevated {
+  box-shadow: 0 4px 24px -4px hsl(222 47% 4% / 0.5),
+              0 0 0 1px hsl(217 30% 18% / 0.5);
+}
+.text-glow {
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.75);
+}
 }
 
 @keyframes border-flash {
