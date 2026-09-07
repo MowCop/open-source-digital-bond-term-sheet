@@ -16,7 +16,6 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import DealChecker from '@/components/DealChecker';
 import DealCheckFlag from '@/components/DealCheckFlag';
@@ -587,9 +586,14 @@ function GenerateBulletinDialog({
 
   return (
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Generate New Issue Bulletin</DialogTitle>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-card via-card to-navy-deep/80 border border-border/60 shadow-[0_24px_80px_-16px_rgba(0,0,0,0.6)] backdrop-blur-sm">
+        <DialogHeader className="border-b border-border/50 pb-3">
+          <DialogTitle className="flex items-center gap-2 text-lg">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-success/15 text-success">
+              <Megaphone className="h-4 w-4" />
+            </span>
+            Generate New Issue Bulletin
+          </DialogTitle>
         </DialogHeader>
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
@@ -598,22 +602,23 @@ function GenerateBulletinDialog({
         ) : error ? (
           <div className="text-sm text-destructive py-6">{error}</div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <Label className="text-xs">Headline</Label>
-              <Input value={subject} onChange={e => setSubject(e.target.value)} />
+              <Label className="text-xs font-medium text-muted-foreground">Headline</Label>
+              <Input value={subject} onChange={e => setSubject(e.target.value)} className="mt-1" />
             </div>
-            <div>
-              <Label className="text-xs">Bulletin body (HTML — prose + term sheet)</Label>
-              <Textarea value={body} onChange={e => setBody(e.target.value)} rows={14} className="font-mono text-xs" />
+
+            <div className="rounded-lg border-2 border-success/70 bg-card/60 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_32px_-12px_rgba(34,197,94,0.25)]">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-success/20">
+                <span className="text-xs font-semibold uppercase tracking-wide text-success">Preview</span>
+                <span className="text-[10px] text-muted-foreground">Announcement preview</span>
+              </div>
+              <div className="max-h-[55vh] overflow-y-auto rounded-md bg-background/70 p-5 text-sm prose prose-sm max-w-none text-white [&_p]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_li]:text-white [&_strong]:text-white [&_em]:text-white [&_a]:text-white [&_a]:underline" dangerouslySetInnerHTML={{ __html: body }} />
             </div>
-            <div>
-              <Label className="text-xs">Preview</Label>
-              <div className="border rounded-md p-4 text-sm prose prose-sm max-w-none text-white [&_p]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_li]:text-white [&_strong]:text-white [&_em]:text-white [&_a]:text-white [&_a]:underline" dangerouslySetInnerHTML={{ __html: body }} />
-            </div>
-            <div className="flex justify-end gap-2">
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
               <Button variant="outline" onClick={onClose}>Cancel</Button>
-              <Button onClick={handlePublish}>
+              <Button onClick={handlePublish} className="bg-success text-success-foreground hover:bg-success/90">
                 <Megaphone className="h-4 w-4 mr-1" /> Publish to New Issue Board
               </Button>
             </div>
