@@ -609,7 +609,7 @@ function GenerateBulletinDialog({
             </div>
             <div>
               <Label className="text-xs">Preview</Label>
-              <div className="border rounded-md p-4 text-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: body }} />
+              <div className="border rounded-md p-4 text-sm prose prose-sm max-w-none text-white [&_p]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_li]:text-white [&_strong]:text-white [&_em]:text-white [&_a]:text-white [&_a]:underline" dangerouslySetInnerHTML={{ __html: body }} />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={onClose}>Cancel</Button>
