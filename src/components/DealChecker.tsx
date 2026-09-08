@@ -515,6 +515,11 @@ export default function DealChecker({
         </div>
 
         <div className="p-3 space-y-2.5">
+          {/* Centered AI Deal Checker logo */}
+          <div className="flex justify-center pt-1 pb-1">
+            <DealCheckerLogo />
+          </div>
+
           {fieldCount === 0 ? (
             <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
               <Shield className="h-8 w-8 mb-2 opacity-20" />
