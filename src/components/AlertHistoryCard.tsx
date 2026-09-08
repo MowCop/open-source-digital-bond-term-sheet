@@ -21,7 +21,7 @@ import { useApp } from '@/context/AppContext';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import DealChecker from '@/components/DealChecker';
+import DealChecker, { DealCheckerLogo } from '@/components/DealChecker';
 import DealCheckFlag from '@/components/DealCheckFlag';
 import DraggablePanel from '@/components/DraggablePanel';
 
