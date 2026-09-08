@@ -1062,6 +1062,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
               <div className="flex-1 min-h-0 overflow-auto p-2">
                 <DealChecker
                   deal={editDeal}
+                  alertText={`${editSubject}\n${editBody}`}
                   userRole={currentUser?.role}
                   currentUserId={currentUser?.id}
                   currentUserName={currentUser?.name}
