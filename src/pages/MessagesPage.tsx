@@ -1091,7 +1091,10 @@ export default function MessagesPage() {
         const liveGroup = alertGroups.find(g => g.dealIds.join(',') === overlayKey) ?? overlayGroup;
         const msg = liveGroup.messages.find(m => m.id === overlayMessageId) ?? liveGroup.messages[0];
         if (!msg) return null;
-        const isLatest = liveGroup.messages[0]?.id === msg.id;
+        // The editable version is the newest published update (unsent drafts
+        // above it are not the live record), falling back to the newest row.
+        const editableId = openTargetId(liveGroup);
+        const isLatest = editableId === msg.id;
 
         return (
           <div
