@@ -898,6 +898,13 @@ export default function AlertHistoryCard({
             <input
               value={editSubject}
               onChange={e => setEditSubject(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.currentTarget.blur();
+                  handleSave();
+                }
+              }}
               placeholder="Subject"
               className="flex-1 min-w-0 bg-background border border-border rounded px-3 py-1.5 text-sm font-bold text-amber-300 placeholder:text-amber-300/40 focus:outline-none focus:ring-1 focus:ring-primary"
             />
