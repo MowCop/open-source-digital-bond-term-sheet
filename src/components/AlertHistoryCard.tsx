@@ -40,6 +40,8 @@ interface AlertHistoryCardProps {
   versionLabel?: string;
   /** All alert versions for this deal, newest first (for the version dropdown). */
   versions?: Message[];
+  /** Id of the version that should be editable (defaults to the newest version). */
+  editableVersionId?: string;
   isLatest?: boolean;
   editSignal?: number;
   saveSignal?: number;
