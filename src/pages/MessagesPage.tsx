@@ -715,6 +715,7 @@ export default function MessagesPage() {
                       <div onClick={(e) => e.stopPropagation()}>
                         <DealChecker
                           deal={deals.find(d => d.id === group.dealIds[0])}
+                          alertText={`${group.latest?.subject ?? ''}\n${group.latest?.body ?? ''}`}
                           userRole={currentUser?.role}
                           currentUserId={currentUser?.id}
                           currentUserName={currentUser?.name}
