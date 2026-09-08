@@ -501,7 +501,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-timestamp text-xs whitespace-nowrap">
-            {versionLabel ? `${versionLabel} · ` : ''}{format(message.updatedAt, 'MMM d, hh:mm a')}
+            {versionLabel ? `${versionLabel} · ` : ''}{formatUTCDateTime(message.updatedAt)} <span className="text-[9px] text-white/70">UTC</span>
           </span>
           <Badge
             variant={isSent ? 'default' : isDraft ? 'secondary' : 'destructive'}
