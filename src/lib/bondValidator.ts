@@ -456,6 +456,37 @@ function checkBenchmarkCurrency(
   return { ok: true };
 }
 
+/**
+ * Scans free-text alert wording (IPT / guidance / spread) for spreads quoted
+ * over the wrong benchmark curve for the deal currency.
+ */
+function scanTextBenchmarks(
+  currency: string | undefined,
+  text: string,
+): { label: string; quote: string; found: string; expected: string }[] {
+  if (!currency || !text) return [];
+  const cfg = CCY_BENCHMARK[currency.toUpperCase()];
+  if (!cfg) return [];
+  const plain = text.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ');
+  const hits: { label: string; quote: string; found: string; expected: string }[] = [];
+  const seen = new Set<string>();
+  const re = /\b(IPTs?|initial price thoughts|revised guidance|guidance|spread|launched at|launch|priced at)\b[^.,;\n]{0,25}?\b(UST|UKT|JGB|Gilt|Treasur\w*|T|G)\s*\+\s*-?\d+(?:\.\d+)?/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(plain)) !== null) {
+    const benchmark = m[2].toUpperCase();
+    const wrong = cfg.wrong.find(w => w.re.test(benchmark));
+    if (!wrong) continue;
+    const label = /ipt|initial/i.test(m[1]) ? 'IPT' : /guidance/i.test(m[1]) ? 'Guidance' : 'Spread';
+    const key = `${label}-${wrong.name}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    hits.push({ label, quote: m[0].trim(), found: wrong.name, expected: cfg.label });
+  }
+  return hits;
+}
+
+
+
 
 // ─── Denomination check ───────────────────────────────────────────────────────
 
