@@ -705,21 +705,7 @@ export default function AlertHistoryCard({
 
         {/* Functional icon toolbar */}
         <div className="relative flex items-center gap-2 px-5 py-2 border-b border-border shrink-0 bg-card/30 overflow-hidden">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                aria-label={fullscreen ? 'Back to Issue Board' : 'Back to Main Menu'}
-                className="toolbar-square-btn"
-                onClick={handleBack}
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-
-            </TooltipTrigger>
-            <TooltipContent>{fullscreen ? 'Back to Issue Board' : 'Back to Main Menu'}</TooltipContent>
-          </Tooltip>
+          <BackButtonTooltip label={fullscreen ? 'Back to Issue Board' : 'Back to Main Menu'} onClick={handleBack} />
 
           <Tooltip>
 
