@@ -1114,6 +1114,7 @@ export default function MessagesPage() {
               chatUnread={getUnreadChatCount(liveGroup.dealIds)}
               chatOpenOnBoard={showChat && activeDealId === liveGroup.dealIds[0]}
               versions={liveGroup.messages}
+              editableVersionId={editableId}
               isLatest={isLatest}
               fullscreen
               onClose={closeOverlay}
