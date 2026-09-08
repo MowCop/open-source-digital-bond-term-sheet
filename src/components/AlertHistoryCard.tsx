@@ -1069,6 +1069,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
               initialWidth={440}
               initialHeight={520}
               className="border border-border"
+              headerCenter={<DealCheckerLogo size={28} />}
               headerActions={
                 <Button size="icon" variant="ghost" className="h-6 w-6" title="Close" onClick={() => setCheckerOpen(false)}>
                   <X className="h-3.5 w-3.5" />
