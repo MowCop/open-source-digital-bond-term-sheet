@@ -114,6 +114,55 @@ function aiFieldsToPartialDeal(
   };
 }
 
+// ─── AI Deal Checker logo ─────────────────────────────────────────────────────
+
+function DealCheckerLogo({ className = '' }: { className?: string }) {
+  return (
+    <div className={`relative inline-flex items-center justify-center ${className}`}>
+      <svg
+        width="56"
+        height="56"
+        viewBox="0 0 56 56"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="drop-shadow-lg"
+      >
+        {/* Rounded green square with gold border */}
+        <rect
+          x="2"
+          y="2"
+          width="48"
+          height="48"
+          rx="10"
+          fill="#064e3b"
+          stroke="#fbbf24"
+          strokeWidth="2"
+        />
+        {/* Shield outline */}
+        <path
+          d="M26 12C26 12 14 16 14 24C14 34 26 42 26 42C26 42 38 34 38 24C38 16 26 12 26 12Z"
+          stroke="#fef3c7"
+          strokeWidth="2.5"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* Checkmark */}
+        <path
+          d="M20 26L24 30L32 22"
+          stroke="#fef3c7"
+          strokeWidth="2.5"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* Top-right notification dot */}
+        <circle cx="44" cy="10" r="6" fill="#fbbf24" stroke="#064e3b" strokeWidth="2" />
+      </svg>
+    </div>
+  );
+}
+
 // ─── Severity UI config ───────────────────────────────────────────────────────
 
 const SEVERITY_CONFIG: Record<Severity, {
