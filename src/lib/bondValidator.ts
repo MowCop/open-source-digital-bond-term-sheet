@@ -934,6 +934,35 @@ export function validateDeal(
     });
   }
 
+  // ── 21. Pricing benchmark ↔ currency convention ──────────────────────────────
+  const benchField = checkBenchmarkCurrency(deal.currency, deal.reofferSpread);
+  if (!benchField.ok) {
+    push({
+      id: 'benchmark-currency-mismatch',
+      severity: 'error',
+      field: 'reofferSpread',
+      title: `Spread quoted over ${benchField.found} on a ${deal.currency} deal`,
+      detail: `${deal.currency} benchmarks are quoted over ${benchField.expected}, but the spread is "${deal.reofferSpread}" — a ${benchField.found} reference. Re-quote over ${benchField.expected} before publication.`,
+      icmaRef: 'ICMA Primary Market Handbook — pricing conventions',
+    });
+  }
+
+  // ── 22. Benchmark references inside the alert wording ────────────────────────
+  if (alertText) {
+    for (const hit of scanTextBenchmarks(deal.currency, alertText)) {
+      push({
+        id: `alert-benchmark-${hit.label.toLowerCase()}`,
+        severity: 'error',
+        field: 'alert text',
+        title: `${hit.label} quoted over ${hit.found} on a ${deal.currency} deal`,
+        detail: `The alert wording says "${hit.quote}". ${deal.currency} transactions are priced over ${hit.expected}, not ${hit.found}. Correct the ${hit.label} reference before sending.`,
+        icmaRef: 'ICMA Primary Market Handbook — pricing conventions',
+      });
+    }
+  }
+
+
+
   // ── Stage awareness ─────────────────────────────────────────────────────────
   // Pricing-dependent checks cannot be satisfied before the book is closed, so
   // they are reported as informational until the deal reaches Books Closed.
