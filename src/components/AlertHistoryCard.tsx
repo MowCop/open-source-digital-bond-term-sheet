@@ -894,7 +894,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
           </div>
           {editDeal && (
             <div className="absolute left-1/2 bottom-2 -translate-x-1/2 h-10 flex items-center max-w-[50%] pointer-events-none">
-              <span className="truncate text-2xl font-bold text-white leading-none tracking-tight">
+              <span className="truncate text-xl md:text-2xl font-bold text-white leading-none tracking-tight">
                 {editDeal.issuerName}
               </span>
             </div>
