@@ -24,6 +24,7 @@ const MIN_H = 240;
 export default function DraggablePanel({
   title,
   headerActions,
+  headerCenter,
   children,
   collapsed = false,
   initialWidth = 400,
