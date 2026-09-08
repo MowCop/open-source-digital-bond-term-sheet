@@ -726,7 +726,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
       onOpenChange={(o) => { if (!o) attemptClose(); }}
     >
       <DialogContent
-        className={`${fullscreen ? 'max-w-[100vw] w-[100vw] h-[100vh] rounded-none' : 'max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg'} p-0 gap-0 flex flex-col`}
+        className={`${fullscreen ? 'max-w-[100vw] w-[100vw] h-[100vh] rounded-none [&>button:last-of-type]:hidden' : 'max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg'} p-0 gap-0 flex flex-col`}
       >
 
         {/* Functional icon toolbar */}
