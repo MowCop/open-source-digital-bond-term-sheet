@@ -84,6 +84,7 @@ export default function AlertHistoryCard({
   readOnly = false,
   versionLabel,
   versions,
+  editableVersionId,
   isLatest = false,
   editSignal = 0,
   saveSignal = 0,
