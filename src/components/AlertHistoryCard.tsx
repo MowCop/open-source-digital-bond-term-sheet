@@ -726,12 +726,13 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
       onOpenChange={(o) => { if (!o) attemptClose(); }}
     >
       <DialogContent
-        className={`${fullscreen ? 'max-w-[100vw] w-[100vw] h-[100vh] rounded-none' : 'max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg'} p-0 gap-0 flex flex-col`}
+        className={`${fullscreen ? 'max-w-[100vw] w-[100vw] h-[100vh] rounded-none [&>button:last-of-type]:hidden' : 'max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg'} p-0 gap-0 flex flex-col`}
       >
 
         {/* Functional icon toolbar */}
-        <div className="relative flex items-end gap-2 pl-5 pr-14 py-2 border-b border-border shrink-0 bg-card/30 overflow-hidden">
-          <BackButtonTooltip label={fullscreen ? 'Back to Issue Board' : 'Back to Main Menu'} onClick={handleBack} />
+        <div className="relative flex items-end justify-between gap-2 pl-5 pr-5 py-2 border-b border-border shrink-0 bg-card/30 overflow-hidden">
+          <div className="flex items-end gap-2 overflow-hidden">
+            <BackButtonTooltip label={fullscreen ? 'Back to Issue Board' : 'Back to Main Menu'} onClick={handleBack} />
 
           <Tooltip>
 
@@ -861,7 +862,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
           </Tooltip>
 
           {canManage && (
-          <div className="flex items-center gap-2 bg-muted/40 border border-border/60 rounded-md px-2 py-1">
+          <div className="flex items-end gap-2 bg-muted/40 border border-border/60 rounded-md px-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button size="icon" variant="outline" className="toolbar-square-btn toolbar-square-btn-action" onClick={handleSave}>
@@ -890,15 +891,29 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
             )}
           </div>
           )}
+          </div>
           {editDeal && (
-            <div className="absolute left-1/2 bottom-2 -translate-x-1/2 max-w-[50%] truncate text-2xl font-bold text-white tracking-tight pointer-events-none">
-              {editDeal.issuerName}
+            <div className="absolute left-1/2 bottom-2 -translate-x-1/2 h-10 flex items-center max-w-[50%] pointer-events-none">
+              <span className="truncate text-xl md:text-2xl font-bold text-white leading-none tracking-tight">
+                {editDeal.issuerName}
+              </span>
             </div>
           )}
-          <span className="ml-auto flex items-end gap-1.5 text-2xl font-normal text-white whitespace-nowrap">
-            {formatUTCDateTime(activeVersion.updatedAt)}
-            <span className="text-sm font-medium text-white/80 uppercase tracking-wide">UTC</span>
-          </span>
+          <div className="flex items-end gap-2 shrink-0">
+            <span className="h-10 flex items-baseline gap-1.5 text-xl md:text-2xl font-normal text-white whitespace-nowrap leading-none">
+              {formatUTCDateTime(activeVersion.updatedAt)}
+              <span className="text-xs md:text-sm font-medium text-white/80 uppercase tracking-wide leading-none">UTC</span>
+            </span>
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Close"
+              className="h-9 w-9 rounded-md border border-border/70 bg-card/60 hover:bg-accent hover:text-foreground hover:border-border"
+              onClick={attemptClose}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Headline */}
