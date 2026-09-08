@@ -42,6 +42,8 @@ interface DealCheckerProps {
   aiFields?: Record<string, string> | null;
   /** Live deal record — used instead of aiFields once a deal exists */
   deal?: Deal;
+  /** Alert subject + body wording, scanned for wrong-benchmark pricing text */
+  alertText?: string;
   aiBookrunners?: Bookrunner[];
   /** Role of the currently logged-in user */
   userRole?: UserRole;
@@ -337,6 +339,7 @@ const RULE_GROUPS = [
 export default function DealChecker({
   aiFields = null,
   deal,
+  alertText,
   aiBookrunners = [],
   userRole,
   currentUserId = 'unknown',
@@ -358,14 +361,14 @@ export default function DealChecker({
 
   // Stable signature of the inputs — avoids re-running on new array/object identities
   const inputSignature = useMemo(
-    () => JSON.stringify([deal ?? null, aiFields ?? null, aiBookrunners ?? [], overrides, overrideReasons]),
-    [deal, aiFields, aiBookrunners, overrides, overrideReasons],
+    () => JSON.stringify([deal ?? null, aiFields ?? null, aiBookrunners ?? [], alertText ?? '', overrides, overrideReasons]),
+    [deal, aiFields, aiBookrunners, alertText, overrides, overrideReasons],
   );
 
   const auditCbRef = useRef(onAuditEntries);
   auditCbRef.current = onAuditEntries;
-  const latestInputs = useRef({ deal, aiFields, aiBookrunners, overrides, overrideReasons });
-  latestInputs.current = { deal, aiFields, aiBookrunners, overrides, overrideReasons };
+  const latestInputs = useRef({ deal, aiFields, aiBookrunners, alertText, overrides, overrideReasons });
+  latestInputs.current = { deal, aiFields, aiBookrunners, alertText, overrides, overrideReasons };
 
   // Re-run validation whenever fields, bookrunners, or active overrides change
   useEffect(() => {
@@ -382,7 +385,7 @@ export default function DealChecker({
             overriddenRuleIds: cur.overrides,
           }
         : undefined;
-      const { results: r, auditEntries } = validateDeal(partial, ctx, cur.deal?.stage);
+      const { results: r, auditEntries } = validateDeal(partial, ctx, cur.deal?.stage, cur.alertText);
       setResults(r);
       setLastRunAt(new Date());
       setStatus('done');
