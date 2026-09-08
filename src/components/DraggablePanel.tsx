@@ -3,6 +3,8 @@ import { useCallback, useRef, useState, type ReactNode } from 'react';
 interface DraggablePanelProps {
   title: string;
   headerActions?: ReactNode;
+  /** Centered header content, e.g. a logo placed beside the title. */
+  headerCenter?: ReactNode;
   children: ReactNode;
   /** Collapse the body, leaving only the title bar. */
   collapsed?: boolean;
