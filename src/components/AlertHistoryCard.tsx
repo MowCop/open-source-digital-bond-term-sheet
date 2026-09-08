@@ -954,7 +954,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
                         <span className="text-xl font-bold uppercase text-sky-300 whitespace-nowrap">{v.label}</span>
                         <span className="truncate text-sm text-amber-300">{v.message.subject}</span>
                         <span className="ml-auto text-base text-timestamp whitespace-nowrap">
-                          {format(v.message.updatedAt, 'MMM d, hh:mm a')}
+                          {formatUTCDateTime(v.message.updatedAt)} <span className="text-[10px] text-white/70">UTC</span>
                         </span>
                       </button>
                     ))}
