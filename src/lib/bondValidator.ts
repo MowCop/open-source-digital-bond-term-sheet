@@ -398,6 +398,96 @@ function checkSpreadYieldImplied(
   return { ok: Math.abs(implied - ry) < 0.05, implied: implied.toFixed(3) + '%' };
 }
 
+// ─── Pricing benchmark ↔ currency convention ─────────────────────────────────
+// EUR/CHF benchmarks price off mid-swaps (MS); USD off US Treasuries (UST/T);
+// GBP off Gilts (UKT/G); JPY off JGBs. Flag a spread quoted off the wrong curve.
+
+const CCY_BENCHMARK: Record<string, { label: string; expect: RegExp; wrong: { re: RegExp; name: string }[] }> = {
+  EUR: {
+    label: 'mid-swaps (MS)',
+    expect: /\b(ms|mid[\s-]?swaps?|m\/s|e|euribor|estr)\b/i,
+    wrong: [
+      { re: /\b(ust|u\.s\.\s*treasur|treasur|t)\s*\+?/i, name: 'US Treasuries (UST)' },
+      { re: /\b(ukt|gilt)\b/i, name: 'Gilts (UKT)' },
+      { re: /\bjgb\b/i, name: 'JGBs' },
+    ],
+  },
+  CHF: {
+    label: 'mid-swaps (MS)',
+    expect: /\b(ms|mid[\s-]?swaps?|saron)\b/i,
+    wrong: [{ re: /\b(ust|treasur)\b/i, name: 'US Treasuries (UST)' }],
+  },
+  USD: {
+    label: 'US Treasuries (UST / T+)',
+    expect: /\b(ust|t|treasur|sofr|cmt)\b/i,
+    wrong: [
+      { re: /\b(ukt|gilt)\b/i, name: 'Gilts (UKT)' },
+      { re: /\bjgb\b/i, name: 'JGBs' },
+    ],
+  },
+  GBP: {
+    label: 'Gilts (UKT) or SONIA',
+    expect: /\b(ukt|gilt|sonia|g)\b/i,
+    wrong: [{ re: /\b(ust|treasur)\b/i, name: 'US Treasuries (UST)' }],
+  },
+  JPY: {
+    label: 'JGBs or TONA',
+    expect: /\b(jgb|tona|yen\s*swap)\b/i,
+    wrong: [{ re: /\b(ust|treasur)\b/i, name: 'US Treasuries (UST)' }],
+  },
+};
+
+function checkBenchmarkCurrency(
+  currency: string | undefined,
+  spread: string | undefined,
+): { ok: boolean; expected?: string; found?: string } {
+  if (!currency || !spread) return { ok: true };
+  const cfg = CCY_BENCHMARK[currency.toUpperCase()];
+  if (!cfg) return { ok: true };
+  const s = spread.trim();
+  if (!s || /^tba$/i.test(s)) return { ok: true };
+  // Purely numeric spreads (e.g. "+65bps") carry no benchmark reference.
+  if (!/[a-z]/i.test(s.replace(/bps?|bp/gi, ''))) return { ok: true };
+  for (const w of cfg.wrong) {
+    if (w.re.test(s) && !cfg.expect.test(s)) {
+      return { ok: false, expected: cfg.label, found: w.name };
+    }
+  }
+  return { ok: true };
+}
+
+/**
+ * Scans free-text alert wording (IPT / guidance / spread) for spreads quoted
+ * over the wrong benchmark curve for the deal currency.
+ */
+function scanTextBenchmarks(
+  currency: string | undefined,
+  text: string,
+): { label: string; quote: string; found: string; expected: string }[] {
+  if (!currency || !text) return [];
+  const cfg = CCY_BENCHMARK[currency.toUpperCase()];
+  if (!cfg) return [];
+  const plain = text.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ');
+  const hits: { label: string; quote: string; found: string; expected: string }[] = [];
+  const seen = new Set<string>();
+  const re = /\b(IPTs?|initial price thoughts|revised guidance|guidance|spread|launched at|launch|priced at)\b[^.,;\n]{0,25}?\b(UST|UKT|JGB|Gilt|Treasur\w*|T|G)\s*\+\s*-?\d+(?:\.\d+)?/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(plain)) !== null) {
+    const benchmark = m[2].toUpperCase();
+    const wrong = cfg.wrong.find(w => w.re.test(benchmark));
+    if (!wrong) continue;
+    const label = /ipt|initial/i.test(m[1]) ? 'IPT' : /guidance/i.test(m[1]) ? 'Guidance' : 'Spread';
+    const key = `${label}-${wrong.name}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    hits.push({ label, quote: m[0].trim(), found: wrong.name, expected: cfg.label });
+  }
+  return hits;
+}
+
+
+
+
 // ─── Denomination check ───────────────────────────────────────────────────────
 
 function checkDenomination(
@@ -479,6 +569,8 @@ export function validateDeal(
   deal: Partial<Deal>,
   overrideContext?: OverrideContext,
   stage?: DealStage,
+  /** Optional alert subject + body, scanned for wrong-benchmark pricing wording */
+  alertText?: string,
 ): { results: ValidationResult[]; auditEntries: DealCheckerAuditEntry[] } {
   const results: ValidationResult[] = [];
   const auditEntries: DealCheckerAuditEntry[] = [];
@@ -874,6 +966,35 @@ export function validateDeal(
       icmaRef: 'ICMA BDT / Prospectus Regulation',
     });
   }
+
+  // ── 21. Pricing benchmark ↔ currency convention ──────────────────────────────
+  const benchField = checkBenchmarkCurrency(deal.currency, deal.reofferSpread);
+  if (!benchField.ok) {
+    push({
+      id: 'benchmark-currency-mismatch',
+      severity: 'error',
+      field: 'reofferSpread',
+      title: `Spread quoted over ${benchField.found} on a ${deal.currency} deal`,
+      detail: `${deal.currency} benchmarks are quoted over ${benchField.expected}, but the spread is "${deal.reofferSpread}" — a ${benchField.found} reference. Re-quote over ${benchField.expected} before publication.`,
+      icmaRef: 'ICMA Primary Market Handbook — pricing conventions',
+    });
+  }
+
+  // ── 22. Benchmark references inside the alert wording ────────────────────────
+  if (alertText) {
+    for (const hit of scanTextBenchmarks(deal.currency, alertText)) {
+      push({
+        id: `alert-benchmark-${hit.label.toLowerCase()}`,
+        severity: 'error',
+        field: 'alert text',
+        title: `${hit.label} quoted over ${hit.found} on a ${deal.currency} deal`,
+        detail: `The alert wording says "${hit.quote}". ${deal.currency} transactions are priced over ${hit.expected}, not ${hit.found}. Correct the ${hit.label} reference before sending.`,
+        icmaRef: 'ICMA Primary Market Handbook — pricing conventions',
+      });
+    }
+  }
+
+
 
   // ── Stage awareness ─────────────────────────────────────────────────────────
   // Pricing-dependent checks cannot be satisfied before the book is closed, so
