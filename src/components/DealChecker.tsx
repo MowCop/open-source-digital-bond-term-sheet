@@ -116,12 +116,12 @@ function aiFieldsToPartialDeal(
 
 // ─── AI Deal Checker logo ─────────────────────────────────────────────────────
 
-function DealCheckerLogo({ className = '' }: { className?: string }) {
+export function DealCheckerLogo({ className = '', size = 56 }: { className?: string; size?: number }) {
   return (
     <div className={`relative inline-flex items-center justify-center ${className}`}>
       <svg
-        width="56"
-        height="56"
+        width={size}
+        height={size}
         viewBox="0 0 56 56"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -515,11 +515,6 @@ export default function DealChecker({
         </div>
 
         <div className="p-3 space-y-2.5">
-          {/* Centered AI Deal Checker logo */}
-          <div className="flex justify-center pt-1 pb-1">
-            <DealCheckerLogo />
-          </div>
-
           {fieldCount === 0 ? (
             <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
               <Shield className="h-8 w-8 mb-2 opacity-20" />

@@ -21,7 +21,7 @@ import { useApp } from '@/context/AppContext';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import DealChecker from '@/components/DealChecker';
+import DealChecker, { DealCheckerLogo } from '@/components/DealChecker';
 import DealCheckFlag from '@/components/DealCheckFlag';
 import DraggablePanel from '@/components/DraggablePanel';
 
@@ -1069,6 +1069,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
               initialWidth={440}
               initialHeight={520}
               className="border border-border"
+              headerCenter={<DealCheckerLogo size={28} />}
               headerActions={
                 <Button size="icon" variant="ghost" className="h-6 w-6" title="Close" onClick={() => setCheckerOpen(false)}>
                   <X className="h-3.5 w-3.5" />

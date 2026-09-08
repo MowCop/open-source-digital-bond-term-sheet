@@ -3,6 +3,8 @@ import { useCallback, useRef, useState, type ReactNode } from 'react';
 interface DraggablePanelProps {
   title: string;
   headerActions?: ReactNode;
+  /** Centered header content, e.g. a logo placed beside the title. */
+  headerCenter?: ReactNode;
   children: ReactNode;
   /** Collapse the body, leaving only the title bar. */
   collapsed?: boolean;
@@ -22,6 +24,7 @@ const MIN_H = 240;
 export default function DraggablePanel({
   title,
   headerActions,
+  headerCenter,
   children,
   collapsed = false,
   initialWidth = 400,
@@ -135,11 +138,16 @@ export default function DraggablePanel({
         onPointerMove={onHeaderPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
-        className={`flex items-center justify-between gap-2 px-3 py-2 shrink-0 border-b border-border/50 bg-muted/40 select-none ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`relative flex items-center justify-between gap-2 px-3 py-2 shrink-0 border-b border-border/50 bg-muted/40 select-none ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       >
         <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">
           {title}
         </span>
+        {headerCenter && (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            {headerCenter}
+          </div>
+        )}
         <div className="flex items-center gap-1">{headerActions}</div>
       </div>
 
