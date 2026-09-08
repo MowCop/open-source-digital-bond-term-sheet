@@ -40,6 +40,8 @@ interface AlertHistoryCardProps {
   versionLabel?: string;
   /** All alert versions for this deal, newest first (for the version dropdown). */
   versions?: Message[];
+  /** Id of the version that should be editable (defaults to the newest version). */
+  editableVersionId?: string;
   isLatest?: boolean;
   editSignal?: number;
   saveSignal?: number;
@@ -82,6 +84,7 @@ export default function AlertHistoryCard({
   readOnly = false,
   versionLabel,
   versions,
+  editableVersionId,
   isLatest = false,
   editSignal = 0,
   saveSignal = 0,
@@ -123,7 +126,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
 
   // Only the latest, non-read-only version is editable. Archive versions and
   // any version selected from the dropdown that is not the newest are view-only.
-  const latestVersionId = versions?.[0]?.id ?? message.id;
+  const latestVersionId = editableVersionId ?? versions?.[0]?.id ?? message.id;
   const canManageLatest = canManageProp && !readOnly;
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [isOpen, setIsOpen] = useState(false);
