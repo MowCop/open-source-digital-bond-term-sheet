@@ -730,8 +730,9 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
       >
 
         {/* Functional icon toolbar */}
-        <div className="relative flex items-end gap-2 pl-5 pr-14 py-2 border-b border-border shrink-0 bg-card/30 overflow-hidden">
-          <BackButtonTooltip label={fullscreen ? 'Back to Issue Board' : 'Back to Main Menu'} onClick={handleBack} />
+        <div className="relative flex items-end justify-between gap-2 pl-5 pr-5 py-2 border-b border-border shrink-0 bg-card/30 overflow-hidden">
+          <div className="flex items-end gap-2 overflow-hidden">
+            <BackButtonTooltip label={fullscreen ? 'Back to Issue Board' : 'Back to Main Menu'} onClick={handleBack} />
 
           <Tooltip>
 
