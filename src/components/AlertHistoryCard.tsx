@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import LinkifiedText from '@/components/LinkifiedText';
 import RichTextEditor from '@/components/RichTextEditor';
 import { isHtml } from '@/lib/htmlText';
-import { format } from 'date-fns';
+import { formatUTCDateTime } from '@/lib/utils';
 import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft, ChevronUp, MessageSquare, BookOpen, Minus, ShieldCheck, Sparkles } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
