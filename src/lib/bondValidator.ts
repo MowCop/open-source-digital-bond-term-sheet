@@ -398,6 +398,65 @@ function checkSpreadYieldImplied(
   return { ok: Math.abs(implied - ry) < 0.05, implied: implied.toFixed(3) + '%' };
 }
 
+// ─── Pricing benchmark ↔ currency convention ─────────────────────────────────
+// EUR/CHF benchmarks price off mid-swaps (MS); USD off US Treasuries (UST/T);
+// GBP off Gilts (UKT/G); JPY off JGBs. Flag a spread quoted off the wrong curve.
+
+const CCY_BENCHMARK: Record<string, { label: string; expect: RegExp; wrong: { re: RegExp; name: string }[] }> = {
+  EUR: {
+    label: 'mid-swaps (MS)',
+    expect: /\b(ms|mid[\s-]?swaps?|m\/s|e|euribor|estr)\b/i,
+    wrong: [
+      { re: /\b(ust|u\.s\.\s*treasur|treasur|t)\s*\+?/i, name: 'US Treasuries (UST)' },
+      { re: /\b(ukt|gilt)\b/i, name: 'Gilts (UKT)' },
+      { re: /\bjgb\b/i, name: 'JGBs' },
+    ],
+  },
+  CHF: {
+    label: 'mid-swaps (MS)',
+    expect: /\b(ms|mid[\s-]?swaps?|saron)\b/i,
+    wrong: [{ re: /\b(ust|treasur)\b/i, name: 'US Treasuries (UST)' }],
+  },
+  USD: {
+    label: 'US Treasuries (UST / T+)',
+    expect: /\b(ust|t|treasur|sofr|cmt)\b/i,
+    wrong: [
+      { re: /\b(ukt|gilt)\b/i, name: 'Gilts (UKT)' },
+      { re: /\bjgb\b/i, name: 'JGBs' },
+    ],
+  },
+  GBP: {
+    label: 'Gilts (UKT) or SONIA',
+    expect: /\b(ukt|gilt|sonia|g)\b/i,
+    wrong: [{ re: /\b(ust|treasur)\b/i, name: 'US Treasuries (UST)' }],
+  },
+  JPY: {
+    label: 'JGBs or TONA',
+    expect: /\b(jgb|tona|yen\s*swap)\b/i,
+    wrong: [{ re: /\b(ust|treasur)\b/i, name: 'US Treasuries (UST)' }],
+  },
+};
+
+function checkBenchmarkCurrency(
+  currency: string | undefined,
+  spread: string | undefined,
+): { ok: boolean; expected?: string; found?: string } {
+  if (!currency || !spread) return { ok: true };
+  const cfg = CCY_BENCHMARK[currency.toUpperCase()];
+  if (!cfg) return { ok: true };
+  const s = spread.trim();
+  if (!s || /^tba$/i.test(s)) return { ok: true };
+  // Purely numeric spreads (e.g. "+65bps") carry no benchmark reference.
+  if (!/[a-z]/i.test(s.replace(/bps?|bp/gi, ''))) return { ok: true };
+  for (const w of cfg.wrong) {
+    if (w.re.test(s) && !cfg.expect.test(s)) {
+      return { ok: false, expected: cfg.label, found: w.name };
+    }
+  }
+  return { ok: true };
+}
+
+
 // ─── Denomination check ───────────────────────────────────────────────────────
 
 function checkDenomination(
