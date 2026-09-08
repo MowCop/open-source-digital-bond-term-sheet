@@ -116,12 +116,12 @@ function aiFieldsToPartialDeal(
 
 // ─── AI Deal Checker logo ─────────────────────────────────────────────────────
 
-function DealCheckerLogo({ className = '' }: { className?: string }) {
+export function DealCheckerLogo({ className = '', size = 56 }: { className?: string; size?: number }) {
   return (
     <div className={`relative inline-flex items-center justify-center ${className}`}>
       <svg
-        width="56"
-        height="56"
+        width={size}
+        height={size}
         viewBox="0 0 56 56"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
