@@ -538,6 +538,8 @@ export function validateDeal(
   deal: Partial<Deal>,
   overrideContext?: OverrideContext,
   stage?: DealStage,
+  /** Optional alert subject + body, scanned for wrong-benchmark pricing wording */
+  alertText?: string,
 ): { results: ValidationResult[]; auditEntries: DealCheckerAuditEntry[] } {
   const results: ValidationResult[] = [];
   const auditEntries: DealCheckerAuditEntry[] = [];
