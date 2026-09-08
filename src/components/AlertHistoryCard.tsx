@@ -891,15 +891,29 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
             )}
           </div>
           )}
+          </div>
           {editDeal && (
-            <div className="absolute left-1/2 bottom-2 -translate-x-1/2 max-w-[50%] truncate text-2xl font-bold text-white tracking-tight pointer-events-none">
-              {editDeal.issuerName}
+            <div className="absolute left-1/2 bottom-2 -translate-x-1/2 h-10 flex items-center max-w-[50%] pointer-events-none">
+              <span className="truncate text-2xl font-bold text-white leading-none tracking-tight">
+                {editDeal.issuerName}
+              </span>
             </div>
           )}
-          <span className="ml-auto flex items-end gap-1.5 text-2xl font-normal text-white whitespace-nowrap">
-            {formatUTCDateTime(activeVersion.updatedAt)}
-            <span className="text-sm font-medium text-white/80 uppercase tracking-wide">UTC</span>
-          </span>
+          <div className="flex items-end gap-2 shrink-0">
+            <span className="h-10 flex items-baseline gap-1.5 text-2xl font-normal text-white whitespace-nowrap leading-none">
+              {formatUTCDateTime(activeVersion.updatedAt)}
+              <span className="text-sm font-medium text-white/80 uppercase tracking-wide leading-none">UTC</span>
+            </span>
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label="Close"
+              className="h-9 w-9 rounded-md border border-border/70 bg-card/60 hover:bg-accent hover:text-foreground hover:border-border"
+              onClick={attemptClose}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Headline */}
