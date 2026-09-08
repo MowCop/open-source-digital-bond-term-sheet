@@ -16,6 +16,7 @@ import DealCheckFlag from '@/components/DealCheckFlag';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction, detectStage } from '@/lib/alertParsing';
 import { stripHtml } from '@/lib/htmlText';
+import { formatUTCDateTime } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
