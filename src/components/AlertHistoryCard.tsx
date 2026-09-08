@@ -126,7 +126,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
 
   // Only the latest, non-read-only version is editable. Archive versions and
   // any version selected from the dropdown that is not the newest are view-only.
-  const latestVersionId = versions?.[0]?.id ?? message.id;
+  const latestVersionId = editableVersionId ?? versions?.[0]?.id ?? message.id;
   const canManageLatest = canManageProp && !readOnly;
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [isOpen, setIsOpen] = useState(false);
