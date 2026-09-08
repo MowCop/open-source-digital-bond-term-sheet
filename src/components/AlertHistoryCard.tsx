@@ -900,7 +900,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
             </div>
           )}
           <div className="flex items-end gap-2 shrink-0">
-            <span className="h-10 flex items-baseline gap-1.5 text-xl md:text-2xl font-normal text-white whitespace-nowrap leading-none">
+            <span className="h-10 flex items-end gap-1.5 text-xl md:text-2xl font-normal text-white whitespace-nowrap leading-none">
               {formatUTCDateTime(activeVersion.updatedAt)}
               <span className="text-xs md:text-sm font-medium text-white/80 uppercase tracking-wide leading-none">UTC</span>
             </span>
