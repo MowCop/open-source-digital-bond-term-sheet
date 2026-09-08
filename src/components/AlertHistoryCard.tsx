@@ -895,8 +895,8 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
               {editDeal.issuerName}
             </div>
           )}
-          <span className="ml-auto text-timestamp text-2xl font-semibold whitespace-nowrap">
-            {format(activeVersion.updatedAt, 'MMM d, hh:mm a')}
+          <span className="ml-auto flex items-baseline gap-1 text-2xl font-bold text-white whitespace-nowrap">
+            {formatUTCDateTime(activeVersion.updatedAt)} <span className="text-xs font-medium text-white/70">UTC</span>
           </span>
         </div>
 
