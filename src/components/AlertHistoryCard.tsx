@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import LinkifiedText from '@/components/LinkifiedText';
 import RichTextEditor from '@/components/RichTextEditor';
 import { isHtml } from '@/lib/htmlText';
-import { format } from 'date-fns';
+import { formatUTCDateTime } from '@/lib/utils';
 import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft, ChevronUp, MessageSquare, BookOpen, Minus, ShieldCheck, Sparkles } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
@@ -501,7 +501,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-timestamp text-xs whitespace-nowrap">
-            {versionLabel ? `${versionLabel} · ` : ''}{format(message.updatedAt, 'MMM d, hh:mm a')}
+            {versionLabel ? `${versionLabel} · ` : ''}{formatUTCDateTime(message.updatedAt)} <span className="text-[9px] text-white/70">UTC</span>
           </span>
           <Badge
             variant={isSent ? 'default' : isDraft ? 'secondary' : 'destructive'}
@@ -895,8 +895,8 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
               {editDeal.issuerName}
             </div>
           )}
-          <span className="ml-auto text-timestamp text-2xl font-semibold whitespace-nowrap">
-            {format(activeVersion.updatedAt, 'MMM d, hh:mm a')}
+          <span className="ml-auto flex items-baseline gap-1 text-2xl font-bold text-white whitespace-nowrap">
+            {formatUTCDateTime(activeVersion.updatedAt)} <span className="text-xs font-medium text-white/70">UTC</span>
           </span>
         </div>
 
@@ -954,7 +954,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
                         <span className="text-xl font-bold uppercase text-sky-300 whitespace-nowrap">{v.label}</span>
                         <span className="truncate text-sm text-amber-300">{v.message.subject}</span>
                         <span className="ml-auto text-base text-timestamp whitespace-nowrap">
-                          {format(v.message.updatedAt, 'MMM d, hh:mm a')}
+                          {formatUTCDateTime(v.message.updatedAt)} <span className="text-[10px] text-white/70">UTC</span>
                         </span>
                       </button>
                     ))}
