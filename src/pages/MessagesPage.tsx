@@ -1061,7 +1061,7 @@ export default function MessagesPage() {
                             </span>
                             <span className="text-sm text-amber-300 truncate">{msg.subject}</span>
                             <span className="ml-auto text-xs text-timestamp whitespace-nowrap">
-                              {format(msg.updatedAt, 'MMM d, hh:mm a')}
+                              {formatUTCDateTime(msg.updatedAt)} <span className="text-[9px] text-white/70">UTC</span>
                             </span>
                           </button>
                         );
