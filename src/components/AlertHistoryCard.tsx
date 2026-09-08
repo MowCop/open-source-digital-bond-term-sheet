@@ -730,7 +730,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
       >
 
         {/* Functional icon toolbar */}
-        <div className="relative flex items-center gap-2 pl-5 pr-14 py-2 border-b border-border shrink-0 bg-card/30 overflow-hidden">
+        <div className="relative flex items-end gap-2 pl-5 pr-14 py-2 border-b border-border shrink-0 bg-card/30 overflow-hidden">
           <BackButtonTooltip label={fullscreen ? 'Back to Issue Board' : 'Back to Main Menu'} onClick={handleBack} />
 
           <Tooltip>
@@ -891,11 +891,11 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
           </div>
           )}
           {editDeal && (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[50%] truncate text-2xl font-bold text-white tracking-tight pointer-events-none">
+            <div className="absolute left-1/2 bottom-2 -translate-x-1/2 max-w-[50%] truncate text-2xl font-bold text-white tracking-tight pointer-events-none">
               {editDeal.issuerName}
             </div>
           )}
-          <span className="ml-auto flex items-baseline gap-1.5 text-2xl font-normal text-white whitespace-nowrap">
+          <span className="ml-auto flex items-end gap-1.5 text-2xl font-normal text-white whitespace-nowrap">
             {formatUTCDateTime(activeVersion.updatedAt)}
             <span className="text-sm font-medium text-white/80 uppercase tracking-wide">UTC</span>
           </span>
