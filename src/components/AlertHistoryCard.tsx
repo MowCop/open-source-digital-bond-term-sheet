@@ -98,6 +98,29 @@ export default function AlertHistoryCard({
   onPostUpdate,
   onDelete,
 }: AlertHistoryCardProps) {
+
+function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Tooltip open={open}>
+      <TooltipTrigger asChild>
+        <Button
+          size="icon"
+          variant="ghost"
+          aria-label={label}
+          className="toolbar-square-btn"
+          onClick={onClick}
+          onMouseEnter={() => setOpen(true)}
+          onMouseLeave={() => setOpen(false)}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
   // Only the latest, non-read-only version is editable. Archive versions and
   // any version selected from the dropdown that is not the newest are view-only.
   const latestVersionId = versions?.[0]?.id ?? message.id;
