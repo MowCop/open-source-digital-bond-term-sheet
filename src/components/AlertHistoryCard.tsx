@@ -862,7 +862,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
           </Tooltip>
 
           {canManage && (
-          <div className="flex items-center gap-2 bg-muted/40 border border-border/60 rounded-md px-2 py-1">
+          <div className="flex items-end gap-2 bg-muted/40 border border-border/60 rounded-md px-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button size="icon" variant="outline" className="toolbar-square-btn toolbar-square-btn-action" onClick={handleSave}>
