@@ -584,7 +584,7 @@ export default function AIDraftPage() {
             value={headline}
             onChange={e => setHeadline(e.target.value)}
             placeholder="Enter Deal/Chat Headline"
-            className="border-0 rounded-lg text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
+            className="border-0 rounded-lg text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50 text-yellow-400"
           />
         </div>
       </div>
