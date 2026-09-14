@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 
 const COLLAPSE_KEY = 'bondvdr.aiDraft.chatOpen';
 const HEIGHT_KEY = 'bondvdr.aiDraft.chatHeight';
-const MIN_HEIGHT = 120;
+const MIN_HEIGHT = 0;
 const DEFAULT_HEIGHT = 192;
 
 interface Props {
