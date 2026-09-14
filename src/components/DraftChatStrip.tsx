@@ -63,9 +63,12 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
     return ids.map(id => users.find(u => u.id === id)).filter(Boolean) as typeof users;
   }, [channel, scpIds, currentUser.id, users]);
 
-  const displayLabel = (headline || '').trim() || 'New Issue Chat';
+  // The chat strip header must always read "New Issue Chat" and not mirror
+  // the bulletin headline, so it stays visible after document drops / AI extraction.
+  const displayLabel = 'New Issue Chat';
 
   const q = scpQuery.trim().toLowerCase();
+
   const scpMatches = q
     ? candidates.filter(u =>
         u.name.toLowerCase().includes(q) ||
