@@ -30,7 +30,7 @@ Add a `/glossary` route and a sidebar entry labelled **Definitions**.
 
 Generate a clean, corporate workflow diagram that matches the Corporate Minimalist direction already in use.
 
-- Nodes: Digital digital term sheet drop-in / Create deal → Digital Term Sheet in VDR → Syndication (chat + blasts, AI parse) → AI Deal Checker → Distribution (email blasts + API/MCP feeds).
+- Nodes: Digital Term Sheet drop-in / Create deal → Digital Term Sheet in VDR → Syndication (chat + blasts, AI parse) → AI Deal Checker → Distribution (email blasts + API/MCP feeds).
 - Style: dark slate background, emerald and gold accents, rounded boxes, subtle depth/shadow.
 - Save to `src/assets/vdr-workflow-diagram.png` and embed it in `README.md` and the glossary page.
 
@@ -38,7 +38,7 @@ Generate a clean, corporate workflow diagram that matches the Corporate Minimali
 
 Use the definitions to audit the current app and close the gaps that are most visible to users. Investigate first, then build.
 
-### 5.1 Digital digital term sheet drop-in at deal creation
+### 5.1 Digital Term Sheet drop-in at deal creation
 - Check whether the create-deal flow accepts a TS file upload (PDF/XML) and auto-populates fields.
 - If missing, add a file drop zone on the create-deal screen, parse the filename/type for now, and store the file reference against the deal.
 
