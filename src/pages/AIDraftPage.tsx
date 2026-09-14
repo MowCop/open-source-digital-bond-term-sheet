@@ -574,16 +574,23 @@ export default function AIDraftPage() {
         <h1 className="text-2xl font-bold">Create New Issue</h1>
       </div>
 
-      <div className="bg-card border border-border rounded-lg">
-        <Input
-          value={headline}
-          onChange={e => setHeadline(e.target.value)}
-          placeholder="Enter Deal/Chat Headline - title will mirror"
-          className="border-0 rounded-lg text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
-        />
+      <div>
+        <label htmlFor="deal-chat-headline" className="block text-sm font-medium text-foreground mb-1.5">
+          Deal/Chat Headline
+        </label>
+        <div className="bg-card border border-border rounded-lg">
+          <Input
+            id="deal-chat-headline"
+            value={headline}
+            onChange={e => setHeadline(e.target.value)}
+            placeholder="Enter Deal/Chat Headline"
+            className="border-0 rounded-lg text-base px-4 py-4 h-auto bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
+          />
+        </div>
       </div>
 
       <DraftChatStrip
+
         draftKey={draftKey}
         headline={headline}
         scpIds={scpIds}
