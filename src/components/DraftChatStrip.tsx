@@ -159,6 +159,8 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
 
   if (!canSend) return null;
 
+  const hasMessages = channelMessages.length > 0;
+
   return (
     <div className="bg-card border border-border rounded-lg">
       {/* Header */}
@@ -167,7 +169,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
         onMouseDown={handleHeaderMouseDown}
         title={open ? 'Drag to resize chat' : undefined}
       >
-        <div className="text-sm font-semibold truncate" title={displayLabel}>
+        <div className="text-sm font-semibold truncate">
           {displayLabel}
         </div>
         <Badge variant="outline" className="text-[10px] shrink-0">Chat</Badge>
@@ -264,32 +266,30 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
             )}
           </div>
 
-          {/* Messages */}
-          <ScrollArea className="px-4">
+          {/* Messages — collapses to a minimal strip when empty */}
+          <ScrollArea className={`transition-all ${hasMessages ? 'px-4' : 'px-4 py-0'}`}>
             <div
               ref={scrollRef}
-              className="py-2 space-y-2 overflow-y-auto"
-              style={{ height: messagesHeight }}
+              className={`space-y-2 overflow-y-auto ${hasMessages ? 'py-2' : 'py-0'}`}
+              style={{ height: hasMessages ? messagesHeight : 0 }}
             >
-              {channelMessages.length === 0 ? null : (
-                channelMessages.map(cm => {
-                  const isMe = cm.senderId === currentUser.id;
-                  return (
-                    <div key={cm.id} className={`flex flex-col text-xs ${isMe ? 'items-end' : 'items-start'}`}>
-                      <div className="text-[10px] text-muted-foreground mb-0.5">
-                        {isMe ? 'You' : cm.senderName} · {format(cm.timestamp, 'HH:mm')}
-                      </div>
-                      <div
-                        className={`max-w-[80%] rounded-md px-2.5 py-1.5 whitespace-pre-wrap break-words ${
-                          isMe ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
-                        }`}
-                      >
-                        {cm.body}
-                      </div>
+              {hasMessages && channelMessages.map(cm => {
+                const isMe = cm.senderId === currentUser.id;
+                return (
+                  <div key={cm.id} className={`flex flex-col text-xs ${isMe ? 'items-end' : 'items-start'}`}>
+                    <div className="text-[10px] text-muted-foreground mb-0.5">
+                      {isMe ? 'You' : cm.senderName} · {format(cm.timestamp, 'HH:mm')}
                     </div>
-                  );
-                })
-              )}
+                    <div
+                      className={`max-w-[80%] rounded-md px-2.5 py-1.5 whitespace-pre-wrap break-words ${
+                        isMe ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
+                      }`}
+                    >
+                      {cm.body}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </ScrollArea>
 
