@@ -302,6 +302,16 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
             </div>
           </ScrollArea>
 
+          {/* Resize grip — drag up/down to size the chat area */}
+          <div
+            onMouseDown={e => startResize(e, true)}
+            onDoubleClick={() => { setEmptyHeight(0); setMessagesHeight(DEFAULT_HEIGHT); }}
+            title="Drag to resize chat"
+            className="group h-2 cursor-ns-resize flex items-center justify-center hover:bg-muted/40"
+          >
+            <div className="h-0.5 w-10 rounded-full bg-border group-hover:bg-primary/60" />
+          </div>
+
           {/* Input */}
           <div className="flex items-center gap-2 p-2 border-t border-border">
             <Input
