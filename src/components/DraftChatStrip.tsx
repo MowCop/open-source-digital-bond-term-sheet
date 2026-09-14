@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 
 const COLLAPSE_KEY = 'bondvdr.aiDraft.chatOpen';
 const HEIGHT_KEY = 'bondvdr.aiDraft.chatHeight';
-const MIN_HEIGHT = 120;
+const MIN_HEIGHT = 0;
 const DEFAULT_HEIGHT = 192;
 
 interface Props {
@@ -47,6 +47,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
       return v && v >= MIN_HEIGHT ? v : DEFAULT_HEIGHT;
     } catch { return DEFAULT_HEIGHT; }
   });
+  const [emptyHeight, setEmptyHeight] = useState<number>(0);
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [scpQuery, setScpQuery] = useState('');
@@ -83,19 +84,18 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
     onPendingMessageChange?.('');
   }, [clearSignal, onPendingMessageChange]);
 
-  const handleHeaderMouseDown = (e: React.MouseEvent) => {
-    // Ignore drags that originate on buttons/inputs inside the header.
-    const target = e.target as HTMLElement;
-    if (target.closest('button, a, input')) return;
+  const startResize = (e: React.MouseEvent, invert = false) => {
     if (!open) return;
     e.preventDefault();
-    dragRef.current = { startY: e.clientY, startH: messagesHeight };
-    const maxH = Math.max(MIN_HEIGHT, Math.round(window.innerHeight * 0.7));
+    const empty = channelMessages.length === 0;
+    const startH = empty ? emptyHeight : messagesHeight;
+    dragRef.current = { startY: e.clientY, startH };
+    const maxH = Math.max(120, Math.round(window.innerHeight * 0.7));
     const onMove = (ev: MouseEvent) => {
       if (!dragRef.current) return;
-      const dy = ev.clientY - dragRef.current.startY;
+      const dy = (ev.clientY - dragRef.current.startY) * (invert ? -1 : 1);
       const next = Math.min(maxH, Math.max(MIN_HEIGHT, dragRef.current.startH + dy));
-      setMessagesHeight(next);
+      if (empty) setEmptyHeight(next); else setMessagesHeight(next);
     };
     const onUp = () => {
       dragRef.current = null;
@@ -103,12 +103,21 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
       window.removeEventListener('mouseup', onUp);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
-      try { setMessagesHeight(h => { localStorage.setItem(HEIGHT_KEY, String(h)); return h; }); } catch { /* ignore */ }
+      if (!empty) {
+        try { setMessagesHeight(h => { localStorage.setItem(HEIGHT_KEY, String(h)); return h; }); } catch { /* ignore */ }
+      }
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
     document.body.style.cursor = 'ns-resize';
     document.body.style.userSelect = 'none';
+  };
+
+  const handleHeaderMouseDown = (e: React.MouseEvent) => {
+    // Ignore drags that originate on buttons/inputs inside the header.
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, input')) return;
+    startResize(e);
   };
 
   // Auto-scroll to bottom when new messages arrive.
@@ -271,7 +280,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
             <div
               ref={scrollRef}
               className={`space-y-2 overflow-y-auto ${hasMessages ? 'py-2' : 'py-0'}`}
-              style={{ height: hasMessages ? messagesHeight : 0 }}
+              style={{ height: hasMessages ? messagesHeight : emptyHeight }}
             >
               {hasMessages && channelMessages.map(cm => {
                 const isMe = cm.senderId === currentUser.id;
@@ -292,6 +301,16 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
               })}
             </div>
           </ScrollArea>
+
+          {/* Resize grip — drag up/down to size the chat area */}
+          <div
+            onMouseDown={e => startResize(e, true)}
+            onDoubleClick={() => { setEmptyHeight(0); setMessagesHeight(DEFAULT_HEIGHT); }}
+            title="Drag to resize chat"
+            className="group h-2 cursor-ns-resize flex items-center justify-center hover:bg-muted/40"
+          >
+            <div className="h-0.5 w-10 rounded-full bg-border group-hover:bg-primary/60" />
+          </div>
 
           {/* Input */}
           <div className="flex items-center gap-2 p-2 border-t border-border">
