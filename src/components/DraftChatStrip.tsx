@@ -84,19 +84,18 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
     onPendingMessageChange?.('');
   }, [clearSignal, onPendingMessageChange]);
 
-  const handleHeaderMouseDown = (e: React.MouseEvent) => {
-    // Ignore drags that originate on buttons/inputs inside the header.
-    const target = e.target as HTMLElement;
-    if (target.closest('button, a, input')) return;
+  const startResize = (e: React.MouseEvent, invert = false) => {
     if (!open) return;
     e.preventDefault();
-    dragRef.current = { startY: e.clientY, startH: messagesHeight };
-    const maxH = Math.max(MIN_HEIGHT, Math.round(window.innerHeight * 0.7));
+    const empty = channelMessages.length === 0;
+    const startH = empty ? emptyHeight : messagesHeight;
+    dragRef.current = { startY: e.clientY, startH };
+    const maxH = Math.max(120, Math.round(window.innerHeight * 0.7));
     const onMove = (ev: MouseEvent) => {
       if (!dragRef.current) return;
-      const dy = ev.clientY - dragRef.current.startY;
+      const dy = (ev.clientY - dragRef.current.startY) * (invert ? -1 : 1);
       const next = Math.min(maxH, Math.max(MIN_HEIGHT, dragRef.current.startH + dy));
-      setMessagesHeight(next);
+      if (empty) setEmptyHeight(next); else setMessagesHeight(next);
     };
     const onUp = () => {
       dragRef.current = null;
@@ -104,12 +103,21 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
       window.removeEventListener('mouseup', onUp);
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
-      try { setMessagesHeight(h => { localStorage.setItem(HEIGHT_KEY, String(h)); return h; }); } catch { /* ignore */ }
+      if (!empty) {
+        try { setMessagesHeight(h => { localStorage.setItem(HEIGHT_KEY, String(h)); return h; }); } catch { /* ignore */ }
+      }
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
     document.body.style.cursor = 'ns-resize';
     document.body.style.userSelect = 'none';
+  };
+
+  const handleHeaderMouseDown = (e: React.MouseEvent) => {
+    // Ignore drags that originate on buttons/inputs inside the header.
+    const target = e.target as HTMLElement;
+    if (target.closest('button, a, input')) return;
+    startResize(e);
   };
 
   // Auto-scroll to bottom when new messages arrive.
