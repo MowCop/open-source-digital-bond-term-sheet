@@ -289,7 +289,7 @@ export default function DealsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Termsheet Data</h1>
+          <h1 className="text-2xl font-bold">Digital Term Sheet</h1>
           <p className="text-muted-foreground text-sm">Track bond deals from Mandate to Settled · ICMA Bond Data Taxonomy aligned</p>
         </div>
         {canManageDeals && (
@@ -597,7 +597,7 @@ function GenerateBulletinDialog({
         </DialogHeader>
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
-            <Loader2 className="h-4 w-4 animate-spin" /> Drafting bulletin from Termsheet Data…
+            <Loader2 className="h-4 w-4 animate-spin" /> Drafting bulletin from Digital Term Sheet…
           </div>
         ) : error ? (
           <div className="text-sm text-destructive py-6">{error}</div>
