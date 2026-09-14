@@ -1,12 +1,12 @@
 # NewIssueVault — Virtual Deal Room (VDR)
 
-NewIssueVault is a Virtual Deal Room for new bond issues. It provides digital synchronisation of the Term Sheet with internal and external stakeholders, augmented with the option to use AI.
+NewIssueVault is a Virtual Deal Room for new bond issues. It provides digital synchronisation of the Digital Term Sheet with internal and external stakeholders, augmented with the option to use AI.
 
-## Definitions — The Term Sheet
+## Definitions — The Digital Term Sheet
 
-The Term Sheet (TS) is what evolves during bond syndication. It is the ultimate source of truth and where a bond's formal life begins.
+The Digital Term Sheet (TS) is what evolves during bond syndication. It is the ultimate source of truth and where a bond's formal life begins.
 
-- A bond's schema, data fields and legal framework are collectively called the "terms", and these are produced on a term sheet (TS).
+- A bond's schema, data fields and legal framework are collectively called the "terms", and these are produced on a digital term sheet (TS).
 - The TS can be a physical document (e.g. PDF) or a digital file (e.g. XML).
 - Lawyers and Bank Syndicates / DCM are the main players in providing information to build the TS.
 
@@ -16,7 +16,7 @@ The Term Sheet (TS) is what evolves during bond syndication. It is the ultimate 
 - Builds and sends deal update blasts to external email recipients — including Bloomberg recipients.
 - Connects with external APIs / MCPs to feed real-time data as deals progress.
 
-## Term sheet options
+## Digital digital term sheet options
 
 - The TS can be dropped into the VDR at the start of the process — the VDR self-populates the terms.
 - If no TS is available, one can be built from scratch in the VDR (create deal).
@@ -42,13 +42,13 @@ The AI Deal Checker runs in the background, applying compliance rules and bond s
 ## Workflow at a glance
 
 ```text
-  Term sheet dropped in            No term sheet
+  Digital digital term sheet dropped in            No digital term sheet
   (VDR self-populates)             (create deal in VDR)
              \                         /
               \                       /
                v                     v
             ┌──────────────────────────────┐
-            │   Term Sheet in the VDR      │
+            │   Digital Term Sheet in the VDR      │
             │   (source of truth)          │
             └──────────────┬───────────────┘
                            │  updated manually or by AI parse
