@@ -27,7 +27,7 @@ Rules:
 - "subject" = a short headline like "Kingdom of Nania USD 1.5bn 10Y Priced at MS+72" (use only fields present; never invent numbers).
 - "body" = HTML string with TWO sections in this order:
     1. <h3>Announcement</h3> followed by 2-4 short <p> paragraphs of bulletin prose covering: issuer + rating, size/tenor/coupon, pricing summary (reoffer spread/yield/price, mid-swap), listing, governing law, bookrunners (mark the GC).
-    2. <h3>Term Sheet</h3> followed by <table> grouped logically (Party/Issuer, Issuance, Product). One <tr> per populated field with <th> label and <td> value. SKIP rows where the value is empty, missing, or "TBA".
+    2. <h3>Digital Term Sheet</h3> followed by <table> grouped logically (Party/Issuer, Issuance, Product). One <tr> per populated field with <th> label and <td> value. SKIP rows where the value is empty, missing, or "TBA".
 - Use <strong> for the GC bookrunner. Do not invent or guess values. No markdown, no commentary, no code fences.`;
 
 Deno.serve(async (req) => {

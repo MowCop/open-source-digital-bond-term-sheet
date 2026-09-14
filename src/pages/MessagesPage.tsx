@@ -240,7 +240,7 @@ export default function MessagesPage() {
     retracted: alertGroups.filter(g => g.publishStatus === 'retracted').length,
   };
 
-  // Auto-expand deal when arriving from Termsheet Data panel via ?dealId=
+  // Auto-expand deal when arriving from Digital Term Sheet panel via ?dealId=
   useEffect(() => {
     const dealId = searchParams.get('dealId');
     if (!dealId) return;
