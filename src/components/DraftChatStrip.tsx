@@ -129,17 +129,8 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
     if (el) el.scrollTop = el.scrollHeight;
   }, [channelMessages.length]);
 
-  // Debounced rename when the headline changes and a channel exists.
-  useEffect(() => {
-    if (!channelId) return;
-    const t = window.setTimeout(() => {
-      renameChatChannel(channelId, displayLabel);
-    }, 250);
-    return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayLabel, channelId]);
-
   // Sync participants when SCP list changes and a channel exists.
+
   useEffect(() => {
     if (!channelId) return;
     updateChatChannelParticipants(channelId, scpIds);
