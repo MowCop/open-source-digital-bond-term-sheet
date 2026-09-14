@@ -47,6 +47,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
       return v && v >= MIN_HEIGHT ? v : DEFAULT_HEIGHT;
     } catch { return DEFAULT_HEIGHT; }
   });
+  const [emptyHeight, setEmptyHeight] = useState<number>(0);
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [scpQuery, setScpQuery] = useState('');
