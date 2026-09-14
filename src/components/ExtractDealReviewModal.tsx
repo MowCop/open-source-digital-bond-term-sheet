@@ -198,7 +198,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
     const margin = 40;
     let y = margin;
     doc.setFontSize(14);
-    doc.text('AI Termsheet Data Extraction — Review', margin, y); y += 18;
+    doc.text('AI Digital Term Sheet Extraction — Review', margin, y); y += 18;
     doc.setFontSize(9);
     doc.text(`Source: ${conversationLabel || 'chat'}`, margin, y); y += 12;
     doc.text(`Overall confidence: ${Math.round(extraction.confidence * 100)}%`, margin, y); y += 12;
@@ -301,7 +301,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
         userId: currentUser.id,
         details: `Created deal from chat extraction (${conversationLabel}). Confidence ${(extraction.confidence * 100).toFixed(0)}%.`,
       });
-      toast({ title: 'Deal created', description: `${issuerName} — review in Termsheet Data.` });
+      toast({ title: 'Deal created', description: `${issuerName} — review in Digital Term Sheet.` });
     } else if (existingDeal) {
       if (Object.keys(patch).length > 0) {
         updateDeal(existingDeal.id, patch);
@@ -331,7 +331,7 @@ export default function ExtractDealReviewModal({ open, onOpenChange, extraction,
         <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-accent" />
-            AI Termsheet Data Extraction — Review
+            AI Digital Term Sheet Extraction — Review
           </DialogTitle>
           <DialogDescription>
             From <span className="font-medium">{conversationLabel || 'chat'}</span>. Confidence{' '}
