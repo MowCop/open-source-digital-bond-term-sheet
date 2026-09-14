@@ -280,7 +280,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
             <div
               ref={scrollRef}
               className={`space-y-2 overflow-y-auto ${hasMessages ? 'py-2' : 'py-0'}`}
-              style={{ height: hasMessages ? messagesHeight : 0 }}
+              style={{ height: hasMessages ? messagesHeight : emptyHeight }}
             >
               {hasMessages && channelMessages.map(cm => {
                 const isMe = cm.senderId === currentUser.id;
