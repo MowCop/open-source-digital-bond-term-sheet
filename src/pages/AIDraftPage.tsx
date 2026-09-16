@@ -25,6 +25,34 @@ import FieldDiffDialog, { buildDiffRows } from '@/components/FieldDiffDialog';
 // - 'onSave' = run AI on every document drop + on explicit Save/Send  (default)
 // - 'manual' = only run AI when the user clicks "Run AI extraction"
 export type AITriggerMode = 'live' | 'onSave' | 'manual';
+
+/**
+ * Mini Digital Term Sheet schema shown in the right-hand panel of Create New
+ * Issue. Rendered blank until AI extraction (document drop / Run AI / Save)
+ * populates the matching keys in `aiFields` — the same layout the full
+ * Digital Term Sheet uses.
+ */
+const MINI_TERM_SHEET_SECTIONS: { title: string; fields: string[] }[] = [
+  {
+    title: 'Party',
+    fields: ['Issuer Name', 'Issuer Rating', 'LEI'],
+  },
+  {
+    title: 'Issuance',
+    fields: [
+      'Currency', 'Size', 'Tenor', 'Coupon', 'Issue Price',
+      'Reoffer Price', 'Reoffer Yield', 'Reoffer Spread', 'Mid-Swap Rate',
+    ],
+  },
+  {
+    title: 'Product',
+    fields: [
+      'ISIN', 'Interest Type', 'Day Count', 'Denomination',
+      'Pricing Date', 'Settlement Date', 'Maturity Date',
+      'Governing Law', 'Listing',
+    ],
+  },
+];
 export const AI_TRIGGER_MODE_KEY = 'bondvdr.ai.triggerMode';
 export function getAITriggerMode(): AITriggerMode {
   if (typeof window === 'undefined') return 'onSave';
@@ -740,14 +768,14 @@ export default function AIDraftPage() {
 
         {/* Right: AI extraction + Distribution */}
         <div className="space-y-4">
-          {/* AI Field Extraction */}
+          {/* Digital Term Sheet (mini) — filled by AI Field Extraction */}
           <div className="text-sm font-bold mb-1.5 pl-4 invisible" aria-hidden="true">
-            AI Field Extraction
+            Digital Term Sheet
           </div>
           <div className="bg-card border border-border rounded-lg !mt-0">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
               <Sparkles className="h-4 w-4 text-accent" />
-              <span className="font-semibold text-sm">AI Field Extraction</span>
+              <span className="font-semibold text-sm">Digital Term Sheet</span>
               {aiFields && (
                 <Badge variant="outline" className="ml-auto text-[10px]">
                   {(aiConfidence * 100).toFixed(0)}%
@@ -813,38 +841,50 @@ export default function AIDraftPage() {
                 </div>
               </div>
             )}
-            <div className="p-4">
-              {aiFields ? (
-                <div className="space-y-2">
-                  {Object.entries(aiFields).map(([key, value]) => (
-                    value ? (
-                      <div key={key} className="flex items-center gap-2 text-xs">
-                        <span className="text-muted-foreground w-24 shrink-0">{key}</span>
-                        <span className="text-foreground font-medium">{value}</span>
+            <div className="p-4 space-y-3">
+              {MINI_TERM_SHEET_SECTIONS.map(section => (
+                <div key={section.title} className="space-y-1">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-border/60 pb-1">
+                    {section.title}
+                  </div>
+                  {section.fields.map(key => {
+                    const value = (aiFields?.[key] ?? '').trim();
+                    return (
+                      <div key={key} className="flex items-baseline gap-2 text-xs">
+                        <span className="text-muted-foreground w-28 shrink-0 truncate">{key}</span>
+                        {value ? (
+                          <span className="text-foreground font-medium truncate" title={value}>{value}</span>
+                        ) : (
+                          <span className="flex-1 border-b border-dashed border-border/60 translate-y-[-2px]" aria-hidden="true" />
+                        )}
                       </div>
-                    ) : null
-                  ))}
-                  {aiBookrunners.length > 0 && (
-                    <div className="flex items-start gap-2 text-xs pt-2 border-t border-border">
-                      <span className="text-muted-foreground w-24 shrink-0 mt-1">Bookrunners</span>
-                      <div className="flex flex-wrap gap-1">
-                        {aiBookrunners.map(b => (
-                          <Badge key={b.name} variant="secondary" className="text-[10px]">
-                            {b.name}{b.isGlobalCoordinator ? ' (GC)' : ''}{b.role === 'passive' ? ' (P)' : ''}
-                          </Badge>
-                        ))}
-                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+              <div className="space-y-1">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-border/60 pb-1">
+                  Syndicate
+                </div>
+                <div className="flex items-baseline gap-2 text-xs">
+                  <span className="text-muted-foreground w-28 shrink-0">Bookrunners</span>
+                  {aiBookrunners.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {aiBookrunners.map(b => (
+                        <Badge key={b.name} variant="secondary" className="text-[10px]">
+                          {b.name}{b.isGlobalCoordinator ? ' (GC)' : ''}{b.role === 'passive' ? ' (P)' : ''}
+                        </Badge>
+                      ))}
                     </div>
-                  )}
-                  {Object.values(aiFields).every(v => !v) && aiBookrunners.length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-4">No fields detected yet.</p>
+                  ) : (
+                    <span className="flex-1 border-b border-dashed border-border/60 translate-y-[-2px]" aria-hidden="true" />
                   )}
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-                  <Sparkles className="h-10 w-10 mb-3 opacity-20" />
-                  <p className="text-xs text-center">Start typing a headline or message body to auto-extract deal fields.</p>
-                </div>
+              </div>
+              {!aiFields && (
+                <p className="text-[11px] text-muted-foreground text-center pt-2">
+                  Drop a document into the New Issue Bulletin — AI extraction fills this Digital Term Sheet.
+                </p>
               )}
             </div>
           </div>
