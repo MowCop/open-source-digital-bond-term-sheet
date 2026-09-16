@@ -252,10 +252,19 @@ export default function AIDraftPage() {
     if (opts?.skipAI) return;
 
     // 2) Call Lovable AI for a richer, more accurate extraction; merge over the baseline.
+    // Strip embedded base64/data blobs and cap length — the edge function rejects >200k chars.
+    const AI_MAX_CHARS = 150_000;
+    const forAI = clean
+      .replace(/data:[a-z0-9.+-]+\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=\s]+/gi, ' ')
+      .replace(/[A-Za-z0-9+/]{500,}={0,2}/g, ' ')
+      .replace(/[ \t]{2,}/g, ' ')
+      .trim()
+      .slice(0, AI_MAX_CHARS);
     try {
       const { data, error } = await supabase.functions.invoke('extract-deal-fields-ai', {
-        body: { text: clean },
+        body: { text: forAI },
       });
+
       if (error) throw error;
       if (data && typeof data === 'object' && 'keyTerms' in data) {
         const aiKeyTerms = (data as any).keyTerms as Record<string, string>;
