@@ -25,6 +25,34 @@ import FieldDiffDialog, { buildDiffRows } from '@/components/FieldDiffDialog';
 // - 'onSave' = run AI on every document drop + on explicit Save/Send  (default)
 // - 'manual' = only run AI when the user clicks "Run AI extraction"
 export type AITriggerMode = 'live' | 'onSave' | 'manual';
+
+/**
+ * Mini Digital Term Sheet schema shown in the right-hand panel of Create New
+ * Issue. Rendered blank until AI extraction (document drop / Run AI / Save)
+ * populates the matching keys in `aiFields` — the same layout the full
+ * Digital Term Sheet uses.
+ */
+const MINI_TERM_SHEET_SECTIONS: { title: string; fields: string[] }[] = [
+  {
+    title: 'Party',
+    fields: ['Issuer Name', 'Issuer Rating', 'LEI'],
+  },
+  {
+    title: 'Issuance',
+    fields: [
+      'Currency', 'Size', 'Tenor', 'Coupon', 'Issue Price',
+      'Reoffer Price', 'Reoffer Yield', 'Reoffer Spread', 'Mid-Swap Rate',
+    ],
+  },
+  {
+    title: 'Product',
+    fields: [
+      'ISIN', 'Interest Type', 'Day Count', 'Denomination',
+      'Pricing Date', 'Settlement Date', 'Maturity Date',
+      'Governing Law', 'Listing',
+    ],
+  },
+];
 export const AI_TRIGGER_MODE_KEY = 'bondvdr.ai.triggerMode';
 export function getAITriggerMode(): AITriggerMode {
   if (typeof window === 'undefined') return 'onSave';
