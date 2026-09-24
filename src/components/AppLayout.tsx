@@ -1,11 +1,13 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut, Settings } from 'lucide-react';
+import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut, Settings, Menu } from 'lucide-react';
+import { useState } from 'react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { RoleBadge } from '@/components/RoleBadge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import GlobalSearch from '@/components/GlobalSearch';
 
 const navItems = [
@@ -21,6 +23,7 @@ const navItems = [
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, setCurrentUser, users, notifications, markNotificationRead } = useApp();
@@ -43,7 +46,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-60 bg-sidebar text-sidebar-foreground flex flex-col shrink-0">
+      <aside className="hidden w-60 bg-sidebar text-sidebar-foreground md:flex flex-col shrink-0">
         <div className="flex items-center border-b border-sidebar-border px-4 pt-[72px] pb-4">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 rounded-sm shrink-0">
@@ -117,12 +120,57 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
       {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-12 border-b flex items-center justify-between px-4 bg-card shrink-0">
-          <div className="flex-1 max-w-xl">
+      <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
+        <header className="h-12 border-b flex items-center justify-between gap-2 px-2 sm:px-4 bg-card shrink-0">
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 shrink-0" aria-label="Open navigation menu">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[min(86vw,20rem)] bg-sidebar text-sidebar-foreground border-sidebar-border p-0 flex flex-col gap-0">
+              <SheetHeader className="border-b border-sidebar-border px-4 py-5 text-left">
+                <SheetTitle className="flex items-center gap-2 text-sidebar-foreground">
+                  <span className="flex items-center justify-center w-8 h-8 bg-emerald-500 rounded-sm shrink-0" aria-hidden="true">
+                    <span className="w-3.5 h-3.5 bg-sidebar rotate-45" />
+                  </span>
+                  <span><strong>Virtual</strong> <span className="text-sidebar-foreground/70 font-normal">Deal Room</span></span>
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="flex-1 overflow-y-auto p-2 pt-4 space-y-1">
+                {visibleNav.map(item => {
+                  const isActive = location.pathname === item.path;
+                  const Icon = item.icon;
+                  const visible = item.masterOnly ? isMaster : item.adminOnly ? isAdmin : true;
+                  if (!visible) return null;
+                  return (
+                    <SheetClose asChild key={item.path}>
+                      <Link
+                        to={item.path}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-md text-sm text-sidebar-foreground transition-colors ${isActive ? 'bg-sidebar-accent font-bold' : 'hover:bg-sidebar-accent/50'}`}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" />
+                        {item.label}
+                      </Link>
+                    </SheetClose>
+                  );
+                })}
+              </nav>
+              <div className="p-3 border-t border-sidebar-border">
+                <div className="mb-2 text-xs text-sidebar-foreground/70">
+                  <div className="font-medium text-sidebar-foreground">{guest ? (guest.name || guest.email) : (profileName || currentUser.name)}</div>
+                  <div>{guest ? 'Guest · read-only' : currentUser.organization}</div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={signOut} className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent">
+                  <LogOut className="h-4 w-4 mr-2" /> Log out
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+          <div className="min-w-0 flex-1 max-w-xl">
             <GlobalSearch />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
               type="button"
               onClick={handleBellClick}
@@ -135,10 +183,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-destructive">{unreadCount}</Badge>
               )}
             </button>
-            <Badge variant="outline" className="text-xs">{currentUser.organization}</Badge>
+            <Badge variant="outline" className="hidden sm:inline-flex text-xs">{currentUser.organization}</Badge>
           </div>
         </header>
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="min-w-0 flex-1 overflow-auto p-3 sm:p-6">{children}</main>
       </div>
     </div>
   );
