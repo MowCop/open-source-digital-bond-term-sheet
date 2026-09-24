@@ -831,9 +831,9 @@ export default function MessagesPage() {
   return (
     <div className="space-y-2">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">New Issue Board</h1>
-        <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold whitespace-nowrap">New Issue Board</h1>
+        <div className="flex w-full min-w-0 items-center gap-2 overflow-x-auto pb-1 sm:w-auto sm:gap-3 sm:flex-wrap sm:overflow-visible sm:pb-0">
           {canManageMessages && (
               <Button
                 onClick={() => navigate('/ai-draft')}
@@ -844,7 +844,7 @@ export default function MessagesPage() {
               </Button>
             )}
             {/* Publish status filter — primary partition between Pre-Published and Published */}
-            <div className="flex items-center gap-1 bg-card rounded-lg p-1 border border-border">
+            <div className="flex shrink-0 items-center gap-1 bg-card rounded-lg p-1 border border-border">
               {(['all', 'pre_published', 'published', 'retracted'] as const).map(s => {
                 const labels = {
                   all: 'All',
@@ -873,7 +873,7 @@ export default function MessagesPage() {
               })}
             </div>
             {/* Stage filter — secondary */}
-            <div className="flex items-center gap-1 bg-card rounded-lg p-1 border border-border">
+            <div className="flex shrink-0 items-center gap-1 bg-card rounded-lg p-1 border border-border">
               {['all', 'Pipeline', 'Priced'].map(s => (
                 <button
                   key={s}
@@ -893,7 +893,7 @@ export default function MessagesPage() {
         <div>
           {/* Table header */}
 
-          <div className="grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
+          <div className="grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-1 sm:px-4 py-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground border-b border-border">
             <div></div>
             <div className="min-w-[28px]"></div>
             <div className="pr-2"></div>
@@ -918,7 +918,7 @@ export default function MessagesPage() {
                     role="button"
                     tabIndex={0}
                     aria-label={`Open deal ${group.borrower}: ${group.headline}`}
-                    className={`grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
+                    className={`grid grid-cols-[min-content_min-content_min-content_min-content_minmax(0,1fr)_auto] gap-0 px-1 sm:px-4 py-3 items-center cursor-pointer transition-colors hover:bg-amber-500/10 hover:ring-1 hover:ring-inset hover:ring-amber-400/50 ${group.publishStatus === 'pre_published' ? 'border-l-2 border-l-amber-500/60' : group.publishStatus === 'published' ? 'border-l-2 border-l-green-500/60' : 'border-l-2 border-l-transparent'}`}
                     onClick={(e) => {
                       returnFocusRef.current = e.currentTarget as HTMLElement;
                       openOverlay(group, false);
@@ -932,10 +932,10 @@ export default function MessagesPage() {
                       openOverlay(group, false);
                     }}
                   >
-                    <div className="text-timestamp text-sm whitespace-nowrap">
+                    <div className="text-timestamp text-xs sm:text-sm whitespace-nowrap">
                       {format(group.latestMessage.updatedAt, 'MMM d')}
                     </div>
-                    <div className="flex items-center justify-center min-w-[28px]">
+                    <div className="hidden sm:flex items-center justify-center min-w-[28px]">
                       <button
                         type="button"
                         title={isExpanded ? 'Collapse inline preview' : 'Expand inline preview'}
@@ -950,7 +950,7 @@ export default function MessagesPage() {
                         )}
                       </button>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 px-1 sm:px-0">
                       <span
                         className={`h-2.5 w-2.5 rounded-full ${pubBadge.dot}`}
                         title={pubBadge.label}
@@ -986,7 +986,7 @@ export default function MessagesPage() {
                         );
                       })()}
                     </div>
-                    <div className="text-sm text-primary font-semibold truncate relative px-1">
+                    <div className="min-w-0 text-sm text-primary font-semibold truncate relative px-1">
                       <span
                         className={canManageMessages ? 'cursor-text hover:bg-background/50 rounded px-1 -mx-1' : ''}
                         title={canManageMessages ? 'Click to edit' : ''}
@@ -995,7 +995,7 @@ export default function MessagesPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-end gap-1 pr-1 min-w-0">
-                      <Badge className={`text-[10px] border shrink-0 ${badge.className}`}>
+                      <Badge className={`hidden sm:inline-flex text-[10px] border shrink-0 ${badge.className}`}>
                         {badge.label}
                       </Badge>
                       {isExpanded && canManageMessages && group.latestMessage.status !== 'retracted' && (
