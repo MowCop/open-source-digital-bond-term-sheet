@@ -112,6 +112,7 @@ export type Database = {
       }
       deals: {
         Row: {
+          benchmark: string | null
           bookrunners: Json
           business_day_convention: string | null
           common_code: string | null
@@ -124,10 +125,12 @@ export type Database = {
           extraction_snapshot: Json | null
           form_of_note: string | null
           governing_law: string | null
+          guidance: string | null
           id: string
           interest_payment_frequency: string | null
           interest_rate: string | null
           interest_type: string | null
+          ipt: string | null
           isin: string | null
           issuance_type: string | null
           issue_date: string | null
@@ -141,6 +144,7 @@ export type Database = {
           optionality: string | null
           pricing_date: string | null
           rating_outlook: string | null
+          reference_rate: string | null
           reoffer_price: string | null
           reoffer_spread: string | null
           reoffer_yield: string | null
@@ -156,6 +160,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          benchmark?: string | null
           bookrunners?: Json
           business_day_convention?: string | null
           common_code?: string | null
@@ -168,10 +173,12 @@ export type Database = {
           extraction_snapshot?: Json | null
           form_of_note?: string | null
           governing_law?: string | null
+          guidance?: string | null
           id: string
           interest_payment_frequency?: string | null
           interest_rate?: string | null
           interest_type?: string | null
+          ipt?: string | null
           isin?: string | null
           issuance_type?: string | null
           issue_date?: string | null
@@ -185,6 +192,7 @@ export type Database = {
           optionality?: string | null
           pricing_date?: string | null
           rating_outlook?: string | null
+          reference_rate?: string | null
           reoffer_price?: string | null
           reoffer_spread?: string | null
           reoffer_yield?: string | null
@@ -200,6 +208,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          benchmark?: string | null
           bookrunners?: Json
           business_day_convention?: string | null
           common_code?: string | null
@@ -212,10 +221,12 @@ export type Database = {
           extraction_snapshot?: Json | null
           form_of_note?: string | null
           governing_law?: string | null
+          guidance?: string | null
           id?: string
           interest_payment_frequency?: string | null
           interest_rate?: string | null
           interest_type?: string | null
+          ipt?: string | null
           isin?: string | null
           issuance_type?: string | null
           issue_date?: string | null
@@ -229,6 +240,7 @@ export type Database = {
           optionality?: string | null
           pricing_date?: string | null
           rating_outlook?: string | null
+          reference_rate?: string | null
           reoffer_price?: string | null
           reoffer_spread?: string | null
           reoffer_yield?: string | null

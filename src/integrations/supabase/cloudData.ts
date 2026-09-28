@@ -91,6 +91,7 @@ const dealFieldMap: Record<string, string> = {
   interestPaymentFrequency: 'interest_payment_frequency',
   dayCountFraction: 'day_count_fraction', businessDayConvention: 'business_day_convention',
   optionality: 'optionality', taxonomy: 'taxonomy',
+  ipt: 'ipt', guidance: 'guidance', benchmark: 'benchmark', referenceRate: 'reference_rate',
   createdByOrg: 'created_by_org',
   extractionSnapshot: 'extraction_snapshot',
 };

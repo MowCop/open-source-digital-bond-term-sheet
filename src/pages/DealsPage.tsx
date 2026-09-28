@@ -20,6 +20,8 @@ import { supabase } from '@/integrations/supabase/client';
 import DealChecker from '@/components/DealChecker';
 import DealCheckFlag from '@/components/DealCheckFlag';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import TermSheetFill from '@/components/termsheet/TermSheetFill';
 
 const STAGES: DealStage[] = ['Mandate', 'Announced', 'Launched', 'Books Open', 'Books Closed', 'Priced', 'Settled'];
 const stageColors: Record<string, string> = {
@@ -49,9 +51,10 @@ interface DealDetailProps {
   fromBoard?: boolean;
   hasBulletin: boolean;
   onGenerateBulletin: () => void;
+  onSaveFields: (patch: Partial<Deal>) => void;
 }
 
-function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGenerateBulletin, currentUser, onCheckerAudit }: DealDetailProps) {
+function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGenerateBulletin, currentUser, onCheckerAudit, onSaveFields }: DealDetailProps) {
   const [stageNote, setStageNote] = useState('');
   const next = getNextStage(deal.stage);
   const navigate = useNavigate();
@@ -99,7 +102,16 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <Tabs defaultValue="view">
+        <TabsList>
+          <TabsTrigger value="view">View</TabsTrigger>
+          <TabsTrigger value="fill">Fill</TabsTrigger>
+        </TabsList>
+        <TabsContent value="fill" className="mt-4">
+          <TermSheetFill deal={deal} canEdit={canManage} onSave={onSaveFields} />
+        </TabsContent>
+        <TabsContent value="view" className="mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Party / Issuer */}
         <div className="space-y-2">
           <h3 className="font-medium text-sm border-b pb-1">Party / Issuer</h3>
@@ -167,6 +179,8 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
           </div>
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
 
       {/* AI Deal Checker — live, runs through to pricing */}
       <DealChecker
@@ -201,7 +215,7 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
 }
 
 export default function DealsPage() {
-  const { deals, messages, createDeal, updateDealStage, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser, addAuditEntry } = useScopedApp();
+  const { deals, messages, createDeal, updateDeal, updateDealStage, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser, addAuditEntry } = useScopedApp();
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -504,6 +518,16 @@ export default function DealsPage() {
                     fromBoard={!!searchParams.get('dealId')}
                     hasBulletin={bulletinByDeal.has(deal.id)}
                     onGenerateBulletin={() => setBulletinDealId(deal.id)}
+                    onSaveFields={(patch) => {
+                      updateDeal(deal.id, { ...patch, updatedAt: new Date() });
+                      addAuditEntry({
+                        action: 'deal_termsheet_updated',
+                        entityType: 'deal',
+                        entityId: deal.id,
+                        userId: currentUser.id,
+                        details: `Digital Term Sheet updated: ${Object.keys(patch).join(', ')}`,
+                      });
+                    }}
                     currentUser={currentUser}
                     onCheckerAudit={(entries) =>
                       entries.forEach((e) =>
