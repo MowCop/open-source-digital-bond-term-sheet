@@ -1,29 +1,57 @@
-# Bring the Claude "VDR Digital Term Sheet" (Draft 3) into the app
+# Upgrade the Digital Term Sheet with a "Fill" view
 
 ## Goal
-Make Claude's Draft 3 Digital Term Sheet usable inside Virtual Deal Room now, following Claude's "quickest route": embed the file as-is. The existing Digital Term Sheet list stays untouched.
+Bring the Fill part of Claude's Draft 3 term sheet into the existing Digital Term Sheet page. It should look like the rest of the Virtual Deal Room (same dark panels, fonts, badges, orange/green accents), not like Claude's layout. The fields a syndicate desk uses most during execution come first. Everything else stays one click away.
 
-## What you will see
-- A new **Term Sheet Builder** entry in the side menu, directly under Digital Term Sheet.
-- It opens the Draft 3 screen inside the app: the Fill tab with collapsed sections, "Show N optional fields" links, the document drop zone, and the Accept/Ignore review panel.
-- A **Download** button that saves real files (XML/JSON) to your computer instead of copying them to the clipboard.
-- A light/dark look that matches the rest of the app.
+## What you will see on each deal
+Each expanded deal gets two tabs: **View** (today's read-only layout, unchanged) and **Fill** (new, for editing).
 
-## Steps
-1. Copy the uploaded HTML into the app's public files as `termsheet.html`, unchanged apart from the fixes below.
-2. Fix the three things Claude said behave differently outside Claude:
-   - Downloads: replace the Claude-only download call with a normal browser file download.
-   - Drafts: keep saving in the browser for now (as it does today); saving drafts to each deal record is in "Later" below.
-   - PDF/Word readers: keep loading them from the public CDN (works as-is).
-3. Add a `/term-sheet-builder` page that shows the file full-height inside the normal app frame (menu and header stay visible, and it works on iPhone too).
-4. Add the menu item to the desktop sidebar and the mobile drawer.
+The Fill tab has three layers:
 
-## Later (not in this plan; to do once you've tried it)
-- Rebuild it properly as app screens and connect it to each deal, so drafts save against the deal record and the AI extraction replaces the pattern matching, with the same review panel as the check.
-- Keep the ICMA BDT ordering tied to the schema file so moving to BDT 2.1 means regenerating it, not fixing it by hand.
-- Add a lifecycle stage marker (IPT / guidance / launch / priced) and a stable deal key on every export, as Claude recommended for multi-vendor feeds.
+```text
++--------------------------------------------------------------+
+| Stage rail: Mandate > Announced > IPT > Guidance > Launch >   |
+|             Priced > Settled      (current stage highlighted) |
+| Readiness: 9 of 11 key fields complete  [Show every field]    |
++--------------------------------------------------------------+
+| 1. KEY TERMS  (always open, large inputs)                     |
+|   Issuer name | Currency | Size | Tenor / Maturity date       |
+|   Coupon type (Fixed / Floating / FRN / Zero) | Coupon / rate |
+|   Bookrunners (banks, Active/Passive, GC)     | Issue date    |
+|   Pricing date | Settlement date | ISIN                       |
++--------------------------------------------------------------+
+| 2. PRICING & EXECUTION  (opens from IPT stage)                |
+|   IPT, Guidance, Reoffer spread / yield / price, Mid-swap,    |
+|   Benchmark, Denomination, Issue price, Books                 |
++--------------------------------------------------------------+
+| 3. MORE DETAIL  (collapsed, "Show 24 optional fields")        |
+|   Issuer & ratings | Form & status | Interest details |       |
+|   Listing & legal  | Selling restrictions | ESG / label       |
++--------------------------------------------------------------+
+|  Drop a document here to suggest values (PDF, Word, XML)      |
++--------------------------------------------------------------+
+```
+
+- **All the fields already in the VDR** are kept (LEI, rating, outlook, CUSIP, common code, form of note, day count, business day convention, governing law, listing venue, optionality, ESG label, and the rest). They are sorted into the three layers above.
+- **Stage-aware:** a section opens automatically once the deal reaches the stage that needs it. Fields that are required and still empty get an orange outline, and filled fields get a small green tick.
+- **Show every field** switch at the top, plus a quick search box to jump to any field.
+- **Document drop with review:** dropping a term sheet proposes values in a side-by-side list (current value crossed out, new value, source file), with Accept, Ignore and Accept all. Nothing is written without your approval, as in Claude's version. It uses the app's existing AI extraction, so it catches more than Claude's pattern rules.
+- **Save** writes to the deal record and the Audit Log, and the AI Deal Checker re-runs straight away.
+
+## Simpler ways to present the structure (built in)
+1. Three layers instead of Claude's 17 sections: Key Terms, Pricing & Execution, More Detail.
+2. About 11 key fields visible at Mandate and about 20 by Pricing, instead of 192.
+3. Coupon type as a 4-button switch. Choosing Floating/FRN swaps "Coupon %" for "Margin over reference rate".
+4. Bookrunners as tag chips with Active/Passive and GC toggles.
+5. Maturity is typed once: entering a tenor suggests the maturity date and vice versa (using the existing maturity correction).
+
+## Out of scope (later)
+- Full ICMA BDT XML export in Claude's element order, and the 17-section expert view.
+- Stage marker and version key on exports for multi-vendor feeds.
 
 ## Technical details
-- File: `public/termsheet.html` (from `vdr-digital-term-sheet_1.html`). Patch line ~577 `window.claude?.use?.("downloads")` → the `download()` path uses `Blob` + `URL.createObjectURL` + a temporary anchor.
-- New page `src/pages/TermSheetBuilderPage.tsx`: `<iframe src="/termsheet.html" className="w-full h-[calc(100vh-7rem)] border rounded-md" />`, route added in `App.tsx` inside `RequireAuth` + `AppLayout`.
-- `navItems` in `AppLayout.tsx`: add `{ path: '/term-sheet-builder', label: 'Term Sheet Builder', icon: FileSpreadsheet }`.
+- New `src/components/termsheet/TermSheetFill.tsx` plus `fieldConfig.ts`. The config defines each field (key of `Deal`, label, type, layer, `fromStage`, `requiredAt`), adapted from Claude's `FIELDS`/`SECTIONS` but mapped onto the existing `Deal` type in `src/types`.
+- New optional `Deal` fields where missing: `couponType`, `ipt`, `guidance`, `benchmark` (added to the type and to the cloud mapping in `cloudData.ts`; a migration adds nullable columns if the deals table stores columns individually. Check before writing).
+- `DealsPage.tsx` `DealDetail`: wrap the existing grid in shadcn `Tabs` (View / Fill), with Fill visible only to users who can manage the deal. Save goes through `updateDeal` from `useScopedApp` plus `addAuditEntry`.
+- Document drop reuses the `extract-deal-fields-ai` function and the existing `FieldDiffDialog`/`ExtractDealReviewModal` review pattern, with the 150k text cap.
+- Styling uses only existing tokens, `Card`, `Badge`, `Collapsible`, `ToggleGroup`, and the orange-border button style already used on the toolbar.
