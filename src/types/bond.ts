@@ -78,6 +78,10 @@ export interface Deal {
   reofferYield?: string;
   reofferSpread?: string;
   midSwapRate?: string;
+  /** Execution messaging (VDR envelope, not modelled by BDT 2.0) */
+  ipt?: string;
+  guidance?: string;
+  benchmark?: string;
   coupon: string;
   governingLaw?: GoverningLaw;
   sellingRestrictions?: string;
