@@ -193,8 +193,24 @@ const FREQ_TO_APP: Record<string, string> = {
   ANNUALLY: 'ANNUAL', SEMIANNUALLY: 'SEMI_ANNUAL', QUARTERLY: 'QUARTERLY', MONTHLY: 'MONTHLY',
 };
 const FREQ_TO_BDT: Record<string, string> = {
-  ANNUAL: 'ANNUALLY', SEMI_ANNUAL: 'SEMIANNUALLY', QUARTERLY: 'QUARTERLY', MONTHLY: 'MONTHLY',
+  ANNUAL: 'ANNUALLY', ANNUALLY: 'ANNUALLY',
+  SEMI_ANNUAL: 'SEMIANNUALLY', SEMIANNUAL: 'SEMIANNUALLY', 'SEMI-ANNUAL': 'SEMIANNUALLY',
+  QUARTERLY: 'QUARTERLY', MONTHLY: 'MONTHLY', 'AT MATURITY': 'ATMATURITY',
 };
+
+/**
+ * Legacy deal columns store dates as free text ("18 October 2036"). BDT date
+ * fields are ISO-8601, so normalise on the way in; unparseable text is dropped
+ * rather than guessed at.
+ */
+export function toISODate(v: unknown): string {
+  const t = s(v).trim();
+  if (!t) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+  const d = new Date(t);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
 
 const MANAGER_ROLE_RE = /MANAGER|BOOKRUNNER|COORDINATOR|ARRANGER/;
 
