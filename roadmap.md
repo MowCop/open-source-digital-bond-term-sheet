@@ -18,5 +18,5 @@
 - [ ] Term Sheet / XML / Envelope / Legends tabs.
 - [ ] Release & Audit Log tab writing immutable rows to `deal_term_sheet_releases`.
 - [ ] Point Deal Checker at `unifiedChecks` so the two surfaces become one in the UI.
-- [ ] Retire `src/components/termsheet/fieldConfig.ts` prototype once nothing imports it.
+- [x] Retired the `fieldConfig.ts` prototype — the BDT FIELDS dictionary is the only field list.
 - [ ] Later iteration: floating / zero coupon with dependent fields and validation.
