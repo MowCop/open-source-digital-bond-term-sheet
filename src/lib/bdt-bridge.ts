@@ -255,11 +255,12 @@ function seedFromDeal(deal: Deal): BdtState {
   set(P.interestType, deal.interestType || 'FIXED');
   const cpn = num(deal.coupon);
   if (Number.isFinite(cpn)) set(P.coupon, String(cpn));
-  set(P.couponFreq, FREQ_TO_BDT[s(deal.interestPaymentFrequency)] || '');
+  set(P.couponFreq, FREQ_TO_BDT[s(deal.interestPaymentFrequency).toUpperCase().replace(/_/g, ' ').trim().replace(/ /g, '_')]
+    || FREQ_TO_BDT[s(deal.interestPaymentFrequency).toUpperCase()] || '');
   set(P.dayCount, s(deal.dayCountFraction).replace(/_/g, '/'));
-  set(P.pricingDate, deal.pricingDate);
-  set(P.issueDate, deal.issueDate);
-  set(P.settlementDate, deal.settlementDate);
+  set(P.pricingDate, toISODate(deal.pricingDate));
+  set(P.issueDate, toISODate(deal.issueDate));
+  set(P.settlementDate, toISODate(deal.settlementDate));
   set(P.issuePrice, num(deal.issuePrice));
   set(P.reofferPrice, num(deal.reofferPrice));
   set(P.reofferYield, num(deal.reofferYield));
