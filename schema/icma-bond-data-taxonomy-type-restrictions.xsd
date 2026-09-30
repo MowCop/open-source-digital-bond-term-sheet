@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2023 sp1 (x64) (http://www.altova.com) by  (ICMA) -->
+<!-- 
+This document was created by the International Capital Market Association (ICMA) Bond Data Taxonomy Working Group. The ICMA Bond Data Taxonomy (“BDT”) is subject to the following terms of use. By accessing, using or implementing the BDT, users agree to be bound by these terms.
+
+The BDT is provided by ICMA on an “AS IS” basis. ICMA does not give and excludes any express or implied warranties with respect to the BDT, including but not limited to any guarantee as to its quality, accuracy, completeness, supply or availability.
+
+ICMA grants users a world-wide, non-exclusive, royalty-free licence to access, use and implement the BDT for informational and operational purposes, including within internal systems, documentation, products, or services.
+
+The user has no right, and no right to authorise others, to with respect to the BDT:
+
+- rent, lease, license or sell it as a standalone product;
+- represent any modified version of the BDT as an official ICMA taxonomy;
+- remove, alter, cover, obfuscate or cancel from view any copyright or other proprietary rights notices, marks or legends appearing with respect to the BDT.
+ 
+Any and all rights, including title, ownership rights, copyright, trademark, patents and any other intellectual property rights of whatever nature in the BDT will remain the exclusive property of ICMA or its licensees.
+
+In the event of any discrepancy between the legal documentation and the digital representation using the BDT, the legal documentation as agreed between the parties to the transaction will prevail. 
+-->
+<xs:schema xmlns="urn:icma:xsd:ICMABondDataTaxonomy" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ns1="urn:icma:xsd:ICMABondDataTaxonomy" targetNamespace="urn:icma:xsd:ICMABondDataTaxonomy" elementFormDefault="qualified" version="2.0.0">
+	<!-- ISO Types-->
+	<xs:simpleType name="ISODate">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ISODate</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">A particular point in the progression of time in a calendar year expressed in the YYYY-MM-DD format. This representation is defined in "XML Schema Part 2: Datatypes Second Edition - W3C Recommendation 28 October 2004" which is aligned with ISO 8601.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:date"/>
+	</xs:simpleType>
+	<xs:simpleType name="ISOCurrencyCode">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ISOCurrencyCode (International Organisation for Standardisation (ISO) 4217)</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{3,3}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ISOCountryCode">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Code to identify a country, a dependency, or another area of particular geopolitical interest, on the basis of country names obtained from the United Nations (ISO 3166, Alpha-2 or Alpha-3 code). The code is checked against the list of country namescoded with three alphabetic characters, defined in the standard.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{2,3}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ISOCountryCodeWithSubdivision">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Country code and subdivision code based on ISO 3166-2.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{2}-[A-Z]{1,3}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ISINOct2015Identifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ISINOct2015Identifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">International Securities Identification Number (ISIN). A numbering system designed by the United Nation's International Organisation for Standardisation (ISO). The ISIN is composed of a 2-character prefix representing the country of issue, followed by the national security number (if one exists), and a check digit. Each country has a national numbering agency that assigns ISIN numbers for securities in that country.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{2,2}[A-Z0-9]{9,9}[0-9]{1,1}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DTI2021Identifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">DTI2021Identifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">The Digital Token Identifier (DTI) is an 8 character code assigned to fungible digital assets which uses distributed ledger technology for its issuance, storage, exchange, record of ownership or transaction validation and is not a currency (ISO 4217) as described in ISO 24165 - DTI. A check character, using the same character set as the base number, shall be calculated and added.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[1-9B-DF-HJ-NP-XZ][0-9B-DF-HJ-NP-XZ]{8,8}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CUSIPIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">CUSIPdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN"/>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9a-zA-Z]{9,9}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FIGIIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">FIGIIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN"/>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[^aeiouAEIOU]{2,2}G[0-9a-zA-Z]{9,9}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="SEDOLIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SEDOLIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN"/>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z0-9]{6,6}[0-9]{1,1}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="COMMON_CODEIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">COMMON_CODEIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN"/>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z0-9]{9,9}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CFIIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">CFIIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN"/>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{6,6}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="FINSIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">FINSIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN"/>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z0-9]{6,6}[0-9]{1,1}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="WKNIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">WKNIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN"/>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9A-Z]{6,9}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CURPIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">CURPIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN"/>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9A-Z]{18}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ValorenIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">CURPIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN"/>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9]{6,9}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LEIIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">LEIIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Legal Entity Identifier is a code allocated to a party as described in ISO 17442 "Financial Services - Legal Entity Identifier (LEI)".</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z0-9]{18,18}[0-9]{2,2}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LEIName">
+		<xs:annotation>
+			<xs:documentation>An element of this type has minimum length of one character and may not
+        contain any of: the carriage return (#xD), line feed (#xA) nor tab (#x9) characters, shall
+        not begin or end with a space (#x20) character, or a sequence of two or more adjacent space
+        characters.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="500"/>
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ActiveCurrencyCode">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ActiveCurrencyCode</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">A code allocated to a currency by a Maintenance Agency under an international identification scheme as described in the latest edition of the international standard ISO 4217 "Codes for the representation of currencies and funds".</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[A-Z]{3,3}"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ISOYear">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ISOYear</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Year represented by YYYY (ISO 8601).</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:gYear"/>
+	</xs:simpleType>
+	<xs:simpleType name="Max140Text">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Max140Text</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Specifies a character string with a maximum length of 140 characters.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="140"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

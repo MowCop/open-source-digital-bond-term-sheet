@@ -1,0 +1,3162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2023 sp1 (x64) (http://www.altova.com) by  (ICMA) -->
+<!-- 
+This document was created by the International Capital Market Association (ICMA) Bond Data Taxonomy Working Group. The ICMA Bond Data Taxonomy (“BDT”) is subject to the following terms of use. By accessing, using or implementing the BDT, users agree to be bound by these terms.
+
+The BDT is provided by ICMA on an “AS IS” basis. ICMA does not give and excludes any express or implied warranties with respect to the BDT, including but not limited to any guarantee as to its quality, accuracy, completeness, supply or availability.
+
+ICMA grants users a world-wide, non-exclusive, royalty-free licence to access, use and implement the BDT for informational and operational purposes, including within internal systems, documentation, products, or services.
+
+The user has no right, and no right to authorise others, to with respect to the BDT:
+
+- rent, lease, license or sell it as a standalone product;
+- represent any modified version of the BDT as an official ICMA taxonomy;
+- remove, alter, cover, obfuscate or cancel from view any copyright or other proprietary rights notices, marks or legends appearing with respect to the BDT.
+ 
+Any and all rights, including title, ownership rights, copyright, trademark, patents and any other intellectual property rights of whatever nature in the BDT will remain the exclusive property of ICMA or its licensees.
+
+In the event of any discrepancy between the legal documentation and the digital representation using the BDT, the legal documentation as agreed between the parties to the transaction will prevail.
+-->
+<xs:schema xmlns="urn:icma:xsd:ICMABondDataTaxonomy" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:pce="ProductClassificationExtension" xmlns:lpe="LinkedProductsExtension" xmlns:ple="PlatformExtension" targetNamespace="urn:icma:xsd:ICMABondDataTaxonomy" elementFormDefault="qualified" version="2.0.0">
+	<xs:include schemaLocation="./icma-bond-data-taxonomy-enums.xsd">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ICMABondDataTaxonomyEnumerations</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Enumeration codes for use in the ICMA Bond Data Taxonomy.</xs:documentation>
+		</xs:annotation>
+	</xs:include>
+	<xs:include schemaLocation="./icma-bond-data-taxonomy-type-restrictions.xsd">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ICMABondDataTaxonomyISOTypes</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">ISO codes for use in the ICMA Bond Data Taxonomy.</xs:documentation>
+		</xs:annotation>
+	</xs:include>
+	<xs:element name="Document" type="Document">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Document</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Top level XML document specification for digitalising issuance, trading, settlement and distribution processes.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<!-- Document definition-->
+	<xs:complexType name="Document">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ICMABondDataTaxonomy</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">ICMA XML specification for primary issuance of notes or securities.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ICMABondDataTaxonomy" type="ICMABondDataTaxonomy">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ICMABondDataTaxonomy</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">ICMA Bond Data Taxonomy (BDT) XML specification.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--ICMA Bond Data Taxonomy-->
+	<xs:complexType name="ICMABondDataTaxonomy">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">ICMABondDataTaxonomy</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">ICMA Bond Data Taxonomy (BDT) XML specification.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="DocumentInformation" type="DocumentInformation" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentInformation</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Common data attributes of the BDT.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<!--Top level element for one or more issuance-->
+			<xs:element name="IssuanceDataGroup" type="IssuanceDataGroup" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuanceDataGroup</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Section of the BDT that groups together the primary elements of PartyGroup, Issuance and Product.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IssuanceDataGroup">
+		<xs:sequence>
+			<xs:element name="IssuanceDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuanceDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Description of issuance and product.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Class A RegS and 144A</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<!--Parties to the issuance-->
+			<xs:element name="PartyGroup" type="PartyGroup" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PartyGroup</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Data element group of all parties involved in the transaction.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<!--Details of the Issuance-->
+			<xs:element name="Issuance" type="Issuance" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Issuance</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The complex xml type that defines the details of a new issuance.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<!--Details of the Product-->
+			<xs:element name="Product" type="Product" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Product</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Attributes of the note being issued as a standalone or as part of a programme.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SeriesTrancheClass" type="SeriesTrancheClassGroup" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SeriesTrancheClass</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Data element that can be used to create multiple issuances or notes that are part of a programme or issuance that includes similar securites that may differ due to regulatory, rating or other parameters.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--PartyRole Definition-->
+	<xs:complexType name="PartyRole">
+		<xs:choice>
+			<xs:element name="PartyRoleType" type="PartyRoleType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PartyRoleType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Role of the party involved in the issuance or servicing of the security.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">ISSUER</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="OtherPartyRoleType" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PartyRoleOtherType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Role of the party if one is not defined in the enumeration list.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Unspecified Advisor</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
+	</xs:complexType>
+	<!--Party Definition-->
+	<xs:complexType name="Party">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Party</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">The name, LEI and other details of the party.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="PartyName" type="LEIName" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PartyName</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Name by which a party is known and which is usually used to identify that party.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">EUROPEAN STABILITY MECHANISM</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="LEIIdentifier" type="LEIIdentifier" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">LEIIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Legal entity identification as an alternate identification for a party.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">222100W4EEAQ77386N50</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="BICIdentifier" type="BusinessIdentifierCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BICIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Bank Identifier Code of the party.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">ESME</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ParentLEIIdentifier" type="LEIIdentifier" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">LEIIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Legal entity identification of the parent entity.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">222100W4EEAQ77386N50</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CountryOfIncorporation" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CountryOfIncorporation</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Country of incorporation if different or not defined by the LEI.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">LU</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Address" type="Address" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Address</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Address of the party if different or not defined by the LEI.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">6A, CIRCUIT DE LA FOIRE INTERNATIONALE,L-1347,LUXEMBOURG (See Address for details).</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="OnBehalfOf" type="Party" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">OnBehalfOf</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Party that this entity is acting on behalf of in the transaction.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">222100W4EEAQ77386N50</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PartyRole" type="PartyRole" minOccurs="1" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PartyRole</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The role of the party in the transaction.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">ISSUER</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PartyType" type="PartyType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PartyType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Type of party based on legal structure.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">SOVEREIGN</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PartyRating" type="RatingGroup" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PartyRating</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The credit rating assigned to the party.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">AA+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Issuance Definition-->
+	<xs:complexType name="Issuance">
+		<xs:sequence>
+			<xs:element name="IssuanceType" type="IssuanceType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuanceType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies whether a issuance is a programme issuance or standalone issuance.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">STANDALONE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssuanceDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuanceDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Free text description of the offering.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Issue of €20,000,000 0.00 per cent. due 22 June 2031 extendible up to 22 June 2026 and registered in a distributed ledger technology (DLT) platform.
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DealIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DealIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identifier assigned to the deal by the issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">DOC-1000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Programme" type="Programme" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Programme</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identifier and description of the programme.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">PGM-2025-1000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="GlobalNoteIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">GlobalNoteIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identifier assigned to the global note.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">GN-2025-1</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ReOpen" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Issue</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication that this issuance has the same terms and conditions as an existing note or programme and may be fungible with existing notes.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">false</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Fungible" type="Fungible" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Fungible</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indicator, date and security identifier of the fungible parent issue.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PrivatePlacement" type="PrivatePlacementProvision" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PrivatePlacement</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">A non-public issuance offered to private persons or institutional investors.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SpecifiedDenomination" type="Amount" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SpecifiedDenomination</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the unit value, par or face value of each bond that sets the minimum amount at which the note may be purchased.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">5000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MinimumDenomination" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MinimumDenomination</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the minimum per unit amount that can be purchased at one time.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">100000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MaximumDenomination" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MaximumDenomination</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the maximum per unit amount that can be purchased at one time.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">200000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IntegralMultiples" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IntegralMultiples</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Smallest amount by which the minimum denomination can be increased.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">5000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CalculationAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CalculationAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The amount used for calculation of interest and redemption amounts.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">10000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InitialAggregateAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InitialAggregateAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Initial issued amount before additional tranches or increases.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">10000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TotalAggregateAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TotalAggregateAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Total amount issued including all tranches, series and classes.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">20000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TotalOutstandingAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TotalOutstandingAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Total amount still outstanding and not redeemed.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">20000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MaximumProgrammeAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MaximumProgrammeAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Maximum amount allowed under the programme.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">500000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MaximumAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MaximumAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Maximum amount allowed under this issuance.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">100000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ChangeOfInterestPaymentBasis" type="ChangeOfInterestPaymentBasis" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ChangeOfInterestPaymentBasis</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Defines the type of change in the interest payment method and the date the change becomes effective</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FIXED_TO_FLOAT 2028-02-25</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SpecifiedCurrency" type="ISOCurrencyCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SpecifiedCurrency</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Currency of the nominal value of the issuance.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">EUR</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PaymentCurrency" type="ISOCurrencyCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PaymentCurrency</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Currency for interest payments. Only if payment currency differs from Specified Currency.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">GBP</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SettlementCurrency" type="ISOCurrencyCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SettlementCurrency</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Currency for settlement if settlement currency differs from Specified Currency.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">USD</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PricingDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PricingDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The date the transaction is priced. Also referred to as trade date for private placements.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2025-11-19</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssueDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssueDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date when the note legally comes into existence separate from the closing date that may be later when securities are delivered or the date when a TAP becomes effective.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2025-11-19</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SettlementDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SettlementDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">When investors receive notes in exchange for the issuer receiving net proceeds.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2025-11-25</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ClosingDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ClosingDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">When securities are delivered to the underwriter.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2025-11-18</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CutOffDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CutOffDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Final date in the review period as in the case of an audit or issuer notice.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2025-11-01</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssuePrice" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IssuePrice</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The price notified to the Managers at which the notes will be issued.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">99.875</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IndicationOfYield" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IndicationOfYield</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The yield of the security based on the issue price.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">3.98</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ReofferPrice" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ReofferPrice</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The price defined as such in the Invitation to Managers or, if none, the price below which the Managers were told they should not reoffer the securities until notified otherwise.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">99.9</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ReofferYield" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ReofferYield</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The yield of the security based on the reoffer price.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">3.91</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Benchmark" type="Security" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Benchmark</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The benchmark security used as a reference to calculate the price of the note being issued.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FR0015510312</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ReofferSpreadToBenchmark" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ReofferSpreadToBenchmark</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Difference in price or yield between the reoffer price and the benchmark security price.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">279.50</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MidSwapRate" type="SwapRateDefinition" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MidSwapRate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Midpoint or average of the bid and offer swap rate, and the tenor used as a reference to the issue price of the security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ReofferSpreadtoMidSwapRate" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ReofferSpreadtoMidSwapRate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Difference in price/yield between the reoffer price/yield based on the mid swap rate.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">100.50</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Fee" type="FeeWithAllocation" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FeeWithAllocation</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Fees payable to managers/dealers expressed as a percentage of nominal amount. Also referred to as commissions.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Delivery" type="DeliveryType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Delivery</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Type of securities settlement delivery method, DVP or Free of Payment.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">DVP</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Proceeds" type="Proceeds" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Proceeds</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The proceeds received by the issuer from the sale of the securities.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">302577998000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AllIn" type="PriceYieldDiscount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AllInPYD</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The price, yield or discount after deducting any costs to the issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">109.75</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Listing" type="Listing" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Listing</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication that the note will be listed and on which venues.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CashClearingSystem" type="SystemIdentifier" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CashClearingSystem</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the system which plays a role in the cash clearing.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">T2</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SecuritiesClearingSystem" type="SystemIdentifier" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SecuritiesClearingSystem</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the system which plays a role in the clearing of securities.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">CBF</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SecuritiesSettlementSystem" type="SystemIdentifier" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SecuritiesSettlementSystem</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the system which plays a role in settlement of securities.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">CBF</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CashSettlementSystem" type="SystemIdentifier" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CashSettlementSystem</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the system which plays a role in the settlement of cash.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">T2</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PlaceOfDeposit" type="PlaceOfDepositSystem" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PlaceOfDeposit</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Depository or platform where securities are held as in an (I)CSD.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">CBL</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DLTPlatform" type="DltPlatformOperationalInformation" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DLTPlatform</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the details of the distributed ledger technology (DLT) platforms used for issuance, registration, settlement and other purposes.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MethodOfDistribution" type="Distribution" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MethodOfDistribution</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identifies the issuance as being syndicated or non-syndicated.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Syndicated</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="GoverningLaw" type="GoverningLaw" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">GoverningLaw</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The law of the specified country and possible subdivision that governs the issuance of the security.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">GB-ENG</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Expenses" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Expenses</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Description of fees, commissions or other costs.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Tax" type="Tax" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Tax</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Details on the tax obligations of the issuer or bond holder.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssuanceDocumentation" type="IssuanceDocumentation" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Documentation</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Prospectus or other documents related to the issuance.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SellingRestrictions" type="SellingRestrictions" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SellingRestrictions</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Provision of the offering that restricts to whom, during what period of time, and/or in what jurisdictions the bond may be sold.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TargetMarket" type="ManufacturerTargetMarket" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ManufacturerTargetMarket</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The target market assessment in respect of the notes and which channels for distribution of the notes are appropriate.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="NegativePledge" type="Applicability" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">NegativePledge</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Provision that indicates the issuer will not create security over its assets in favour of other creditors unless equivalent security is simultaneously granted to the bondholders.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">NA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="GrossUp" type="Applicability" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">GrossUp</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">An indication of any tax provision that may affect the payment obligations of the issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">NA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CrossDefault" type="Applicability" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CrossDefault</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">An indication that a provision exists related to the default of another security affecting the issued security. </xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">NA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SubstitutionOrVariation" type="Applicability" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SubstitutionOrVariation</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication of whether the terms and conditions of the note provide for a substitution or variation.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">NA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Redemption" type="RedemptionProvision" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Redemption</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The method, date and calculations that are used to determine redemption of the bond's principal and interest.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="YieldToCall" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">YieldToCall</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The yield as calculated to the specified or earliest call date.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RecordDate" type="AdjustedDate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RecordDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The number of days prior to payment date to determine holders of record.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Events" type="Event" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Events</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">List of events and event codes that have taken place or are scheduled.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SubstitutionAndExchangeProvision" type="SubstitutionAndExchangeProvision" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SubstitutionAndExchangeProvision</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if substitutions are allowed and which securities are eligible for substitution.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MREL_Ratio_Percentage" type="xs:decimal" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MREL</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The Minimum Requirement for Own Funds and Eligible Liabilities (MREL) ratio expressed as a percentage.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AdditionalIssuanceInformation" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AdditionalIssuanceInformation</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Free text field for the issuer to include additional issuance information.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN"/>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Product Definition-->
+	<xs:complexType name="Product">
+		<xs:sequence>
+			<xs:element name="SecurityShortName" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SecurityShortName</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">An abbreviated description for the security.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">OBL 3.875% 10/15/27 #186.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SecurityLongName" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SecurityLongName</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Unabbreviated description of the security.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Dated Subordinated Notes qualifying as Tier 2 Capital.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ProgrammeReference" type="Programme" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ProgrammeReference</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Reference to the programme identifier for a new issue under a programme.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">EC092501</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SecurityIdentifierList" type="SecurityIdentifierList" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SecurityIdentifierList</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">List of identifiers assigned to the note.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FR0015510310</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InitialFormOfNote" type="FormOfNote" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FormOfNote</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Whether Bearer, Registered, or other formats in initial form.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Certificated</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AfterExchangeFormOfNote" type="FormOfNote" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FinalFormOfNote</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Form of note after exchange as in the case of a global note exchanged for definitive.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FinalFormOfNote" type="FormOfNote" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FormOfNote</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Whether Bearer, Registered, or other formats in final form.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Dematerialised</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SafeKeepingStructure" type="SafeKeepingStructureType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SafeKeepingStructure</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication of the safekeeping structure as it relates to custody, settlement and transfers of securities.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">NSS</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CentralBankEligibility" type="CentralBankEligibility" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CentralBankEligibility</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if the security is eligible collateral within the central bank system.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">true</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="GuaranteeType" type="GuaranteeType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">GuaranteeType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication of a government or other guarantee that applies to the note.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">GOVERNMENT</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="StatusOfNote" type="StatusOfNote" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">StatusOfNote</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Captures information relating to the seniority, subordinated, secured and preferred status of the note.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">SENIOR, SECURED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AggregateNominalAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AggregateNominalAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Aggregate nominal amount of the note begin issued, TAP, series, class or tranche.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">300000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="OutstandingAmountBeforeIncrease" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">OutstandingAmountBeforeIncrease</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Aggregate nominal amount outstanding prior to any TAP or fungible tranche increase.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">200000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="OutstandingAmountAfterIncrease" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">OutstandingAmountAfterIncrease</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Aggregate nominal amount outstanding following any TAP or fungible tranche increase.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">400000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Maturity" type="Maturity">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Maturity</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Defines a date, perpetual or other form of maturity of the note.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2033-12-20</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ExpectedProductRating" type="RatingGroup" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ExpectedProductRating</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Expected credit rating assigned to the note by one or more rating agencies.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Moodys A++</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PrincipalFactor" type="xs:decimal" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PrincipalFactor</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Adjustment to the principal value of the note due to paydowns or other adjustments.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">.95</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InterestPayment" type="InterestPayment" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestPayment</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Details of interest payments due to be paid to the holder by the issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">4.5% Annually</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DayCountFraction" type="DayCountFraction" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DayCountFraction</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the method that determines the number of days in a period that is used to compute accruing interest of the product.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">ACT/360</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="BusinessDayConvention" type="BusinessDayConvention" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BusinessDayConvention</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the method that adjusts payment and interest calculation periods.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FOLLOWING, UNADJUSTED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="BusinessDayCenter" type="BusinessDayCalendar" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BusinessDayCenter</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indicates the financial center or country calendar used to validate a business day for payments or interest calculations.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">T2</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Optionality" type="OptionType" minOccurs="0" maxOccurs="3">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Optionality</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indicates if the note is subject to a call or put option by the holder or issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">CALL</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ForeignExchangeRateProvision" type="ForeignExchangeRateProvision" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ForeignExchangeRateProvision</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indicates if the note is subject to payments or redemption in a foreign currency and how the exchange rate is determined.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">EUR/USD</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ProductClassification" type="ProductClassification" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InstrumentCategory</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Custom category as defined through a separate xsd provided by the issuer.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="LinkedProducts" type="LinkedProducts" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InstrumentCategory</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Custom category as defined through a separate xsd provided by the issuer.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DLTBondIndicator" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DLTBondIndicator</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication of whether the bond is issued on a distributed ledger. See also ICMA FAQs on DLT and blockchain in bond markets. </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ESGLabel" type="ESGLabel" minOccurs="0" maxOccurs="4">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ESGLabel</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Securities that are aligned with ICMA principles or other relevant standards.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">GREEN</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SukukShariahCompliantIndicator" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SukukShariahCompliantIndicator</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Securities that comply with Sharia principles.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">false</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="UnderlyingProducts" type="Product" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">UnderlyingProducts</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Reference to any underlying products.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--PartyGroup Definition-->
+	<xs:complexType name="PartyGroup">
+		<xs:sequence>
+			<xs:element name="Party" type="Party" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Party</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The name, LEI and other details of the party.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Issuer, Guarantor, Registrar.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Rating Definition-->
+	<xs:complexType name="Rating">
+		<xs:sequence>
+			<xs:element name="RatingAgency" type="RatingAgency" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RatingAgency</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Ratings Agency means Fitch Ratings Limited, Moody's Investors Service, Limited or SandP Global Ratings Europe Limited or any other statistical ratings organisation which rates the Issuer's debt securities.
+</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FITCH</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RatingValue" type="RatingValue" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RatingValue</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Rating value assigned by the ratings agency.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">AAA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RatingOutlook" type="RatingOutlook" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RatingOutlook</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication that a rating may be raised, lowered or is stable.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">STABLE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="RatingValue">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">RatingValue</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Rating value assigned by the ratings agency.</xs:documentation>
+			<xs:documentation source="Example" xml:lang="EN">AAA</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+		</xs:restriction>
+	</xs:simpleType>
+	<!--Rating Group-->
+	<xs:complexType name="RatingGroup">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">RatingGroup</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Data element group of one or more ratings assigned by rating agencies to an entity or security.</xs:documentation>
+		</xs:annotation>
+		<xs:choice>
+			<xs:element name="Rating" type="Rating" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Rating</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Rating agency and rating values assigned to the issuer or note.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Unrated" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Unrated</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">No agency has a rating on the note.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
+	</xs:complexType>
+	<!--Security Definition-->
+	<xs:complexType name="Security">
+		<xs:sequence>
+			<xs:element name="Identifier" type="SecurityIdentifier" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SecurityIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">An identifier assigned to a security as defined by the service provider of the identifier such as ISIN and CUSIP.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FR0015510310</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Ticker" type="SecurityTicker" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Ticker</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The ticker of the security used to price the note, e.g. DBR.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Maturity" type="Maturity" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Maturity</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Defines the type of maturity that describes the final redemption date of the security.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2033-12-20</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InterestRate" type="xs:decimal" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestRate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Rate of interest used to calculate coupon payments.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">4.5</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Price" type="PriceYieldDiscount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Price</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Price of the security in terms of percent, yield, discount.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">98.5</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Security Identifier Definition-->
+	<xs:complexType name="SecurityIdentifier">
+		<xs:sequence>
+			<xs:sequence>
+				<xs:element name="ISIN" type="ISINOct2015Identifier" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">ISIN</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">The International Securities Identification Number assigned to the security.</xs:documentation>
+						<xs:documentation source="Example" xml:lang="EN">FR0015510310</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="CUSIP" type="CUSIPIdentifier" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">CUSIP</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Committee on Uniform Securities and Identification Procedures (CUSIP) number assigned to the security.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="FIGI" type="FIGIIdentifier" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">FIGI</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Financial Instrument Global Identifier number assigned to the security.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="SEDOL" type="SEDOLIdentifier" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">SEDOL</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Stock Exchange Daily Official List (SEDOL) number assigned to the security.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="COMMON_CODE" type="COMMON_CODEIdentifier" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">COMMON_CODE</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">A Common Code is a specific type of identifier issued by Clearstream and Euroclear to refer to a security.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="WKN" type="WKNIdentifier" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">WKNIdentifier</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">WKN, Wertpapierkennnummer is a German securities identifier.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="DTI" type="DTI2021Identifier" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">DTI</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">The Digital Token Identifier (DTI) assigned to the security.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="CMU" type="xs:string" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">CMU</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Hong Kong Central Moneymarkets Unit identifier assigned to a security.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="VALOR" type="ValorenIdentifier" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">VALOR</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Valoren number assigned to the security.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="CURP" type="CURPIdentifier" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">CURP</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Mexico security identifier, Clave Única de Registro de Población, (CURP) assigned to the security.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="TEMPORARY_ISIN" type="xs:string" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">TEMPORARY_ISIN</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Temporary ISIN assigned to a note, as in the case of a TAP or reopening, that will later become fungible and converted to the partent ISIN.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="TEMPORARY_CUSIP" type="xs:string" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">TEMPORARY_CUSIP</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Temporary CUSIP assigned to a note, as in the case of a TAP or reopening, that will later become fungible and converted to the partent CUSIP.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="TEMPORARY_COMMON_CODE" type="xs:string" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">TEMPORARY_COMMON_CODE</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Temporary Common Code assigned to a note, as in the case of a TAP or reopening, that will later become fungible and converted to the partent Common Code.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="SeriesIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">SeriesIdentifier</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">An identifier assigned by the issuer to a note under a programme with multiple series.</xs:documentation>
+						<xs:documentation source="Example" xml:lang="EN">287</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="TrancheIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">TrancheIdentifier</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">An identifier assigned by the issuer to a note under a programme with multiple tranches.</xs:documentation>
+						<xs:documentation source="Example" xml:lang="EN">2</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="ClassIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">ClassIdentifier</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">An identifier assigned by the issuer to a note under a programme with multiple classes.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="STEPIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">STEPIdentifier</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Identifier that indicates the security is compliant with the ECB Short Term European Programme standards and documentation.</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="OtherIdentifier" type="OtherIdentifier" minOccurs="0" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation source="Name" xml:lang="EN">OtherIdentifier</xs:documentation>
+						<xs:documentation source="Definition" xml:lang="EN">Identifier and schema other than the predefine identifier types.</xs:documentation>
+						<xs:documentation source="Example" xml:lang="EN">INE002A01018</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:sequence>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Security Ticker Definition-->
+	<xs:complexType name="SecurityTicker">
+		<xs:sequence>
+			<xs:element name="Ticker" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Ticker</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">A short three or four alpha-numeric string that describes the security.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">DBR</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Source" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Source</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The organisation or system that is the source of the ticker identifier.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN"/>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Price Definition-->
+	<xs:complexType name="Price">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Price</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Price type and decimal value that can represent a value, rate or percentage.</xs:documentation>
+			<xs:documentation source="Example" xml:lang="EN">Price, 97.75</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Value" type="xs:decimal" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Value</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">A decimal value that can represent a value, rate or percentage.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">97.75</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PriceType" type="PriceType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PriceType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">A price type enumeration (PERCENT, ABSOLUTE, SPREAD, BASIS_POINT) that identified how to interpret the price value element.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">PERCENT</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Price Definition for Price, Yield or Discount-->
+	<xs:complexType name="PriceYieldDiscount">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">PriceYieldDiscount</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">A complex type that includes elements for the price, yield and discount.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Price" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Price</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">A decimal value that can represent a value, rate or percentage.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">97.75</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Yield" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Yield</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">A value that represents the yield on an asset.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2.5</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Discount" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Discount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">A value that represents the discount of an asset.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">.23</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="BenchmarkSecurity" type="Security" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BenchmarkSecurity</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Underlying reference security on which the price, yield or discount are calculated.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="BenchmarkIndex" type="InterestRateBenchmark" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BenchmarkIndex</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Underlying reference index on which the price, yield or discount are calculated.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">EONA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SpreadToBenchmark" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SpreadToBenchmark</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Difference in price or yield between the reoffer price and the benchmark security price.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">280.80</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Accrued Interest Definition-->
+	<xs:complexType name="AccruedInterest">
+		<xs:sequence>
+			<xs:element name="Date" type="ISODate">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Date</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Determination date (as of date) used to calculate accrued interest.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2026-02-25</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Days" type="xs:integer">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Days</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Number of days used to calculated accrued interest.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">120</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InterestAmount" type="xs:decimal">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Accrued interest amount.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2026-02-25</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Transaction Proceeds Definition-->
+	<xs:complexType name="Proceeds">
+		<xs:sequence>
+			<xs:element name="Gross" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Gross</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Amount due to issuer before costs, fees and taxes.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Net" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Net</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Amount due to issuer after costs, fees and taxes.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AccruedInterest" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AccruedInterest</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Accumulated income calculated from the interest commencement date or trade date to the settlement date.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="NetIncludingAccruedInterest" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">NetIncludingAccruedInterest</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Net amount plus accrued interest from the sale of the notes.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ProceedsCurrency" type="ISOCurrencyCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ProceedsCurrency</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Currency of the cash paid to the issuer from sale of the notes.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">EUR</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="UseOfProceeds" type="UseOfProceeds" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">UseOfProceeds</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Attributes and codes that describe the issuers use of proceeds from the sale of the notes.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Market Listing Definition-->
+	<xs:complexType name="Listing">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Listing</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Indication that the note will be listed and on which venues.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Listed" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Listed</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication true/false if the security is listed on an exchange.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">true</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ListingVenue" type="ListingVenue" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ListingVenue</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The exchange or platform where the notes will be listed for trading.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">XLUX</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ListingVenue">
+		<xs:sequence>
+			<xs:element name="MIC" type="MarketIdentifierCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MarketIdentifierCode</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Market Identifier Code in accordance with ISO 10383</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">XLUX</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Market" type="ListingMarket" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Listing</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Listing Market from the predefined list attached to this document.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">LUXEMBOURG_STOCK_EXCHANGE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MarketName" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MarketDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Listing market name.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">LUXEMBOURG STOCK EXCHANGE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MarketAlternateCode" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MarketAlternateCode</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Alternate code for the listing market.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">LGX</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MarketType" type="ListingMarketType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MarketType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The listing market type is a code associated with the characteristics of the trading venue where the security is initially admitted to trading.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">RMKT</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<!--Interest Payment Definition-->
+	<xs:complexType name="InterestPayment">
+		<xs:sequence>
+			<xs:element name="IsdaDetermination" type="IsdaDeterminationVersion" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">IsdaDetermination</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">If applicable the vesion of ISDA Determinations.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2006</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InterestType" type="InterestType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Type of interest payment (e.g. Fixed, Floating, Zero coupon). May also refer to dividend in other jurisdictions.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FIXED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FixedRatePayment" type="FixedRatePayment" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FixedRatePayment</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Attributes that define fixed rate payments, frequency and day count methods.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FloatingRatePayment" type="FloatingRatePayment" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FloatingRatePayment</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Attributes that define variable rate payments, frequency and day count methods.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ZeroCoupon" type="ZeroCoupon" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ZeroCoupon</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Attributes that define notes without coupon payments.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ResetSchedule" type="ResetSchedule" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ResetSchedule</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">List of dates when the note's interest rate is reset.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MinimumRate" type="xs:decimal" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MinimumRate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Minimum rate allowed on the note.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MaximumRate" type="xs:decimal" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MaximumRate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Maximum rate allowed on the note.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IssuanceDocumentation">
+		<xs:sequence>
+			<xs:element name="DocumentDetail" type="DocumentDetail" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentDetail</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">List of documents associated with the issuance.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DocumentDetail">
+		<xs:sequence>
+			<xs:element name="DocumentName" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentationName</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Name of offer document, including any supplements, red herrings. </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DocumentDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentationDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Offer document/supplement date.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DocumentLink" type="xs:anyURI" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentationLink</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Web link to relevant document.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DocumentId" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentId</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Custom document identifier assigned by the creator of the XML document.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">5378-1</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DigitalDocumentIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DOI</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Digital document identifier</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">12.1018/T0021-9258(11)52355-7</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DocumentVersion" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentVersion</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Custom version identifier assigned by document creator.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">1.01</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="InterestRateBenchmark">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">InterestRateBenchmark</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Underlying reference rate on which the periodic interest payments are calculated.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="BenchmarkCode" type="InterestRateBenchmarkCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Definition" xml:lang="EN">The code of the underlying security used to define the reference rate on which the periodic interest payments are calculated.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">EONA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="BenchmarkName" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Definition" xml:lang="EN">Common name of the underlying security used as the reference rate on which periodic interest payments are calculated.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Euro Overnight Index Average (EONIA)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Currency" type="ISOCurrencyCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Currency</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Currency of the benchmark.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">GBP</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Source" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Source</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The organisation or system that is the source of the code.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Term" type="Term" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Term</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Term of the index/benchmark. Only required when term period defined. The term shall be expressed as an integer referring to a term period of days, weeks, months or years (as cited under Term Period).</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TaxonomyCode">
+		<xs:sequence>
+			<xs:element name="Date" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Date</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date when code is assigned.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2026-02-25</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Identifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Identifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identifer code, id or string.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">DBFTFR</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SchemaSource" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Source</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identifier of the taxonomy source, CFI or other.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">CFI</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FeeWithAllocation">
+		<xs:sequence>
+			<xs:element name="Percentage" type="xs:decimal" minOccurs="0" maxOccurs="1">
+			</xs:element>
+			<xs:element name="FeeAllocationType" type="FeeAllocationType" minOccurs="0" maxOccurs="1">
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DateRange">
+		<xs:sequence>
+			<xs:element name="StartDate" type="FixedOrRelativeDate" minOccurs="0" maxOccurs="1">
+			</xs:element>
+			<xs:element name="EndDate" type="FixedOrRelativeDate" minOccurs="0" maxOccurs="1">
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FixedOrRelativeDate">
+		<xs:choice>
+			<xs:element name="Date" type="ISODate" minOccurs="0" maxOccurs="1">
+			</xs:element>
+			<xs:element name="ReferenceDate" type="xs:string" minOccurs="0" maxOccurs="1">
+			</xs:element>
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="SecurityIdentifierList">
+		<xs:sequence>
+			<xs:element name="SecurityIdentifier" type="SecurityIdentifier" minOccurs="0" maxOccurs="unbounded">
+				</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PaymentDatesAndAmounts">
+		<xs:sequence>
+			<xs:element name="InterestPaymentFrequency" type="InterestPaymentFrequency" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestPaymentFrequency</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The term period of payments.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">ANNUALLY</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PayableDate" type="PayableDayAndMonth" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PayableDayAndMonth</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The day and month during the year when interest payments are scheduled.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">3-11</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FirstPayment" type="PaymentDateAndAmount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FirstPayment</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date and amount of first payment.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">SHORT 2026-03-11 2100</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="LastPayment" type="PaymentDateAndAmount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">LastPayment</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date and amount of last payment.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">LONG 2033-05-11 2100</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ScheduledPaymentDates" type="PaymentSchedule" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ScheduledPaymentDates</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">List of interest payment dates.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2027-03-11,2028-03-11,2029-03-11</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DeterminationDates" type="ISODate" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DeterminationDates</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Interest payment dates excluding issue date and maturity date.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2027-05-11</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PaymentSchedule">
+		<xs:sequence>
+			<xs:element name="ScheduledPayment" type="PaymentDateAndAmount" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ScheduledPayment</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">List of schedule payment dates and amounts.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PaymentDateAndAmount">
+		<xs:sequence>
+			<xs:element name="PaymentDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PaymentDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date of a payment e.g. coupon, paydown, fee.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="BrokenDateProvision" type="BrokenDateProvision" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BrokenDateProvision</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Attributes that define a non-standard interest period.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Amount" type="Amount" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PayableDayAndMonth">
+		<xs:sequence>
+			<xs:element name="Day" minOccurs="1" maxOccurs="1">
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:minInclusive value="1"/>
+						<xs:maxInclusive value="31"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Month" minOccurs="1" maxOccurs="1">
+				<xs:simpleType>
+					<xs:restriction base="xs:integer">
+						<xs:minInclusive value="1"/>
+						<xs:maxInclusive value="12"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FixedRatePayment">
+		<xs:sequence>
+			<xs:element name="InterestRate" type="xs:decimal" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestRate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Rate of fixed interest payments.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InterestPayments" type="PaymentDatesAndAmounts" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestPayments</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">List of fixed rate interest payment dates and amounts.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InterestCommencementDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestCommencementDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Initial date for calculation of interest payments.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DayCountFraction" type="DayCountFraction" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DayCountFraction</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the method that determines the number of days in a period that is used to compute accruing interest of the product.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">ACT/360</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="BusinessDayConvention" type="BusinessDayConvention" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BusinessDayConvention</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the method that adjusts payment and interest calculation periods.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FOLLOWING, UNADJUSTED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RatingStepUpStepDown" type="Applicability" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RatingStepUpStepDown</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication that the note is subject to rate adjustments due to changes in credit rating.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="StepUpStepDownMargin" type="xs:decimal" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">StepUpStepDownMargin</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication that the note is subject to rate adjustments.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FloatingRatePayment">
+		<xs:sequence>
+			<xs:element name="InterestRate" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestRate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Rate of floating interest payments.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Spread" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Spread</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Adjustment to the reference index or benchmark price.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InterestPayments" type="PaymentDatesAndAmounts" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="Benchmark" type="InterestRateBenchmark" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestRateBenchmark</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Underlying reference rate on which the periodic interest payments are calculated.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DesignatedMaturityTerm" type="Term" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DesignatedMaturity</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The maturity period expressed in months or years.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ResetDate" type="ISODate" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ResetDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date when the floating rate interest in determined.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InterestCommencementDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestCommencementDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date after issuance when interest accrual begins.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CalculationProvision" type="CalculationProvision" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CalculationProvision</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Calculation method and any date or price adjustments.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DeterminationMethod" type="DeterminationMethod" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DeterminationMethod</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if the rate is calculated or based on an index.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FallbackReference" type="FloatingRatePayment" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FallbackReference</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Method and benchmark used to determine the floating rate when the primary rate cannot be determined.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Term" type="Term" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Term</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Term in days, months or year.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DayCountFraction" type="DayCountFraction" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DayCountFraction</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the method that determines the number of days in a period that is used to compute accruing interest of the product.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">ACT/360</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="BusinessDayConvention" type="BusinessDayConvention" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BusinessDayConvention</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the method that adjusts payment and interest calculation periods.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FOLLOWING, UNADJUSTED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Margin" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="RatingStepUpStepDown" type="Applicability" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="StepUpStepDownMargin" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ZeroCoupon">
+		<xs:sequence>
+			<xs:element name="Yield" type="PriceYieldDiscount" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="ReferencePrice" type="PriceYieldDiscount" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="DayCountFraction" type="DayCountFraction" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ResetSchedule">
+		<xs:sequence>
+			<xs:element name="ResetDates" type="ISODate" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="ResetTerm" type="Term" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DltPlatformOperationalInformation">
+		<xs:sequence>
+			<xs:element name="Type" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Type</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specifies the name of the underlying platform used in the design and operation of the DLT and covers a range of services such as accessibility, consensus mechanism, and governance. </xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Ethereum</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Accessibility" type="DltPlatformAcessibilityType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Accessibility</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Accessibility describes the scope of participants and whether participants' access is restricted.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">PRIVATE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Role" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Role</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The Role element describes the activities and services performed by the platform as described in the offering documents.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Paying Agent</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Operator" type="PlatformOperator" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Operator</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Party responsible for maintaining the operations of the platform.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">BANK XYZ</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Name" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Name</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The public or commercial name assigned to the platform.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">DLT XYZ</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Fee" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FeeDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">A description of the fees (if applicable) charged by the platform, how they are calculated and distributed.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Identifier" type="PlatformIdentifier" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Identifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">One or more identifiers assigned to the platform that may include a MIC, LEI, DTI or custom identifier.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">DTI XC7KDF8R9</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SmartContract" type="SmartContract" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SmartContract</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Name and identifier of the smart contract used by the platform in reference to the token type and purpose of the platform.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">0xE9Ac9b7zf6DA4FcDK8BE49</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SeriesTrancheClassGroup">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SeriesTrancheClassGroup</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Data group of elements that define a series, tranche or class.</xs:documentation>
+		</xs:annotation>
+		<xs:choice>
+			<xs:element name="Series" type="Series" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Series</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Data group of elements to define a series of multiple notes of similar characteristics under a single issuance.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Tranche" type="Tranche" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Tranche</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Data group of elements to define tranches of multiple notes of similar characteristics under a single issuance.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Class" type="Class" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Class</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Data group of elements to define classes of multiple notes of similar characteristics under a single issuance.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="Series">
+		<xs:sequence>
+			<xs:element name="SeriesIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SeriesIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">An custom alpha-numeric identifier assigned by the issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">287</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SeriesAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SeriesAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The aggregate nominal amount of this series.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2000000 EUR (See Amount Example)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SeriesDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SeriesDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Description of the series</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssuanceDataGroup" type="IssuanceDataGroup" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Tranche">
+		<xs:sequence>
+			<xs:element name="TrancheIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TrancheIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">An custom alpha-numeric identifier assigned by the issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TrancheAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TrancheAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The aggregate nominal amount of this tranche.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2000000 EUR (See Amount Example for details)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TrancheDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TrancheDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Description of the tranche.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssuanceDataGroup" type="IssuanceDataGroup" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Class">
+		<xs:sequence>
+			<xs:element name="ClassIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ClassIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">An custom alpha-numeric identifier assigned by the issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">A-1</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ClassAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ClassAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The aggregate nominal amount of this class.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2000000 EUR (See Amount Example)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ClassDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ClassDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Description of the class.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="IssuanceDataGroup" type="IssuanceDataGroup" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PlatformIdentifier">
+		<xs:sequence>
+			<xs:element name="MIC" type="MarketIdentifierCode" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="LEI" type="LEIIdentifier" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="DTI" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="BlockChainAddress" type="xs:string" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="Custom" type="xs:string" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PlatformOperator">
+		<xs:sequence>
+			<xs:element name="Operator" type="Party" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Operator</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The party responsible for operation of the platform. This field is a link to the party defined in the party block.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Decentralised" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Decentralised</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if the platform is decentralised.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="BDTExtensionDetails">
+		<xs:sequence>
+			<xs:element name="Provider" type="xs:string" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Provider</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Name of the extension provider.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Version" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Version</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Version of the extension.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SchemaLocation" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SchemaLocation</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Address of the extension.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Description" type="xs:string" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExtensionType">
+		<xs:sequence>
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Amount">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">AmountType</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Type of amount, in terms of money, units, percent or nominal.</xs:documentation>
+			<xs:documentation source="Example" xml:lang="EN">NOMINAL</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Value" type="xs:decimal" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Value</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Decimal value of the price or amount, in terms of money, units or nominal.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">5000000000.00</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AmountType" type="AmountType" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AmountType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Type of amount, in terms of money, units, percent or nominal.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">NOMINAL</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Currency" type="ISOCurrencyCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Currency</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Currency of the money or nominal amount.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">GBP</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AdjustedDate">
+		<xs:sequence>
+			<xs:element name="ReferenceDateDescription" type="xs:string">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ReferenceDateDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Description of the reference date to be adjusted.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="NumberOfDays" type="xs:integer"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Maturity">
+		<xs:sequence>
+			<xs:element name="MaturityType" type="MaturityType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MaturityType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The date, term or event that defines the end date of the security.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FIXED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MaturityDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MaturityDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The end date of the security when any remaining principal and interest is paid to the bond holder.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2033-12-20</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FinalMaturityDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MaturityDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The end date of the security when any remaining principal and interest is paid to the bond holder if different from the maturity date.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2033-12-20</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RedemptionProvision">
+		<xs:sequence>
+			<xs:element name="RedemptionType" type="RedemptionType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RedemptionType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Type of redemption (convertible, call, put, extraordinary)</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">MATURITY</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="EarlyRedemptionPercentage" type="xs:decimal" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">EarlyRedemptionPercentage</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Percentage of a specified amount that can be redeemed by the issuer prior to maturity.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">100</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FinalRedemptionPercentage" type="xs:decimal" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FinalRedemptionPercentage</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Percentage of a specified amount to be redeemed by the issuer at maturity.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">100</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="EarlyRedemptionAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">EarlyRedemptionAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specified amount or per calcuation amount if specified, that can be redeemed by the issuer prior to maturity.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">10000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FinalRedemptionAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FinalRedemptionAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specified amount or per calcuation amount if specified, that can be  redeemed by the issuer at maturity.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">20000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MinRedemptionAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MinRedemptionAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specified minimum amount or per calcuation amount if specified, to be redeemed by the issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">1000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="MaxRedemptionAmount" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">MaxRedemptionAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Specified maximum amount or per calcuation amount if specified, to be redeemed by the issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">10000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RedemptionPrice" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RedemptionPrice</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Price paid by the issuer at redemption.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">100.00</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RedemptionPremium" type="Amount" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RedemptionPremium</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Premium paid by the issuer at redemption.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">0</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FixingDate" type="ISODate" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FixingDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date(s) when the redemption price is determined.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2033-03-04</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="OptionalRedemptionDate" type="ISODate" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">OptionalRedemptionDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date(s) when the issuer or investor may redeem notes.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2027-03-04</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FinalRedemptionDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FinalRedemptionDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Last date when the issuer or investor may redeem notes.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2033-03-04</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="OptionalRedemptionPeriod" type="OptionalRedemptionPeriod" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">OptionalRedemptionPeriod</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Period of time when an option to redeem the notes is allowed.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">5Y</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="OptionalRedemptionType" type="OptionalRedemptionType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">OptionalRedemptionType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indicates whether securities or cash or both may be redeemed.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RedemptionPaymentBasis" type="RedemptionPaymentBasis" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RedemptionPaymentBasis</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Definition of how redemption amount is determined and provisions for determining redemption.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">PAR, PARTLY_ PAID, AMORTISING, etc.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="OptionalRedemptionPeriod">
+		<xs:sequence>
+			<xs:element name="OptionalRedemptionDateRange" type="DateRange" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">OptionalRedemptionDateRange</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Start and end date during which optional redemption is available.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Start Date: 2025-02-03, End Date: 2033-02-03</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="OptionalRedemptionAmount" type="Amount" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">OptionalRedemptionAmount</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Amount of the optional redemption.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2000000000</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="StatusOfNote">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">StatusOfNote</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Captures information relating to the seniority, subordinated, secured and preferred status of the note.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Seniority" type="SeniorityCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Seniority</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if the note is ranked as senior or junior.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">SENIOR</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Subordinated" type="SubordinatedCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Subordinated</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if the note is subordinated or unsubordinated.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">UNSUBORDINATED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Secured" type="SecuredCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Secured</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if the note is secured or unsecured.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">SECURED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Preferred" type="PreferredCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Preferred</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if the note is preferred or non-preferred.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">NON_PREFERRED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AdditionalStatusOfNote" type="AdditionalStatusOfNoteCode" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AdditionalStatusOfNoteCode</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication of the note's capital structure, Tier1 Capital, Covered, etc.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Event">
+		<xs:sequence>
+			<xs:element name="EventCode" type="EventType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">EventCode</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Code to indicate contingency or viability event.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="EventDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">EventDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Custom description and details of the event.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="EventDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">EventCode</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date of the event.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SellingRestrictions">
+		<xs:sequence>
+			<xs:element name="TEFRA" type="Tefra" minOccurs="0" maxOccurs="3">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TEFRA</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Codes for Tax Equity and Fiscal Responsibility Act of 1982.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="REGS" type="RegS" minOccurs="0" maxOccurs="4">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">REGS</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Codes for Regulation S of the U.S. Securities Act.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RULE144A" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Rule144A</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">True/False indicator if the note complies with U.S. Rule 144A.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SEC_Registered" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SEC_Registered</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">True/False indicator if the note is SEC Registered.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Rule3C7" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Rule3C7</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">True/False indicator if the note complies with Rule 3c7 exemption.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Accredited_Investor" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Rule3C7</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">True/False indicator that the note is only available to accredited investors as defined by the governing jurisdiction.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RiskLinkedSecurity" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Rule3C7</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">True/False indicator if the note is a risk linked security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PRIIPsRestriction" type="PRIIPsRestriction" minOccurs="0" maxOccurs="4">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PRIIPs</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Any prohibition of sales to EEA and/or UK retail investors pursuant to the EEA and/or UK PRIIPs Regulation.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">NO_EEA</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CCIRestriction" type="CCIRestriction" minOccurs="0" maxOccurs="4">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CCIRestriction</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">UK Consumer Composite Investments (CCI) regime.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">APPLICABLE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CountryRestrictions" type="ISOCountryCode" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CountryRestrictions</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">List of country codes with selling restrictions on the note.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">EU</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CurrencyRestrictions" type="ISOCurrencyCode" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CurrencyRestrictions</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">List of currency codes restrictions.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">EUR</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AdditionalSellingRestrictions" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AdditionalSellingRestrictions</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Free text field to describe additional selling restrictions.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Tefra">
+		<xs:sequence>
+			<xs:element name="TefraCode" type="TefraCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TefraCode</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Code to indicate US Tax Equity and Fiscal Responsibility Act of 1982</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">TEFRA_C</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TefraExchangeDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TefraExchangeDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date when security is exchangeable from temporary to permanent form.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2026-01-15</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AdditionalNotes" type="xs:string" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RegS">
+		<xs:sequence>
+			<xs:element name="RegSCode" type="RegSCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RegSCode</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Code to indicate US Regulation S exemption from registration.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">REGS_CAT1</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AdditionalNotes" type="xs:string" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="UseOfProceeds">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">UseOfProceeds</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Codes and text that describes how the proceeds from the sale of the bond will be allocated by the issuer to projects or other initiatives.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="UseOfProceedsPrimaryCategory" type="UseOfProceedsPrimaryCategory" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">UseOfProceedsPrimaryCategory</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Code used to describe the primary use of the proceeds.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">CPUR</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="UseOfProceedsSubCategory" type="UseOfProceedsSubCategory" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">UseOfProceedsSubCategory</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Code used to describe a subcategory of the use of the proceeds.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">CPUR</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="UseOfProceedsDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">UseOfProceedsDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Describes how the proceeds from the sale of the bond will be allocated by the issuer to projects or other initiatives.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Tax">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Tax</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Fields to define applicable country tax codes.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="TaxCode" type="TaxCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TaxCode</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The tax code from the BDT predefined lists.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">WITHHOLDING</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TaxProcessingEntity" type="Party" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TaxProcessingEntity</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The entity responsible for processing tax calculations and reporting.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">See Party Definition</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TaxDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TaxDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Supplements the description of tax code or tax provisions.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="WithHoldingTaxCountry" type="ISOCountryCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">WithHoldingTaxCountry</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Country code of the tax country jurisdiction.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">LU</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FormOfNote">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">FormOfNote</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Indication of the notes physical and legal form.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="PhysicalFormOfNote" type="PhysicalFormOfNote" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PhysicalFormOfNote</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication of the physical form as in material or electronic.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">UNCERTIFICATED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="LegalTitleFormOfNote" type="LegalTitleFormOfNote" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">LegalTitleFormOfNote</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication of the legal form as in bearer or registered.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">REGISTERED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="GlobalNote" type="GlobalNote" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">GlobalNote</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Note in global form held in central custody.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">NGN</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ExchangeableForDefinitiveNote" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ExchangeableForDefinitiveNote</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication that the global note is exchangeable for a definitive form of note.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GlobalNote">
+		<xs:sequence>
+			<xs:element name="GlobalNoteType" type="GlobalNoteType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">GlobalNoteType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Type of Global Note; New Global Note or Classic Global Note.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">NGN</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="GlobalNoteIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">GlobalNoteIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identifier assigned to the global note.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Global Note Document ID</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ExchangeableNoticeDays" type="xs:integer" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ExchangeableNoticeDays</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Number of days before a note is exchangeable.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PrivatePlacementProvision">
+		<xs:sequence>
+			<xs:element name="PrivatePlacement" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PrivatePlacement</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indicator (true/false) that the issuance is a private placement.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">false</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Jurisdiction" type="ISOCountryCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Jurisdiction</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Jurisdiction where the private placement rule applies.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">UK</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ReferenceRegulation" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ReferenceRegulation</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Regulation that defines the rules for private placement within the specified jurisdiction.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Distribution">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Distribution</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Details on the distribution method as private placement or public distribution.</xs:documentation>
+		</xs:annotation>
+		<xs:choice>
+			<xs:element name="PrivatePlacement" type="PrivatePlacementProvision" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PrivatePlacement</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication that the issuance is a private placement and jurisdiction where it applies.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DistributionMethod" type="DistributionMethod" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DistributionMethod</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication how the issuance is distributed as syndicated or non-syndicated.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">SYNDICATED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Auction" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Auction</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if the note is distributed through auction.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">false</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Confidential" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Confidential</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if the issuance is confidential.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">false</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="Address">
+		<xs:sequence>
+			<xs:element name="AddressLine1" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AddressLine1</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">First line of the address.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">6A CIRCUIT DE LA FOIRE INTERNATIONALE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AddressLine2" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AddressLine2</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Second line of the address.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Investor Relations</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AddressLine3" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AddressLine1</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Third line of the address.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">bureau 2</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="City" type="xs:string">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">City"</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">City of the address.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">LUXEMBOURG</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Region" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Region</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Region of the address.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN"/>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Country" type="xs:string">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Country</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Country of the address.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">LUXEMBOURG</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PostalCode" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PostalCode</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Postal code of the address.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">L-1347</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Programme">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Programme</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Program identifier and program description.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ProgrammeIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ProgrammeIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Alpha-numeric identifier assigned by the issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">EC092501</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ProgrammeDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ProgrammeDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Description of the programme assigned by the issuer.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">SCB Note Programme</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SwapRateDefinition">
+		<xs:sequence>
+			<xs:element name="Rate" type="Price" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Rate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Swap rate for the term specified.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">1.952</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Term" type="Term" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Term</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Term of the swap. Only required when term period defined. The term shall be expressed as an integer referring to a term period of days, weeks, months or years (as cited under Term Period).</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">5Y (See Term definition)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SwapDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SwapDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Text description of the swap.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">10Y Fixed versus SOFR</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ManufacturerTargetMarket">
+		<xs:sequence>
+			<xs:annotation>
+				<xs:documentation source="Name" xml:lang="EN">ManufacturerTargetMarket</xs:documentation>
+				<xs:documentation source="Definition" xml:lang="EN">Target market as defined by MiFID and MiFIR where the notes will be sold.</xs:documentation>
+			</xs:annotation>
+			<xs:element name="ManufacturerTargetMarketType" type="ManufacturerTargetMarketType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ManufacturerTargetMarketType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Code to define the MiFID or MIFIR market.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">UK_MIFIR_PROF_AND_ECPS</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RedemptionPaymentBasis">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">RedemptionPaymentBasis</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Redemption payment type (PAR) and amortising method if applicable.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="RedemptionPaymentBasisType" type="RedemptionPaymentBasisType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RedemptionPaymentBasisType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Definition of how redemption amount is determined.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">PAR</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AmortisingProvision" type="AmortisingProvision" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AmortisingProvision</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Method and schedule that determines how amortisation is calculated.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="RedemptionPaymentReference" type="Security" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">RedemptionPaymentReference</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Security on which the redemption payment is based.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AmortisingProvision">
+		<xs:sequence>
+			<xs:element name="AmortisingMethod" type="AmortisingMethod" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AmortisingMethod</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Method that determines how amortisation is calculated.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">STRAIGHT_LINE</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AmortisingSchedule" type="PaymentSchedule" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AmortisingSchedule</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Schedule of amortisation payment dates.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ForeignExchangeRateProvision">
+		<xs:sequence>
+			<xs:element name="ReferenceRate" type="Security" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ReferenceRate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The security or index that is observed/referenced to determine the foreign exchange rate.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">BRl PTAX</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ValuationDate" type="AdjustedDate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ValuationDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The observed or actual delivery date of the foreign exchange.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2026-01-09</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SubstitutionAndExchangeProvision">
+		<xs:sequence>
+			<xs:element name="SubstitutionAllowed" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SubstitutionAllowed</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if substitutions are allowed.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="EligibleSecurities" type="Security" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">EligibleSecurities</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">List of securities eligible to be pledged or substituted.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CentralBankEligibility">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">CentralBankEligibility</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Indication if the security is considered as eligible collateral within the central bank system.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Eligible" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Eligible</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">True/false indication if the security is considered as eligible collateral into the central bank system.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="EligibilityIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">EligibilityIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identifier assigned by the central bank or other agency to an eligible security.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CentralBankCountryCode" type="ISOCountryCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CentralBankCountryCode</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">ISO country code of the central bank.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Description" type="xs:string" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ChangeOfInterestPaymentBasis">
+		<xs:sequence>
+			<xs:element name="ChangeOfBasisDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ChangeOfBasisDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The date when any change in the interest rate calculation method occurs.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2028-02-23</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ChangeOfBasisType" type="ChangeOfBasisType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ChangeOfBasisType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication of the type of change of interest basis.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FIXED_TO_FLOAT</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="BusinessDayCalendar">
+		<xs:sequence>
+			<xs:element name="SettlementSystemCalendar" type="SystemIdentifier" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SettlementSystemCalendar</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">When a settlement system calendar is used to determine settlement dates.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">CBF</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CityCalendar" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CityCalendar</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">City code designation defined by ISO 3166-2</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GoverningLaw">
+		<xs:choice>
+			<xs:element name="CountryCode" type="ISOCountryCode" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="CountryCodeWithSubdivision" type="ISOCountryCodeWithSubdivision" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="Other" type="xs:string" minOccurs="0" maxOccurs="1"/>
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="Fungible">
+		<xs:sequence>
+			<xs:element name="IsFungible" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FungibleIndicator</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if the note is fungible.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">true</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ImmediatelyFungible" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ImmediatelyFungible</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">An indicator if the note is immediately fungible in lieu of a fixed date.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">false</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FungibleDate" type="ISODate" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FungibleDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Date when the note(s) from a TAP or similar offer become interchangeable as one and the same note.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2026-04-23</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="FungibleIdentifier" type="SecurityIdentifier" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">FungibleIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identifier of the note into which the note of this issuance is fungible.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">FR0015510310</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="BusinessDayConvention">
+		<xs:sequence>
+			<xs:element name="BusinessDayAdjustment" type="BusinessDayAdjustment" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BusinessDayAdjustment</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Code to indicate how the payment date will be adjusted by a non-business day.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">MODIFIED_FOLLOWING</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="InterestCalculationAdjustment" type="InterestCalculationAdjustment" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">InterestCalculationAdjustment</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Code to indicate how the interest period will be adjusted by a non-business day.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">ADJUSTED</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Term">
+		<xs:sequence>
+			<xs:element name="TermUnit" type="xs:integer" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Term</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Term of the index/benchmark. Only required when term period defined. The term shall be expressed as an integer referring to a term period of days, weeks, months or years (as cited under Term Period).</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">10</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TermPeriod" type="TermPeriod" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TermPeriod</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Term period of the index/benchmark. Only required when term period defined. The term period shall be expressed in days, weeks, months or years.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">YEAR</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CalculationProvision">
+		<xs:sequence>
+			<xs:element name="CalculationMethod" type="CalculationMethod" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CalculationMethod</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Method used to calculate an adjusted rate in terms of compounding, averaging or other methods.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">COMPOUNDING</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="AdjustmentProvision" type="AdjustmentProvision" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">AdjustmentProvision</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Attributes to describe the calculation method, observation method, and calculation date adjustments.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AdjustmentProvision">
+		<xs:sequence>
+			<xs:element name="CalculationMethod" type="CalculationMethod" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">CalculationMethod</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Method used to calculate an adjusted rate in terms of compounding, averaging or other methods.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ObservationMethod" type="ObservationMethod" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ObservationMethod</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication of how an adjusted rate is determined.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">LOOK_BACK</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ObservationPeriodShiftBusinessDays" type="xs:integer" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ObservationPeriodShiftBusinessDays</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Number of days to move the rate setting period.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ObservationPeriodShiftAdditionalBusinessDays" type="xs:integer" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ObservationPeriodShiftBusinessDays</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Number of additional days to move the rate setting period.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="LockoutPeriodBusinessDays" type="xs:integer" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">LockoutPeriodBusinessDays</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Number of business days during which the note cannot be called or redeemed.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="BrokenDateProvision">
+		<xs:sequence>
+			<xs:element name="BrokenDateType" type="BrokenDateType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BrokenDateType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Indication if the interest period is short or long.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">SHORT</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="CalculationProvision" type="CalculationProvision" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SmartContract">
+		<xs:sequence>
+			<xs:element name="SmartContractName" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SmartContractName</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Name of the smart contract used by the platform in reference to the token type and purpose of the platform.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Payment</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SmartContractDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SmartContractDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Description of the smart contract's purpose, function and role.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Executable smart contract to make interest and redemption payments.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SmartContractType" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SmartContractType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Custom description of the type of smart contract.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">ERC-1440S</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SmartContractAddress" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SmartContractAddress</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The smart contract identifier used to interact with a smart contract.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">0xAAc9Eb7cDDAzfd9e5CD43c23bd521aFcDK8BE29</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="SmartContractPublicKey" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SmartContractPublicKey</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The public cryptographic key associated with smart contracts that support key-based accounts.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">0xDAc9Eb8cDDAzfd9e5CD43b23bd521aFcDK8BE37</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Token" type="Token" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Token</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The token type, technical reference and identifier.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">456789</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Token">
+		<xs:sequence>
+			<xs:element name="TokenType" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TokenType</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The type of token(s) used on the platform. This is a free text field that allows for multiple tokens.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Security</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TokenTechnicalReference" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TokenTechnicalReference</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">One or more technical reference documents and specifications of the token(s).</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">ERC-1400</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="TokenTechnicalReferenceIdentifier" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">TokenTechnicalReferenceIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identifiers of the technical specifications reference in the TokenTechnicalReference tag.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ProductClassification">
+		<xs:sequence>
+			<xs:element name="ProductTaxonomy" type="TaxonomyCode" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ProductTaxonomy</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Codes that describes the product based on a taxonomy schema such as CFI or other.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ClassificationDetails" type="BDTExtensionDetails" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ClassificationDetails</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Details of the product classification extension.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ProductClassificationExtension" type="ExtensionType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">ProductClassificationExtension</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">An xsd extension for custom product classification.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="LinkedProducts">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">LinkedProducts</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Schema that describes linked or underlying products such as swaps.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="LinkedProductDetails" type="BDTExtensionDetails" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">LinkedProductDetails</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Details of the linked products extension.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="LinkedProductsExtension" type="ExtensionType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">LinkedProductsExtension</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">An xsd extension for linked products.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Platforms">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">Platforms</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">Schema that include platform specific data elements.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="PlatformDetails" type="BDTExtensionDetails" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PlatformDetails</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Details of the platoform extension.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PlatformExtension" type="ExtensionType" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">PlatformExtension</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">An xsd extension for platforms.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SystemIdentifier">
+		<xs:annotation>
+			<xs:documentation source="Name" xml:lang="EN">SystemIdentifier</xs:documentation>
+			<xs:documentation source="Definition" xml:lang="EN">BIC or MIC or other codes to identify a trading, clearing or settlement system.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="Code" type="IdentifierCode" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Code</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">BIC or MIC or other codes to identify a trading, clearing or settlement system.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Name" type="SystemName" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">SystemName</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The name of the system identified by the code.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Source" type="IdentifierSource" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Source</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">BIC or MIC or other source.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="OtherIdentifier">
+		<xs:sequence>
+			<xs:element name="Identifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">OtherIdentifier</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Identifier other than the predefine identifier types.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">INE002A01018</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="OtherIdentifierSchema" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">OtherIdentifierSchema</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The schema that defines the other identifier.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Aadhaar (India)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DocumentContacts">
+		<xs:sequence>
+			<xs:element name="Name" type="xs:string" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Name</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Name of the document creator or others involved in maintaining the document.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Issuer's Name</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Email" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Email</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Email address of the document creator or others involved in maintaining the document.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">issuer@issuer.com</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Address" type="Address" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Address</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Group of data elements for the address of the document creator or others involved in maintaining the document.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN"/>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DocumentInformation">
+		<xs:sequence>
+			<xs:element name="BDTVersion" type="Version" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">BDTVersion</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Version of the BDT XSD used to generate and validate an xml document.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2.0</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DocumentId" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentId</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Custom document identifier assigned by the creator of the XML document.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">5378-1</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DigitalDocumentIdentifier" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DOI</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Digital document identifier</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">12.1018/T0021-9258(11)52355-7</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DocumentVersion" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentVersion</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Custom version identifier assigned by document creator.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">1.01</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DocumentDescription" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentDescription</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Description of the xml document's specific purpose or intended use.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">Issuer draft for issuance of DBN 3.4 12/31/35</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DocumentDate" type="ISODate" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentDate</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The date assigned to the xml document by the document creator.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">2025-11-18</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DocumentStatus" type="DocumentStatus" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentStatus</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">The status of the document as defined by the creator.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">PENDING</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="DocumentContacts" type="DocumentContacts" minOccurs="1" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">DocumentContacts</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Contact names and emails.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Disclaimer" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation source="Name" xml:lang="EN">Disclaimer</xs:documentation>
+					<xs:documentation source="Definition" xml:lang="EN">Document creator's disclaimer statement with respect to this document and not other issuance documents.</xs:documentation>
+					<xs:documentation source="Example" xml:lang="EN">The creator of this xml does not guarantee the accuracy or completeness or other data contained herein. This xml document does not in any way supersede, replace or amend any of the terms of the issuance document from which this xml is derived.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

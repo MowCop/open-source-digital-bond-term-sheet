@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VDR Digital Term Sheet — Single-Tranche Vanilla Eurobond</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#E9EDF1; --surface:#FFFFFF; --surface-2:#F4F7F9; --ink:#16202B; --muted:#5D6E7E;
+  --rule:#CBD4DC; --rule-strong:#A9B6C1; --brass:#8A6A1F; --brass-soft:#F0E6CC;
+  --pass:#1F6F4A; --warn:#9A4A12; --fail:#8E2A2A; --focus:#1B5E8A;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#111820; --surface:#18212B; --surface-2:#1E2933; --ink:#E6ECF1; --muted:#9BABB8;
+    --rule:#2C3A47; --rule-strong:#3D4E5D; --brass:#D6B25F; --brass-soft:#3A2F14;
+    --pass:#5FC08D; --warn:#E39A5C; --fail:#E38080; --focus:#7BC1EA;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#111820; --surface:#18212B; --surface-2:#1E2933; --ink:#E6ECF1; --muted:#9BABB8;
+  --rule:#2C3A47; --rule-strong:#3D4E5D; --brass:#D6B25F; --brass-soft:#3A2F14;
+  --pass:#5FC08D; --warn:#E39A5C; --fail:#E38080; --focus:#7BC1EA;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-0.01em}
+a{color:var(--focus)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- masthead ---------- */
+.masthead{background:var(--surface);border-bottom:1px solid var(--rule);position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+.mast-in{max-width:1400px;margin:0 auto;padding:14px 20px 0;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.deal{flex:1 1 320px;min-width:260px}
+.deal input{font-family:var(--sans);font-size:19px;font-weight:600;color:var(--ink);background:transparent;border:0;border-bottom:1px dashed var(--rule);width:100%;padding:2px 0}
+.deal input:focus{border-bottom-color:var(--focus)}
+.deal .sub{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:5px}
+.mast-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{font-family:var(--mono);font-size:11.5px;padding:4px 9px;border:1px solid var(--rule-strong);border-radius:2px;color:var(--muted);background:var(--surface-2)}
+.pill.live{border-color:var(--brass);color:var(--brass);background:var(--brass-soft)}
+button{font-family:var(--sans);font-size:13.5px;border:1px solid var(--rule-strong);background:var(--surface);color:var(--ink);padding:7px 13px;border-radius:2px;cursor:pointer}
+button:hover{border-color:var(--ink)}
+button.primary{background:var(--brass);border-color:var(--brass);color:#fff;font-weight:500}
+:root[data-theme="dark"] button.primary,:root:not([data-theme="light"]) button.primary{color:#171208}
+button.primary:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{background:transparent}
+
+/* ---------- stage rail (the hero) ---------- */
+.rail{max-width:1400px;margin:0 auto;padding:14px 20px 0;overflow-x:auto}
+.rail ol{display:flex;list-style:none;margin:0;padding:0 0 2px;min-width:720px;gap:0}
+.rail li{flex:1;position:relative}
+.rail button.stage{width:100%;text-align:left;border:0;background:transparent;padding:6px 10px 12px 0;display:block;border-bottom:3px solid var(--rule)}
+.rail button.stage .n{font-family:var(--mono);font-size:11px;color:var(--muted);display:block}
+.rail button.stage .t{font-size:13px;color:var(--muted);white-space:nowrap}
+.rail li.done button.stage{border-bottom-color:var(--rule-strong)}
+.rail li.done .t{color:var(--ink)}
+.rail li.now button.stage{border-bottom-color:var(--brass)}
+.rail li.now .t{color:var(--ink);font-weight:600}
+.rail li.now .n{color:var(--brass)}
+.tabs{max-width:1400px;margin:0 auto;padding:10px 20px 0;display:flex;gap:2px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--rule);border-bottom:0;background:var(--surface-2);border-radius:2px 2px 0 0;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);font-weight:500;box-shadow:inset 0 2px 0 var(--brass)}
+
+/* ---------- layout ---------- */
+.shell{max-width:1400px;margin:0 auto;padding:0 20px 56px}
+.grid{display:grid;grid-template-columns:200px minmax(0,1fr) 288px;gap:20px;align-items:start;background:var(--surface);border:1px solid var(--rule);border-top:0;padding:18px}
+@media(max-width:1100px){.grid{grid-template-columns:minmax(0,1fr)}.sidenav,.checkscol{position:static!important}}
+.sidenav{position:sticky;top:130px}
+.sidenav h3,.checkscol h3{font-size:11.5px;font-family:var(--mono);color:var(--muted);font-weight:500;margin-bottom:8px}
+.sidenav a{display:flex;justify-content:space-between;gap:6px;padding:5px 0;font-size:13.5px;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--rule)}
+.sidenav a span{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sidenav a.gap span{color:var(--fail)}
+.checkscol{position:sticky;top:130px;max-height:calc(100vh - 170px);overflow:auto}
+
+/* ---------- term rows ---------- */
+section.block{margin:0 0 26px}
+section.block>h2{font-size:15px;padding-bottom:6px;border-bottom:1px solid var(--rule-strong);display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+section.block>h2 em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400}
+.note{font-size:13px;color:var(--muted);margin:8px 0 12px;max-width:66ch}
+.row{display:grid;grid-template-columns:30px 230px minmax(0,1fr);gap:10px;align-items:start;padding:7px 0;border-bottom:1px solid var(--rule)}
+@media(max-width:700px){.row{grid-template-columns:24px minmax(0,1fr)}.row .val{grid-column:2}}
+.row .num{font-family:var(--mono);font-size:11px;color:var(--muted);padding-top:7px}
+.row label{font-size:13.5px;padding-top:6px}
+.row label .xp{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);word-break:break-all;margin-top:2px}
+.row.req label{font-weight:500}
+.row.req label::after{content:" *";color:var(--fail)}
+.row.future{opacity:.5}
+input[type=text],input[type=date],input[type=number],select,textarea{width:100%;font-family:var(--mono);font-size:13px;color:var(--ink);background:var(--surface-2);border:1px solid var(--rule);border-radius:2px;padding:6px 8px}
+input[type=text].plain,textarea{font-family:var(--sans);font-size:13.5px}
+select{font-family:var(--sans)}
+textarea{min-height:62px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--focus);background:var(--surface)}
+.inline{display:flex;gap:6px;flex-wrap:wrap}
+.inline>*{flex:1 1 90px;min-width:80px}
+.chk{display:flex;align-items:center;gap:7px;font-size:13.5px;padding-top:5px}
+.chk input{width:16px;height:16px;accent-color:var(--brass)}
+.hint{font-size:12px;color:var(--muted);margin-top:3px}
+.bad input,.bad select{border-color:var(--fail)}
+.fielderr{font-size:12px;color:var(--fail);margin-top:3px}
+
+/* ---------- repeating groups ---------- */
+.cards{display:flex;flex-direction:column;gap:10px;margin:10px 0}
+.card{border:1px solid var(--rule);border-left:3px solid var(--rule-strong);padding:11px;background:var(--surface-2)}
+.card.isr{border-left-color:var(--brass)}
+.card .head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
+.card .head b{font-size:13px}
+.card .fr{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.card .fr label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:3px}
+button.mini{font-size:12px;padding:3px 8px}
+
+/* ---------- checks ---------- */
+.check{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--rule);font-size:12.5px;align-items:flex-start}
+.check .dot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;margin-top:5px}
+.dot.pass{background:var(--pass)}.dot.warn{background:var(--warn)}.dot.fail{background:var(--fail)}
+.check b{font-weight:500;display:block}
+.check p{margin:2px 0 0;color:var(--muted)}
+.meter{height:6px;background:var(--rule);border-radius:3px;overflow:hidden;margin:6px 0 12px}
+.meter i{display:block;height:100%;background:var(--brass)}
+.tally{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:4px}
+
+/* ---------- panes ---------- */
+.pane{display:none}
+.pane.on{display:block}
+pre.out{font-family:var(--mono);font-size:12px;background:var(--surface-2);border:1px solid var(--rule);padding:12px;overflow:auto;max-height:66vh;white-space:pre;margin:0}
+.ts{max-width:74ch}
+.ts h2{font-size:17px;margin-bottom:2px}
+.ts .issuer{font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:14px}
+.ts table{width:100%;border-collapse:collapse;font-size:13.5px}
+.ts th{text-align:left;font-weight:500;vertical-align:top;padding:6px 12px 6px 0;width:34%;border-bottom:1px solid var(--rule);color:var(--muted)}
+.ts td{padding:6px 0;border-bottom:1px solid var(--rule);font-family:var(--mono);font-size:12.5px;word-break:break-word}
+.ts caption{caption-side:bottom;text-align:left;font-size:12px;color:var(--muted);padding-top:12px}
+.legend{font-size:11.5px;color:var(--muted);border:1px solid var(--rule);border-left:3px solid var(--brass);padding:9px 11px;margin:14px 0}
+.chan{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:14px 0}
+.chan .c{border:1px solid var(--rule);padding:13px;background:var(--surface-2)}
+.chan .c h3{font-size:13.5px;font-family:var(--sans);color:var(--ink);margin-bottom:5px}
+.chan .c p{font-size:12.5px;color:var(--muted);margin:0 0 10px}
+.log{font-family:var(--mono);font-size:12px;border-collapse:collapse;width:100%}
+.log th,.log td{text-align:left;padding:6px 10px 6px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--ground);font-size:13px;padding:9px 15px;border-radius:2px;z-index:60;max-width:90vw}
+.footbar{position:fixed;bottom:0;left:0;right:0;padding:8px 20px calc(8px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--rule);display:flex;gap:12px;justify-content:space-between;align-items:center;font-size:12.5px;z-index:30}
+@media print{
+  .masthead,.footbar,.sidenav,.checkscol,.tabs,.rail,button{display:none!important}
+  .grid{grid-template-columns:1fr;border:0;padding:0}
+  body{background:#fff;color:#000;font-size:11pt}
+  .ts td,.ts th{border-bottom:1px solid #999}
+  .pane:not(.on){display:none}
+}
+.filter{width:100%;margin-bottom:10px}
+.diff{font-family:var(--mono);font-size:12px}
+.diff div{padding:4px 0;border-bottom:1px solid var(--rule)}
+.diff s{color:var(--muted);text-decoration:line-through}
+.diff b{color:var(--brass);font-weight:500}
+
+.expander{margin-top:10px;font-size:12.5px;color:var(--muted);border-style:dashed}
+.expander:hover{color:var(--ink)}
+.dropzone{border:1.5px dashed var(--rule-strong);background:var(--surface-2);padding:20px;text-align:center;display:flex;flex-direction:column;gap:7px;align-items:center;border-radius:2px}
+.dropzone.over{border-color:var(--brass);background:var(--brass-soft)}
+.dropzone b{font-size:14px}
+.dropzone span{font-size:12px;color:var(--muted)}
+.filelist{margin-top:10px}
+.filelist div{display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;padding:5px 0;border-bottom:1px solid var(--rule)}
+.sugs{border-top:1px solid var(--rule-strong)}
+.sug{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule)}
+@media(max-width:760px){.sug{grid-template-columns:minmax(0,1fr)}}
+.sug b{font-size:13px;font-weight:500;display:block}
+.sug .src{font-family:var(--mono);font-size:10.5px;color:var(--muted);word-break:break-all}
+.sug .vals{font-family:var(--mono);font-size:12px;word-break:break-word}
+.sug .vals s{color:var(--muted)}
+.sug .vals b{display:inline;color:var(--brass)}
+button.mini.primary{background:var(--brass);border-color:var(--brass);color:#fff}
+:root[data-theme="dark"] button.mini.primary{color:#171208}
+.footbar .st{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="masthead">
+  <div class="mast-in">
+    <div class="deal">
+      <input id="dealName" value="" aria-label="Deal name" placeholder="Issuer — currency, tenor, format">
+      <div class="sub"><span id="dealRef"></span> · v<span id="verLbl">0.1</span> · BDT 2.0.0</div>
+    </div>
+    <div class="mast-actions">
+      <span class="pill" id="stagePill">Stage 1 · Announcement</span>
+      <span class="pill" id="valPill">—</span>
+      <button class="ghost" id="btnExample">Load worked example</button>
+      <button class="ghost" id="btnTheme" title="Switch light/dark">Theme</button>
+      <button class="primary" id="btnRelease">Release to stakeholders</button>
+    </div>
+  </div>
+  <div class="rail"><ol id="rail"></ol></div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+</div>
+
+<div class="shell">
+  <div class="grid">
+    <nav class="sidenav" id="sidenav" aria-label="Sections"><h3>Sections</h3><div id="navlist"></div></nav>
+    <main>
+      <div class="pane on" id="pane-fill"></div>
+      <div class="pane" id="pane-sheet"></div>
+      <div class="pane" id="pane-xml"></div>
+      <div class="pane" id="pane-env"></div>
+      <div class="pane" id="pane-legends"></div>
+      <div class="pane" id="pane-dist"></div>
+      <div class="pane" id="pane-log"></div>
+    </main>
+    <aside class="checkscol" id="checkscol"><h3>Readiness for this stage</h3><div id="checks"></div></aside>
+  </div>
+</div>
+
+<div class="footbar">
+  <span class="st" id="saveState">Draft held in this browser only</span>
+  <span class="st">Legal documentation prevails over this digital record</span>
+</div>
+<script>
+/* ============================================================
+   VDR Digital Term Sheet — field dictionary
+   Paths are BDT 2.0 element paths below <ICMABondDataTaxonomy>.
+   Fields marked ext:1 are VDR execution fields with no BDT 2.0
+   home; they travel in the VDR envelope, not the BDT payload.
+   ============================================================ */
+const STAGES = [
+  {k:"ANNOUNCE", t:"Announcement"},
+  {k:"IPT",      t:"Initial price thoughts"},
+  {k:"GUIDANCE", t:"Guidance"},
+  {k:"LAUNCH",   t:"Spread set / launch"},
+  {k:"PRICED",   t:"Priced"},
+  {k:"ALLOCATED",t:"Allocated"},
+  {k:"FINAL",    t:"Final terms"}
+];
+
+const E = {
+  DocumentStatus:["PENDING","ISSUED","WITHDRAWN"],
+  PartyRoleType:["ISSUER","GUARANTOR","GLOBAL_COORDINATOR","LEAD_MANAGER","JOINT_LEAD_MANAGER","JOINT_BOOKRUNNER","CO_MANAGER","ARRANGER","UNDERWRITER","PLACEMENT_AGENT","STABILISATION_MANAGER","BILLING_AND_DELIVERY_AGENT","FISCAL_AGENT","PRINCIPAL_PAYING_AGENT","PAYING_AGENT","CALCULATION_AGENT","TRUSTEE","REGISTRAR","TRANSFER_AGENT","CUSTODIAN","CSD_ICSD","LISTING_AGENT","LODGING_AGENT","ISSUE_AGENT","SETTLEMENT_AGENT","DETERMINATION_AGENT","EXCHANGE_AGENT","INFORMATION_AGENT","LEGAL_ADVISOR","LEGAL_COUNSEL","AUDITOR","PLATFORM_OPERATOR"],
+  PartyType:["CORPORATION","SUPRANATIONAL","SOVEREIGN","MUNICIPAL","PROVINCE","STATE","COUNTY","PARTNERSHIP","FINANCIALINSTITUTION","NATIONAL"],
+  RatingAgency:["FITCH","MOODYS","SNPG","DBRS","SCOPE"],
+  RatingOutlook:["POSITIVE","STABLE","NEGATIVE","DEVELOPING","NOT_MEANINGFULL","EVOLVING","NOT_APPLICABLE"],
+  IssuanceType:["STANDALONE","PROGRAMME","PROGRAMME_NOTE","GLOBAL_NOTE","SERIES","TRANCHE","CLASS","TAP"],
+  AmountType:["NOMINAL","MONEY","UNIT","PERCENT"],
+  PriceType:["PERCENT","ABSOLUTE","SPREAD","BASIS_POINT"],
+  FeeAllocationType:["EQUAL","PROPORTIONAL"],
+  DeliveryType:["DVP","FREE_OF_PAYMENT"],
+  TermPeriod:["DAY","WEEK","MONTH","QUARTER","SEMI_ANNUAL","YEAR"],
+  BenchmarkCode:["ESTR","EURI","SOFR","SONA","TREA","SWAP","ECBR","CORA","TIBO","BBSW","CDOR","NIBO","STBO","CIBO","HKIO","JIBA","WIBO","OTHR"],
+  UseOfProceedsPrimary:["CORPORATE_PURPOSES","SOVEREIGN_FINANCING","MERGERS_ACQUISITION_FINANCING","MERGERS_ACQUISITION_SEED_FINANCING","INVESTMENT","LBO_FINANCING","DEBT_REFINANCING","REGULATORY","GENERAL_ASSET_FINANCING","SUSTAINABLE_FINANCING"],
+  UseOfProceedsSub:["GENERAL_PURPOSES","STRAIGHT_BOND","TIER1_CAPITAL","TIER2_CAPITAL","TIER3_CAPITAL","BAIL_IN","COVERED_BOND","ICMA_GREEN_BOND_PRINCIPLES","ICMA_SOCIAL_BOND_PRINCIPLES","ICMA_SUSTAINABILITY_BOND_GUIDELINES","ICMA_SUSTAINABILITY_LINKED_BOND_PRINCIPLES","OTHER"],
+  ListingMarket:["LONDON_STOCK_EXCHANGE","LUXEMBOURG_STOCK_EXCHANGE","EURONEXT_DUBLIN","EURONEXT_AMSTERDAM","EURONEXT_PARIS","EURONEXT_BRUSSELS","FRANKFURT_STOCK_EXCHANGE","BORSA_ITALIANA","SIX_SWISS_EXCHANGE","VIENNA_STOCK_EXCHANGE","SINGAPORE_SGX","HONGKONG_STOCK_EXCHANGE","NASDAQ_DUBAI","INTERNATIONAL_STOCK_EXCHANGE","NOT_LISTED"],
+  ListingMarketType:["RMKT","RMQI","MSGM","MLTF"],
+  ClearingSystem:["EUROCLEAR_BANK_SA/NV","CLEARSTREAM_BANKING_S.A.","CLEARSTREAM_BANKING_FRANKFURT","CLEARSTREAM_EUROPE_AG(CEU)","THE_DEPOSITORY_TRUST_COMPANY","CENTRAL_MONEYMARKETS_UNIT","EURONEXT_SECURITIES_MILANO","T2"],
+  PlaceOfDeposit:["EUROCLEAR_BANK_SA/NV","CLEARSTREAM_BANKING_S.A.","CLEARSTREAM_BANKING_FRANKFURT","THE_DEPOSITORY_TRUST_COMPANY","CENTRAL_MONEYMARKETS_UNIT"],
+  DistributionMethod:["SYNDICATED","NON-SYNDICATED"],
+  TaxCode:["GROSS_UP","EXEMPT","WITHHOLDING","WITHHOLDING_PROCESSED_BY_ICSD","ITALIAN_239T","ITALIAN_239A","US_SOURCE_US_WITHHOLDING","US_TAX_SECTION_871M","US_TAX_OTHER_INCOME"],
+  TefraCode:["TEFRA_C","TEFRA_D","TEFRA_NA","TEFRA_NoCode"],
+  RegSCode:["REGS_CAT1","REGS_CAT2","REGS_CAT3","REGS_NA","REGS_NoCode"],
+  PRIIPs:["NO_EEA","NO_UK","EEA","UK","NOT_APPLICABLE"],
+  CCI:["APPLICABLE","NOT_APPLICABLE"],
+  TargetMarket:["EU_MIFIDII_PROF_AND_ECPS","UK_MIFIDII_PROF_AND_ECPS","EU_MIFIR_PROF_AND_ECPS","UK_MIFIR_PROF_AND_ECPS","EU_MIFIDII_RETAIL_PROF_ECPS","UK_MIFIDII_RETAIL_PROF_ECPS","NOT_APPLICABLE"],
+  Applicability:["APPLICABLE","NOT_APPLICABLE"],
+  RedemptionType:["MATURITY","ISSUER_CALL","INVESTOR_PUT","SINKING_FUND","CHANGE_OF_CONTROL_PUT_EVENT","REGULATORY_REASONS","EXTRAORDINARY","CONVERTIBLE"],
+  PhysicalForm:["GLOBAL_NOTE_CERTIFICATE","CERTIFICATED","DEMATERIALISED","UNCERTIFICATED"],
+  LegalTitleForm:["BEARER","REGISTERED","DEMATERIALISED","BOOK_ENTRY","COLLECTIVE_DEBT_REGISTERED_CLAIM"],
+  GlobalNoteType:["PERMANENT","TEMPORARY","REGISTERED"],
+  SafeKeeping:["NEW_GLOBAL_NOTE","CLASSIC_GLOBAL_NOTE","NEW_SAFEKEEPING_STRUCTURE_PHYSICAL","NEW_SAFEKEEPING_STRUCTURE_ELECTRONIC","RESTRICTED","UNRESTRICTED"],
+  GuaranteeType:["NO_GUARANTEE","GOVERNMENT","STATE","JOINT"],
+  Seniority:["SENIOR","SUPER_SENIOR","MEZZANINE","JUNIOR"],
+  Subordinated:["UNSUBORDINATED","SUBORDINATED"],
+  Secured:["UNSECURED","SECURED"],
+  Preferred:["PREFERRED","NON_PREFERRED"],
+  AdditionalStatus:["TIER1CAPITAL","TIER2CAPITAL","TIER3CAPITAL","BAIL-IN","COVERED","STRUCTURED_COVERED"],
+  MaturityType:["FIXED","PERPETUAL","EXTENDIBLE"],
+  InterestType:["FIXED","FLOATING","ZERO_COUPON","RESET","INDEX_LINKED_INTEREST","VARIABLE","PAYMENT_IN_KIND"],
+  Frequency:["ANNUALLY","SEMIANNUALLY","QUARTERLY","MONTHLY","BIANNUALLY","BIMONTHLY","ATMATURITY","NONE"],
+  DayCount:["ICMA_ACT/ACT","ISDA_ACT/ACT","ACT/ACT","ACT/360","ACT/365","ACT/365F","30/360","30E/360","30U/360","ISMA_30/360","ISDA_30E/360","30E+/360","30/360M","30/365","ACT/365L","NL/365","BUS/252"],
+  BusinessDayAdj:["FOLLOWING","MODIFIED_FOLLOWING","PRECEDING"],
+  InterestCalcAdj:["UNADJUSTED","ADJUSTED"],
+  BrokenDate:["SHORT","LONG"],
+  Optionality:["NOT_APPLICABLE","CALL","PUT","CHANGE_OF_CONTROL_PUT_EVENT"],
+  ESGLabel:["GREEN","SOCIAL","SUSTAINABILITY","SUSTAINABILITY_LINKED","CLIMATE_TRANSITION"],
+  IdType:["ISIN","COMMON_CODE","TEMPORARY_ISIN","TEMPORARY_COMMON_CODE","CUSIP","FIGI","SEDOL","WKN","VALOR","DTI","CMU","SeriesIdentifier","TrancheIdentifier","OtherIdentifier"]
+};
+
+const SECTIONS = [
+  {id:"doc",     t:"Document control",              n:"Identity, version and status of this record. The deal reference and version are what let every downstream consumer tell which message supersedes which."},
+  {id:"parties", t:"Parties",                       n:"One entry per party, each with its own roles. A party may hold several roles, which is how a bookrunner that is also stabilisation manager is expressed."},
+  {id:"deal",    t:"Deal and format",               n:"Whether this is a standalone issue or a drawdown under a programme, and the documentation route it follows."},
+  {id:"size",    t:"Size, currency and denominations", n:"Indicative maximum size can be carried from announcement; final size is required once the deal is priced."},
+  {id:"time",    t:"Timetable",                     n:"Execution and settlement dates. Ordering is checked: pricing on or before issue, issue on or before settlement, maturity after settlement."},
+  {id:"price",   t:"Pricing",                       n:"Reoffer levels, benchmark and mid-swap reference. Fields here become mandatory at spread set and pricing."},
+  {id:"exec",    t:"Execution messaging",           n:"Fields the market uses during execution that BDT 2.0 does not model. These travel in the VDR envelope alongside the BDT payload, never inside it."},
+  {id:"prod",    t:"Security identification",       n:"Names and codes. Temporary codes can be used before the ISIN is confirmed, then replaced without breaking the deal reference."},
+  {id:"form",    t:"Form, safekeeping and eligibility", n:"Form of note drives TEFRA treatment, ICSD safekeeping structure and central bank eligibility."},
+  {id:"status",  t:"Status and ranking",            n:"Seniority, subordination, security and any regulatory capital label."},
+  {id:"interest",t:"Interest and maturity",         n:"Fixed rate single tranche. Floating, reset and zero coupon exist in BDT and are switched on in later iterations of this template."},
+  {id:"red",     t:"Redemption",                    n:"Vanilla redemption at par on the maturity date. Call and put structures are the subject of the next iteration."},
+  {id:"listing", t:"Listing, clearing and settlement", n:"Where the notes are admitted to trading and how they clear and settle."},
+  {id:"legal",   t:"Governing law, tax and covenants", n:"Law, withholding treatment and the standard covenant set."},
+  {id:"restrict",t:"Selling restrictions and target market", n:"Legends and product governance. The UK POATRs regime took effect on 19 January 2026 and the UK CCI regime replaced UK PRIIPs on 6 April 2026, so UK wording differs from pre-2026 precedents."},
+  {id:"docs",    t:"Documentation",                 n:"Every document the deal relies on, including each supplement on file. Attach or link the offering memorandum, base prospectus, supplements and the signed final terms."},
+  {id:"esg",     t:"Labels and digital issuance",   n:"ESG label, Shariah compliance and DLT flags."}
+];
+
+/* f: path | label | type | options */
+function f(sec,p,l,t,o){return Object.assign({sec:sec,p:p,l:l,t:t,from:1,req:0},o||{});}
+
+const FIELDS = [
+  /* ---- DocumentInformation ---- */
+  f("doc","DocumentInformation/BDTVersion","BDT version","text",{req:1,fixed:1}),
+  f("doc","DocumentInformation/DocumentId","Document id","text",{req:1,auto:1,hint:"Immutable id for this message. Auto-generated."}),
+  f("doc","DocumentInformation/DigitalDocumentIdentifier","Digital document identifier","text",{hint:"Hash or DLT reference once the record is anchored."}),
+  f("doc","DocumentInformation/DocumentVersion","Version","text",{req:1,auto:1,hint:"Increments on each release."}),
+  f("doc","DocumentInformation/DocumentDescription","Description","text",{req:1,auto:1,plain:1}),
+  f("doc","DocumentInformation/DocumentDate","Document date","date",{req:1}),
+  f("doc","DocumentInformation/DocumentStatus","Status","sel",{e:"DocumentStatus",req:1,hint:"BDT offers three values only. The execution stage is carried in the envelope."}),
+  f("doc","@contacts","Contacts","group",{g:"contacts",req:1}),
+  f("doc","DocumentInformation/Disclaimer","Disclaimer","ta",{req:1}),
+  f("doc","IssuanceDataGroup/IssuanceDescription","Issuance description","text",{plain:1}),
+
+  /* ---- Parties ---- */
+  f("parties","@parties","Parties","group",{g:"parties",req:1}),
+
+  /* ---- Issuance: deal and format ---- */
+  f("deal","IssuanceDataGroup/Issuance/IssuanceType","Issuance type","sel",{e:"IssuanceType",req:1}),
+  f("deal","IssuanceDataGroup/Issuance/IssuanceDescription","Issue description","text",{plain:1,req:4,hint:"The one-line description used on the final terms cover."}),
+  f("deal","IssuanceDataGroup/Issuance/DealIdentifier","Deal identifier","text",{req:1,hint:"The key that binds every message on this deal together. Set once, never changed."}),
+  f("deal","IssuanceDataGroup/Issuance/Programme/ProgrammeIdentifier","Programme identifier","text"),
+  f("deal","IssuanceDataGroup/Issuance/Programme/ProgrammeDescription","Programme description","text",{plain:1}),
+  f("deal","IssuanceDataGroup/Issuance/ReOpen","Reopening of an existing series","bool"),
+  f("deal","IssuanceDataGroup/Issuance/PrivatePlacement/PrivatePlacement","Private placement","bool"),
+  f("deal","IssuanceDataGroup/Issuance/PrivatePlacement/Jurisdiction","Private placement jurisdiction","text",{ph:"GB"}),
+
+  /* ---- Size ---- */
+  f("size","IssuanceDataGroup/Issuance/SpecifiedDenomination/Value","Specified denomination","num",{req:1}),
+  f("size","IssuanceDataGroup/Issuance/SpecifiedDenomination/AmountType","Denomination amount type","sel",{e:"AmountType",req:1}),
+  f("size","IssuanceDataGroup/Issuance/MinimumDenomination/Value","Minimum denomination","num"),
+  f("size","IssuanceDataGroup/Issuance/MinimumDenomination/AmountType","Minimum denomination type","sel",{e:"AmountType"}),
+  f("size","IssuanceDataGroup/Issuance/IntegralMultiples/Value","Integral multiples","num"),
+  f("size","IssuanceDataGroup/Issuance/IntegralMultiples/AmountType","Integral multiples type","sel",{e:"AmountType"}),
+  f("size","IssuanceDataGroup/Issuance/CalculationAmount/Value","Calculation amount","num"),
+  f("size","IssuanceDataGroup/Issuance/CalculationAmount/AmountType","Calculation amount type","sel",{e:"AmountType"}),
+  f("size","IssuanceDataGroup/Issuance/TotalAggregateAmount/Value","Total aggregate amount","num",{req:5,hint:"Final size. Leave empty while the deal is still \u201cbenchmark\u201d."}),
+  f("size","IssuanceDataGroup/Issuance/TotalAggregateAmount/AmountType","Total aggregate amount type","sel",{e:"AmountType",req:5}),
+  f("size","IssuanceDataGroup/Issuance/MaximumAmount/Value","Maximum size","num",{from:2,hint:"Indicative cap communicated at IPT, e.g. 500m max."}),
+  f("size","IssuanceDataGroup/Issuance/MaximumAmount/AmountType","Maximum size type","sel",{e:"AmountType",from:2}),
+  f("size","IssuanceDataGroup/Issuance/SpecifiedCurrency","Specified currency","text",{req:1,ph:"EUR",cur:1}),
+  f("size","IssuanceDataGroup/Issuance/PaymentCurrency","Payment currency","text",{cur:1}),
+  f("size","IssuanceDataGroup/Issuance/SettlementCurrency","Settlement currency","text",{cur:1}),
+
+  /* ---- Timetable ---- */
+  f("time","IssuanceDataGroup/Issuance/PricingDate","Pricing date","date",{req:5}),
+  f("time","IssuanceDataGroup/Issuance/IssueDate","Issue date","date",{req:4}),
+  f("time","IssuanceDataGroup/Issuance/SettlementDate","Settlement date","date",{req:5}),
+  f("time","IssuanceDataGroup/Issuance/ClosingDate","Closing date","date"),
+  f("time","IssuanceDataGroup/Issuance/Delivery","Delivery","sel",{e:"DeliveryType",req:5}),
+
+  /* ---- Pricing ---- */
+  f("price","IssuanceDataGroup/Issuance/IssuePrice/Value","Issue price","num",{req:5,step:"0.001"}),
+  f("price","IssuanceDataGroup/Issuance/IssuePrice/PriceType","Issue price type","sel",{e:"PriceType",req:5}),
+  f("price","IssuanceDataGroup/Issuance/IndicationOfYield/Value","Indication of yield","num",{req:5,step:"0.001"}),
+  f("price","IssuanceDataGroup/Issuance/ReofferPrice/Value","Reoffer price","num",{from:4,step:"0.001"}),
+  f("price","IssuanceDataGroup/Issuance/ReofferYield/Value","Reoffer yield","num",{from:4,step:"0.001"}),
+  f("price","IssuanceDataGroup/Issuance/Benchmark/Ticker/Ticker","Benchmark security","text",{from:2,ph:"DBR 0 08/15/31"}),
+  f("price","IssuanceDataGroup/Issuance/Benchmark/Ticker/Source","Benchmark source","text",{from:2,ph:"BLOOMBERG"}),
+  f("price","IssuanceDataGroup/Issuance/Benchmark/Maturity/MaturityDate","Benchmark maturity","date",{from:2}),
+  f("price","IssuanceDataGroup/Issuance/Benchmark/InterestRate","Benchmark coupon","num",{from:2,step:"0.001"}),
+  f("price","IssuanceDataGroup/Issuance/Benchmark/Price/Price/Value","Benchmark price","num",{from:4,step:"0.001"}),
+  f("price","IssuanceDataGroup/Issuance/Benchmark/Price/Yield/Value","Benchmark yield","num",{from:4,step:"0.001"}),
+  f("price","IssuanceDataGroup/Issuance/ReofferSpreadToBenchmark/Value","Spread to benchmark","num",{from:4,step:"0.1"}),
+  f("price","IssuanceDataGroup/Issuance/ReofferSpreadToBenchmark/PriceType","Spread to benchmark type","sel",{e:"PriceType",from:4}),
+  f("price","IssuanceDataGroup/Issuance/MidSwapRate/Rate/Value","Mid-swap rate","num",{from:4,step:"0.001"}),
+  f("price","IssuanceDataGroup/Issuance/MidSwapRate/Term/TermUnit","Mid-swap term","num",{from:4}),
+  f("price","IssuanceDataGroup/Issuance/MidSwapRate/Term/TermPeriod","Mid-swap term period","sel",{e:"TermPeriod",from:4}),
+  f("price","IssuanceDataGroup/Issuance/MidSwapRate/SwapDescription","Mid-swap description","text",{from:4,plain:1}),
+  f("price","IssuanceDataGroup/Issuance/ReofferSpreadtoMidSwapRate/Value","Spread to mid-swaps","num",{from:3,step:"0.1"}),
+  f("price","IssuanceDataGroup/Issuance/ReofferSpreadtoMidSwapRate/PriceType","Spread to mid-swaps type","sel",{e:"PriceType",from:3}),
+  f("price","IssuanceDataGroup/Issuance/Fee/Percentage","Combined management and underwriting fee","num",{req:5,step:"0.001"}),
+  f("price","IssuanceDataGroup/Issuance/Fee/FeeAllocationType","Fee allocation","sel",{e:"FeeAllocationType",req:5}),
+  f("price","IssuanceDataGroup/Issuance/Proceeds/Gross/Value","Gross proceeds","num",{from:5}),
+  f("price","IssuanceDataGroup/Issuance/Proceeds/Gross/AmountType","Gross proceeds type","sel",{e:"AmountType",from:5}),
+  f("price","IssuanceDataGroup/Issuance/Proceeds/Net/Value","Net proceeds","num",{from:5}),
+  f("price","IssuanceDataGroup/Issuance/Proceeds/Net/AmountType","Net proceeds type","sel",{e:"AmountType",from:5}),
+  f("price","IssuanceDataGroup/Issuance/Proceeds/ProceedsCurrency","Proceeds currency","text",{from:5,cur:1}),
+  f("price","IssuanceDataGroup/Issuance/Proceeds/UseOfProceeds/UseOfProceedsPrimaryCategory","Use of proceeds","sel",{e:"UseOfProceedsPrimary",req:1}),
+  f("price","IssuanceDataGroup/Issuance/Proceeds/UseOfProceeds/UseOfProceedsSubCategory","Use of proceeds sub-category","sel",{e:"UseOfProceedsSub"}),
+  f("price","IssuanceDataGroup/Issuance/Proceeds/UseOfProceeds/UseOfProceedsDescription","Use of proceeds description","ta"),
+
+  /* ---- Listing, clearing ---- */
+  f("listing","IssuanceDataGroup/Issuance/Listing/Listed","Listed","bool",{req:1}),
+  f("listing","IssuanceDataGroup/Issuance/Listing/ListingVenue/MIC","Listing venue MIC","text",{ph:"XLON"}),
+  f("listing","IssuanceDataGroup/Issuance/Listing/ListingVenue/Market","Listing venue","sel",{e:"ListingMarket",req:4}),
+  f("listing","IssuanceDataGroup/Issuance/Listing/ListingVenue/MarketType","Market type","sel",{e:"ListingMarketType",req:4}),
+  f("listing","IssuanceDataGroup/Issuance/SecuritiesClearingSystem/Code","Clearing system","sel",{e:"ClearingSystem",req:1}),
+  f("listing","IssuanceDataGroup/Issuance/SecuritiesSettlementSystem/Code","Settlement system","sel",{e:"ClearingSystem"}),
+  f("listing","IssuanceDataGroup/Issuance/PlaceOfDeposit","Place of deposit","sel",{e:"PlaceOfDeposit",req:4}),
+  f("listing","IssuanceDataGroup/Issuance/MethodOfDistribution/DistributionMethod","Method of distribution","sel",{e:"DistributionMethod",req:1}),
+
+  /* ---- Law, tax, covenants ---- */
+  f("legal","IssuanceDataGroup/Issuance/GoverningLaw/CountryCode","Governing law","text",{req:1,ph:"GB",hint:"ISO country code, e.g. GB for English law."}),
+  f("legal","IssuanceDataGroup/Issuance/Expenses/Value","Estimated expenses","num"),
+  f("legal","IssuanceDataGroup/Issuance/Expenses/AmountType","Expenses type","sel",{e:"AmountType"}),
+  f("legal","IssuanceDataGroup/Issuance/Tax/TaxCode","Withholding treatment","sel",{e:"TaxCode",req:4}),
+  f("legal","IssuanceDataGroup/Issuance/Tax/WithHoldingTaxCountry","Withholding tax country","text",{ph:"NL"}),
+  f("legal","IssuanceDataGroup/Issuance/NegativePledge","Negative pledge","sel",{e:"Applicability",req:4}),
+  f("legal","IssuanceDataGroup/Issuance/GrossUp","Gross-up","sel",{e:"Applicability",req:4}),
+  f("legal","IssuanceDataGroup/Issuance/CrossDefault","Cross default","sel",{e:"Applicability",req:4}),
+  f("legal","IssuanceDataGroup/Issuance/SubstitutionOrVariation","Substitution or variation","sel",{e:"Applicability"}),
+
+  /* ---- Documentation ---- */
+  f("docs","@docs","Deal documents","group",{g:"docs",req:1}),
+
+  /* ---- Selling restrictions ---- */
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/TEFRA/TefraCode","TEFRA","sel",{e:"TefraCode",req:1}),
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/TEFRA/TefraExchangeDate","TEFRA D exchange date","date"),
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/REGS/RegSCode","Regulation S category","sel",{e:"RegSCode",req:1}),
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/RULE144A","Rule 144A tranche","bool"),
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/SEC_Registered","SEC registered","bool"),
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/PRIIPsRestriction","PRIIPs restriction","sel",{e:"PRIIPs",req:1}),
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/CCIRestriction","UK CCI restriction","sel",{e:"CCI",req:1,hint:"The UK Consumer Composite Investments regime replaced UK PRIIPs on 6 April 2026."}),
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/CountryRestrictions","Country restrictions","text",{ph:"US, CA, AU",hint:"Comma separated ISO country codes."}),
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/AdditionalSellingRestrictions","Additional selling restrictions","ta"),
+  f("restrict","IssuanceDataGroup/Issuance/TargetMarket/ManufacturerTargetMarketType","Manufacturer target market","sel",{e:"TargetMarket",req:1}),
+
+  /* ---- Redemption ---- */
+  f("red","IssuanceDataGroup/Issuance/Redemption/RedemptionType","Redemption type","sel",{e:"RedemptionType",req:1}),
+  f("red","IssuanceDataGroup/Issuance/Redemption/FinalRedemptionPercentage","Final redemption percentage","num",{req:1,step:"0.001"}),
+  f("red","IssuanceDataGroup/Issuance/Redemption/FinalRedemptionDate","Final redemption date","date",{req:4}),
+  f("red","IssuanceDataGroup/Issuance/AdditionalIssuanceInformation","Additional issuance information","ta",{auto:1,hint:"Execution fields with no BDT home are mirrored here as text so the payload stays self-describing."}),
+
+  /* ---- Product: identification ---- */
+  f("prod","IssuanceDataGroup/Product/SecurityShortName","Security short name","text",{plain:1,req:4}),
+  f("prod","IssuanceDataGroup/Product/SecurityLongName","Security long name","text",{plain:1,req:4}),
+  f("prod","@ids","Security identifiers","group",{g:"ids",req:4}),
+
+  /* ---- Product: form ---- */
+  f("form","IssuanceDataGroup/Product/InitialFormOfNote/PhysicalFormOfNote","Initial physical form","sel",{e:"PhysicalForm",req:1}),
+  f("form","IssuanceDataGroup/Product/InitialFormOfNote/LegalTitleFormOfNote","Initial legal title form","sel",{e:"LegalTitleForm",req:1}),
+  f("form","IssuanceDataGroup/Product/InitialFormOfNote/GlobalNote/GlobalNoteType","Initial global note","sel",{e:"GlobalNoteType"}),
+  f("form","IssuanceDataGroup/Product/InitialFormOfNote/GlobalNote/ExchangeableNoticeDays","Exchange notice days","num"),
+  f("form","IssuanceDataGroup/Product/InitialFormOfNote/ExchangeableForDefinitiveNote","Exchangeable for definitive notes","bool"),
+  f("form","IssuanceDataGroup/Product/FinalFormOfNote/PhysicalFormOfNote","Final physical form","sel",{e:"PhysicalForm"}),
+  f("form","IssuanceDataGroup/Product/FinalFormOfNote/LegalTitleFormOfNote","Final legal title form","sel",{e:"LegalTitleForm"}),
+  f("form","IssuanceDataGroup/Product/FinalFormOfNote/GlobalNote/GlobalNoteType","Final global note","sel",{e:"GlobalNoteType"}),
+  f("form","IssuanceDataGroup/Product/SafeKeepingStructure","Safekeeping structure","sel",{e:"SafeKeeping",req:4}),
+  f("form","IssuanceDataGroup/Product/CentralBankEligibility/Eligible","Intended to be held in a manner allowing Eurosystem eligibility","bool",{req:4}),
+  f("form","IssuanceDataGroup/Product/CentralBankEligibility/CentralBankCountryCode","Central bank country","text",{ph:"EU"}),
+  f("form","IssuanceDataGroup/Product/GuaranteeType","Guarantee type","sel",{e:"GuaranteeType"}),
+
+  /* ---- Product: status ---- */
+  f("status","IssuanceDataGroup/Product/StatusOfNote/Seniority","Seniority","sel",{e:"Seniority",req:1}),
+  f("status","IssuanceDataGroup/Product/StatusOfNote/Subordinated","Subordination","sel",{e:"Subordinated",req:1}),
+  f("status","IssuanceDataGroup/Product/StatusOfNote/Secured","Security","sel",{e:"Secured",req:1}),
+  f("status","IssuanceDataGroup/Product/StatusOfNote/Preferred","Preference","sel",{e:"Preferred"}),
+  f("status","IssuanceDataGroup/Product/StatusOfNote/AdditionalStatusOfNote","Regulatory capital label","sel",{e:"AdditionalStatus"}),
+  f("status","@ratings","Expected issue ratings","group",{g:"ratings",req:1}),
+
+  /* ---- Interest ---- */
+  f("interest","IssuanceDataGroup/Product/AggregateNominalAmount/Value","Aggregate nominal amount","num",{req:5}),
+  f("interest","IssuanceDataGroup/Product/AggregateNominalAmount/AmountType","Aggregate nominal amount type","sel",{e:"AmountType",req:5}),
+  f("interest","IssuanceDataGroup/Product/AggregateNominalAmount/Currency","Aggregate nominal currency","text",{req:5,cur:1}),
+  f("interest","IssuanceDataGroup/Product/Maturity/MaturityType","Maturity type","sel",{e:"MaturityType",req:1}),
+  f("interest","IssuanceDataGroup/Product/Maturity/MaturityDate","Maturity date","date",{req:1}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/InterestType","Interest type","sel",{e:"InterestType",req:1,hint:"This iteration covers FIXED. Other values are reserved for later iterations."}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestRate","Coupon","num",{req:5,step:"0.001"}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/InterestPaymentFrequency","Coupon frequency","sel",{e:"Frequency",req:1}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/PayableDate/Day","Coupon payable day","num",{req:4}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/PayableDate/Month","Coupon payable month","num",{req:4}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/FirstPayment/PaymentDate","First coupon date","date",{req:4}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/FirstPayment/BrokenDateProvision/BrokenDateType","First coupon broken date","sel",{e:"BrokenDate"}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/FirstPayment/Amount/Value","First coupon amount","num",{from:5}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/FirstPayment/Amount/AmountType","First coupon amount type","sel",{e:"AmountType",from:5}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestCommencementDate","Interest commencement date","date",{req:4}),
+  f("interest","IssuanceDataGroup/Product/DayCountFraction","Day count fraction","sel",{e:"DayCount",req:1}),
+  f("interest","IssuanceDataGroup/Product/BusinessDayConvention/BusinessDayAdjustment","Business day convention","sel",{e:"BusinessDayAdj",req:1}),
+  f("interest","IssuanceDataGroup/Product/BusinessDayConvention/InterestCalculationAdjustment","Interest calculation","sel",{e:"InterestCalcAdj",req:1}),
+  f("interest","IssuanceDataGroup/Product/BusinessDayCenter/CityCalendar","Business day centres","text",{ph:"LON, TARGET",hint:"Comma separated."}),
+  f("interest","IssuanceDataGroup/Product/Optionality","Optionality","sel",{e:"Optionality",req:1}),
+
+  /* ---- Labels ---- */
+  f("esg","IssuanceDataGroup/Product/DLTBondIndicator","DLT-issued bond","bool"),
+  f("esg","IssuanceDataGroup/Product/ESGLabel","ESG label","sel",{e:"ESGLabel"}),
+  f("esg","IssuanceDataGroup/Product/SukukShariahCompliantIndicator","Shariah compliant","bool"),
+
+  /* ---- Execution messaging: VDR envelope only ---- */
+  f("exec","x:iptSpread","Initial price thoughts","text",{ext:1,from:2,req:2,ph:"MS + 110 area",plain:1}),
+  f("exec","x:guidance","Guidance","text",{ext:1,from:3,req:3,ph:"MS + 85 area (+/- 3)",plain:1}),
+  f("exec","x:spreadSet","Spread set","text",{ext:1,from:4,req:4,ph:"MS + 82",plain:1}),
+  f("exec","x:sizeMsg","Size message","text",{ext:1,from:2,ph:"EUR benchmark, 500m max",plain:1}),
+  f("exec","x:bookSize","Order book excluding joint lead manager interest","text",{ext:1,from:3,ph:"EUR 2.3bn, 118 accounts",plain:1}),
+  f("exec","x:nic","New issue concession","text",{ext:1,from:4,ph:"3bp",plain:1}),
+  f("exec","x:booksOpen","Books open","text",{ext:1,from:2,ph:"08:45 London",plain:1}),
+  f("exec","x:booksSubject","Books subject","text",{ext:1,from:4,ph:"11:20 London",plain:1}),
+  f("exec","x:stabilisation","Stabilisation","sel",{ext:1,e:"Applicability",from:2,req:2}),
+  f("exec","x:stabPeriod","Stabilisation period","text",{ext:1,from:4,ph:"From pricing to 30 days after the issue date",plain:1}),
+  f("exec","x:overAllot","Over-allotment","text",{ext:1,from:4,ph:"Up to 5 per cent of the issue size",plain:1}),
+  f("exec","x:pot","Order book basis","text",{ext:1,from:2,ph:"Pot, full disclosure",plain:1}),
+  f("exec","x:retention","Retention","text",{ext:1,from:4,ph:"None",plain:1}),
+  f("exec","x:syndDesk","Syndicate contact","text",{ext:1,req:1,ph:"Name, desk, telephone",plain:1}),
+  f("exec","x:pricingCall","Pricing call","text",{ext:1,from:4,plain:1}),
+  f("exec","x:notes","Execution notes","ta",{ext:1})
+];
+
+const GROUPS = {
+  contacts:{t:"Contact",  fields:[["Name","Name","text"],["Email","Email","text"]], init:()=>({Name:"",Email:""})},
+  parties:{t:"Party", fields:[
+      ["PartyName","Legal name","text"],["LEIIdentifier","LEI","text"],["BICIdentifier","BIC","text"],
+      ["CountryOfIncorporation","Country of incorporation","text"],["PartyType","Party type","sel","PartyType"],
+      ["Roles","Roles","roles"],["Ratings","Ratings","ratings"]],
+      init:()=>({PartyName:"",LEIIdentifier:"",BICIdentifier:"",CountryOfIncorporation:"",PartyType:"",Roles:["JOINT_LEAD_MANAGER"],Ratings:[]})},
+  ids:{t:"Identifier", fields:[["Type","Type","sel","IdType"],["Value","Value","text"]], init:()=>({Type:"ISIN",Value:""})},
+  ratings:{t:"Rating", fields:[["RatingAgency","Agency","sel","RatingAgency"],["RatingValue","Rating","text"],["RatingOutlook","Outlook","sel","RatingOutlook"]], init:()=>({RatingAgency:"",RatingValue:"",RatingOutlook:""})},
+  docs:{t:"Document", fields:[["DocumentName","Name","text"],["DocumentDate","Date","date"],["DocumentLink","Link","text"],["DocumentVersion","Version","text"]], init:()=>({DocumentName:"",DocumentDate:"",DocumentLink:"",DocumentVersion:""})}
+};
+
+/* ---- fields added in refinement pass 2 ---- */
+const FIELDS2 = [
+  f("size","IssuanceDataGroup/Issuance/MaximumDenomination/Value","Maximum denomination","num"),
+  f("size","IssuanceDataGroup/Issuance/MaximumDenomination/AmountType","Maximum denomination type","sel",{e:"AmountType"}),
+  f("size","IssuanceDataGroup/Issuance/InitialAggregateAmount/Value","Initial aggregate amount","num",{hint:"Where the series is expected to be tapped later."}),
+  f("size","IssuanceDataGroup/Issuance/InitialAggregateAmount/AmountType","Initial aggregate amount type","sel",{e:"AmountType"}),
+  f("size","IssuanceDataGroup/Issuance/TotalOutstandingAmount/Value","Total outstanding amount","num"),
+  f("size","IssuanceDataGroup/Issuance/TotalOutstandingAmount/AmountType","Total outstanding amount type","sel",{e:"AmountType"}),
+  f("size","IssuanceDataGroup/Issuance/MaximumProgrammeAmount/Value","Maximum programme amount","num"),
+  f("size","IssuanceDataGroup/Issuance/MaximumProgrammeAmount/AmountType","Maximum programme amount type","sel",{e:"AmountType"}),
+  f("time","IssuanceDataGroup/Issuance/CutOffDate","Cut-off date","date"),
+  f("time","x:settlementBasis","Settlement basis","text",{ext:1,from:4,ph:"T+5, delivery versus payment",plain:1}),
+  f("time","x:preStabNotice","Pre-stabilisation notice","text",{ext:1,from:2,ph:"Published 2026-10-05",plain:1,hint:"Required before stabilisation begins."}),
+  f("price","IssuanceDataGroup/Issuance/AllIn/Price/Value","All-in price","num",{from:5,step:"0.001"}),
+  f("price","IssuanceDataGroup/Issuance/AllIn/Yield/Value","All-in yield","num",{from:5,step:"0.001"}),
+  f("price","x:mgmtFee","Management and underwriting commission","text",{ext:1,from:4,ph:"0.075 per cent.",plain:1}),
+  f("price","x:concession","Selling concession","text",{ext:1,from:4,ph:"0.125 per cent.",plain:1}),
+  f("price","x:costsCharges","Costs and charges disclosure","ta",{ext:1,from:4,hint:"MiFID II costs and charges statement given to distributors."}),
+  f("legal","x:jurisdiction","Jurisdiction of courts","text",{ext:1,plain:1,ph:"Courts of England and Wales",req:4,hint:"BDT models governing law as a choice: an ISO country code, a subdivision code, or free text, never more than one. Since the country code carries the governing law, the courts clause travels in the envelope."}),
+  f("legal","IssuanceDataGroup/Issuance/Tax/TaxDescription","Withholding description","ta"),
+  f("legal","IssuanceDataGroup/Issuance/RecordDate/ReferenceDateDescription","Record date reference","text",{plain:1,ph:"Business days before the relevant payment date"}),
+  f("legal","IssuanceDataGroup/Issuance/RecordDate/NumberOfDays","Record date days","num"),
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/Rule3C7","Section 3(c)(7) restriction","bool"),
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/Accredited_Investor","Accredited investors only","bool"),
+  f("restrict","IssuanceDataGroup/Issuance/SellingRestrictions/RiskLinkedSecurity","Risk linked security","bool"),
+  f("restrict","x:prospectusRegime","Offer documentation regime","text",{ext:1,req:4,ph:"Exempt offer under the UK POATRs and the EU Prospectus Regulation",plain:1,hint:"The UK POATRs regime took effect on 19 January 2026."}),
+  f("prod","IssuanceDataGroup/Product/ProgrammeReference/ProgrammeIdentifier","Programme reference","text"),
+  f("form","IssuanceDataGroup/Product/InitialFormOfNote/GlobalNote/GlobalNoteIdentifier","Initial global note identifier","text"),
+  f("form","IssuanceDataGroup/Product/AfterExchangeFormOfNote/PhysicalFormOfNote","Form after exchange","sel",{e:"PhysicalForm",hint:"Where a temporary global note is exchanged after the distribution compliance period."}),
+  f("form","IssuanceDataGroup/Product/AfterExchangeFormOfNote/LegalTitleFormOfNote","Legal title after exchange","sel",{e:"LegalTitleForm"}),
+  f("form","IssuanceDataGroup/Product/AfterExchangeFormOfNote/GlobalNote/GlobalNoteType","Global note after exchange","sel",{e:"GlobalNoteType"}),
+  f("form","IssuanceDataGroup/Product/CentralBankEligibility/Description","Eligibility description","ta"),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/IsdaDetermination","ISDA definitions","sel",{e:["2006","2021"]}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/LastPayment/PaymentDate","Final coupon date","date",{req:4}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/RatingStepUpStepDown","Rating step-up or step-down","sel",{e:"Applicability"}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/StepUpStepDownMargin","Step-up margin","num",{step:"0.001"}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/MinimumRate","Minimum rate of interest","num",{step:"0.001"}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/MaximumRate","Maximum rate of interest","num",{step:"0.001"}),
+  f("exec","x:ratingsDisclaimer","Ratings disclosure","ta",{ext:1,hint:"Credit rating agency status under the EU and UK CRA Regulations."})
+];
+FIELDS.push.apply(FIELDS, FIELDS2);
+
+const ORDER = {"Document": ["ICMABondDataTaxonomy"], "ICMABondDataTaxonomy": ["DocumentInformation", "IssuanceDataGroup"], "DocumentInformation": ["BDTVersion", "DocumentId", "DigitalDocumentIdentifier", "DocumentVersion", "DocumentDescription", "DocumentDate", "DocumentStatus", "DocumentContacts", "Disclaimer"], "DocumentContacts": ["Name", "Email", "Address"], "Address": ["AddressLine1", "AddressLine2", "AddressLine3", "City", "Region", "Country", "PostalCode"], "IssuanceDataGroup": ["IssuanceDescription", "PartyGroup", "Issuance", "Product", "SeriesTrancheClass"], "PartyGroup": ["Party"], "Party": ["PartyName", "LEIIdentifier", "BICIdentifier", "ParentLEIIdentifier", "CountryOfIncorporation", "Address", "OnBehalfOf", "PartyRole", "PartyType", "PartyRating"], "OnBehalfOf": ["PartyName", "LEIIdentifier", "BICIdentifier", "ParentLEIIdentifier", "CountryOfIncorporation", "Address", "OnBehalfOf", "PartyRole", "PartyType", "PartyRating"], "PartyRole": ["PartyRoleType", "OtherPartyRoleType"], "PartyRating": ["Rating", "Unrated"], "Rating": ["RatingAgency", "RatingValue", "RatingOutlook"], "Issuance": ["IssuanceType", "IssuanceDescription", "DealIdentifier", "Programme", "GlobalNoteIdentifier", "ReOpen", "Fungible", "PrivatePlacement", "SpecifiedDenomination", "MinimumDenomination", "MaximumDenomination", "IntegralMultiples", "CalculationAmount", "InitialAggregateAmount", "TotalAggregateAmount", "TotalOutstandingAmount", "MaximumProgrammeAmount", "MaximumAmount", "ChangeOfInterestPaymentBasis", "SpecifiedCurrency", "PaymentCurrency", "SettlementCurrency", "PricingDate", "IssueDate", "SettlementDate", "ClosingDate", "CutOffDate", "IssuePrice", "IndicationOfYield", "ReofferPrice", "ReofferYield", "Benchmark", "ReofferSpreadToBenchmark", "MidSwapRate", "ReofferSpreadtoMidSwapRate", "Fee", "Delivery", "Proceeds", "AllIn", "Listing", "CashClearingSystem", "SecuritiesClearingSystem", "SecuritiesSettlementSystem", "CashSettlementSystem", "PlaceOfDeposit", "DLTPlatform", "MethodOfDistribution", "GoverningLaw", "Expenses", "Tax", "IssuanceDocumentation", "SellingRestrictions", "TargetMarket", "NegativePledge", "GrossUp", "CrossDefault", "SubstitutionOrVariation", "Redemption", "YieldToCall", "RecordDate", "Events", "SubstitutionAndExchangeProvision", "MREL_Ratio_Percentage", "AdditionalIssuanceInformation"], "Programme": ["ProgrammeIdentifier", "ProgrammeDescription"], "Fungible": ["IsFungible", "ImmediatelyFungible", "FungibleDate", "FungibleIdentifier"], "FungibleIdentifier": ["ISIN", "CUSIP", "FIGI", "SEDOL", "COMMON_CODE", "WKN", "DTI", "CMU", "VALOR", "CURP", "TEMPORARY_ISIN", "TEMPORARY_CUSIP", "TEMPORARY_COMMON_CODE", "SeriesIdentifier", "TrancheIdentifier", "ClassIdentifier", "STEPIdentifier", "OtherIdentifier"], "OtherIdentifier": ["Identifier", "OtherIdentifierSchema"], "PrivatePlacement": ["PrivatePlacement", "Jurisdiction", "ReferenceRegulation"], "SpecifiedDenomination": ["Value", "AmountType", "Currency"], "MinimumDenomination": ["Value", "AmountType", "Currency"], "MaximumDenomination": ["Value", "AmountType", "Currency"], "IntegralMultiples": ["Value", "AmountType", "Currency"], "CalculationAmount": ["Value", "AmountType", "Currency"], "InitialAggregateAmount": ["Value", "AmountType", "Currency"], "TotalAggregateAmount": ["Value", "AmountType", "Currency"], "TotalOutstandingAmount": ["Value", "AmountType", "Currency"], "MaximumProgrammeAmount": ["Value", "AmountType", "Currency"], "MaximumAmount": ["Value", "AmountType", "Currency"], "ChangeOfInterestPaymentBasis": ["ChangeOfBasisDate", "ChangeOfBasisType"], "IssuePrice": ["Value", "PriceType"], "IndicationOfYield": ["Value", "PriceType"], "ReofferPrice": ["Value", "PriceType"], "ReofferYield": ["Value", "PriceType"], "Benchmark": ["Identifier", "Ticker", "Maturity", "InterestRate", "Price"], "Identifier": ["ISIN", "CUSIP", "FIGI", "SEDOL", "COMMON_CODE", "WKN", "DTI", "CMU", "VALOR", "CURP", "TEMPORARY_ISIN", "TEMPORARY_CUSIP", "TEMPORARY_COMMON_CODE", "SeriesIdentifier", "TrancheIdentifier", "ClassIdentifier", "STEPIdentifier", "OtherIdentifier"], "Ticker": ["Ticker", "Source"], "Maturity": ["MaturityType", "MaturityDate", "FinalMaturityDate"], "Price": ["Price", "Yield", "Discount", "BenchmarkSecurity", "BenchmarkIndex", "SpreadToBenchmark"], "Yield": ["Value", "PriceType"], "Discount": ["Value", "PriceType"], "BenchmarkSecurity": ["Identifier", "Ticker", "Maturity", "InterestRate", "Price"], "BenchmarkIndex": ["BenchmarkCode", "BenchmarkName", "Currency", "Source", "Term"], "SpreadToBenchmark": ["Value", "PriceType"], "Term": ["TermUnit", "TermPeriod"], "ReofferSpreadToBenchmark": ["Value", "PriceType"], "MidSwapRate": ["Rate", "Term", "SwapDescription"], "Rate": ["Value", "PriceType"], "ReofferSpreadtoMidSwapRate": ["Value", "PriceType"], "Fee": ["Percentage", "FeeAllocationType"], "Proceeds": ["Gross", "Net", "AccruedInterest", "NetIncludingAccruedInterest", "ProceedsCurrency", "UseOfProceeds"], "Gross": ["Value", "AmountType", "Currency"], "Net": ["Value", "AmountType", "Currency"], "AccruedInterest": ["Value", "AmountType", "Currency"], "NetIncludingAccruedInterest": ["Value", "AmountType", "Currency"], "UseOfProceeds": ["UseOfProceedsPrimaryCategory", "UseOfProceedsSubCategory", "UseOfProceedsDescription"], "AllIn": ["Price", "Yield", "Discount", "BenchmarkSecurity", "BenchmarkIndex", "SpreadToBenchmark"], "Listing": ["Listed", "ListingVenue"], "ListingVenue": ["MIC", "Market", "MarketName", "MarketAlternateCode", "MarketType"], "CashClearingSystem": ["Code", "Name", "Source"], "SecuritiesClearingSystem": ["Code", "Name", "Source"], "SecuritiesSettlementSystem": ["Code", "Name", "Source"], "CashSettlementSystem": ["Code", "Name", "Source"], "DLTPlatform": ["Type", "Accessibility", "Role", "Operator", "Name", "Fee", "Identifier", "SmartContract"], "Operator": ["Operator", "Decentralised"], "SmartContract": ["SmartContractName", "SmartContractDescription", "SmartContractType", "SmartContractAddress", "SmartContractPublicKey", "Token"], "Token": ["TokenType", "TokenTechnicalReference", "TokenTechnicalReferenceIdentifier"], "MethodOfDistribution": ["PrivatePlacement", "DistributionMethod", "Auction", "Confidential"], "GoverningLaw": ["CountryCode", "CountryCodeWithSubdivision", "Other"], "Expenses": ["Value", "AmountType", "Currency"], "Tax": ["TaxCode", "TaxProcessingEntity", "TaxDescription", "WithHoldingTaxCountry"], "TaxProcessingEntity": ["PartyName", "LEIIdentifier", "BICIdentifier", "ParentLEIIdentifier", "CountryOfIncorporation", "Address", "OnBehalfOf", "PartyRole", "PartyType", "PartyRating"], "IssuanceDocumentation": ["DocumentDetail"], "DocumentDetail": ["DocumentName", "DocumentDate", "DocumentLink", "DocumentId", "DigitalDocumentIdentifier", "DocumentVersion"], "SellingRestrictions": ["TEFRA", "REGS", "RULE144A", "SEC_Registered", "Rule3C7", "Accredited_Investor", "RiskLinkedSecurity", "PRIIPsRestriction", "CCIRestriction", "CountryRestrictions", "CurrencyRestrictions", "AdditionalSellingRestrictions"], "TEFRA": ["TefraCode", "TefraExchangeDate", "AdditionalNotes"], "REGS": ["RegSCode", "AdditionalNotes"], "TargetMarket": ["ManufacturerTargetMarketType"], "Redemption": ["RedemptionType", "EarlyRedemptionPercentage", "FinalRedemptionPercentage", "EarlyRedemptionAmount", "FinalRedemptionAmount", "MinRedemptionAmount", "MaxRedemptionAmount", "RedemptionPrice", "RedemptionPremium", "FixingDate", "OptionalRedemptionDate", "FinalRedemptionDate", "OptionalRedemptionPeriod", "OptionalRedemptionType", "RedemptionPaymentBasis"], "EarlyRedemptionAmount": ["Value", "AmountType", "Currency"], "FinalRedemptionAmount": ["Value", "AmountType", "Currency"], "MinRedemptionAmount": ["Value", "AmountType", "Currency"], "MaxRedemptionAmount": ["Value", "AmountType", "Currency"], "RedemptionPrice": ["Value", "PriceType"], "RedemptionPremium": ["Value", "AmountType", "Currency"], "OptionalRedemptionPeriod": ["OptionalRedemptionDateRange", "OptionalRedemptionAmount"], "OptionalRedemptionDateRange": ["StartDate", "EndDate"], "StartDate": ["Date", "ReferenceDate"], "EndDate": ["Date", "ReferenceDate"], "OptionalRedemptionAmount": ["Value", "AmountType", "Currency"], "RedemptionPaymentBasis": ["RedemptionPaymentBasisType", "AmortisingProvision", "RedemptionPaymentReference"], "AmortisingProvision": ["AmortisingMethod", "AmortisingSchedule"], "AmortisingSchedule": ["ScheduledPayment"], "ScheduledPayment": ["PaymentDate", "BrokenDateProvision", "Amount"], "RedemptionPaymentReference": ["Identifier", "Ticker", "Maturity", "InterestRate", "Price"], "YieldToCall": ["Value", "PriceType"], "RecordDate": ["ReferenceDateDescription", "NumberOfDays"], "Events": ["EventCode", "EventDescription", "EventDate"], "SubstitutionAndExchangeProvision": ["SubstitutionAllowed", "EligibleSecurities"], "EligibleSecurities": ["Identifier", "Ticker", "Maturity", "InterestRate", "Price"], "Product": ["SecurityShortName", "SecurityLongName", "ProgrammeReference", "SecurityIdentifierList", "InitialFormOfNote", "AfterExchangeFormOfNote", "FinalFormOfNote", "SafeKeepingStructure", "CentralBankEligibility", "GuaranteeType", "StatusOfNote", "AggregateNominalAmount", "OutstandingAmountBeforeIncrease", "OutstandingAmountAfterIncrease", "Maturity", "ExpectedProductRating", "PrincipalFactor", "InterestPayment", "DayCountFraction", "BusinessDayConvention", "BusinessDayCenter", "Optionality", "ForeignExchangeRateProvision", "ProductClassification", "LinkedProducts", "DLTBondIndicator", "ESGLabel", "SukukShariahCompliantIndicator", "UnderlyingProducts"], "ProgrammeReference": ["ProgrammeIdentifier", "ProgrammeDescription"], "SecurityIdentifierList": ["SecurityIdentifier"], "SecurityIdentifier": ["ISIN", "CUSIP", "FIGI", "SEDOL", "COMMON_CODE", "WKN", "DTI", "CMU", "VALOR", "CURP", "TEMPORARY_ISIN", "TEMPORARY_CUSIP", "TEMPORARY_COMMON_CODE", "SeriesIdentifier", "TrancheIdentifier", "ClassIdentifier", "STEPIdentifier", "OtherIdentifier"], "InitialFormOfNote": ["PhysicalFormOfNote", "LegalTitleFormOfNote", "GlobalNote", "ExchangeableForDefinitiveNote"], "GlobalNote": ["GlobalNoteType", "GlobalNoteIdentifier", "ExchangeableNoticeDays"], "AfterExchangeFormOfNote": ["PhysicalFormOfNote", "LegalTitleFormOfNote", "GlobalNote", "ExchangeableForDefinitiveNote"], "FinalFormOfNote": ["PhysicalFormOfNote", "LegalTitleFormOfNote", "GlobalNote", "ExchangeableForDefinitiveNote"], "CentralBankEligibility": ["Eligible", "EligibilityIdentifier", "CentralBankCountryCode", "Description"], "StatusOfNote": ["Seniority", "Subordinated", "Secured", "Preferred", "AdditionalStatusOfNote"], "AggregateNominalAmount": ["Value", "AmountType", "Currency"], "OutstandingAmountBeforeIncrease": ["Value", "AmountType", "Currency"], "OutstandingAmountAfterIncrease": ["Value", "AmountType", "Currency"], "ExpectedProductRating": ["Rating", "Unrated"], "InterestPayment": ["IsdaDetermination", "InterestType", "FixedRatePayment", "FloatingRatePayment", "ZeroCoupon", "ResetSchedule", "MinimumRate", "MaximumRate"], "FixedRatePayment": ["InterestRate", "InterestPayments", "InterestCommencementDate", "DayCountFraction", "BusinessDayConvention", "RatingStepUpStepDown", "StepUpStepDownMargin"], "InterestPayments": ["InterestPaymentFrequency", "PayableDate", "FirstPayment", "LastPayment", "ScheduledPaymentDates", "DeterminationDates"], "PayableDate": ["Day", "Month"], "FirstPayment": ["PaymentDate", "BrokenDateProvision", "Amount"], "BrokenDateProvision": ["BrokenDateType", "CalculationProvision"], "Amount": ["Value", "AmountType", "Currency"], "LastPayment": ["PaymentDate", "BrokenDateProvision", "Amount"], "ScheduledPaymentDates": ["ScheduledPayment"], "BusinessDayConvention": ["BusinessDayAdjustment", "InterestCalculationAdjustment"], "FloatingRatePayment": ["InterestRate", "Spread", "InterestPayments", "Benchmark", "DesignatedMaturityTerm", "ResetDate", "InterestCommencementDate", "CalculationProvision", "DeterminationMethod", "FallbackReference", "Term", "DayCountFraction", "BusinessDayConvention", "Margin", "RatingStepUpStepDown", "StepUpStepDownMargin"], "InterestRate": ["Value", "PriceType"], "Spread": ["Value", "PriceType"], "DesignatedMaturityTerm": ["TermUnit", "TermPeriod"], "CalculationProvision": ["CalculationMethod", "AdjustmentProvision"], "AdjustmentProvision": ["CalculationMethod", "ObservationMethod", "ObservationPeriodShiftBusinessDays", "ObservationPeriodShiftAdditionalBusinessDays", "LockoutPeriodBusinessDays"], "FallbackReference": ["InterestRate", "Spread", "InterestPayments", "Benchmark", "DesignatedMaturityTerm", "ResetDate", "InterestCommencementDate", "CalculationProvision", "DeterminationMethod", "FallbackReference", "Term", "DayCountFraction", "BusinessDayConvention", "Margin", "RatingStepUpStepDown", "StepUpStepDownMargin"], "ZeroCoupon": ["Yield", "ReferencePrice", "DayCountFraction"], "ReferencePrice": ["Price", "Yield", "Discount", "BenchmarkSecurity", "BenchmarkIndex", "SpreadToBenchmark"], "ResetSchedule": ["ResetDates", "ResetTerm"], "ResetTerm": ["TermUnit", "TermPeriod"], "BusinessDayCenter": ["SettlementSystemCalendar", "CityCalendar"], "SettlementSystemCalendar": ["Code", "Name", "Source"], "ForeignExchangeRateProvision": ["ReferenceRate", "ValuationDate"], "ReferenceRate": ["Identifier", "Ticker", "Maturity", "InterestRate", "Price"], "ValuationDate": ["ReferenceDateDescription", "NumberOfDays"], "ProductClassification": ["ProductTaxonomy", "ClassificationDetails", "ProductClassificationExtension"], "ProductTaxonomy": ["Date", "Identifier", "SchemaSource"], "ClassificationDetails": ["Provider", "Version", "SchemaLocation", "Description"], "LinkedProducts": ["LinkedProductDetails", "LinkedProductsExtension"], "LinkedProductDetails": ["Provider", "Version", "SchemaLocation", "Description"], "UnderlyingProducts": ["SecurityShortName", "SecurityLongName", "ProgrammeReference", "SecurityIdentifierList", "InitialFormOfNote", "AfterExchangeFormOfNote", "FinalFormOfNote", "SafeKeepingStructure", "CentralBankEligibility", "GuaranteeType", "StatusOfNote", "AggregateNominalAmount", "OutstandingAmountBeforeIncrease", "OutstandingAmountAfterIncrease", "Maturity", "ExpectedProductRating", "PrincipalFactor", "InterestPayment", "DayCountFraction", "BusinessDayConvention", "BusinessDayCenter", "Optionality", "ForeignExchangeRateProvision", "ProductClassification", "LinkedProducts", "DLTBondIndicator", "ESGLabel", "SukukShariahCompliantIndicator", "UnderlyingProducts"], "SeriesTrancheClass": ["Series", "Tranche", "Class"], "Series": ["SeriesIdentifier", "SeriesAmount", "SeriesDescription", "IssuanceDataGroup"], "SeriesAmount": ["Value", "AmountType", "Currency"], "Tranche": ["TrancheIdentifier", "TrancheAmount", "TrancheDescription", "IssuanceDataGroup"], "TrancheAmount": ["Value", "AmountType", "Currency"], "Class": ["ClassIdentifier", "ClassAmount", "ClassDescription", "IssuanceDataGroup"], "ClassAmount": ["Value", "AmountType", "Currency"]};
+
+/* ============================================================
+   State
+   ============================================================ */
+const LS = "vdr.dts.vanilla.v1";
+const state = {
+  stage: 1, deal: "", ver: "0.1", seq: 0,
+  f: {}, contacts: [], parties: [], ids: [], ratings: [], docs: [], releases: []
+};
+let dl = null;
+let fieldFilter = "";
+const expanded = {};
+let showAll = false;
+window.claude?.use?.("downloads").then(d => { dl = d; renderDist(); }).catch(() => {});
+
+const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x !== undefined) n.textContent = x; return n; };
+const esc = s => String(s == null ? "" : s).replace(/[<>&"]/g, m => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[m]));
+const v = p => state.f[p] ?? "";
+const has = p => String(v(p)).trim() !== "";
+const stageName = i => `${i}. ${STAGES[i - 1].t}`;
+
+function toast(msg) {
+  document.querySelectorAll(".toast").forEach(t => t.remove());
+  const t = el("div", "toast", msg); document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+function save() {
+  try { localStorage.setItem(LS, JSON.stringify(state)); document.getElementById("saveState").textContent = "Draft saved in this browser " + new Date().toLocaleTimeString(); }
+  catch (e) { document.getElementById("saveState").textContent = "Draft not saved: this browser blocked storage"; }
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(LS); if (!raw) return false;
+    Object.assign(state, JSON.parse(raw)); return true;
+  } catch (e) { return false; }
+}
+
+/* ============================================================
+   Auto fields
+   ============================================================ */
+function refreshAuto() {
+  const deal = v("IssuanceDataGroup/Issuance/DealIdentifier") || "UNASSIGNED";
+  state.f["DocumentInformation/BDTVersion"] = "2.0.0";
+  state.f["DocumentInformation/DocumentId"] = `${deal}-${String(state.seq + 1).padStart(3, "0")}`;
+  state.f["DocumentInformation/DocumentVersion"] = state.ver;
+  state.f["DocumentInformation/DocumentDescription"] =
+    `${STAGES[state.stage - 1].t} term sheet — ${state.deal || "untitled deal"}`;
+  if (!state.f["DocumentInformation/DocumentDate"]) state.f["DocumentInformation/DocumentDate"] = new Date().toISOString().slice(0, 10);
+  state.f["DocumentInformation/DocumentStatus"] = state.stage >= 7 ? "ISSUED" : (v("DocumentInformation/DocumentStatus") === "WITHDRAWN" ? "WITHDRAWN" : "PENDING");
+  const ex = FIELDS.filter(x => x.ext && has(x.p)).map(x => `${x.l}: ${v(x.p)}`);
+  state.f["IssuanceDataGroup/Issuance/AdditionalIssuanceInformation"] =
+    `VDR execution stage: ${STAGES[state.stage - 1].t}.` + (ex.length ? " " + ex.join("; ") + "." : "");
+}
+
+/* ============================================================
+   Form rendering
+   ============================================================ */
+function inputFor(fd) {
+  const wrap = el("div", "val");
+  const id = "i_" + fd.p.replace(/[^\w]/g, "_");
+  let node;
+  if (fd.t === "sel") {
+    node = el("select");
+    node.appendChild(el("option", null, ""));
+    (Array.isArray(fd.e) ? fd.e : E[fd.e]).forEach(o => { const op = el("option", null, o); op.value = o; node.appendChild(op); });
+    node.value = v(fd.p);
+  } else if (fd.t === "bool") {
+    const lab = el("label", "chk"); node = document.createElement("input");
+    node.type = "checkbox"; node.checked = v(fd.p) === "true";
+    lab.appendChild(node); lab.appendChild(el("span", null, v(fd.p) === "true" ? "Yes" : "No"));
+    node.addEventListener("change", () => { setVal(fd.p, node.checked ? "true" : "false"); });
+    node.id = id; wrap.appendChild(lab);
+    if (fd.hint) wrap.appendChild(el("div", "hint", fd.hint));
+    return wrap;
+  } else if (fd.t === "ta") {
+    node = el("textarea"); node.value = v(fd.p);
+  } else {
+    node = document.createElement("input");
+    node.type = fd.t === "date" ? "date" : (fd.t === "num" ? "number" : "text");
+    if (fd.step) node.step = fd.step;
+    if (fd.plain) node.className = "plain";
+    if (fd.ph) node.placeholder = fd.ph;
+    node.value = v(fd.p);
+  }
+  node.id = id;
+  if (fd.fixed || fd.auto) { node.readOnly = true; node.disabled = fd.t === "sel" && fd.fixed; }
+  node.addEventListener("change", () => setVal(fd.p, node.value));
+  node.addEventListener("input", () => { state.f[fd.p] = node.value; });
+  wrap.appendChild(node);
+  if (fd.hint) wrap.appendChild(el("div", "hint", fd.hint));
+  const err = fieldError(fd);
+  if (err) { wrap.classList.add("bad"); wrap.appendChild(el("div", "fielderr", err)); }
+  return wrap;
+}
+
+function setVal(p, val) { state.f[p] = val; refreshAuto(); renderAll(); save(); }
+
+function groupCard(gk, i) {
+  const G = GROUPS[gk], row = state[gk][i];
+  const card = el("div", "card" + (gk === "parties" && (row.Roles || []).includes("ISSUER") ? " isr" : ""));
+  const head = el("div", "head");
+  head.appendChild(el("b", null, `${G.t} ${i + 1}${gk === "parties" && row.PartyName ? " — " + row.PartyName : ""}`));
+  const rm = el("button", "mini", "Remove");
+  rm.onclick = () => { state[gk].splice(i, 1); renderAll(); save(); };
+  head.appendChild(rm); card.appendChild(head);
+  const fr = el("div", "fr");
+  G.fields.forEach(([k, label, t, en]) => {
+    const cell = el("div");
+    cell.appendChild(el("label", null, label));
+    if (t === "roles") {
+      const sel = el("select"); sel.multiple = true; sel.size = 5;
+      E.PartyRoleType.forEach(r => { const o = el("option", null, r); o.value = r; o.selected = (row.Roles || []).includes(r); sel.appendChild(o); });
+      sel.onchange = () => { row.Roles = [...sel.selectedOptions].map(o => o.value); renderAll(); save(); };
+      cell.appendChild(sel);
+      cell.appendChild(el("div", "hint", "Select all roles this party holds."));
+    } else if (t === "ratings") {
+      const box = el("div");
+      (row.Ratings || []).forEach((rt, j) => {
+        const line = el("div", "inline");
+        [["RatingAgency", E.RatingAgency], ["RatingOutlook", E.RatingOutlook]].forEach(([key, opts]) => {
+          const s = el("select"); s.appendChild(el("option", null, ""));
+          opts.forEach(o => { const op = el("option", null, o); op.value = o; op.selected = rt[key] === o; s.appendChild(op); });
+          s.onchange = () => { rt[key] = s.value; renderAll(); save(); }; line.appendChild(s);
+        });
+        const inp = document.createElement("input"); inp.type = "text"; inp.value = rt.RatingValue || ""; inp.placeholder = "A-";
+        inp.onchange = () => { rt.RatingValue = inp.value; renderAll(); save(); }; line.appendChild(inp);
+        const x = el("button", "mini", "×"); x.onclick = () => { row.Ratings.splice(j, 1); renderAll(); save(); }; line.appendChild(x);
+        box.appendChild(line);
+      });
+      const add = el("button", "mini", "Add rating");
+      add.onclick = () => { row.Ratings = row.Ratings || []; row.Ratings.push({ RatingAgency: "", RatingValue: "", RatingOutlook: "" }); renderAll(); save(); };
+      box.appendChild(add); cell.appendChild(box);
+    } else if (t === "sel") {
+      const s = el("select"); s.appendChild(el("option", null, ""));
+      E[en].forEach(o => { const op = el("option", null, o); op.value = o; op.selected = row[k] === o; s.appendChild(op); });
+      s.onchange = () => { row[k] = s.value; renderAll(); save(); }; cell.appendChild(s);
+    } else {
+      const inp = document.createElement("input"); inp.type = t === "date" ? "date" : "text"; inp.value = row[k] || "";
+      inp.onchange = () => { row[k] = inp.value; renderAll(); save(); };
+      inp.oninput = () => { row[k] = inp.value; };
+      cell.appendChild(inp);
+      if (k === "LEIIdentifier" && row[k] && !validLEI(row[k])) cell.appendChild(el("div", "fielderr", "Not a valid 20-character LEI"));
+      if (k === "Value" && row.Type === "ISIN" && row.Value && !validISIN(row.Value)) cell.appendChild(el("div", "fielderr", "ISIN check digit does not compute"));
+    }
+    fr.appendChild(cell);
+  });
+  card.appendChild(fr);
+  return card;
+}
+
+function renderForm() {
+  const host = document.getElementById("pane-fill"); host.innerHTML = "";
+  const lg = el("div", "legend");
+  lg.appendChild(el("b", null, "Iteration 1: single-tranche vanilla Eurobond, fixed rate."));
+  lg.appendChild(el("div", null, "Every field maps to an ICMA Bond Data Taxonomy 2.0 element, shown under each label, so the record leaves here as valid BDT XML. Fields the market uses during execution but BDT does not model sit in the Execution messaging section and travel in the VDR envelope instead. Multi-tranche, asset-backed, floating rate, reset and callable structures follow in later iterations."));
+  host.appendChild(lg);
+  const ctl = el("div", "inline"); ctl.style.cssText = "max-width:420px;margin:0 0 18px";
+  const ta = el("button", "ghost", showAll ? "Show only what this stage needs" : "Show every field");
+  ta.onclick = () => { showAll = !showAll; renderForm(); };
+  ctl.appendChild(ta); host.appendChild(ctl);
+  host.appendChild(dropPanel());
+  const q = fieldFilter.trim().toLowerCase();
+  SECTIONS.forEach(sec => {
+    let fields = FIELDS.filter(x => x.sec === sec.id);
+    if (q) fields = fields.filter(x => (x.l + " " + x.p).toLowerCase().includes(q));
+    if (!fields.length) return;
+    const open = showAll || q || expanded[sec.id];
+    const core = fields.filter(x => x.t === "group" || (x.req && x.req <= state.stage) || filled(x) || suggestedPaths().has(x.p));
+    const hidden = fields.length - core.length;
+    const shown = open ? fields : core;
+    const s = el("section", "block"); s.id = "sec-" + sec.id;
+    const h = el("h2", null, sec.t);
+    const gaps = fields.filter(x => x.req && x.req <= state.stage && !filled(x)).length;
+    h.appendChild(el("em", null, gaps ? `${gaps} required for this stage` : (fields.filter(filled).length ? "complete for this stage" : "nothing required yet")));
+    s.appendChild(h);
+    if (sec.n) s.appendChild(el("div", "note", sec.n));
+    let n = 0;
+    shown.forEach(fd => {
+      if (fd.t === "group") {
+        const gk = fd.g;
+        const cards = el("div", "cards");
+        state[gk].forEach((_, i) => cards.appendChild(groupCard(gk, i)));
+        s.appendChild(cards);
+        const add = el("button", null, "Add " + GROUPS[gk].t.toLowerCase());
+        add.onclick = () => { state[gk].push(GROUPS[gk].init()); renderAll(); save(); };
+        s.appendChild(add);
+        return;
+      }
+      n++;
+      const req = fd.req && fd.req <= state.stage;
+      const row = el("div", "row" + (req ? " req" : "") + (fd.from > state.stage ? " future" : ""));
+      row.appendChild(el("div", "num", String(n)));
+      const lab = el("label", null, fd.l); lab.htmlFor = "i_" + fd.p.replace(/[^\w]/g, "_");
+      lab.appendChild(el("span", "xp", fd.ext ? "envelope: " + fd.p.slice(2) : fd.p));
+      row.appendChild(lab);
+      row.appendChild(inputFor(fd));
+      s.appendChild(row);
+    });
+    if (hidden > 0 && !q) {
+      const tog = el("button", "ghost expander", open ? "Hide " + hidden + " optional fields" : "Show " + hidden + " optional fields");
+      tog.onclick = () => { expanded[sec.id] = !open; renderForm(); };
+      s.appendChild(tog);
+    }
+    host.appendChild(s);
+  });
+}
+
+function filled(fd) {
+  if (fd.t === "group") return state[fd.g] && state[fd.g].length > 0;
+  return has(fd.p);
+}
+
+/* ============================================================
+   Validation
+   ============================================================ */
+function validLEI(s) {
+  if (!/^[A-Z0-9]{20}$/.test(s)) return false;
+  const n = s.split("").map(c => (/[0-9]/.test(c) ? c : (c.charCodeAt(0) - 55))).join("");
+  let r = 0; for (const ch of n) r = (r * 10 + Number(ch)) % 97;
+  return r === 1;
+}
+function validISIN(s) {
+  if (!/^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(s)) return false;
+  const d = s.slice(0, 11).split("").map(c => (/[0-9]/.test(c) ? c : String(c.charCodeAt(0) - 55))).join("");
+  let sum = 0, dbl = true;
+  for (let i = d.length - 1; i >= 0; i--) { let x = Number(d[i]); if (dbl) { x *= 2; if (x > 9) x -= 9; } sum += x; dbl = !dbl; }
+  return (10 - (sum % 10)) % 10 === Number(s[11]);
+}
+function fieldError(fd) {
+  const val = String(v(fd.p)).trim(); if (!val) return null;
+  if (fd.cur && !/^[A-Z]{3}$/.test(val)) return "Three-letter ISO currency code";
+  if (fd.p.endsWith("GoverningLaw/CountryCode") && !/^[A-Z]{2}$/.test(val)) return "Two-letter ISO country code";
+  return null;
+}
+function checks() {
+  const out = [];
+  const S = state.stage;
+  const missing = FIELDS.filter(x => x.req && x.req <= S && !filled(x));
+  out.push(missing.length
+    ? { l: "fail", t: `${missing.length} required fields are empty`, d: missing.slice(0, 6).map(x => x.l).join("; ") + (missing.length > 6 ? "…" : "") }
+    : { l: "pass", t: "All fields required at this stage are populated", d: stageName(S) });
+
+  const roles = state.parties.flatMap(p => p.Roles || []);
+  out.push(roles.includes("ISSUER") ? { l: "pass", t: "Issuer identified" } : { l: "fail", t: "No party carries the ISSUER role" });
+  const mgr = state.parties.filter(p => (p.Roles || []).some(r => /MANAGER|BOOKRUNNER|COORDINATOR|ARRANGER/.test(r)));
+  if (v("IssuanceDataGroup/Issuance/MethodOfDistribution/DistributionMethod") === "SYNDICATED")
+    out.push(mgr.length >= 2 ? { l: "pass", t: `${mgr.length} managers named` } : { l: "warn", t: "Syndicated distribution with fewer than two managers named" });
+  const badLEI = state.parties.filter(p => p.LEIIdentifier && !validLEI(p.LEIIdentifier));
+  if (badLEI.length) out.push({ l: "fail", t: "Invalid LEI", d: badLEI.map(p => p.PartyName || "unnamed").join("; ") });
+  const noLEI = state.parties.filter(p => !p.LEIIdentifier);
+  if (noLEI.length) out.push({ l: "warn", t: `${noLEI.length} parties without an LEI`, d: "Reference data consumers and ESMA FIRDS reporting need the issuer LEI at the latest by pricing." });
+
+  const pd = v("IssuanceDataGroup/Issuance/PricingDate"), idt = v("IssuanceDataGroup/Issuance/IssueDate"),
+    sd = v("IssuanceDataGroup/Issuance/SettlementDate"), md = v("IssuanceDataGroup/Product/Maturity/MaturityDate");
+  if (pd && idt) out.push(pd <= idt ? { l: "pass", t: "Pricing date on or before issue date" } : { l: "fail", t: "Pricing date is after the issue date" });
+  if (idt && sd) out.push(idt <= sd ? { l: "pass", t: "Issue date on or before settlement date" } : { l: "fail", t: "Issue date is after the settlement date" });
+  if (sd && md) out.push(md > sd ? { l: "pass", t: "Maturity after settlement" } : { l: "fail", t: "Maturity date is not after settlement" });
+  const frd = v("IssuanceDataGroup/Issuance/Redemption/FinalRedemptionDate");
+  if (frd && md && frd !== md) out.push({ l: "warn", t: "Final redemption date differs from the maturity date", d: "Intentional for some structures, but unusual on a vanilla bond." });
+
+  const ids = state.ids || [];
+  const isin = ids.find(x => x.Type === "ISIN");
+  if (S >= 5) out.push(isin && validISIN(isin.Value) ? { l: "pass", t: "Valid ISIN present" } : { l: "fail", t: "No valid ISIN", d: "Use TEMPORARY_ISIN before the code is confirmed." });
+  if (S >= 5 && !ids.find(x => x.Type === "COMMON_CODE")) out.push({ l: "warn", t: "No common code", d: "ICSD-cleared issues normally carry one." });
+
+  const tefra = v("IssuanceDataGroup/Issuance/SellingRestrictions/TEFRA/TefraCode");
+  const gnt = v("IssuanceDataGroup/Product/InitialFormOfNote/GlobalNote/GlobalNoteType");
+  if (tefra === "TEFRA_D") {
+    out.push(gnt === "TEMPORARY" ? { l: "pass", t: "TEFRA D consistent with a temporary global note" } : { l: "fail", t: "TEFRA D without a temporary global note", d: "TEFRA D requires a temporary global note exchangeable after the 40-day distribution compliance period." });
+    if (!has("IssuanceDataGroup/Issuance/SellingRestrictions/TEFRA/TefraExchangeDate")) out.push({ l: "warn", t: "TEFRA D exchange date missing" });
+  }
+  if (tefra === "TEFRA_C" && gnt === "TEMPORARY") out.push({ l: "warn", t: "TEFRA C with a temporary global note", d: "TEFRA C issues are normally in permanent global form from the outset." });
+
+  const tm = v("IssuanceDataGroup/Issuance/TargetMarket/ManufacturerTargetMarketType");
+  const priips = v("IssuanceDataGroup/Issuance/SellingRestrictions/PRIIPsRestriction");
+  const cci = v("IssuanceDataGroup/Issuance/SellingRestrictions/CCIRestriction");
+  if (tm && /PROF_AND_ECPS$/.test(tm) && priips && !/^NO_/.test(priips))
+    out.push({ l: "warn", t: "Professional-only target market without a retail prohibition legend", d: "Wholesale deals normally pair the professionals and ECPs target market with NO_EEA or NO_UK." });
+  if (tm && /UK_/.test(tm) && !cci) out.push({ l: "warn", t: "UK target market with no CCI determination", d: "The UK CCI regime replaced UK PRIIPs on 6 April 2026." });
+  if (priips && cci) out.push({ l: "pass", t: "Retail distribution legends set for both EEA and UK" });
+
+  const listed = v("IssuanceDataGroup/Issuance/Listing/Listed");
+  if (listed === "true") {
+    out.push(has("IssuanceDataGroup/Issuance/Listing/ListingVenue/Market") ? { l: "pass", t: "Listing venue named" } : { l: S >= 4 ? "fail" : "warn", t: "Listed but no venue named" });
+    if (!roles.includes("LISTING_AGENT")) out.push({ l: "warn", t: "No listing agent among the parties" });
+  }
+  if (v("x:stabilisation") === "APPLICABLE" && !roles.includes("STABILISATION_MANAGER"))
+    out.push({ l: "fail", t: "Stabilisation applicable but no stabilisation manager named", d: "The manager must be identified in the pre-stabilisation notice." });
+
+  const cpn = Number(v("IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestRate"));
+  const yld = Number(v("IssuanceDataGroup/Issuance/IndicationOfYield/Value"));
+  const px = Number(v("IssuanceDataGroup/Issuance/IssuePrice/Value"));
+  if (cpn && yld && px) {
+    const dir = (px < 100 && yld > cpn) || (px > 100 && yld < cpn) || (Math.abs(px - 100) < 0.01 && Math.abs(yld - cpn) < 0.02);
+    out.push(dir ? { l: "pass", t: "Price, coupon and yield are directionally consistent" } : { l: "fail", t: "Price, coupon and yield disagree", d: "A discount price should give a yield above the coupon, and a premium price a yield below it." });
+  }
+  const tot = Number(v("IssuanceDataGroup/Issuance/TotalAggregateAmount/Value"));
+  const agg = Number(v("IssuanceDataGroup/Product/AggregateNominalAmount/Value"));
+  if (tot && agg) out.push(tot === agg ? { l: "pass", t: "Issuance and product amounts agree" } : { l: "fail", t: "Total aggregate amount and aggregate nominal amount differ" });
+  const mx = Number(v("IssuanceDataGroup/Issuance/MaximumAmount/Value"));
+  if (tot && mx && tot > mx) out.push({ l: "fail", t: "Final size exceeds the communicated maximum size" });
+  const den = Number(v("IssuanceDataGroup/Issuance/SpecifiedDenomination/Value"));
+  if (den && den < 100000 && tm && /PROF_AND_ECPS$/.test(tm))
+    out.push({ l: "warn", t: "Denomination below 100,000 with a wholesale target market", d: "Retail denominations change the prospectus and key information document position." });
+  if (agg && den && agg % den !== 0) out.push({ l: "warn", t: "Issue size is not a whole multiple of the denomination" });
+
+  if (!state.docs.length) out.push({ l: "fail", t: "No deal documents attached" });
+  else {
+    const undated = state.docs.filter(d => !d.DocumentDate).length;
+    if (undated) out.push({ l: "warn", t: `${undated} documents without a date`, d: "Every supplement on file should be cited with its date." });
+    else out.push({ l: "pass", t: `${state.docs.length} deal documents cited` });
+  }
+  if (S >= 5 && v("IssuanceDataGroup/Product/InterestPayment/InterestType") !== "FIXED")
+    out.push({ l: "warn", t: "This template iteration validates fixed rate single tranche issues only" });
+  return out;
+}
+function tally() { const c = checks(); return { fail: c.filter(x => x.l === "fail").length, warn: c.filter(x => x.l === "warn").length, pass: c.filter(x => x.l === "pass").length }; }
+
+function renderChecks() {
+  const host = document.getElementById("checks"); host.innerHTML = "";
+  const req = FIELDS.filter(x => x.req && x.req <= state.stage);
+  const done = req.filter(filled).length;
+  const t = tally();
+  host.appendChild(el("div", "tally", `${done} of ${req.length} required fields · ${t.fail} blocking · ${t.warn} to review`));
+  const m = el("div", "meter"); const i = el("i"); i.style.width = (req.length ? Math.round(done / req.length * 100) : 0) + "%"; m.appendChild(i); host.appendChild(m);
+  checks().forEach(c => {
+    const d = el("div", "check");
+    d.appendChild(el("span", "dot " + c.l));
+    const body = el("div"); body.appendChild(el("b", null, c.t));
+    if (c.d) body.appendChild(el("p", null, c.d));
+    d.appendChild(body); host.appendChild(d);
+  });
+  document.getElementById("valPill").textContent = t.fail ? `${t.fail} blocking` : (t.warn ? `${t.warn} to review` : "checks clear");
+  document.getElementById("valPill").className = "pill" + (t.fail ? "" : " live");
+  document.getElementById("btnRelease").disabled = t.fail > 0;
+}
+
+/* ============================================================
+   Document drop and assisted fill
+   Nothing is written to a field without a person accepting it.
+   ============================================================ */
+state.suggestions = state.suggestions || [];
+state.files = state.files || [];
+
+function suggestedPaths() { return new Set((state.suggestions || []).filter(s => s.kind === "field").map(s => s.p)); }
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector(`script[src="${src}"]`)) return res();
+    const sc = document.createElement("script");
+    sc.src = src; sc.onload = () => res(); sc.onerror = () => rej(new Error("blocked"));
+    document.head.appendChild(sc);
+  });
+}
+
+/* ---------- text extraction per file type ---------- */
+async function textFrom(file) {
+  const name = file.name.toLowerCase();
+  if (/\.(txt|md|csv|json|xml)$/.test(name)) return await file.text();
+  if (/\.pdf$/.test(name)) {
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
+    const lib = window.pdfjsLib;
+    lib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const buf = await file.arrayBuffer();
+    const pdf = await lib.getDocument({ data: buf, isEvalSupported: false }).promise;
+    let out = "";
+    const pages = Math.min(pdf.numPages, 25);
+    for (let i = 1; i <= pages; i++) {
+      const pg = await pdf.getPage(i);
+      const tc = await pg.getTextContent();
+      out += tc.items.map(x => x.str).join(" ") + "\n";
+    }
+    return out;
+  }
+  if (/\.docx$/.test(name)) {
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+    const zip = await window.JSZip.loadAsync(await file.arrayBuffer());
+    const f = zip.file("word/document.xml");
+    if (!f) return "";
+    const xml = await f.async("string");
+    return xml.replace(/<\/w:p>/g, "\n").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+  }
+  return "";
+}
+
+/* ---------- BDT XML import: exact, path for path ---------- */
+function ingestBDT(xmlText, src) {
+  const doc = new DOMParser().parseFromString(xmlText, "application/xml");
+  if (doc.querySelector("parsererror")) return 0;
+  const root = doc.documentElement.getElementsByTagName("*")[0];
+  if (!root || root.localName !== "ICMABondDataTaxonomy") return 0;
+  const byPath = {};
+  (function walk(nd, path) {
+    const kids = [...nd.children];
+    if (!kids.length) { if (nd.textContent.trim()) byPath[path] = nd.textContent.trim(); return; }
+    kids.forEach(k => walk(k, path ? path + "/" + k.localName : k.localName));
+  })(root, "");
+  let n = 0;
+  FIELDS.forEach(fd => {
+    if (fd.t === "group" || fd.ext) return;
+    const val = byPath[fd.p];
+    if (val === undefined || String(v(fd.p)) === String(val)) return;
+    propose(fd.p, fd.l, val, src); n++;
+  });
+  const parties = [...root.getElementsByTagName("*")].filter(e => e.localName === "Party");
+  if (parties.length) {
+    const list = parties.map(p => ({
+      PartyName: txt(p, "PartyName"), LEIIdentifier: txt(p, "LEIIdentifier"), BICIdentifier: txt(p, "BICIdentifier"),
+      CountryOfIncorporation: txt(p, "CountryOfIncorporation"), PartyType: txt(p, "PartyType"),
+      Roles: [...p.getElementsByTagName("*")].filter(e => e.localName === "PartyRoleType").map(e => e.textContent.trim()),
+      Ratings: [...p.getElementsByTagName("*")].filter(e => e.localName === "Rating").map(r => ({ RatingAgency: txt(r, "RatingAgency"), RatingValue: txt(r, "RatingValue"), RatingOutlook: txt(r, "RatingOutlook") }))
+    }));
+    proposeGroup("parties", `${list.length} parties`, list, src); n++;
+  }
+  const ids = [...root.getElementsByTagName("*")].filter(e => e.localName === "SecurityIdentifier")
+    .map(e => e.children[0]).filter(Boolean).map(c => ({ Type: c.localName, Value: c.textContent.trim() }));
+  if (ids.length) { proposeGroup("ids", ids.map(i => i.Type + " " + i.Value).join(", "), ids, src); n++; }
+  const dd = [...root.getElementsByTagName("*")].filter(e => e.localName === "DocumentDetail")
+    .map(e => ({ DocumentName: txt(e, "DocumentName"), DocumentDate: txt(e, "DocumentDate"), DocumentLink: txt(e, "DocumentLink"), DocumentVersion: txt(e, "DocumentVersion") }));
+  if (dd.length) { proposeGroup("docs", `${dd.length} documents`, dd, src); n++; }
+  return n;
+}
+function txt(nd, name) { const e = [...nd.getElementsByTagName("*")].find(x => x.localName === name); return e ? e.textContent.trim() : ""; }
+
+/* ---------- heuristics for prose term sheets and prospectuses ---------- */
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+function toISO(raw) {
+  if (!raw) return "";
+  let m = raw.match(/(\d{4})-(\d{2})-(\d{2})/); if (m) return m[0];
+  m = raw.match(/(\d{1,2})\s+([A-Za-z]{3,9})\s+(\d{4})/);
+  if (m && MONTHS[m[2].slice(0, 3).toLowerCase()]) return `${m[3]}-${String(MONTHS[m[2].slice(0, 3).toLowerCase()]).padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  m = raw.match(/([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})/);
+  if (m && MONTHS[m[1].slice(0, 3).toLowerCase()]) return `${m[3]}-${String(MONTHS[m[1].slice(0, 3).toLowerCase()]).padStart(2, "0")}-${m[2].padStart(2, "0")}`;
+  m = raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  return "";
+}
+function num(s) { return String(s).replace(/[,\s]/g, ""); }
+function scaled(amount, unit) {
+  const n = Number(num(amount)); if (!isFinite(n)) return "";
+  const u = (unit || "").toLowerCase();
+  if (/^b/.test(u)) return String(n * 1e9);
+  if (/^m/.test(u)) return String(n * 1e6);
+  return String(n);
+}
+const LAWS = [[/english law|laws of england/i, "GB"], [/new york law/i, "US"], [/german law/i, "DE"], [/french law/i, "FR"], [/dutch law|laws of the netherlands/i, "NL"], [/luxembourg law/i, "LU"], [/irish law/i, "IE"]];
+const VENUES = [[/luxembourg/i, "LUXEMBOURG_STOCK_EXCHANGE"], [/london stock exchange/i, "LONDON_STOCK_EXCHANGE"], [/euronext dublin|irish stock exchange/i, "EURONEXT_DUBLIN"], [/frankfurt/i, "FRANKFURT_STOCK_EXCHANGE"], [/six swiss/i, "SIX_SWISS_EXCHANGE"], [/singapore/i, "SINGAPORE_SGX"], [/nasdaq dubai/i, "NASDAQ_DUBAI"], [/vienna/i, "VIENNA_STOCK_EXCHANGE"]];
+const RULES = [
+  { p: "IssuanceDataGroup/Issuance/SpecifiedCurrency", l: "Specified currency", fn: t => { const m = t.match(/\b(EUR|USD|GBP|CHF|JPY|SEK|NOK|DKK|AUD|CAD|SGD|HKD|CNH|AED|SAR)\b/); if (m) return m[1]; const sym = t.match(/[\u20ac\u00a3\u0024]/); return sym ? ({ "\u20ac": "EUR", "\u00a3": "GBP", "$": "USD" })[sym[0]] : ""; } },
+  {
+    p: "IssuanceDataGroup/Issuance/TotalAggregateAmount/Value", l: "Total aggregate amount", fn: t => {
+      const m = t.match(/(?:\b(?:EUR|USD|GBP|CHF|JPY|SEK|NOK|AUD|CAD|SGD|HKD|AED|SAR)|[\u20ac\u00a3\u0024])\s?([\d][\d,\.]*)\s?(billion|bn|million|mm|m)\b/i);
+      if (m) return scaled(m[1], m[2]);
+      const m2 = t.match(/\b(?:EUR|USD|GBP|CHF)\s?([\d]{1,3}(?:,\d{3}){2,})\b/); return m2 ? num(m2[1]) : "";
+    }
+  },
+  { p: "IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestRate", l: "Coupon", fn: t => (t.match(/(?:coupon|rate of interest|interest rate)[^\d%]{0,40}(\d{1,2}[\.\u00b7]\d{1,4})\s*(?:per cent|%)/i) || t.match(/(\d{1,2}\.\d{2,4})\s*per cent\.?\s*(?:notes|fixed rate)/i) || [])[1] },
+  { p: "IssuanceDataGroup/Issuance/IssuePrice/Value", l: "Issue price", fn: t => (t.match(/(?:issue price|re-?offer price)[^\d]{0,30}(\d{2,3}\.\d{1,4})/i) || [])[1] },
+  { p: "IssuanceDataGroup/Issuance/IndicationOfYield/Value", l: "Indication of yield", fn: t => (t.match(/(?:yield|indication of yield)[^\d]{0,30}(\d{1,2}\.\d{1,4})\s*(?:per cent|%)/i) || [])[1] },
+  { p: "IssuanceDataGroup/Product/Maturity/MaturityDate", l: "Maturity date", fn: t => toISO((t.match(/maturity date[:\s]{1,20}([^\n\.;]{6,30})/i) || t.match(/due\s+(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/i) || [])[1]) },
+  { p: "IssuanceDataGroup/Issuance/IssueDate", l: "Issue date", fn: t => toISO((t.match(/issue date[:\s]{1,20}([^\n\.;]{6,30})/i) || [])[1]) },
+  { p: "IssuanceDataGroup/Issuance/SettlementDate", l: "Settlement date", fn: t => toISO((t.match(/settlement date[:\s]{1,20}([^\n\.;]{6,30})/i) || [])[1]) },
+  { p: "IssuanceDataGroup/Issuance/PricingDate", l: "Pricing date", fn: t => toISO((t.match(/(?:pricing|trade) date[:\s]{1,20}([^\n\.;]{6,30})/i) || [])[1]) },
+  { p: "IssuanceDataGroup/Issuance/SpecifiedDenomination/Value", l: "Specified denomination", fn: t => { const m = t.match(/denominations?\s+of[^\d]{0,20}([\d][\d,\.]{4,})/i); return m ? num(m[1]) : ""; } },
+  { p: "IssuanceDataGroup/Issuance/GoverningLaw/CountryCode", l: "Governing law", fn: t => { const h = LAWS.find(([r]) => r.test(t)); return h ? h[1] : ""; } },
+  { p: "IssuanceDataGroup/Issuance/Listing/ListingVenue/Market", l: "Listing venue", fn: t => { if (!/listing|admission to trading/i.test(t)) return ""; const h = VENUES.find(([r]) => r.test(t)); return h ? h[1] : ""; } },
+  { p: "IssuanceDataGroup/Issuance/SellingRestrictions/TEFRA/TefraCode", l: "TEFRA", fn: t => { const m = t.match(/TEFRA\s*([CD])\b/i); return m ? "TEFRA_" + m[1].toUpperCase() : ""; } },
+  { p: "IssuanceDataGroup/Issuance/SellingRestrictions/REGS/RegSCode", l: "Regulation S category", fn: t => { const m = t.match(/(?:Regulation S|Reg\.?\s?S)[^\n]{0,40}Category\s*([123])/i); return m ? "REGS_CAT" + m[1] : (/regulation s/i.test(t) ? "" : ""); } },
+  { p: "IssuanceDataGroup/Issuance/SellingRestrictions/PRIIPsRestriction", l: "PRIIPs restriction", fn: t => (/prohibition of sales to eea retail/i.test(t) ? "NO_EEA" : (/prohibition of sales to uk retail/i.test(t) ? "NO_UK" : "")) },
+  { p: "IssuanceDataGroup/Issuance/TargetMarket/ManufacturerTargetMarketType", l: "Manufacturer target market", fn: t => (/eligible counterparties and professional clients only/i.test(t) ? (/uk mifir|united kingdom domestic law/i.test(t) ? "UK_MIFIR_PROF_AND_ECPS" : "EU_MIFIDII_PROF_AND_ECPS") : "") },
+  { p: "IssuanceDataGroup/Product/DayCountFraction", l: "Day count fraction", fn: t => { const m = t.match(/(30\/360|30E\/360|Actual\/Actual\s*\(ICMA\)|ACT\/ACT|Actual\/360|Actual\/365)/i); if (!m) return ""; const x = m[1].toLowerCase(); return x.indexOf("icma") > -1 ? "ICMA_ACT/ACT" : x.indexOf("act/act") > -1 ? "ACT/ACT" : x.indexOf("360") > -1 && x.indexOf("30") === 0 ? "30/360" : x.indexOf("actual/360") > -1 ? "ACT/360" : x.indexOf("actual/365") > -1 ? "ACT/365" : ""; } },
+  { p: "IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/InterestPaymentFrequency", l: "Coupon frequency", fn: t => (/semi-?annual/i.test(t) ? "SEMIANNUALLY" : (/quarterly/i.test(t) ? "QUARTERLY" : (/annual/i.test(t) ? "ANNUALLY" : ""))) },
+  { p: "x:spreadSet", l: "Spread set", fn: t => { const m = t.match(/(?:MS|mid-?swaps?|spread)\s*\+\s*(\d{1,3})\s*(?:bps?|basis points)?/i); return m ? "MS + " + m[1] : ""; } },
+  { p: "x:iptSpread", l: "Initial price thoughts", fn: t => { const m = t.match(/(?:IPTs?|initial price thoughts)[^\d]{0,20}([A-Za-z\s\+]{0,12}\d{1,3}\s*(?:area|bps?)?)/i); return m ? m[1].trim() : ""; } },
+  { p: "x:bookSize", l: "Order book", fn: t => { const m = t.match(/books?[^\.\n]{0,40}(?:in excess of|above|over|at)\s+((?:EUR|USD|GBP)?\s?[\d\.,]+\s?(?:bn|billion|m|million))/i); return m ? m[1].trim() : ""; } }
+];
+const AGENCIES = [[/moody'?s/i, "MOODYS"], [/(?:standard\s*&\s*poor|s&p|sandp)/i, "SNPG"], [/fitch/i, "FITCH"], [/dbrs/i, "DBRS"], [/scope/i, "SCOPE"]];
+
+function ingestText(text, src) {
+  let n = 0;
+  const t = text.replace(/\u00a0/g, " ");
+  RULES.forEach(r => {
+    let val = "";
+    try { val = r.fn(t) || ""; } catch (e) { val = ""; }
+    if (!val) return;
+    if (String(v(r.p)).trim() === String(val).trim()) return;
+    propose(r.p, r.l, String(val).trim(), src); n++;
+  });
+  const isin = (t.match(/\b([A-Z]{2}[A-Z0-9]{9}\d)\b/g) || []).find(validISIN);
+  const cc = (t.match(/common code[:\s]{1,12}(\d{9})/i) || [])[1];
+  if (isin || cc) {
+    const list = [];
+    if (isin) list.push({ Type: "ISIN", Value: isin });
+    if (cc) list.push({ Type: "COMMON_CODE", Value: cc });
+    if (JSON.stringify(list) !== JSON.stringify(state.ids)) { proposeGroup("ids", list.map(i => i.Type + " " + i.Value).join(", "), list, src); n++; }
+  }
+  const found = [];
+  /* each agency is matched only against its own scale, so a Moody's rating nearby cannot be read as a Fitch one */
+  const MOODYS = /\b(Aaa|Aa[123]|A[123]|Baa[123]|Ba[123]|B[123]|Caa[123])(?![A-Za-z0-9])/;
+  const SP = /\b(AAA|AA[+-]?|A[+-]?|BBB[+-]?|BB[+-]?|B[+-]?|CCC[+-]?)(?![A-Za-z0-9])/;
+  AGENCIES.forEach(([re, code]) => {
+    const idx = t.search(re);
+    if (idx < 0) return;
+    const win = t.slice(idx, idx + 70);
+    const m = win.match(code === "MOODYS" ? MOODYS : SP);
+    if (m) found.push({ RatingAgency: code, RatingValue: m[1], RatingOutlook: "" });
+  });
+  if (found.length && JSON.stringify(found) !== JSON.stringify(state.ratings)) { proposeGroup("ratings", found.map(r => r.RatingAgency + " " + r.RatingValue).join(", "), found, src); n++; }
+  const lei = (t.match(/\b([A-Z0-9]{20})\b/g) || []).find(validLEI);
+  if (lei && state.parties[0] && !state.parties[0].LEIIdentifier) {
+    const list = JSON.parse(JSON.stringify(state.parties)); list[0].LEIIdentifier = lei;
+    proposeGroup("parties", "issuer LEI " + lei, list, src); n++;
+  }
+  return n;
+}
+
+/* ---------- suggestion store ---------- */
+let sugSeq = 0;
+function propose(p, l, val, src) {
+  state.suggestions = state.suggestions.filter(s => !(s.kind === "field" && s.p === p));
+  state.suggestions.push({ id: "s" + (++sugSeq), kind: "field", p: p, l: l, val: val, cur: String(v(p) || ""), src: src });
+}
+function proposeGroup(g, label, payload, src) {
+  state.suggestions = state.suggestions.filter(s => !(s.kind === "group" && s.g === g));
+  state.suggestions.push({ id: "s" + (++sugSeq), kind: "group", g: g, l: GROUPS[g].t + " list", val: label, cur: (state[g] || []).length + " entries", payload: payload, src: src });
+}
+function acceptSug(id) {
+  const s = state.suggestions.find(x => x.id === id); if (!s) return;
+  if (s.kind === "field") state.f[s.p] = s.val; else state[s.g] = s.payload;
+  state.suggestions = state.suggestions.filter(x => x.id !== id);
+  refreshAuto(); renderAll(); save();
+}
+function rejectSug(id) { state.suggestions = state.suggestions.filter(x => x.id !== id); renderForm(); save(); }
+
+/* ---------- drop handling ---------- */
+async function handleFiles(files) {
+  let added = 0, sug = 0, notes = [];
+  for (const file of files) {
+    const nm = file.name;
+    state.files.push({ name: nm, size: file.size, at: new Date().toISOString() });
+    if (!state.docs.some(d => d.DocumentName === nm)) {
+      state.docs = state.docs.filter(d => d.DocumentName || d.DocumentDate || d.DocumentLink);
+      state.docs.push({ DocumentName: nm.replace(/\.[a-z0-9]+$/i, ""), DocumentDate: "", DocumentLink: nm, DocumentVersion: "" });
+      added++;
+    }
+    let text = "";
+    try { text = await textFrom(file); }
+    catch (e) { notes.push(nm + ": could not be read in the browser, so it is attached only"); }
+    if (!text) continue;
+    if (/^\s*<\?xml|<Document/i.test(text)) {
+      const n = ingestBDT(text, nm);
+      if (n) { sug += n; continue; }
+    }
+    if (/^\s*\{/.test(text)) {
+      try {
+        const j = JSON.parse(text);
+        if (j.vdrEnvelope && j.execution) { Object.entries(j.execution).forEach(([k, val]) => { const fd = FIELDS.find(x => x.p === "x:" + k); if (fd && String(v(fd.p)) !== String(val)) { propose(fd.p, fd.l, String(val), nm); sug++; } }); continue; }
+      } catch (e) { /* fall through to text rules */ }
+    }
+    sug += ingestText(text, nm);
+  }
+  renderAll(); save();
+  toast(`${files.length} file(s) attached. ${sug} suggested values for review.` + (notes.length ? " " + notes[0] : ""));
+}
+
+function dropPanel() {
+  const wrap = el("section", "block"); wrap.id = "sec-intake";
+  const h = el("h2", null, "Documents and assisted fill");
+  h.appendChild(el("em", null, state.files.length ? state.files.length + " attached" : "nothing attached"));
+  wrap.appendChild(h);
+  wrap.appendChild(el("div", "note", "Drop the offering memorandum, base prospectus, supplements, a signed term sheet or a BDT XML file here. Text is read in the browser, nothing is uploaded anywhere, and every value found is proposed for review rather than written to a field. BDT XML maps element for element; prose documents are read with pattern rules that are deliberately conservative and will miss things."));
+  const dz = el("div", "dropzone");
+  dz.appendChild(el("b", null, "Drop files here"));
+  dz.appendChild(el("span", null, "PDF, Word, BDT XML, envelope JSON, text and CSV"));
+  const pick = el("button", null, "Choose files");
+  const inp = document.createElement("input"); inp.type = "file"; inp.multiple = true; inp.style.display = "none";
+  inp.onchange = () => { if (inp.files.length) handleFiles([...inp.files]); };
+  pick.onclick = () => inp.click();
+  dz.appendChild(pick); dz.appendChild(inp);
+  ["dragenter", "dragover"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("over"); }));
+  dz.addEventListener("drop", e => { if (e.dataTransfer?.files?.length) handleFiles([...e.dataTransfer.files]); });
+  wrap.appendChild(dz);
+  if (state.files.length) {
+    const ul = el("div", "filelist");
+    state.files.forEach((fl, i) => {
+      const r = el("div"); r.appendChild(el("span", null, fl.name + "  ·  " + Math.round(fl.size / 1024) + " kB"));
+      const x = el("button", "mini", "Remove"); x.onclick = () => { state.files.splice(i, 1); renderForm(); save(); };
+      r.appendChild(x); ul.appendChild(r);
+    });
+    wrap.appendChild(ul);
+  }
+  if (state.suggestions.length) {
+    const sh = el("h3", null, `${state.suggestions.length} proposed values awaiting review`);
+    sh.style.cssText = "font-size:13px;margin:16px 0 6px";
+    wrap.appendChild(sh);
+    wrap.appendChild(el("div", "note", "Check each against the source document before accepting. Accepting writes the value into the field; the field stays editable afterwards."));
+    const tbl = el("div", "sugs");
+    state.suggestions.forEach(s => {
+      const r = el("div", "sug");
+      const c1 = el("div"); c1.appendChild(el("b", null, s.l)); c1.appendChild(el("span", "src", "from " + s.src));
+      const c2 = el("div", "vals");
+      if (s.cur) { c2.appendChild(el("s", null, s.cur)); c2.appendChild(el("span", null, " \u2192 ")); }
+      c2.appendChild(el("b", null, s.val));
+      const c3 = el("div", "inline");
+      const ok = el("button", "mini primary", "Accept"); ok.onclick = () => acceptSug(s.id);
+      const no = el("button", "mini", "Ignore"); no.onclick = () => rejectSug(s.id);
+      c3.appendChild(ok); c3.appendChild(no);
+      r.appendChild(c1); r.appendChild(c2); r.appendChild(c3); tbl.appendChild(r);
+    });
+    wrap.appendChild(tbl);
+    const bar = el("div", "inline"); bar.style.cssText = "max-width:360px;margin-top:10px";
+    const all = el("button", null, "Accept all"); all.onclick = () => { [...state.suggestions].forEach(s => acceptSug(s.id)); };
+    const none = el("button", "ghost", "Ignore all"); none.onclick = () => { state.suggestions = []; renderForm(); save(); };
+    bar.appendChild(all); bar.appendChild(none); wrap.appendChild(bar);
+  }
+  return wrap;
+}
+
+/* ============================================================
+   BDT 2.0 XML payload
+   ============================================================ */
+const MULTI = ["SellingRestrictions/CountryRestrictions", "BusinessDayCenter/CityCalendar"];
+function node(name) { return { n: name, c: [], t: null }; }
+function ensure(root, parts) {
+  let cur = root;
+  parts.forEach(p => {
+    let k = cur.c.find(x => x.n === p);
+    if (!k) { k = node(p); cur.c.push(k); }
+    cur = k;
+  });
+  return cur;
+}
+function sortTree(nd) {
+  const ord = ORDER[nd.n];
+  if (ord) nd.c.sort((a, b) => {
+    const ia = ord.indexOf(a.n), ib = ord.indexOf(b.n);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  nd.c.forEach(sortTree);
+  return nd;
+}
+function ser(nd, d) {
+  const pad = "  ".repeat(d);
+  if (nd.t !== null && !nd.c.length) return `${pad}<${nd.n}>${esc(nd.t)}</${nd.n}>`;
+  if (!nd.c.length) return `${pad}<${nd.n}/>`;
+  return `${pad}<${nd.n}>\n` + nd.c.map(k => ser(k, d + 1)).join("\n") + `\n${pad}</${nd.n}>`;
+}
+function buildTree() {
+  const root = node("ICMABondDataTaxonomy");
+  FIELDS.forEach(fd => {
+    if (fd.ext) return;
+    if (fd.t === "group") return;
+    if (!has(fd.p)) return;
+    const parts = fd.p.split("/");
+    if (MULTI.some(m => fd.p.endsWith(m))) {
+      const parent = ensure(root, parts.slice(0, -1));
+      String(v(fd.p)).split(",").map(s => s.trim()).filter(Boolean).forEach(val => {
+        const k = node(parts[parts.length - 1]); k.t = val; parent.c.push(k);
+      });
+      return;
+    }
+    const leaf = ensure(root, parts); leaf.t = String(v(fd.p)).trim();
+  });
+  /* repeating groups */
+  const di = ensure(root, ["DocumentInformation"]);
+  di.c = di.c.filter(x => x.n !== "DocumentContacts");
+  state.contacts.forEach(c => {
+    const g = node("DocumentContacts");
+    if (c.Name) { const k = node("Name"); k.t = c.Name; g.c.push(k); }
+    if (c.Email) { const k = node("Email"); k.t = c.Email; g.c.push(k); }
+    if (g.c.length) di.c.push(g);
+  });
+  if (state.parties.length) {
+    const pg = ensure(root, ["IssuanceDataGroup", "PartyGroup"]);
+    state.parties.forEach(p => {
+      const pn = node("Party");
+      const add = (n, val) => { if (val) { const k = node(n); k.t = val; pn.c.push(k); } };
+      add("PartyName", p.PartyName); add("LEIIdentifier", p.LEIIdentifier); add("BICIdentifier", p.BICIdentifier);
+      add("CountryOfIncorporation", p.CountryOfIncorporation);
+      (p.Roles || []).forEach(r => { const pr = node("PartyRole"); const k = node("PartyRoleType"); k.t = r; pr.c.push(k); pn.c.push(pr); });
+      add("PartyType", p.PartyType);
+      if ((p.Ratings || []).some(r => r.RatingAgency || r.RatingValue)) {
+        const rg = node("PartyRating");
+        p.Ratings.forEach(r => {
+          if (!(r.RatingAgency || r.RatingValue)) return;
+          const rt = node("Rating");
+          [["RatingAgency", r.RatingAgency], ["RatingValue", r.RatingValue], ["RatingOutlook", r.RatingOutlook]].forEach(([n, val]) => { if (val) { const k = node(n); k.t = val; rt.c.push(k); } });
+          rg.c.push(rt);
+        });
+        pn.c.push(rg);
+      }
+      pg.c.push(pn);
+    });
+  }
+  if (state.docs.length) {
+    const doc = ensure(root, ["IssuanceDataGroup", "Issuance", "IssuanceDocumentation"]);
+    state.docs.forEach(d => {
+      const dd = node("DocumentDetail");
+      [["DocumentName", d.DocumentName], ["DocumentDate", d.DocumentDate], ["DocumentLink", d.DocumentLink], ["DocumentVersion", d.DocumentVersion]]
+        .forEach(([n, val]) => { if (val) { const k = node(n); k.t = val; dd.c.push(k); } });
+      if (dd.c.length) doc.c.push(dd);
+    });
+  }
+  if (state.ids.length) {
+    const sl = ensure(root, ["IssuanceDataGroup", "Product", "SecurityIdentifierList"]);
+    state.ids.forEach(x => {
+      if (!x.Value) return;
+      const si = node("SecurityIdentifier"); const k = node(x.Type); k.t = x.Value; si.c.push(k); sl.c.push(si);
+    });
+  }
+  if (state.ratings.length) {
+    const rg = ensure(root, ["IssuanceDataGroup", "Product", "ExpectedProductRating"]);
+    state.ratings.forEach(r => {
+      if (!(r.RatingAgency || r.RatingValue)) return;
+      const rt = node("Rating");
+      [["RatingAgency", r.RatingAgency], ["RatingValue", r.RatingValue], ["RatingOutlook", r.RatingOutlook]].forEach(([n, val]) => { if (val) { const k = node(n); k.t = val; rt.c.push(k); } });
+      rg.c.push(rt);
+    });
+  }
+  return sortTree(root);
+}
+function buildXML() {
+  const inner = ser(buildTree(), 1);
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<!-- VDR digital term sheet. Stage: ${STAGES[state.stage - 1].t}. Version ${state.ver}.\n     BDT 2.0 payload. The legal documentation prevails over this digital record. -->\n<Document xmlns="urn:icma:xsd:ICMABondDataTaxonomy" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:icma:xsd:ICMABondDataTaxonomy icma-bond-data-taxonomy.xsd">\n${inner}\n</Document>\n`;
+}
+
+/* ============================================================
+   VDR envelope: routing, lifecycle and execution-only data
+   ============================================================ */
+function buildEnvelope() {
+  const ex = {};
+  FIELDS.filter(x => x.ext && has(x.p)).forEach(x => { ex[x.p.slice(2)] = v(x.p); });
+  const last = state.releases[state.releases.length - 1];
+  return {
+    vdrEnvelope: "0.1",
+    dealIdentifier: v("IssuanceDataGroup/Issuance/DealIdentifier") || null,
+    dealName: state.deal || null,
+    documentId: v("DocumentInformation/DocumentId"),
+    documentVersion: state.ver,
+    supersedes: last ? last.documentId : null,
+    executionStage: STAGES[state.stage - 1].k,
+    executionStageLabel: STAGES[state.stage - 1].t,
+    snapshot: true,
+    generatedAt: new Date().toISOString(),
+    authorisedBy: last ? last.by : null,
+    instrument: {
+      issuer: (state.parties.find(p => (p.Roles || []).includes("ISSUER")) || {}).PartyName || null,
+      currency: v("IssuanceDataGroup/Issuance/SpecifiedCurrency") || null,
+      size: v("IssuanceDataGroup/Issuance/TotalAggregateAmount/Value") || v("IssuanceDataGroup/Issuance/MaximumAmount/Value") || null,
+      maturityDate: v("IssuanceDataGroup/Product/Maturity/MaturityDate") || null,
+      isin: (state.ids.find(x => x.Type === "ISIN") || {}).Value || null,
+      temporaryIsin: (state.ids.find(x => x.Type === "TEMPORARY_ISIN") || {}).Value || null
+    },
+    execution: ex,
+    bookrunners: state.parties.filter(p => (p.Roles || []).some(r => /MANAGER|BOOKRUNNER|COORDINATOR/.test(r))).map(p => ({ name: p.PartyName, lei: p.LEIIdentifier || null, roles: p.Roles })),
+    documents: state.docs.map(d => ({ name: d.DocumentName, date: d.DocumentDate || null, link: d.DocumentLink || null, version: d.DocumentVersion || null })),
+    distribution: { channels: ["api", "mcp", "email", "instant_bloomberg"], recipients: "governed by the bookrunners on this deal" },
+    checks: tally(),
+    payload: { format: "ICMA-BDT", version: "2.0.0", encoding: "xml", reference: (v("DocumentInformation/DocumentId") || "document") + ".xml" }
+  };
+}
+
+/* ============================================================
+   Human-readable term sheet
+   ============================================================ */
+function fmtAmt(val, cur) {
+  if (!val) return "";
+  const n = Number(val);
+  if (!isFinite(n)) return String(val);
+  const s = n >= 1e9 ? (n / 1e9).toLocaleString("en-GB", { maximumFractionDigits: 3 }) + "bn"
+    : n >= 1e6 ? (n / 1e6).toLocaleString("en-GB", { maximumFractionDigits: 3 }) + "m"
+      : n.toLocaleString("en-GB");
+  return (cur ? cur + " " : "") + s;
+}
+function sheetRows() {
+  const cur = v("IssuanceDataGroup/Issuance/SpecifiedCurrency");
+  const party = r => state.parties.filter(p => (p.Roles || []).includes(r)).map(p => p.PartyName).join(", ");
+  const ratings = state.ratings.filter(r => r.RatingValue).map(r => `${r.RatingValue} (${r.RatingAgency}${r.RatingOutlook ? ", " + r.RatingOutlook.toLowerCase() : ""})`).join(" / ");
+  const size = v("IssuanceDataGroup/Issuance/TotalAggregateAmount/Value")
+    ? fmtAmt(v("IssuanceDataGroup/Issuance/TotalAggregateAmount/Value"), cur)
+    : (v("x:sizeMsg") || (v("IssuanceDataGroup/Issuance/MaximumAmount/Value") ? fmtAmt(v("IssuanceDataGroup/Issuance/MaximumAmount/Value"), cur) + " maximum" : ""));
+  const st = [v("IssuanceDataGroup/Product/StatusOfNote/Seniority"), v("IssuanceDataGroup/Product/StatusOfNote/Subordinated"), v("IssuanceDataGroup/Product/StatusOfNote/Secured"), v("IssuanceDataGroup/Product/StatusOfNote/Preferred")].filter(Boolean).join(", ").toLowerCase();
+  const spread = v("x:spreadSet") || v("x:guidance") || v("x:iptSpread");
+  const rows = [
+    ["Issuer", party("ISSUER")],
+    ["Guarantor", party("GUARANTOR")],
+    ["Issuer ratings", state.parties.filter(p => (p.Roles || []).includes("ISSUER")).flatMap(p => (p.Ratings || [])).filter(r => r.RatingValue).map(r => `${r.RatingValue} (${r.RatingAgency})`).join(" / ")],
+    ["Expected issue ratings", ratings],
+    ["Status", st],
+    ["Format", [v("IssuanceDataGroup/Issuance/IssuanceType"), v("IssuanceDataGroup/Issuance/SellingRestrictions/REGS/RegSCode"), v("IssuanceDataGroup/Product/ESGLabel")].filter(Boolean).join(", ")],
+    ["Size", size],
+    ["Order book", v("x:bookSize")],
+    ["Pricing date", v("IssuanceDataGroup/Issuance/PricingDate")],
+    ["Settlement date", v("IssuanceDataGroup/Issuance/SettlementDate")],
+    ["Maturity date", v("IssuanceDataGroup/Product/Maturity/MaturityDate")],
+    ["Coupon", v("IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestRate") ? v("IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestRate") + " per cent., " + (v("IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/InterestPaymentFrequency") || "").toLowerCase() : ""],
+    ["Spread", spread],
+    ["Reoffer spread to mid-swaps", v("IssuanceDataGroup/Issuance/ReofferSpreadtoMidSwapRate/Value") ? "+" + v("IssuanceDataGroup/Issuance/ReofferSpreadtoMidSwapRate/Value") + "bp" : ""],
+    ["Benchmark", [v("IssuanceDataGroup/Issuance/Benchmark/Ticker/Ticker"), v("IssuanceDataGroup/Issuance/ReofferSpreadToBenchmark/Value") ? "+" + v("IssuanceDataGroup/Issuance/ReofferSpreadToBenchmark/Value") + "bp" : ""].filter(Boolean).join(" ")],
+    ["Reoffer price", v("IssuanceDataGroup/Issuance/IssuePrice/Value")],
+    ["Reoffer yield", v("IssuanceDataGroup/Issuance/IndicationOfYield/Value") ? v("IssuanceDataGroup/Issuance/IndicationOfYield/Value") + " per cent." : ""],
+    ["New issue concession", v("x:nic")],
+    ["First coupon date", v("IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/FirstPayment/PaymentDate")],
+    ["Day count", v("IssuanceDataGroup/Product/DayCountFraction")],
+    ["Business day convention", v("IssuanceDataGroup/Product/BusinessDayConvention/BusinessDayAdjustment")],
+    ["Denomination", fmtAmt(v("IssuanceDataGroup/Issuance/SpecifiedDenomination/Value"), cur)],
+    ["Redemption", v("IssuanceDataGroup/Issuance/Redemption/FinalRedemptionPercentage") ? v("IssuanceDataGroup/Issuance/Redemption/FinalRedemptionPercentage") + " per cent. at maturity" : ""],
+    ["Optionality", v("IssuanceDataGroup/Product/Optionality")],
+    ["Use of proceeds", [v("IssuanceDataGroup/Issuance/Proceeds/UseOfProceeds/UseOfProceedsPrimaryCategory"), v("IssuanceDataGroup/Issuance/Proceeds/UseOfProceeds/UseOfProceedsSubCategory")].filter(Boolean).join(" / ")],
+    ["Form of notes", [v("IssuanceDataGroup/Product/InitialFormOfNote/LegalTitleFormOfNote"), v("IssuanceDataGroup/Product/InitialFormOfNote/GlobalNote/GlobalNoteType"), v("IssuanceDataGroup/Product/SafeKeepingStructure")].filter(Boolean).join(", ")],
+    ["Listing", v("IssuanceDataGroup/Issuance/Listing/Listed") === "true" ? [v("IssuanceDataGroup/Issuance/Listing/ListingVenue/Market"), v("IssuanceDataGroup/Issuance/Listing/ListingVenue/MarketType")].filter(Boolean).join(", ") : "Unlisted"],
+    ["Clearing", v("IssuanceDataGroup/Issuance/SecuritiesClearingSystem/Code")],
+    ["Governing law", v("IssuanceDataGroup/Issuance/GoverningLaw/CountryCode")],
+    ["Selling restrictions", [v("IssuanceDataGroup/Issuance/SellingRestrictions/REGS/RegSCode"), v("IssuanceDataGroup/Issuance/SellingRestrictions/TEFRA/TefraCode"), v("IssuanceDataGroup/Issuance/SellingRestrictions/PRIIPsRestriction"), v("IssuanceDataGroup/Issuance/SellingRestrictions/CCIRestriction") ? "CCI " + v("IssuanceDataGroup/Issuance/SellingRestrictions/CCIRestriction") : ""].filter(Boolean).join(" · ")],
+    ["Target market", v("IssuanceDataGroup/Issuance/TargetMarket/ManufacturerTargetMarketType")],
+    ["Stabilisation", [v("x:stabilisation"), v("x:overAllot")].filter(Boolean).join(", ")],
+    ["Bookrunners", state.parties.filter(p => (p.Roles || []).some(r => /MANAGER|BOOKRUNNER|COORDINATOR/.test(r))).map(p => p.PartyName).join(", ")],
+    ["Billing and delivery", party("BILLING_AND_DELIVERY_AGENT")],
+    ["ISIN", (state.ids.find(x => x.Type === "ISIN") || state.ids.find(x => x.Type === "TEMPORARY_ISIN") || {}).Value || ""],
+    ["Common code", (state.ids.find(x => x.Type === "COMMON_CODE") || {}).Value || ""],
+    ["Documentation", state.docs.map(d => d.DocumentName + (d.DocumentDate ? " dated " + d.DocumentDate : "")).join("; ")],
+    ["Timing", [v("x:booksOpen") ? "Books open " + v("x:booksOpen") : "", v("x:booksSubject") ? "books subject " + v("x:booksSubject") : ""].filter(Boolean).join(", ")],
+    ["Syndicate contact", v("x:syndDesk")]
+  ];
+  return rows.filter(r => String(r[1]).trim() !== "");
+}
+function sheetText() {
+  const head = `${state.deal || "Untitled deal"}\n${STAGES[state.stage - 1].t} — version ${state.ver} — ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC\n`;
+  const body = sheetRows().map(([k, val]) => k.padEnd(30, " ") + String(val)).join("\n");
+  return head + "\n" + body + "\n\nNot an offer to sell or a solicitation to buy. Distribution restricted as set out above.\nThe legal documentation prevails over this record. Released through the VDR by the bookrunners.\n";
+}
+function renderSheet() {
+  const host = document.getElementById("pane-sheet"); host.innerHTML = "";
+  const w = el("div", "ts");
+  w.appendChild(el("h2", null, state.deal || "Untitled deal"));
+  w.appendChild(el("div", "issuer", `${STAGES[state.stage - 1].t} · version ${state.ver} · document ${v("DocumentInformation/DocumentId")}`));
+  const tb = el("table");
+  sheetRows().forEach(([k, val]) => {
+    const tr = el("tr"); tr.appendChild(el("th", null, k)); tr.appendChild(el("td", null, String(val))); tb.appendChild(tr);
+  });
+  const cap = el("caption", null, "Indicative terms for discussion, subject to the offering documentation. Not an offer to sell or a solicitation to buy securities. The legal documentation prevails over this digital record.");
+  tb.appendChild(cap);
+  w.appendChild(tb);
+  const bar = el("div"); bar.style.marginTop = "14px"; bar.className = "inline";
+  const b1 = el("button", null, "Copy as plain text"); b1.onclick = () => copy(sheetText());
+  bar.appendChild(b1);
+  w.appendChild(bar);
+  host.appendChild(w);
+}
+
+/* ============================================================
+   Panes: XML, envelope, distribution, log
+   ============================================================ */
+function copy(txt) {
+  navigator.clipboard?.writeText(txt).then(() => toast("Copied to the clipboard"), () => toast("The browser blocked clipboard access"));
+}
+async function download(name, text) {
+  if (dl) {
+    try { await dl.save({ filename: name, data: text }); toast("Saved " + name); return; }
+    catch (e) { toast("Save declined or unavailable"); return; }
+  }
+  copy(text); toast("Downloads unavailable here, so the content was copied instead");
+}
+function renderXML() {
+  const host = document.getElementById("pane-xml"); host.innerHTML = "";
+  host.appendChild(el("div", "note", "The BDT 2.0 payload for this stage. Every element below is defined in the ICMA schema, so it validates against icma-bond-data-taxonomy.xsd and can be consumed unchanged by any BDT-aware system. Execution-only fields are not here; they are in the envelope."));
+  const bar = el("div", "inline"); bar.style.maxWidth = "440px";
+  const b1 = el("button", null, "Download XML"); b1.onclick = () => download((v("DocumentInformation/DocumentId") || "termsheet") + ".xml", buildXML());
+  const b2 = el("button", null, "Copy XML"); b2.onclick = () => copy(buildXML());
+  bar.appendChild(b1); bar.appendChild(b2); host.appendChild(bar);
+  const pre = el("pre", "out", buildXML()); pre.style.marginTop = "12px"; host.appendChild(pre);
+}
+function renderEnv() {
+  const host = document.getElementById("pane-env"); host.innerHTML = "";
+  host.appendChild(el("div", "note", "The routing wrapper. It carries the things BDT deliberately leaves open: which stage this message represents, which message it supersedes, who authorised the release, and the execution fields the market uses before pricing. Each release is a full snapshot, so a consumer that missed a message is never left with a partial picture."));
+  const bar = el("div", "inline"); bar.style.maxWidth = "440px";
+  const b1 = el("button", null, "Download envelope"); b1.onclick = () => download((v("DocumentInformation/DocumentId") || "termsheet") + ".envelope.json", JSON.stringify(buildEnvelope(), null, 2));
+  const b2 = el("button", null, "Copy envelope"); b2.onclick = () => copy(JSON.stringify(buildEnvelope(), null, 2));
+  bar.appendChild(b1); bar.appendChild(b2); host.appendChild(bar);
+  const pre = el("pre", "out", JSON.stringify(buildEnvelope(), null, 2)); pre.style.marginTop = "12px"; host.appendChild(pre);
+}
+function ibText() {
+  const r = sheetRows();
+  const pick = k => (r.find(x => x[0] === k) || [, ""])[1];
+  return [
+    state.deal || "NEW ISSUE",
+    STAGES[state.stage - 1].t.toUpperCase(),
+    pick("Issuer") ? "ISSUER: " + pick("Issuer") : "",
+    pick("Size") ? "SIZE: " + pick("Size") : "",
+    pick("Maturity date") ? "MATURITY: " + pick("Maturity date") : "",
+    pick("Spread") ? "SPREAD: " + pick("Spread") : "",
+    pick("Coupon") ? "CPN: " + pick("Coupon") : "",
+    pick("Reoffer price") ? "REOFFER: " + pick("Reoffer price") : "",
+    pick("Reoffer yield") ? "YIELD: " + pick("Reoffer yield") : "",
+    pick("Order book") ? "BOOKS: " + pick("Order book") : "",
+    pick("Expected issue ratings") ? "RATINGS: " + pick("Expected issue ratings") : "",
+    pick("Bookrunners") ? "JLMS: " + pick("Bookrunners") : "",
+    pick("Target market") ? "TARGET MKT: " + pick("Target market") : "",
+    pick("Selling restrictions") ? "RESTRICTIONS: " + pick("Selling restrictions") : "",
+    pick("Syndicate contact") ? "CONTACT: " + pick("Syndicate contact") : "",
+    "REF: " + v("DocumentInformation/DocumentId") + " v" + state.ver
+  ].filter(Boolean).join("\n");
+}
+function renderDist() {
+  const host = document.getElementById("pane-dist"); if (!host) return; host.innerHTML = "";
+  host.appendChild(el("div", "note", "One record, many channels. Everything below is generated from the same fields, so an investor reading an email, a vendor consuming the feed and a bank reading the chat message are looking at the same version of the same terms."));
+  const grid = el("div", "chan");
+  const mk = (title, desc, btns) => {
+    const c = el("div", "c"); c.appendChild(el("h3", null, title)); c.appendChild(el("p", null, desc));
+    const bar = el("div", "inline"); btns.forEach(([l, fn]) => { const b = el("button", "mini", l); b.onclick = fn; bar.appendChild(b); });
+    c.appendChild(bar); return c;
+  };
+  grid.appendChild(mk("Data feed", "BDT 2.0 XML plus the VDR envelope, the same artefacts an API or MCP consumer receives.",
+    [["BDT XML", () => download((v("DocumentInformation/DocumentId") || "ts") + ".xml", buildXML())], ["Envelope", () => download((v("DocumentInformation/DocumentId") || "ts") + ".envelope.json", JSON.stringify(buildEnvelope(), null, 2))]]));
+  grid.appendChild(mk("Email", "Opens a draft in the default mail client with the term sheet in the body. Recipients are added by the desk.",
+    [["Open draft", () => {
+      const sub = encodeURIComponent(`${state.deal || "New issue"} — ${STAGES[state.stage - 1].t}`);
+      const body = encodeURIComponent(sheetText());
+      if (body.length > 1800) { copy(sheetText()); toast("Term sheet copied: it is too long for a mail link"); return; }
+      window.open(`mailto:?subject=${sub}&body=${body}`, "_self");
+    }], ["Copy body", () => copy(sheetText())]]));
+  grid.appendChild(mk("Instant Bloomberg", "A compact block for chat distribution. Wiring this to IB Connect needs a Bloomberg agreement; nothing is sent from here.",
+    [["Copy chat block", () => copy(ibText())]]));
+  grid.appendChild(mk("Term sheet document", "The human-readable sheet, for attachment to the deal file alongside the offering documentation.",
+    [["Copy plain text", () => copy(sheetText())], ["Download", () => download((v("DocumentInformation/DocumentId") || "ts") + ".txt", sheetText())]]));
+  host.appendChild(grid);
+  const pre = el("pre", "out", ibText()); host.appendChild(pre);
+  host.appendChild(el("div", "legend", dl ? "File downloads are available in this session." : "File downloads are not available in this view, so the download buttons copy to the clipboard instead."));
+  host.appendChild(el("div", "legend", "Subscriber routing, entitlements and acknowledgement tracking are deliberately out of scope for this draft. A production VDR would hold the subscriber list per deal, record which channel each release reached and when, and refuse release to any consumer not entitled to the deal."));
+}
+function renderLog() {
+  const host = document.getElementById("pane-log"); host.innerHTML = "";
+  host.appendChild(el("div", "note", "Every release is recorded. A term sheet is only meaningful with its stage and version, so the log is what lets anyone reconstruct what was communicated and when."));
+  if (!state.releases.length) { host.appendChild(el("div", "legend", "Nothing released yet. Fill the fields required for the current stage, then use Release to stakeholders.")); return; }
+  const d = diffSince();
+  if (d) {
+    const sec = el("section", "block");
+    const h = el("h2", null, "Changes since version " + d.since);
+    h.appendChild(el("em", null, d.rows.length ? d.rows.length + " amended" : "no changes"));
+    sec.appendChild(h);
+    if (d.rows.length) {
+      const box = el("div", "diff");
+      d.rows.forEach(([l, a, b]) => {
+        const r = el("div"); r.appendChild(el("span", null, l + ": "));
+        if (a) { const st = el("s", null, a); r.appendChild(st); r.appendChild(el("span", null, " \u2192 ")); }
+        r.appendChild(el("b", null, b || "removed"));
+        box.appendChild(r);
+      });
+      sec.appendChild(box);
+    } else sec.appendChild(el("div", "note", "Nothing has changed since that release."));
+    host.appendChild(sec);
+  }
+  const t = el("table", "log");
+  const hr = el("tr"); ["Released", "Version", "Stage", "Document id", "Authorised by", "Checks"].forEach(h => hr.appendChild(el("th", null, h))); t.appendChild(hr);
+  [...state.releases].reverse().forEach(r => {
+    const tr = el("tr");
+    [new Date(r.at).toLocaleString(), r.version, r.stage, r.documentId, r.by, `${r.checks.pass} pass / ${r.checks.warn} review`].forEach(c => tr.appendChild(el("td", null, String(c))));
+    t.appendChild(tr);
+  });
+  host.appendChild(t);
+}
+
+
+/* ============================================================
+   Standard legends and disclosures, generated from the fields
+   ============================================================ */
+function legendBlocks() {
+  const out = [];
+  const tm = v("IssuanceDataGroup/Issuance/TargetMarket/ManufacturerTargetMarketType");
+  const priips = v("IssuanceDataGroup/Issuance/SellingRestrictions/PRIIPsRestriction");
+  const cci = v("IssuanceDataGroup/Issuance/SellingRestrictions/CCIRestriction");
+  const regs = v("IssuanceDataGroup/Issuance/SellingRestrictions/REGS/RegSCode");
+  const tefra = v("IssuanceDataGroup/Issuance/SellingRestrictions/TEFRA/TefraCode");
+  const r144 = v("IssuanceDataGroup/Issuance/SellingRestrictions/RULE144A") === "true";
+  const mgrs = state.parties.filter(p => (p.Roles || []).some(r => /MANAGER|BOOKRUNNER|COORDINATOR/.test(r))).map(p => p.PartyName);
+  const stab = state.parties.filter(p => (p.Roles || []).includes("STABILISATION_MANAGER")).map(p => p.PartyName);
+  const den = Number(v("IssuanceDataGroup/Issuance/SpecifiedDenomination/Value"));
+  const cur = v("IssuanceDataGroup/Issuance/SpecifiedCurrency");
+  const wholesale = tm && /PROF_AND_ECPS$/.test(tm);
+  const agencies = [...new Set(state.ratings.filter(r => r.RatingAgency).map(r => r.RatingAgency))];
+
+  if (tm) out.push(["Product governance target market",
+    `Solely for the purposes of the manufacturer's product approval process, the target market assessment in respect of the notes has led to the conclusion that the target market is ${wholesale ? "eligible counterparties and professional clients only" : "retail clients, professional clients and eligible counterparties"}, each as defined in ${/^UK_/.test(tm) ? "the UK MiFIR regime as it forms part of UK domestic law" : "Directive 2014/65/EU (MiFID II)"}. All channels for distribution of the notes are appropriate. Any person subsequently offering, selling or recommending the notes is responsible for undertaking its own target market assessment and determining appropriate distribution channels. Recorded in the taxonomy as ${tm}.`]);
+
+  if (priips && /^NO_EEA$/.test(priips)) out.push(["Prohibition of sales to EEA retail investors",
+    "The notes are not intended to be offered, sold or otherwise made available to, and should not be offered, sold or otherwise made available to, any retail investor in the European Economic Area. No key information document required by Regulation (EU) No 1286/2014 has been prepared, and offering or selling the notes to any EEA retail investor may be unlawful."]);
+  if (priips && /^NO_UK$/.test(priips)) out.push(["Prohibition of sales to UK retail investors",
+    "The notes are not intended to be offered, sold or otherwise made available to, and should not be offered, sold or otherwise made available to, any retail investor in the United Kingdom."]);
+  if (cci === "APPLICABLE") out.push(["United Kingdom consumer composite investments",
+    "The UK Consumer Composite Investments regime replaced the UK PRIIPs Regulation on 6 April 2026. No product summary or other CCI disclosure has been prepared for the notes, and they are not intended for distribution to retail investors in the United Kingdom. Confirm the current wording with counsel, since transitional provisions continue to apply to legacy documentation."]);
+
+  if (regs || tefra) out.push(["United States",
+    `The notes have not been and will not be registered under the United States Securities Act of 1933. ${regs ? "They are offered outside the United States in reliance on Regulation S (" + regs.replace("REGS_", "") + ")" : "They are offered outside the United States"}${r144 ? " and within the United States to qualified institutional buyers in reliance on Rule 144A" : " and may not be offered or sold within the United States or to, or for the account or benefit of, US persons except pursuant to an exemption"}.${tefra && tefra.indexOf("TEFRA_") === 0 && tefra !== "TEFRA_NA" ? " " + tefra.replace("TEFRA_", "TEFRA ") + " rules apply." : ""}`]);
+
+  if (v("x:stabilisation") === "APPLICABLE") out.push(["Stabilisation",
+    `In connection with the issue of the notes, ${stab.length ? stab.join(", ") : "[stabilisation manager to be named]"} (or persons acting on its behalf) may over-allot the notes or effect transactions with a view to supporting the market price of the notes at a level higher than that which might otherwise prevail. There is no assurance that stabilisation will be undertaken. ${v("x:stabPeriod") ? "Stabilisation period: " + v("x:stabPeriod") + "." : ""} ${v("x:overAllot") ? "Over-allotment: " + v("x:overAllot") + "." : ""} Any stabilisation action must be conducted in accordance with all applicable laws and rules, and a pre-stabilisation notice must be published before stabilisation begins.`]);
+
+  if (agencies.length) out.push(["Credit ratings",
+    `The expected ratings above are assigned by ${agencies.join(", ")}. A credit rating is not a recommendation to buy, sell or hold securities and may be revised, suspended or withdrawn at any time. Confirm the registration status of each agency under the EU and UK CRA Regulations before the terms are circulated.${v("x:ratingsDisclaimer") ? " " + v("x:ratingsDisclaimer") : ""}`]);
+
+  if (den && cur) out.push(["Denomination",
+    `The notes are issued in denominations of ${cur} ${den.toLocaleString("en-GB")}${den >= 100000 && wholesale ? ", consistent with a wholesale offering" : ", which is a retail denomination and changes the disclosure position"}.`]);
+
+  if (v("x:prospectusRegime")) out.push(["Offer documentation", v("x:prospectusRegime")]);
+  if (v("x:costsCharges")) out.push(["Costs and charges", v("x:costsCharges")]);
+
+  out.push(["Status of this record",
+    `Indicative terms at the ${STAGES[state.stage - 1].t.toLowerCase()} stage, version ${state.ver}, released through the VDR by ${mgrs.length ? mgrs.join(", ") : "the bookrunners"}. Not an offer to sell or a solicitation of an offer to buy securities, and not for distribution where such distribution would be unlawful. The legal documentation prevails over this digital record.`]);
+  return out;
+}
+function legendText() { return legendBlocks().map(([h, b]) => h.toUpperCase() + "\n" + b).join("\n\n"); }
+function renderLegends() {
+  const host = document.getElementById("pane-legends"); host.innerHTML = "";
+  host.appendChild(el("div", "note", "Standard legends assembled from the fields above, so the wording and the data can never drift apart. These are drafting aids that follow current market practice, not legal advice: counsel on the deal signs off the final wording, and the offering documentation prevails."));
+  const bar = el("div", "inline"); bar.style.maxWidth = "440px";
+  const b1 = el("button", null, "Copy all legends"); b1.onclick = () => copy(legendText());
+  const b2 = el("button", null, "Download"); b2.onclick = () => download((v("DocumentInformation/DocumentId") || "ts") + ".legends.txt", legendText());
+  bar.appendChild(b1); bar.appendChild(b2); host.appendChild(bar);
+  const w = el("div", "ts"); w.style.marginTop = "14px";
+  legendBlocks().forEach(([h, b]) => {
+    const s2 = el("section", "block");
+    s2.appendChild(el("h2", null, h));
+    const p = el("div", "note", b); p.style.maxWidth = "72ch"; s2.appendChild(p);
+    w.appendChild(s2);
+  });
+  host.appendChild(w);
+}
+
+/* ---- what changed since the last release ---- */
+function snapshot() {
+  return { f: Object.assign({}, state.f), parties: JSON.parse(JSON.stringify(state.parties)), ids: JSON.parse(JSON.stringify(state.ids)), docs: JSON.parse(JSON.stringify(state.docs)), ratings: JSON.parse(JSON.stringify(state.ratings)) };
+}
+function diffSince() {
+  const last = state.releases[state.releases.length - 1];
+  if (!last || !last.snap) return null;
+  const rows = [];
+  const skip = ["DocumentInformation/DocumentId", "DocumentInformation/DocumentVersion", "DocumentInformation/DocumentDescription", "IssuanceDataGroup/Issuance/AdditionalIssuanceInformation"];
+  FIELDS.forEach(fd => {
+    if (fd.t === "group" || skip.includes(fd.p)) return;
+    const a = String(last.snap.f[fd.p] ?? ""), b = String(state.f[fd.p] ?? "");
+    if (a !== b) rows.push([fd.l, a, b]);
+  });
+  ["parties", "ids", "docs", "ratings"].forEach(k => {
+    const a = JSON.stringify(last.snap[k] || []), b = JSON.stringify(state[k] || []);
+    if (a !== b) rows.push([GROUPS[k].t + " list", (last.snap[k] || []).length + " entries", (state[k] || []).length + " entries, amended"]);
+  });
+  return { since: last.version, stage: last.stage, rows: rows };
+}
+
+/* ============================================================
+   Chrome
+   ============================================================ */
+const TABS = [["fill", "Fill"], ["sheet", "Term sheet"], ["legends", "Legends"], ["xml", "BDT XML"], ["env", "Envelope"], ["dist", "Distribution"], ["log", "Release log"]];
+let tab = "fill";
+function renderTabs() {
+  const host = document.getElementById("tabs"); host.innerHTML = "";
+  TABS.forEach(([k, l]) => {
+    const b = el("button", null, l); b.setAttribute("role", "tab"); b.setAttribute("aria-selected", k === tab);
+    b.onclick = () => { tab = k; renderAll(); };
+    host.appendChild(b);
+  });
+  TABS.forEach(([k]) => document.getElementById("pane-" + k).classList.toggle("on", k === tab));
+  document.getElementById("sidenav").style.visibility = tab === "fill" ? "visible" : "hidden";
+  document.getElementById("checkscol").style.visibility = tab === "dist" || tab === "log" || tab === "legends" ? "hidden" : "visible";
+}
+function renderRail() {
+  const host = document.getElementById("rail"); host.innerHTML = "";
+  STAGES.forEach((s, i) => {
+    const li = el("li", i + 1 === state.stage ? "now" : (i + 1 < state.stage ? "done" : ""));
+    const b = el("button", "stage");
+    b.appendChild(el("span", "n", String(i + 1)));
+    b.appendChild(el("span", "t", s.t));
+    b.onclick = () => { state.stage = i + 1; refreshAuto(); renderAll(); save(); };
+    li.appendChild(b); host.appendChild(li);
+  });
+  document.getElementById("stagePill").textContent = `Stage ${state.stage} · ${STAGES[state.stage - 1].t}`;
+  document.getElementById("verLbl").textContent = state.ver;
+  document.getElementById("dealRef").textContent = v("IssuanceDataGroup/Issuance/DealIdentifier") || "no deal reference";
+}
+function renderNav() {
+  const host = document.getElementById("navlist"); host.innerHTML = "";
+  SECTIONS.forEach(sec => {
+    const fs = FIELDS.filter(x => x.sec === sec.id);
+    const req = fs.filter(x => x.req && x.req <= state.stage);
+    const gaps = req.filter(x => !filled(x)).length;
+    const a = el("a", gaps ? "gap" : ""); a.href = "#sec-" + sec.id; a.appendChild(el("span", null, sec.t));
+    a.appendChild(el("span", null, gaps ? gaps + " left" : (req.length ? "ok" : "")));
+    a.onclick = e => { if (tab !== "fill") { e.preventDefault(); tab = "fill"; renderAll(); setTimeout(() => document.getElementById("sec-" + sec.id)?.scrollIntoView({ block: "start" }), 30); } };
+    host.appendChild(a);
+  });
+}
+function renderAll() {
+  renderRail(); renderTabs(); renderNav();
+  if (tab === "fill") renderForm();
+  if (tab === "sheet") renderSheet();
+  if (tab === "xml") renderXML();
+  if (tab === "env") renderEnv();
+  if (tab === "legends") renderLegends();
+  if (tab === "dist") renderDist();
+  if (tab === "log") renderLog();
+  renderChecks();
+}
+
+/* in-page prompt and confirm, since sandboxed frames may block the native ones */
+function overlay(msg, mode) {
+  return new Promise(res => {
+    const bg = el("div"); bg.style.cssText = "position:fixed;inset:0;background:rgba(10,16,22,.55);z-index:80;display:flex;align-items:center;justify-content:center;padding:20px";
+    const box = el("div"); box.style.cssText = "background:var(--surface);border:1px solid var(--rule-strong);padding:18px;max-width:420px;width:100%";
+    const m = el("div", null, msg); m.style.cssText = "font-size:14px;margin-bottom:12px"; box.appendChild(m);
+    let inp;
+    if (mode === "text") {
+      inp = document.createElement("input"); inp.type = "text"; inp.style.width = "100%";
+      inp.placeholder = "Name and desk"; box.appendChild(inp);
+    }
+    const bar = el("div"); bar.style.cssText = "display:flex;gap:8px;justify-content:flex-end;margin-top:14px";
+    const no = el("button", "ghost", "Cancel"); const yes = el("button", "primary", mode === "text" ? "Authorise" : "Continue");
+    bar.appendChild(no); bar.appendChild(yes); box.appendChild(bar); bg.appendChild(box); document.body.appendChild(bg);
+    if (inp) inp.focus(); else yes.focus();
+    const done = r => { bg.remove(); res(r); };
+    no.onclick = () => done(null);
+    yes.onclick = () => done(mode === "text" ? (inp.value.trim() || null) : true);
+    bg.addEventListener("keydown", e => { if (e.key === "Escape") done(null); if (e.key === "Enter" && mode === "text") yes.click(); });
+  });
+}
+
+async function release() {
+  const t = tally();
+  if (t.fail) { toast("Blocking checks must be cleared first"); return; }
+  const by = await overlay("Name of the bookrunner authorising release of version " + state.ver + " at stage " + STAGES[state.stage - 1].t + ".", "text");
+  if (!by) return;
+  state.seq += 1; refreshAuto();
+  const parts = state.ver.split("."); state.ver = `${parts[0]}.${Number(parts[1] || 0) + 1}`;
+  refreshAuto();
+  state.releases.push({ at: new Date().toISOString(), version: state.ver, stage: STAGES[state.stage - 1].t, documentId: v("DocumentInformation/DocumentId"), by: by, checks: t, snap: snapshot() });
+  tab = "dist"; renderAll(); save();
+  toast(`Version ${state.ver} released. Distribute through the channels below.`);
+}
+
+/* ============================================================
+   Worked example (illustrative, fictional entities)
+   ============================================================ */
+function loadExample() {
+  state.stage = 5; state.ver = "0.4"; state.seq = 3; state.deal = "Aurelis Utilities N.V. — EUR 500m 5yr senior unsecured";
+  state.contacts = [{ Name: "Syndicate desk, Northbridge Securities plc", Email: "syndicate@example.com" }];
+  state.parties = [
+    { PartyName: "Aurelis Utilities N.V.", LEIIdentifier: "5299001QNPFY8V4JEP73", BICIdentifier: "", CountryOfIncorporation: "NL", PartyType: "CORPORATION", Roles: ["ISSUER"], Ratings: [{ RatingAgency: "MOODYS", RatingValue: "Baa1", RatingOutlook: "STABLE" }, { RatingAgency: "SNPG", RatingValue: "BBB+", RatingOutlook: "STABLE" }] },
+    { PartyName: "Northbridge Securities plc", LEIIdentifier: "213800NBXYZ4KLMN0P03", BICIdentifier: "", CountryOfIncorporation: "GB", PartyType: "FINANCIALINSTITUTION", Roles: ["JOINT_LEAD_MANAGER", "BILLING_AND_DELIVERY_AGENT", "STABILISATION_MANAGER"], Ratings: [] },
+    { PartyName: "Banque Lorraine SA", LEIIdentifier: "5493001KJTIIGC8Y1R12", BICIdentifier: "", CountryOfIncorporation: "FR", PartyType: "FINANCIALINSTITUTION", Roles: ["JOINT_LEAD_MANAGER"], Ratings: [] },
+    { PartyName: "Helvetia Kapital AG", LEIIdentifier: "", BICIdentifier: "", CountryOfIncorporation: "CH", PartyType: "FINANCIALINSTITUTION", Roles: ["JOINT_LEAD_MANAGER"], Ratings: [] },
+    { PartyName: "Kestrel Corporate Trustee Limited", LEIIdentifier: "", BICIdentifier: "", CountryOfIncorporation: "GB", PartyType: "FINANCIALINSTITUTION", Roles: ["FISCAL_AGENT", "PRINCIPAL_PAYING_AGENT", "CALCULATION_AGENT"], Ratings: [] },
+    { PartyName: "Lux Listing Services S.A.", LEIIdentifier: "", BICIdentifier: "", CountryOfIncorporation: "LU", PartyType: "FINANCIALINSTITUTION", Roles: ["LISTING_AGENT"], Ratings: [] }
+  ];
+  state.ids = [{ Type: "ISIN", Value: "XS3012345677" }, { Type: "COMMON_CODE", Value: "301234567" }];
+  state.ratings = [{ RatingAgency: "MOODYS", RatingValue: "Baa1", RatingOutlook: "STABLE" }, { RatingAgency: "SNPG", RatingValue: "BBB+", RatingOutlook: "STABLE" }];
+  state.docs = [
+    { DocumentName: "Base Prospectus (EUR 5,000,000,000 EMTN Programme)", DocumentDate: "2026-05-14", DocumentLink: "", DocumentVersion: "2026" },
+    { DocumentName: "First Supplement to the Base Prospectus", DocumentDate: "2026-08-07", DocumentLink: "", DocumentVersion: "1" },
+    { DocumentName: "Final Terms", DocumentDate: "2026-10-06", DocumentLink: "", DocumentVersion: "1" }
+  ];
+  const F = {
+    "DocumentInformation/DocumentDate": "2026-10-06",
+    "DocumentInformation/Disclaimer": "Indicative terms for discussion only and subject to the offering documentation. Not an offer to sell or a solicitation of an offer to buy securities, and not for distribution in any jurisdiction where such distribution would be unlawful. In the event of any discrepancy, the legal documentation agreed between the parties prevails over this digital record.",
+    "IssuanceDataGroup/IssuanceDescription": "Drawdown of EUR 500,000,000 3.375 per cent. Notes due 2031 under the EMTN Programme",
+    "IssuanceDataGroup/Issuance/IssuanceType": "PROGRAMME_NOTE",
+    "IssuanceDataGroup/Issuance/IssuanceDescription": "EUR 500,000,000 3.375 per cent. Notes due 13 October 2031",
+    "IssuanceDataGroup/Issuance/DealIdentifier": "VDR-2026-AURL-001",
+    "IssuanceDataGroup/Issuance/Programme/ProgrammeIdentifier": "AURL-EMTN-2026",
+    "IssuanceDataGroup/Issuance/Programme/ProgrammeDescription": "EUR 5,000,000,000 Euro Medium Term Note Programme",
+    "IssuanceDataGroup/Issuance/ReOpen": "false",
+    "IssuanceDataGroup/Issuance/SpecifiedDenomination/Value": "100000",
+    "IssuanceDataGroup/Issuance/SpecifiedDenomination/AmountType": "NOMINAL",
+    "IssuanceDataGroup/Issuance/MinimumDenomination/Value": "100000",
+    "IssuanceDataGroup/Issuance/MinimumDenomination/AmountType": "NOMINAL",
+    "IssuanceDataGroup/Issuance/IntegralMultiples/Value": "1000",
+    "IssuanceDataGroup/Issuance/IntegralMultiples/AmountType": "NOMINAL",
+    "IssuanceDataGroup/Issuance/CalculationAmount/Value": "100000",
+    "IssuanceDataGroup/Issuance/CalculationAmount/AmountType": "NOMINAL",
+    "IssuanceDataGroup/Issuance/TotalAggregateAmount/Value": "500000000",
+    "IssuanceDataGroup/Issuance/TotalAggregateAmount/AmountType": "NOMINAL",
+    "IssuanceDataGroup/Issuance/MaximumAmount/Value": "500000000",
+    "IssuanceDataGroup/Issuance/MaximumAmount/AmountType": "NOMINAL",
+    "IssuanceDataGroup/Issuance/SpecifiedCurrency": "EUR",
+    "IssuanceDataGroup/Issuance/PaymentCurrency": "EUR",
+    "IssuanceDataGroup/Issuance/SettlementCurrency": "EUR",
+    "IssuanceDataGroup/Issuance/PricingDate": "2026-10-06",
+    "IssuanceDataGroup/Issuance/IssueDate": "2026-10-13",
+    "IssuanceDataGroup/Issuance/SettlementDate": "2026-10-13",
+    "IssuanceDataGroup/Issuance/Delivery": "DVP",
+    "IssuanceDataGroup/Issuance/IssuePrice/Value": "99.612",
+    "IssuanceDataGroup/Issuance/IssuePrice/PriceType": "PERCENT",
+    "IssuanceDataGroup/Issuance/IndicationOfYield/Value": "3.46",
+    "IssuanceDataGroup/Issuance/ReofferPrice/Value": "99.612",
+    "IssuanceDataGroup/Issuance/ReofferYield/Value": "3.46",
+    "IssuanceDataGroup/Issuance/Benchmark/Ticker/Ticker": "DBR 0 08/15/31",
+    "IssuanceDataGroup/Issuance/Benchmark/Ticker/Source": "BLOOMBERG",
+    "IssuanceDataGroup/Issuance/Benchmark/Maturity/MaturityDate": "2031-08-15",
+    "IssuanceDataGroup/Issuance/Benchmark/InterestRate": "0",
+    "IssuanceDataGroup/Issuance/ReofferSpreadToBenchmark/Value": "112",
+    "IssuanceDataGroup/Issuance/ReofferSpreadToBenchmark/PriceType": "BASIS_POINT",
+    "IssuanceDataGroup/Issuance/MidSwapRate/Rate/Value": "2.64",
+    "IssuanceDataGroup/Issuance/MidSwapRate/Term/TermUnit": "5",
+    "IssuanceDataGroup/Issuance/MidSwapRate/Term/TermPeriod": "YEAR",
+    "IssuanceDataGroup/Issuance/MidSwapRate/SwapDescription": "5 year EUR mid-swaps",
+    "IssuanceDataGroup/Issuance/ReofferSpreadtoMidSwapRate/Value": "82",
+    "IssuanceDataGroup/Issuance/ReofferSpreadtoMidSwapRate/PriceType": "BASIS_POINT",
+    "IssuanceDataGroup/Issuance/Fee/Percentage": "0.2",
+    "IssuanceDataGroup/Issuance/Fee/FeeAllocationType": "PROPORTIONAL",
+    "IssuanceDataGroup/Issuance/Proceeds/Gross/Value": "498060000",
+    "IssuanceDataGroup/Issuance/Proceeds/Gross/AmountType": "MONEY",
+    "IssuanceDataGroup/Issuance/Proceeds/Net/Value": "497060000",
+    "IssuanceDataGroup/Issuance/Proceeds/Net/AmountType": "MONEY",
+    "IssuanceDataGroup/Issuance/Proceeds/ProceedsCurrency": "EUR",
+    "IssuanceDataGroup/Issuance/Proceeds/UseOfProceeds/UseOfProceedsPrimaryCategory": "DEBT_REFINANCING",
+    "IssuanceDataGroup/Issuance/Proceeds/UseOfProceeds/UseOfProceedsSubCategory": "STRAIGHT_BOND",
+    "IssuanceDataGroup/Issuance/Listing/Listed": "true",
+    "IssuanceDataGroup/Issuance/Listing/ListingVenue/MIC": "XLUX",
+    "IssuanceDataGroup/Issuance/Listing/ListingVenue/Market": "LUXEMBOURG_STOCK_EXCHANGE",
+    "IssuanceDataGroup/Issuance/Listing/ListingVenue/MarketType": "RMKT",
+    "IssuanceDataGroup/Issuance/SecuritiesClearingSystem/Code": "EUROCLEAR_BANK_SA/NV",
+    "IssuanceDataGroup/Issuance/SecuritiesSettlementSystem/Code": "CLEARSTREAM_BANKING_S.A.",
+    "IssuanceDataGroup/Issuance/PlaceOfDeposit": "EUROCLEAR_BANK_SA/NV",
+    "IssuanceDataGroup/Issuance/MethodOfDistribution/DistributionMethod": "SYNDICATED",
+    "IssuanceDataGroup/Issuance/GoverningLaw/CountryCode": "GB",
+    "IssuanceDataGroup/Issuance/Expenses/Value": "2500",
+    "IssuanceDataGroup/Issuance/Expenses/AmountType": "MONEY",
+    "IssuanceDataGroup/Issuance/Tax/TaxCode": "GROSS_UP",
+    "IssuanceDataGroup/Issuance/Tax/WithHoldingTaxCountry": "NL",
+    "IssuanceDataGroup/Issuance/NegativePledge": "APPLICABLE",
+    "IssuanceDataGroup/Issuance/GrossUp": "APPLICABLE",
+    "IssuanceDataGroup/Issuance/CrossDefault": "APPLICABLE",
+    "IssuanceDataGroup/Issuance/SellingRestrictions/TEFRA/TefraCode": "TEFRA_D",
+    "IssuanceDataGroup/Issuance/SellingRestrictions/TEFRA/TefraExchangeDate": "2026-11-23",
+    "IssuanceDataGroup/Issuance/SellingRestrictions/REGS/RegSCode": "REGS_CAT2",
+    "IssuanceDataGroup/Issuance/SellingRestrictions/RULE144A": "false",
+    "IssuanceDataGroup/Issuance/SellingRestrictions/SEC_Registered": "false",
+    "IssuanceDataGroup/Issuance/SellingRestrictions/PRIIPsRestriction": "NO_EEA",
+    "IssuanceDataGroup/Issuance/SellingRestrictions/CCIRestriction": "APPLICABLE",
+    "IssuanceDataGroup/Issuance/SellingRestrictions/CountryRestrictions": "US, CA, JP, AU",
+    "IssuanceDataGroup/Issuance/TargetMarket/ManufacturerTargetMarketType": "EU_MIFIDII_PROF_AND_ECPS",
+    "IssuanceDataGroup/Issuance/Redemption/RedemptionType": "MATURITY",
+    "IssuanceDataGroup/Issuance/Redemption/FinalRedemptionPercentage": "100",
+    "IssuanceDataGroup/Issuance/Redemption/FinalRedemptionDate": "2031-10-13",
+    "IssuanceDataGroup/Product/SecurityShortName": "AURL 3 3/8 10/13/31",
+    "IssuanceDataGroup/Product/SecurityLongName": "Aurelis Utilities N.V. EUR 500,000,000 3.375 per cent. Notes due 13 October 2031",
+    "IssuanceDataGroup/Product/InitialFormOfNote/PhysicalFormOfNote": "GLOBAL_NOTE_CERTIFICATE",
+    "IssuanceDataGroup/Product/InitialFormOfNote/LegalTitleFormOfNote": "BEARER",
+    "IssuanceDataGroup/Product/InitialFormOfNote/GlobalNote/GlobalNoteType": "TEMPORARY",
+    "IssuanceDataGroup/Product/InitialFormOfNote/GlobalNote/ExchangeableNoticeDays": "40",
+    "IssuanceDataGroup/Product/InitialFormOfNote/ExchangeableForDefinitiveNote": "false",
+    "IssuanceDataGroup/Product/FinalFormOfNote/PhysicalFormOfNote": "GLOBAL_NOTE_CERTIFICATE",
+    "IssuanceDataGroup/Product/FinalFormOfNote/LegalTitleFormOfNote": "BEARER",
+    "IssuanceDataGroup/Product/FinalFormOfNote/GlobalNote/GlobalNoteType": "PERMANENT",
+    "IssuanceDataGroup/Product/SafeKeepingStructure": "NEW_GLOBAL_NOTE",
+    "IssuanceDataGroup/Product/CentralBankEligibility/Eligible": "true",
+    "IssuanceDataGroup/Product/CentralBankEligibility/CentralBankCountryCode": "EU",
+    "IssuanceDataGroup/Product/GuaranteeType": "NO_GUARANTEE",
+    "IssuanceDataGroup/Product/StatusOfNote/Seniority": "SENIOR",
+    "IssuanceDataGroup/Product/StatusOfNote/Subordinated": "UNSUBORDINATED",
+    "IssuanceDataGroup/Product/StatusOfNote/Secured": "UNSECURED",
+    "IssuanceDataGroup/Product/AggregateNominalAmount/Value": "500000000",
+    "IssuanceDataGroup/Product/AggregateNominalAmount/AmountType": "NOMINAL",
+    "IssuanceDataGroup/Product/AggregateNominalAmount/Currency": "EUR",
+    "IssuanceDataGroup/Product/Maturity/MaturityType": "FIXED",
+    "IssuanceDataGroup/Product/Maturity/MaturityDate": "2031-10-13",
+    "IssuanceDataGroup/Product/InterestPayment/InterestType": "FIXED",
+    "IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestRate": "3.375",
+    "IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/InterestPaymentFrequency": "ANNUALLY",
+    "IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/PayableDate/Day": "13",
+    "IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/PayableDate/Month": "10",
+    "IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/FirstPayment/PaymentDate": "2027-10-13",
+    "IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestCommencementDate": "2026-10-13",
+    "IssuanceDataGroup/Product/DayCountFraction": "ICMA_ACT/ACT",
+    "IssuanceDataGroup/Product/BusinessDayConvention/BusinessDayAdjustment": "FOLLOWING",
+    "IssuanceDataGroup/Product/BusinessDayConvention/InterestCalculationAdjustment": "UNADJUSTED",
+    "IssuanceDataGroup/Product/BusinessDayCenter/CityCalendar": "TARGET, LON",
+    "IssuanceDataGroup/Product/Optionality": "NOT_APPLICABLE",
+    "IssuanceDataGroup/Product/DLTBondIndicator": "false",
+    "IssuanceDataGroup/Product/SukukShariahCompliantIndicator": "false",
+    "x:iptSpread": "MS + 110 area",
+    "x:guidance": "MS + 85 area (+/- 3)",
+    "x:spreadSet": "MS + 82",
+    "x:sizeMsg": "EUR benchmark, 500m maximum",
+    "x:bookSize": "EUR 2.3bn excluding joint lead manager interest, 118 accounts",
+    "x:nic": "3bp",
+    "x:booksOpen": "08:45 London",
+    "x:booksSubject": "11:20 London",
+    "x:stabilisation": "APPLICABLE",
+    "x:stabPeriod": "From pricing until 30 calendar days after the issue date",
+    "x:overAllot": "Up to 5 per cent of the issue size",
+    "x:pot": "Pot, full disclosure",
+    "x:retention": "None",
+    "x:syndDesk": "Syndicate desk, Northbridge Securities plc, +44 20 7000 0000",
+    "x:pricingCall": "12:00 London, dial-in circulated separately",
+    "x:jurisdiction": "Courts of England and Wales",
+    "IssuanceDataGroup/Issuance/RecordDate/ReferenceDateDescription": "Business days before the relevant interest payment date",
+    "IssuanceDataGroup/Issuance/RecordDate/NumberOfDays": "1",
+    "IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/LastPayment/PaymentDate": "2031-10-13",
+    "IssuanceDataGroup/Product/InterestPayment/IsdaDetermination": "2021",
+    "IssuanceDataGroup/Product/AfterExchangeFormOfNote/PhysicalFormOfNote": "GLOBAL_NOTE_CERTIFICATE",
+    "IssuanceDataGroup/Product/AfterExchangeFormOfNote/LegalTitleFormOfNote": "BEARER",
+    "IssuanceDataGroup/Product/AfterExchangeFormOfNote/GlobalNote/GlobalNoteType": "PERMANENT",
+    "IssuanceDataGroup/Product/ProgrammeReference/ProgrammeIdentifier": "AURL-EMTN-2026",
+    "IssuanceDataGroup/Issuance/AllIn/Price/Value": "99.412",
+    "IssuanceDataGroup/Issuance/AllIn/Yield/Value": "3.504",
+    "IssuanceDataGroup/Issuance/SellingRestrictions/Rule3C7": "false",
+    "IssuanceDataGroup/Issuance/SellingRestrictions/Accredited_Investor": "false",
+    "IssuanceDataGroup/Issuance/SellingRestrictions/RiskLinkedSecurity": "false",
+    "x:settlementBasis": "T+5, delivery versus payment",
+    "x:preStabNotice": "Published 5 October 2026",
+    "x:mgmtFee": "0.075 per cent.",
+    "x:concession": "0.125 per cent.",
+    "x:costsCharges": "No costs or charges are payable by investors to the managers in connection with the notes beyond the issue price. Distributors must make their own MiFID II costs and charges disclosure to their clients.",
+    "x:prospectusRegime": "Exempt offer to qualified investors only. No prospectus is required under the EU Prospectus Regulation or the UK POATRs regime, which took effect on 19 January 2026.",
+    "x:ratingsDisclaimer": "Each rating agency named is registered under Regulation (EC) No 1060/2009 as amended and, for United Kingdom purposes, under that regulation as it forms part of UK domestic law."
+  };
+  state.f = Object.assign({}, F);
+  refreshAuto(); renderAll(); save();
+  toast("Worked example loaded. Entities and figures are fictional.");
+}
+
+/* ============================================================
+   Boot
+   ============================================================ */
+document.getElementById("dealName").addEventListener("input", e => { state.deal = e.target.value; refreshAuto(); });
+document.getElementById("dealName").addEventListener("change", () => { renderAll(); save(); });
+document.getElementById("btnExample").onclick = async () => { if (await overlay("Replace the current draft with the worked example? Entities and figures in it are fictional.", "confirm")) loadExample(); };
+document.getElementById("btnRelease").onclick = release;
+document.getElementById("btnTheme").onclick = () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : (cur === "light" ? "dark" : (matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark"));
+  document.documentElement.setAttribute("data-theme", next);
+};
+(function boot() {
+  const restored = load();
+  if (!restored) {
+    state.contacts = [GROUPS.contacts.init()];
+    state.parties = [Object.assign(GROUPS.parties.init(), { Roles: ["ISSUER"] }), GROUPS.parties.init()];
+    state.docs = [GROUPS.docs.init()];
+    state.ids = [{ Type: "TEMPORARY_ISIN", Value: "" }];
+    state.ratings = [GROUPS.ratings.init()];
+    state.f["DocumentInformation/Disclaimer"] = "Indicative terms for discussion only and subject to the offering documentation. Not an offer to sell or a solicitation of an offer to buy securities. In the event of any discrepancy, the legal documentation agreed between the parties prevails over this digital record.";
+    state.f["IssuanceDataGroup/Product/InterestPayment/InterestType"] = "FIXED";
+    state.f["IssuanceDataGroup/Issuance/Redemption/RedemptionType"] = "MATURITY";
+    state.f["IssuanceDataGroup/Issuance/Redemption/FinalRedemptionPercentage"] = "100";
+    state.f["IssuanceDataGroup/Product/Optionality"] = "NOT_APPLICABLE";
+    state.f["IssuanceDataGroup/Issuance/MethodOfDistribution/DistributionMethod"] = "SYNDICATED";
+  }
+  document.getElementById("dealName").value = state.deal || "";
+  refreshAuto(); renderAll();
+})();
+
+</script>
+</body>
+</html>
