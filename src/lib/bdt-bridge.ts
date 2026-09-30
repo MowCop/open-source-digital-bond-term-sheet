@@ -250,7 +250,7 @@ function seedFromDeal(deal: Deal): BdtState {
   }
 
   set(P.denomination, deal.specifiedDenomination ? String(parseAmount(deal.specifiedDenomination)) : '');
-  set(P.maturityDate, deal.maturityDate);
+  set(P.maturityDate, toISODate(deal.maturityDate));
   set(P.maturityType, 'FIXED');
   set(P.interestType, deal.interestType || 'FIXED');
   const cpn = num(deal.coupon);
