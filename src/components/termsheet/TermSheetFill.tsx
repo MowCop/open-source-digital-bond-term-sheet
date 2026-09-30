@@ -25,7 +25,7 @@ import { toast } from 'sonner';
 import type { Deal } from '@/types/bond';
 import { docxFileToHtml } from '@/lib/docxToHtml';
 import { pdfFileToHtml } from '@/lib/pdfToHtml';
-import { htmlToText } from '@/lib/htmlText';
+import { stripHtml } from '@/lib/htmlText';
 import {
   FIELDS, SECTIONS, GROUPS, STAGES, filled, fieldError, refreshAuto,
   ingestBDT, ingestText,
@@ -139,7 +139,7 @@ export default function TermSheetFill({ deal, canEdit, onSave }: Props) {
         let text = '';
         if (name.endsWith('.pdf')) text = (await pdfFileToHtml(file)).text;
         else if (name.endsWith('.docx')) text = (await docxFileToHtml(file)).text;
-        else if (name.endsWith('.html') || name.endsWith('.htm')) text = htmlToText(await file.text());
+        else if (name.endsWith('.html') || name.endsWith('.htm')) text = stripHtml(await file.text());
         else text = await file.text();
         const out = ingestText(state, text.slice(0, 150000), file.name);
         if (Array.isArray(out)) found.push(...(out as Proposal[]));
