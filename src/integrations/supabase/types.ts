@@ -110,8 +110,65 @@ export type Database = {
         }
         Relationships: []
       }
+      deal_term_sheet_releases: {
+        Row: {
+          bdt_state_snapshot: Json
+          bdt_xml: string | null
+          checks_summary: Json
+          deal_id: string
+          diff_summary: Json
+          envelope: Json | null
+          id: string
+          released_at: string
+          released_by: string | null
+          released_by_name: string | null
+          stage: number
+          stage_label: string
+          version: number
+        }
+        Insert: {
+          bdt_state_snapshot: Json
+          bdt_xml?: string | null
+          checks_summary?: Json
+          deal_id: string
+          diff_summary?: Json
+          envelope?: Json | null
+          id?: string
+          released_at?: string
+          released_by?: string | null
+          released_by_name?: string | null
+          stage: number
+          stage_label?: string
+          version: number
+        }
+        Update: {
+          bdt_state_snapshot?: Json
+          bdt_xml?: string | null
+          checks_summary?: Json
+          deal_id?: string
+          diff_summary?: Json
+          envelope?: Json | null
+          id?: string
+          released_at?: string
+          released_by?: string | null
+          released_by_name?: string | null
+          stage?: number
+          stage_label?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_term_sheet_releases_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deals: {
         Row: {
+          bdt_state: Json | null
           benchmark: string | null
           bookrunners: Json
           business_day_convention: string | null
@@ -160,6 +217,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bdt_state?: Json | null
           benchmark?: string | null
           bookrunners?: Json
           business_day_convention?: string | null
@@ -208,6 +266,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bdt_state?: Json | null
           benchmark?: string | null
           bookrunners?: Json
           business_day_convention?: string | null
