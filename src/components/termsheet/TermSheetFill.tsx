@@ -1,20 +1,40 @@
+/**
+ * Digital Term Sheet — Fill tab.
+ *
+ * Built directly on the vendored ICMA BDT 2.0 core (src/lib/termsheet/), which
+ * is never modified. Rules that hold here:
+ *  • `bdtState` is authoritative. The flat deal columns are a derived cache
+ *    written on save via `bdtToDealCache` and never edited directly.
+ *  • The Priority Execution Layer selects FIELDS entries BY PATH. There is
+ *    exactly one definition of every field.
+ *  • Validation comes from `unifiedChecks` — one list, core checks first,
+ *    VDR calendar/settlement/benchmark rules appended.
+ *  • Fixed-rate single tranche only in this iteration.
+ */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Bookrunner, Deal } from '@/types/bond';
-import { Input } from '@/components/ui/input';
+import {
+  AlertTriangle, Check, ChevronDown, ChevronRight, CircleCheck, FileUp,
+  Loader2, Plus, Save, Search, Sparkles, Trash2, X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Check, ChevronDown, ChevronRight, FileUp, Loader2, Plus, Save, Search, Sparkles, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import type { Deal } from '@/types/bond';
 import { docxFileToHtml } from '@/lib/docxToHtml';
 import { pdfFileToHtml } from '@/lib/pdfToHtml';
-import { toast } from 'sonner';
+import { htmlToText } from '@/lib/htmlText';
 import {
-  FIELDS, LAYERS, TS_STAGES, TSField, Layer, aiToDealPatch, isFilled, isRequiredNow, stageIndex, suggestMaturity, suggestTenor,
-} from './fieldConfig';
+  FIELDS, SECTIONS, GROUPS, STAGES, filled, fieldError, refreshAuto,
+  ingestBDT, ingestText,
+} from '@/lib/termsheet/index.js';
+import {
+  bdtStageForDeal, bdtToDealCache, dealToBdtState, priorityFields,
+  unifiedChecks, tallyChecks, type BdtState, type CheckItem,
+} from '@/lib/bdt-bridge';
+import TermSheetField, { optionsFor, prettyEnum, type FieldDef } from './TermSheetField';
 
 interface Props {
   deal: Deal;
@@ -22,351 +42,601 @@ interface Props {
   onSave: (patch: Partial<Deal>) => void;
 }
 
-type Draft = Partial<Deal>;
-interface Proposal { key: keyof Deal; label: string; current: string; proposed: string; source: string }
+interface Proposal {
+  kind: 'field' | 'group';
+  p?: string;
+  g?: string;
+  l: string;
+  val: string;
+  cur: string;
+  src: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: any;
+}
 
-const COUPON_TYPES = [
-  { value: 'FIXED', label: 'Fixed' },
-  { value: 'FLOATING', label: 'Floating / FRN' },
-  { value: 'ZERO_COUPON', label: 'Zero' },
-];
-
-const str = (v: unknown) => (v == null ? '' : String(v));
+const clone = (s: BdtState): BdtState => JSON.parse(JSON.stringify(s));
 
 export default function TermSheetFill({ deal, canEdit, onSave }: Props) {
-  const [draft, setDraft] = useState<Draft>({});
-  const [showAll, setShowAll] = useState(false);
-  const [open, setOpen] = useState<Record<Layer, boolean>>({ key: true, pricing: false, more: false });
+  const [state, setState] = useState<BdtState>(() => dealToBdtState(deal));
+  const [dirty, setDirty] = useState(false);
   const [query, setQuery] = useState('');
+  const [showOptional, setShowOptional] = useState(false);
+  const [open, setOpen] = useState<Record<string, boolean>>({ parties: true });
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [parsing, setParsing] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [brName, setBrName] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const stage = deal.stage;
-  const sIdx = stageIndex(stage);
-
-  // Auto-open sections once the deal reaches their stage.
+  // Re-seed when the deal identity changes (never mid-edit).
   useEffect(() => {
-    setOpen(o => ({
-      key: true,
-      pricing: o.pricing || sIdx >= stageIndex('Launched'),
-      more: o.more,
-    }));
-  }, [sIdx]);
+    setState(dealToBdtState(deal));
+    setDirty(false);
+    setProposals([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deal.id]);
 
-  const val = (k: keyof Deal) => (k in draft ? draft[k] : deal[k]);
-  const set = (k: keyof Deal, v: unknown) => setDraft(d => ({ ...d, [k]: v }));
-  const dirty = Object.keys(draft).length > 0;
-  const bookrunners = (val('bookrunners') as Bookrunner[]) ?? [];
-  const couponType = str(val('interestType')) || 'FIXED';
-  const floating = couponType === 'FLOATING';
+  // The BDT stage follows the deal's lifecycle stage.
+  useEffect(() => {
+    setState(s => (s.stage === bdtStageForDeal(deal.stage) ? s : { ...s, stage: bdtStageForDeal(deal.stage) }));
+  }, [deal.stage]);
 
-  const keyReq = FIELDS.filter(f => f.layer === 'key');
-  const keyDone = keyReq.filter(f => isFilled(val(f.key))).length + (isFilled(val('coupon')) ? 1 : 0) + (bookrunners.length ? 1 : 0);
-  const keyTotal = keyReq.length + 2;
-  const missingNow = FIELDS.filter(f => isRequiredNow(f, stage) && !isFilled(val(f.key))).length;
+  const stageIdx = state.stage;
+  const checkItems: CheckItem[] = useMemo(() => {
+    try { return unifiedChecks(state); } catch { return []; }
+  }, [state]);
+  const tally = useMemo(() => tallyChecks(checkItems), [checkItems]);
+
+  const requiredNow = useMemo(
+    () => FIELDS.filter((f: FieldDef) => f.req && f.req <= stageIdx),
+    [stageIdx],
+  );
+  const requiredDone = requiredNow.filter((f: FieldDef) => filled(state, f)).length;
+  const pct = requiredNow.length ? Math.round((requiredDone / requiredNow.length) * 100) : 100;
+
+  // ── mutation helpers ────────────────────────────────────────────────────────
+
+  const setField = (p: string, v: string) => {
+    setState(s => {
+      const next = clone(s);
+      next.f[p] = v;
+      refreshAuto(next);
+      return next;
+    });
+    setDirty(true);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mutateGroup = (g: string, fn: (rows: any[]) => any[]) => {
+    setState(s => {
+      const next = clone(s);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (next as any)[g] = fn(((next as any)[g] ?? []) as any[]);
+      refreshAuto(next);
+      return next;
+    });
+    setDirty(true);
+  };
+
+  const valueOf = (p: string) => state.f?.[p] ?? '';
+  const isRequired = (fd: FieldDef) => !!fd.req && fd.req <= stageIdx;
+  const proposedPaths = useMemo(() => new Set(proposals.filter(p => p.p).map(p => p.p as string)), [proposals]);
+
+  // ── assisted fill ───────────────────────────────────────────────────────────
+
+  async function handleFiles(files: FileList | null) {
+    if (!files?.length || !canEdit) return;
+    setParsing(true);
+    try {
+      const found: Proposal[] = [];
+      for (const file of Array.from(files)) {
+        const name = file.name.toLowerCase();
+        if (name.endsWith('.xml')) {
+          const xml = await file.text();
+          const out = ingestBDT(state, xml, file.name);
+          if (Array.isArray(out)) found.push(...(out as Proposal[]));
+          continue;
+        }
+        let text = '';
+        if (name.endsWith('.pdf')) text = (await pdfFileToHtml(file)).text;
+        else if (name.endsWith('.docx')) text = (await docxFileToHtml(file)).text;
+        else if (name.endsWith('.html') || name.endsWith('.htm')) text = htmlToText(await file.text());
+        else text = await file.text();
+        const out = ingestText(state, text.slice(0, 150000), file.name);
+        if (Array.isArray(out)) found.push(...(out as Proposal[]));
+      }
+      setProposals(found);
+      toast[found.length ? 'success' : 'info'](
+        found.length ? `${found.length} proposals to review` : 'Nothing recognisable found in that document',
+      );
+    } catch (err) {
+      toast.error(`Could not read that document: ${(err as Error).message}`);
+    } finally {
+      setParsing(false);
+    }
+  }
+
+  const acceptProposal = (i: number) => {
+    const pr = proposals[i];
+    if (!pr) return;
+    if (pr.kind === 'group' && pr.g) mutateGroup(pr.g, () => pr.payload ?? []);
+    else if (pr.p) setField(pr.p, pr.val);
+    setProposals(list => list.filter((_, n) => n !== i));
+  };
+  const ignoreProposal = (i: number) => setProposals(list => list.filter((_, n) => n !== i));
+  const acceptAll = () => {
+    setState(s => {
+      const next = clone(s);
+      for (const pr of proposals) {
+        if (pr.kind === 'group' && pr.g) (next as unknown as Record<string, unknown>)[pr.g] = pr.payload ?? [];
+        else if (pr.p) next.f[pr.p] = pr.val;
+      }
+      refreshAuto(next);
+      return next;
+    });
+    setDirty(true);
+    setProposals([]);
+  };
+
+  // ── save ────────────────────────────────────────────────────────────────────
+
+  const save = () => {
+    const next = clone(state);
+    refreshAuto(next);
+    onSave({ ...bdtToDealCache(next), bdtState: next });
+    setState(next);
+    setDirty(false);
+    toast.success('Digital Term Sheet saved');
+  };
+
+  // ── field filtering ─────────────────────────────────────────────────────────
 
   const q = query.trim().toLowerCase();
-  const matches = (f: TSField) => !q || f.label.toLowerCase().includes(q);
+  const matches = (fd: FieldDef) => !q || fd.l.toLowerCase().includes(q) || fd.p.toLowerCase().includes(q);
 
-  const visibleIn = (layer: Layer) => {
-    const all = FIELDS.filter(f => f.layer === layer && matches(f));
-    if (showAll || q || layer !== 'more') return { shown: all, hidden: 0 };
-    const shown = all.filter(f => isFilled(val(f.key)) || isRequiredNow(f, stage) || proposals.some(p => p.key === f.key));
-    return { shown: open.more ? all : shown, hidden: open.more ? 0 : all.length - shown.length };
+  const sectionFields = (secId: string) => {
+    const all = FIELDS.filter((f: FieldDef) => f.sec === secId && f.t !== 'group' && matches(f));
+    if (showOptional || q) return { shown: all, hidden: 0 };
+    const shown = all.filter((f: FieldDef) => isRequired(f) || filled(state, f) || proposedPaths.has(f.p));
+    return { shown, hidden: all.length - shown.length };
   };
+  const sectionGroups = (secId: string) =>
+    FIELDS.filter((f: FieldDef) => f.sec === secId && f.t === 'group');
 
-  const onTenorOrDate = (k: keyof Deal, v: string) => {
-    set(k, v);
-    const next = { ...deal, ...draft, [k]: v } as Deal;
-    const from = next.issueDate || next.settlementDate;
-    if ((k === 'tenor' || k === 'issueDate' || k === 'settlementDate') && !isFilled(next.maturityDate)) {
-      const m = suggestMaturity(next.tenor, from);
-      if (m) set('maturityDate', m);
-    }
-    if (k === 'maturityDate' && !isFilled(next.tenor)) {
-      const t = suggestTenor(v, from);
-      if (t) set('tenor', t);
-    }
-  };
+  const priority = useMemo(() => priorityFields().filter(matches), [q]);
 
-  const handleSave = () => {
-    if (!dirty) return;
-    onSave(draft);
-    setDraft({});
-    toast.success('Digital Term Sheet saved', { description: `${Object.keys(draft).length} field(s) updated` });
-  };
-
-  // ---------- Document drop -> proposals ----------
-  const parseFile = async (file: File) => {
-    const name = file.name.toLowerCase();
-    let text = '';
-    if (name.endsWith('.pdf')) text = (await pdfFileToHtml(file)).text;
-    else if (name.endsWith('.docx')) text = (await docxFileToHtml(file)).text;
-    else if (name.endsWith('.xml') || name.endsWith('.txt')) {
-      const raw = await file.text();
-      text = raw.replace(/<\/?([A-Za-z0-9:_-]+)[^>]*>/g, (_m, tag) => ` ${tag}: `).replace(/\s+/g, ' ');
-    } else {
-      toast.error(`"${file.name}" can't be read`, { description: 'Use PDF, Word (.docx) or XML.' });
-      return;
-    }
-    const clean = text
-      .replace(/data:[a-z0-9.+-]+\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=\s]+/gi, ' ')
-      .replace(/[A-Za-z0-9+/]{500,}={0,2}/g, ' ')
-      .replace(/\s{2,}/g, ' ').trim().slice(0, 150_000);
-    if (clean.length < 20) { toast.error('No readable text found in the document'); return; }
-
-    const { data, error } = await supabase.functions.invoke('extract-deal-fields-ai', { body: { text: clean } });
-    if (error) throw error;
-    const keyTerms = ((data as { keyTerms?: Record<string, string> })?.keyTerms) || {};
-    const bks = (data as { bookrunners?: Bookrunner[] })?.bookrunners || [];
-    const patch = aiToDealPatch(keyTerms);
-    const labelOf = (k: string) => FIELDS.find(f => f.key === k)?.label || (k === 'coupon' ? 'Coupon' : k === 'interestType' ? 'Coupon type' : k);
-    const next: Proposal[] = [];
-    for (const [k, v] of Object.entries(patch)) {
-      const cur = str(val(k as keyof Deal));
-      if (cur.trim() !== str(v).trim()) next.push({ key: k as keyof Deal, label: labelOf(k), current: cur, proposed: str(v), source: file.name });
-    }
-    if (bks.length) {
-      const cur = bookrunners.map(b => b.name).join(', ');
-      const prop = bks.map(b => b.name).join(', ');
-      if (cur !== prop) next.push({ key: 'bookrunners', label: 'Bookrunners', current: cur, proposed: prop, source: file.name });
-      (next as (Proposal & { _bks?: Bookrunner[] })[]).at(-1)!._bks = bks;
-    }
-    setProposals(p => [...p.filter(x => !next.some(n => n.key === x.key)), ...next]);
-    if (next.length === 0) toast.info('No new values found', { description: file.name });
-  };
-
-  const handleFiles = async (files: FileList | File[]) => {
-    const list = Array.from(files);
-    if (!list.length) return;
-    setParsing(true);
-    try { for (const f of list) await parseFile(f); }
-    catch (e: unknown) {
-      const status = (e as { context?: { status?: number } })?.context?.status;
-      toast.error(status === 429 ? 'AI rate limit, try again shortly' : status === 402 ? 'AI credits exhausted' : 'Could not read the document');
-    } finally { setParsing(false); }
-  };
-
-  const accept = (p: Proposal) => {
-    const withBks = p as Proposal & { _bks?: Bookrunner[] };
-    set(p.key, p.key === 'bookrunners' ? withBks._bks : p.proposed);
-    setProposals(ps => ps.filter(x => x !== p));
-  };
-  const ignore = (p: Proposal) => setProposals(ps => ps.filter(x => x !== p));
-
-  // ---------- Rendering helpers ----------
-  const fieldShell = (f: { key: keyof Deal; label: string; requiredAt?: TSField['requiredAt'] }, control: React.ReactNode) => {
-    const filled = isFilled(val(f.key));
-    const req = isRequiredNow(f, stage);
-    const proposed = proposals.some(p => p.key === f.key);
-    return (
-      <div key={String(f.key)} className="space-y-1">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span>{f.label}</span>
-          {req && !filled && <span className="text-orange-400" title="Required at this stage">•</span>}
-          {filled && <Check className="h-3 w-3 text-emerald-400" aria-label="Filled" />}
-          {proposed && <Sparkles className="h-3 w-3 text-primary" aria-label="Value proposed from document" />}
-        </div>
-        <div className={req && !filled ? 'rounded-md ring-1 ring-orange-500/70' : ''}>{control}</div>
-      </div>
-    );
-  };
-
-  const renderField = (f: TSField, large = false) => {
-    const v = str(val(f.key));
-    const cls = large ? 'h-10 text-base' : 'h-9 text-sm';
-    if (f.type === 'select') {
-      return fieldShell(f, (
-        <Select value={v || undefined} onValueChange={x => set(f.key, x)} disabled={!canEdit}>
-          <SelectTrigger className={cls}><SelectValue placeholder="Select…" /></SelectTrigger>
-          <SelectContent>{f.options!.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-        </Select>
-      ));
-    }
-    const isDate = f.type === 'date' && (v === '' || /^\d{4}-\d{2}-\d{2}$/.test(v));
-    return fieldShell(f, (
-      <Input
-        className={cls}
-        type={isDate ? 'date' : 'text'}
-        value={v}
-        placeholder={f.placeholder}
-        disabled={!canEdit}
-        onChange={e => ['tenor', 'issueDate', 'settlementDate', 'maturityDate'].includes(f.key as string)
-          ? onTenorOrDate(f.key, e.target.value) : set(f.key, e.target.value)}
-      />
-    ));
-  };
-
-  const addBookrunner = () => {
-    const n = brName.trim(); if (!n) return;
-    set('bookrunners', [...bookrunners, { name: n, role: 'active', isGlobalCoordinator: false }]);
-    setBrName('');
-  };
-  const patchBr = (i: number, p: Partial<Bookrunner>) => set('bookrunners', bookrunners.map((b, j) => (j === i ? { ...b, ...p } : b)));
-
-  const layerHeader = (id: Layer, title: string, note: string, extra?: React.ReactNode) => (
-    <button
-      type="button"
-      onClick={() => id !== 'key' && setOpen(o => ({ ...o, [id]: !o[id] }))}
-      className="w-full flex items-center gap-2 text-left"
-    >
-      {id !== 'key' && (open[id] ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />)}
-      <span className="text-sm font-semibold uppercase tracking-wide">{title}</span>
-      <span className="text-xs text-muted-foreground hidden sm:inline">— {note}</span>
-      <span className="ml-auto">{extra}</span>
-    </button>
-  );
-
-  const pricing = visibleIn('pricing');
-  const more = visibleIn('more');
-  const moreGroups = useMemo(() => {
-    const g: Record<string, TSField[]> = {};
-    more.shown.forEach(f => { (g[f.group || 'Other'] ||= []).push(f); });
-    return g;
-  }, [more.shown]);
+  // ── render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-4">
-      {/* Stage rail + readiness */}
-      <div className="rounded-lg border bg-card/60 p-3 space-y-3">
-        <ol className="flex flex-wrap gap-1">
-          {TS_STAGES.map((s, i) => (
-            <li key={s} className={`flex-1 min-w-[5.5rem] border-b-2 pb-1 text-xs ${i < sIdx ? 'border-muted-foreground/50 text-muted-foreground' : i === sIdx ? 'border-orange-500 text-foreground font-semibold' : 'border-border text-muted-foreground/60'}`}>
-              <span className="font-mono text-[10px] block">{i + 1}</span>{s}
-            </li>
-          ))}
-        </ol>
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="outline" className="text-xs">Key terms {keyDone}/{keyTotal}</Badge>
-          {missingNow > 0
-            ? <Badge variant="outline" className="text-xs border-orange-500/70 text-orange-400">{missingNow} required for {stage}</Badge>
-            : <Badge variant="outline" className="text-xs border-emerald-500/60 text-emerald-400">Ready for {stage}</Badge>}
-          <div className="relative flex-1 min-w-[10rem] max-w-xs">
-            <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a field…" className="h-8 pl-7 text-xs" />
-          </div>
-          <div className="flex items-center gap-2 ml-auto">
-            <Switch id={`all-${deal.id}`} checked={showAll} onCheckedChange={setShowAll} />
-            <Label htmlFor={`all-${deal.id}`} className="text-xs">Show every field</Label>
-          </div>
+    <div className="space-y-5">
+      {/* Masthead: stage rail, readiness, checks */}
+      <div className="rounded-lg border border-border/70 bg-card/60 p-4 space-y-4">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {STAGES.map((s: { k: string; t: string }, i: number) => {
+            const n = i + 1;
+            const active = n === stageIdx;
+            const done = n < stageIdx;
+            return (
+              <div key={s.k} className="flex items-center gap-1.5">
+                <span
+                  className={[
+                    'text-[11px] px-2 py-1 rounded-md border whitespace-nowrap',
+                    active
+                      ? 'border-primary text-primary bg-primary/10 font-medium'
+                      : done
+                        ? 'border-border/60 text-muted-foreground'
+                        : 'border-border/40 text-muted-foreground/50',
+                  ].join(' ')}
+                >
+                  {n}. {s.t}
+                </span>
+                {i < STAGES.length - 1 && <ChevronRight className="h-3 w-3 text-muted-foreground/30" />}
+              </div>
+            );
+          })}
         </div>
+
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="min-w-[200px] flex-1">
+            <div className="flex items-baseline justify-between mb-1">
+              <span className="text-xs text-muted-foreground">
+                Required at this stage: {requiredDone} of {requiredNow.length}
+              </span>
+              <span className="text-xs font-medium">{pct}%</span>
+            </div>
+            <Progress value={pct} className="h-1.5" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="border-emerald-500/50 text-emerald-500">
+              <CircleCheck className="h-3 w-3 mr-1" /> {tally.pass} pass
+            </Badge>
+            <Badge variant="outline" className="border-amber-500/50 text-amber-500">
+              <AlertTriangle className="h-3 w-3 mr-1" /> {tally.warn} warn
+            </Badge>
+            <Badge variant="outline" className={tally.fail ? 'border-destructive/60 text-destructive' : 'text-muted-foreground'}>
+              <X className="h-3 w-3 mr-1" /> {tally.fail} fail
+            </Badge>
+          </div>
+          {canEdit && (
+            <Button size="sm" onClick={save} disabled={!dirty}>
+              <Save className="h-4 w-4 mr-1" /> {dirty ? 'Save term sheet' : 'Saved'}
+            </Button>
+          )}
+        </div>
+
+        <p className="text-[11px] text-muted-foreground/70">
+          Fixed-rate single tranche. Floating and zero coupon structures arrive in a later iteration.
+        </p>
       </div>
 
-      {/* Document drop */}
+      {/* Assisted fill */}
       {canEdit && (
         <div
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={e => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
-          onClick={() => fileRef.current?.click()}
-          className={`cursor-pointer rounded-lg border border-dashed px-4 py-2.5 flex items-center gap-2 text-xs transition-colors ${dragOver ? 'border-primary bg-primary/10' : 'border-border text-muted-foreground hover:border-primary/60'}`}
+          className={[
+            'rounded-lg border border-dashed p-4 text-center transition-colors',
+            dragOver ? 'border-primary bg-primary/5' : 'border-border/60 bg-card/30',
+          ].join(' ')}
         >
-          {parsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
-          {parsing ? 'Reading document…' : 'Drop a term sheet here to suggest values (PDF, Word, XML). Nothing is saved until you accept.'}
-          <input ref={fileRef} type="file" accept=".pdf,.docx,.xml,.txt" multiple hidden onChange={e => { if (e.target.files) handleFiles(e.target.files); e.target.value = ''; }} />
+          <input
+            ref={fileRef}
+            type="file"
+            multiple
+            className="hidden"
+            accept=".pdf,.docx,.xml,.html,.htm,.txt"
+            onChange={e => handleFiles(e.target.files)}
+          />
+          <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground">
+            {parsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
+            <span>Drop a term sheet, final terms or BDT XML file here to propose values</span>
+            <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} disabled={parsing}>
+              <Sparkles className="h-3.5 w-3.5 mr-1" /> Choose file
+            </Button>
+          </div>
         </div>
       )}
 
-      {/* Review proposals */}
+      {/* Proposal review — nothing is applied without acceptance */}
       {proposals.length > 0 && (
-        <div className="rounded-lg border border-primary/50 bg-primary/5 p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold">Proposed values ({proposals.length})</span>
-            <Button size="sm" variant="outline" className="ml-auto h-7 text-xs" onClick={() => proposals.forEach(accept)}>Accept all</Button>
-            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setProposals([])}>Ignore all</Button>
+        <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium">{proposals.length} proposed values</h3>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={acceptAll}>Accept all</Button>
+              <Button size="sm" variant="ghost" onClick={() => setProposals([])}>Ignore all</Button>
+            </div>
           </div>
-          <div className="divide-y divide-border/60">
-            {proposals.map(p => (
-              <div key={String(p.key)} className="grid grid-cols-[8rem_1fr_auto] sm:grid-cols-[10rem_1fr_1fr_auto] items-center gap-2 py-1.5 text-xs">
-                <span className="text-muted-foreground">{p.label}</span>
-                <span className="hidden sm:block line-through text-muted-foreground truncate">{p.current || '—'}</span>
-                <span className="font-medium truncate" title={`From ${p.source}`}>{p.proposed}</span>
-                <span className="flex gap-1">
-                  <Button size="icon" variant="outline" className="h-7 w-7" title="Accept" onClick={() => accept(p)}><Check className="h-3.5 w-3.5 text-emerald-400" /></Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" title="Ignore" onClick={() => ignore(p)}><X className="h-3.5 w-3.5" /></Button>
-                </span>
+          <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+            {proposals.map((pr, i) => (
+              <div key={`${pr.p ?? pr.g}-${i}`} className="flex items-center gap-3 rounded-md border border-border/50 bg-background/60 px-3 py-2">
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-medium truncate">{pr.l}</div>
+                  <div className="text-[11px] text-muted-foreground truncate">
+                    <span className="line-through opacity-60">{pr.cur || 'empty'}</span>
+                    <span className="mx-1.5">→</span>
+                    <span className="text-foreground">{pr.val}</span>
+                  </div>
+                </div>
+                <span className="text-[10px] text-muted-foreground/60 truncate max-w-[120px]">{pr.src}</span>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => acceptProposal(i)} title="Accept">
+                  <Check className="h-4 w-4 text-emerald-500" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => ignoreProposal(i)} title="Ignore">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </Button>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Layer 1: Key terms */}
-      <section className="rounded-lg border bg-card/60 p-4 space-y-4">
-        {layerHeader('key', LAYERS[0].title, LAYERS[0].note)}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {keyReq.filter(matches).slice(0, 5).map(f => renderField(f, true))}
-          {(!q || 'coupon type'.includes(q)) && fieldShell({ key: 'interestType', label: 'Coupon type' }, (
-            <ToggleGroup type="single" value={couponType} onValueChange={v => v && canEdit && set('interestType', v)} className="justify-start" variant="outline">
-              {COUPON_TYPES.map(c => <ToggleGroupItem key={c.value} value={c.value} className="h-10 px-3 text-xs data-[state=on]:border-orange-500 data-[state=on]:text-foreground">{c.label}</ToggleGroupItem>)}
-            </ToggleGroup>
-          ))}
-          {(!q || 'coupon margin'.includes(q)) && (floating
-            ? <>
-                {fieldShell({ key: 'referenceRate', label: 'Reference rate' }, <Input className="h-10 text-base" value={str(val('referenceRate'))} placeholder="e.g. 3M EURIBOR" disabled={!canEdit} onChange={e => set('referenceRate', e.target.value)} />)}
-                {fieldShell({ key: 'coupon', label: 'Margin over reference', requiredAt: 'Priced' }, <Input className="h-10 text-base" value={str(val('coupon'))} placeholder="e.g. +45bp" disabled={!canEdit} onChange={e => set('coupon', e.target.value)} />)}
-              </>
-            : couponType !== 'ZERO_COUPON' && fieldShell({ key: 'coupon', label: 'Coupon', requiredAt: 'Priced' }, <Input className="h-10 text-base" value={str(val('coupon'))} placeholder="e.g. 3.250%" disabled={!canEdit} onChange={e => set('coupon', e.target.value)} />)
-          )}
-          {keyReq.filter(matches).slice(5).map(f => renderField(f, true))}
+      {/* Search + optional toggle */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search all 197 term sheet fields..."
+            className="h-9 pl-8 text-sm"
+          />
         </div>
+        <Button size="sm" variant={showOptional ? 'secondary' : 'outline'} onClick={() => setShowOptional(v => !v)}>
+          {showOptional ? 'Required at this stage only' : 'Show every field'}
+        </Button>
+      </div>
 
-        {(!q || 'bookrunners banks'.includes(q)) && fieldShell({ key: 'bookrunners', label: 'Bookrunners (banks)', requiredAt: 'Mandate' }, (
-          <div className="flex flex-wrap items-center gap-2 p-2 rounded-md border bg-background/40">
-            {bookrunners.map((b, i) => (
-              <span key={i} className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs">
-                {b.name}
-                <button type="button" disabled={!canEdit} onClick={() => patchBr(i, { role: b.role === 'active' ? 'passive' : 'active' })}
-                  className={`rounded px-1 text-[10px] ${b.role === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-muted text-muted-foreground'}`} title="Toggle Active/Passive">
-                  {b.role === 'active' ? 'Active' : 'Passive'}
-                </button>
-                <button type="button" disabled={!canEdit} onClick={() => patchBr(i, { isGlobalCoordinator: !b.isGlobalCoordinator })}
-                  className={`rounded px-1 text-[10px] ${b.isGlobalCoordinator ? 'bg-orange-500/25 text-orange-300' : 'text-muted-foreground/60'}`} title="Toggle Global Coordinator">GC</button>
-                {canEdit && <button type="button" onClick={() => set('bookrunners', bookrunners.filter((_, j) => j !== i))} aria-label={`Remove ${b.name}`}><X className="h-3 w-3" /></button>}
-              </span>
+      {/* Priority Execution Layer — FIELDS entries selected by path */}
+      {priority.length > 0 && (
+        <section className="rounded-lg border border-primary/30 bg-card/50 p-4">
+          <h3 className="text-sm font-semibold mb-1">Execution essentials</h3>
+          <p className="text-[11px] text-muted-foreground/70 mb-3">
+            The fields a syndicate desk touches on almost every deal. Each one is the same entry as in its full section below.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+            {priority.map((fd: FieldDef) => (
+              <TermSheetField
+                key={`pri-${fd.p}`}
+                fd={fd}
+                value={valueOf(fd.p)}
+                required={isRequired(fd)}
+                proposed={proposedPaths.has(fd.p)}
+                invalid={fieldError(state, fd)}
+                disabled={!canEdit}
+                onChange={v => setField(fd.p, v)}
+              />
             ))}
-            {canEdit && (
-              <span className="inline-flex items-center gap-1">
-                <Input value={brName} onChange={e => setBrName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addBookrunner(); } }} placeholder="Add bank…" className="h-7 w-36 text-xs" />
-                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={addBookrunner}><Plus className="h-3.5 w-3.5" /></Button>
-              </span>
+          </div>
+          <div className="mt-4 pt-3 border-t border-border/50">
+            <GroupEditor
+              g="parties"
+              rows={state.parties ?? []}
+              canEdit={canEdit}
+              onChange={fn => mutateGroup('parties', fn)}
+            />
+          </div>
+        </section>
+      )}
+
+      {/* Full BDT sections */}
+      <div className="space-y-2">
+        {SECTIONS.map((sec: { id: string; t: string; n: string }) => {
+          const { shown, hidden } = sectionFields(sec.id);
+          const groups = sectionGroups(sec.id);
+          if (!shown.length && !groups.length) return null;
+          const isOpen = open[sec.id] ?? !!q;
+          const missing = shown.filter((f: FieldDef) => isRequired(f) && !filled(state, f)).length;
+          return (
+            <section key={sec.id} className="rounded-lg border border-border/60 bg-card/40">
+              <button
+                type="button"
+                onClick={() => setOpen(o => ({ ...o, [sec.id]: !isOpen }))}
+                className="w-full flex items-center gap-2 px-4 py-3 text-left"
+              >
+                {isOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                <span className="text-sm font-medium flex-1">{sec.t}</span>
+                {missing > 0 && (
+                  <Badge variant="outline" className="border-destructive/50 text-destructive text-[10px]">
+                    {missing} missing
+                  </Badge>
+                )}
+                <span className="text-[11px] text-muted-foreground/60">{shown.length + groups.length}</span>
+              </button>
+              {isOpen && (
+                <div className="px-4 pb-4 space-y-4">
+                  <p className="text-[11px] leading-snug text-muted-foreground/70">{sec.n}</p>
+                  {shown.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+                      {shown.map((fd: FieldDef) => (
+                        <TermSheetField
+                          key={fd.p}
+                          fd={fd}
+                          value={valueOf(fd.p)}
+                          required={isRequired(fd)}
+                          proposed={proposedPaths.has(fd.p)}
+                          invalid={fieldError(state, fd)}
+                          disabled={!canEdit}
+                          onChange={v => setField(fd.p, v)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {groups.map((fd: FieldDef) => (
+                    <GroupEditor
+                      key={fd.p}
+                      g={fd.g}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      rows={((state as any)[fd.g] ?? []) as any[]}
+                      canEdit={canEdit}
+                      onChange={fn => mutateGroup(fd.g, fn)}
+                    />
+                  ))}
+                  {hidden > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowOptional(true)}
+                      className="text-[11px] text-primary hover:underline"
+                    >
+                      Show {hidden} optional field{hidden === 1 ? '' : 's'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </section>
+          );
+        })}
+      </div>
+
+      {/* Check list — the single validation surface */}
+      <section className="rounded-lg border border-border/60 bg-card/40 p-4 space-y-2">
+        <h3 className="text-sm font-semibold">Checks</h3>
+        {checkItems.map((c, i) => (
+          <div key={i} className="flex items-start gap-2 text-xs">
+            <span
+              className={[
+                'mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide',
+                c.l === 'fail' ? 'bg-destructive/15 text-destructive'
+                  : c.l === 'warn' ? 'bg-amber-500/15 text-amber-500'
+                    : 'bg-emerald-500/15 text-emerald-500',
+              ].join(' ')}
+            >
+              {c.l}
+            </span>
+            <div className="min-w-0">
+              <div className="text-foreground">{c.t}</div>
+              {c.d && <div className="text-muted-foreground/70">{c.d}</div>}
+            </div>
+            {c.src === 'vdr' && (
+              <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/50">calendar &amp; market rules</span>
             )}
           </div>
         ))}
       </section>
+    </div>
+  );
+}
 
-      {/* Layer 2: Pricing & execution */}
-      <section className="rounded-lg border bg-card/60 p-4 space-y-4">
-        {layerHeader('pricing', LAYERS[1].title, LAYERS[1].note)}
-        {(open.pricing || showAll || q) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">{pricing.shown.map(f => renderField(f))}</div>
+// ─── Repeating group editor (parties, identifiers, ratings, documents, contacts) ──
+
+interface GroupProps {
+  g: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rows: any[];
+  canEdit: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onChange: (fn: (rows: any[]) => any[]) => void;
+}
+
+function GroupEditor({ g, rows, canEdit, onChange }: GroupProps) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const def = (GROUPS as any)[g];
+  if (!def) return null;
+
+  const setCell = (i: number, key: string, v: unknown) =>
+    onChange(list => list.map((r, n) => (n === i ? { ...r, [key]: v } : r)));
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h4 className="text-xs font-medium text-muted-foreground">{def.t} list</h4>
+        {canEdit && (
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onChange(list => [...list, def.init()])}>
+            <Plus className="h-3 w-3 mr-1" /> Add {def.t.toLowerCase()}
+          </Button>
         )}
-      </section>
-
-      {/* Layer 3: More detail */}
-      <section className="rounded-lg border bg-card/60 p-4 space-y-4">
-        {layerHeader('more', LAYERS[2].title, LAYERS[2].note,
-          more.hidden > 0 && <span className="text-xs text-primary underline-offset-2 hover:underline">Show {more.hidden} optional fields</span>)}
-        {Object.entries(moreGroups).map(([g, fs]) => (
-          <div key={g} className="space-y-2">
-            <h4 className="text-xs font-medium text-muted-foreground border-b pb-1">{g}</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">{fs.map(f => renderField(f))}</div>
+      </div>
+      {rows.length === 0 && <p className="text-[11px] text-muted-foreground/60">None recorded.</p>}
+      <div className="space-y-2">
+        {rows.map((row, i) => (
+          <div key={i} className="rounded-md border border-border/50 bg-background/40 p-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-2">
+              {def.fields.map(([key, label, type, enumKey]: [string, string, string, string?]) => {
+                if (type === 'roles') {
+                  return (
+                    <div key={key} className="space-y-1.5 sm:col-span-2 lg:col-span-3">
+                      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(row.Roles ?? []).map((r: string, ri: number) => (
+                          <Badge key={ri} variant="secondary" className="text-[10px] gap-1">
+                            {prettyEnum(r)}
+                            {canEdit && (
+                              <button
+                                type="button"
+                                onClick={() => setCell(i, 'Roles', (row.Roles ?? []).filter((_: string, n: number) => n !== ri))}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                          </Badge>
+                        ))}
+                        {canEdit && (
+                          <Select
+                            value=""
+                            onValueChange={v => setCell(i, 'Roles', Array.from(new Set([...(row.Roles ?? []), v])))}
+                          >
+                            <SelectTrigger className="h-6 w-[150px] text-[11px]">
+                              <SelectValue placeholder="Add role" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-72">
+                              {optionsFor({ e: 'PartyRoleType' }).map(o => (
+                                <SelectItem key={o} value={o}>{prettyEnum(o)}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+                if (type === 'ratings') {
+                  const ratings = row.Ratings ?? [];
+                  return (
+                    <div key={key} className="space-y-1.5 sm:col-span-2 lg:col-span-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+                        {canEdit && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 text-[11px]"
+                            onClick={() => setCell(i, 'Ratings', [...ratings, { RatingAgency: '', RatingValue: '', RatingOutlook: '' }])}
+                          >
+                            <Plus className="h-3 w-3 mr-1" /> Add
+                          </Button>
+                        )}
+                      </div>
+                      {ratings.map((rt: Record<string, string>, rj: number) => (
+                        <div key={rj} className="flex gap-2">
+                          <Select
+                            value={rt.RatingAgency || undefined}
+                            disabled={!canEdit}
+                            onValueChange={v => setCell(i, 'Ratings', ratings.map((x: Record<string, string>, n: number) => (n === rj ? { ...x, RatingAgency: v } : x)))}
+                          >
+                            <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Agency" /></SelectTrigger>
+                            <SelectContent>
+                              {optionsFor({ e: 'RatingAgency' }).map(o => <SelectItem key={o} value={o}>{prettyEnum(o)}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            className="h-8 w-24 text-xs"
+                            placeholder="Rating"
+                            value={rt.RatingValue ?? ''}
+                            disabled={!canEdit}
+                            onChange={e => setCell(i, 'Ratings', ratings.map((x: Record<string, string>, n: number) => (n === rj ? { ...x, RatingValue: e.target.value } : x)))}
+                          />
+                          <Select
+                            value={rt.RatingOutlook || undefined}
+                            disabled={!canEdit}
+                            onValueChange={v => setCell(i, 'Ratings', ratings.map((x: Record<string, string>, n: number) => (n === rj ? { ...x, RatingOutlook: v } : x)))}
+                          >
+                            <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="Outlook" /></SelectTrigger>
+                            <SelectContent>
+                              {optionsFor({ e: 'RatingOutlook' }).map(o => <SelectItem key={o} value={o}>{prettyEnum(o)}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          {canEdit && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={() => setCell(i, 'Ratings', ratings.filter((_: unknown, n: number) => n !== rj))}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+                return (
+                  <TermSheetField
+                    key={key}
+                    fd={{ p: `${g}.${i}.${key}`, l: label, t: type === 'sel' ? 'sel' : type, e: enumKey }}
+                    value={row[key] ?? ''}
+                    disabled={!canEdit}
+                    invalid={null}
+                    onChange={v => setCell(i, key, v)}
+                  />
+                );
+              })}
+            </div>
+            {canEdit && (
+              <div className="flex justify-end mt-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs text-muted-foreground"
+                  onClick={() => onChange(list => list.filter((_, n) => n !== i))}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1" /> Remove
+                </Button>
+              </div>
+            )}
           </div>
         ))}
-      </section>
-
-      {canEdit && (
-        <div className="sticky bottom-0 flex justify-end gap-2 py-2 bg-gradient-to-t from-background to-transparent">
-          {dirty && <Button variant="ghost" size="sm" onClick={() => setDraft({})}>Discard</Button>}
-          <Button size="sm" onClick={handleSave} disabled={!dirty} className="border border-orange-500">
-            <Save className="h-4 w-4 mr-1" /> {dirty ? `Save ${Object.keys(draft).length} change(s)` : 'Saved'}
-          </Button>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
