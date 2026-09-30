@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import type { Deal } from '@/types/bond';
 import { docxFileToHtml } from '@/lib/docxToHtml';
 import { pdfFileToHtml } from '@/lib/pdfToHtml';
@@ -56,8 +57,24 @@ interface Proposal {
 
 const clone = (s: BdtState): BdtState => JSON.parse(JSON.stringify(s));
 
-export default function TermSheetFill({ deal, canEdit, onSave }: Props) {
-  const [state, setState] = useState<BdtState>(() => dealToBdtState(deal));
+interface StageSnap { version: number; stage: number; released_at: string; released_by_name: string | null; bdt_state_snapshot: BdtState }
+
+export default function TermSheetFill({ deal, canEdit: canEditProp, onSave }: Props) {
+  const [snaps, setSnaps] = useState<StageSnap[]>([]);
+  const [viewStage, setViewStage] = useState<number | null>(null);
+  const loadSnaps = async () => {
+    const { data } = await supabase.from('deal_term_sheet_releases')
+      .select('version,stage,released_at,released_by_name,bdt_state_snapshot')
+      .eq('deal_id', deal.id).order('version', { ascending: false });
+    setSnaps((data ?? []) as unknown as StageSnap[]);
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setViewStage(null); loadSnaps(); }, [deal.id]);
+  // Latest snapshot saved while the deal was at (or before) the chosen stage.
+  const viewSnap = viewStage == null ? null
+    : snaps.find(s => s.stage === viewStage) ?? null;
+  const canEdit = canEditProp && viewStage == null;
+  const [liveState, setState] = useState<BdtState>(() => dealToBdtState(deal));
   const [dirty, setDirty] = useState(false);
   const [query, setQuery] = useState('');
   const [showOptional, setShowOptional] = useState(false);
@@ -80,6 +97,8 @@ export default function TermSheetFill({ deal, canEdit, onSave }: Props) {
     setState(s => (s.stage === bdtStageForDeal(deal.stage) ? s : { ...s, stage: bdtStageForDeal(deal.stage) }));
   }, [deal.stage]);
 
+  const state: BdtState = viewSnap ? { ...viewSnap.bdt_state_snapshot, stage: viewStage as number } : liveState;
+  const liveStage = liveState.stage;
   const stageIdx = state.stage;
   const checkItems: CheckItem[] = useMemo(() => {
     try { return unifiedChecks(state); } catch { return []; }
@@ -184,6 +203,19 @@ export default function TermSheetFill({ deal, canEdit, onSave }: Props) {
     refreshAuto(next);
     onSave({ ...bdtToDealCache(next), bdtState: next });
     setState(next);
+    // Immutable per-stage history row, so earlier stages can be revisited.
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const version = (snaps[0]?.version ?? 0) + 1;
+      const { error } = await supabase.from('deal_term_sheet_releases').insert({
+        deal_id: deal.id, version, stage: next.stage,
+        stage_label: STAGES[next.stage - 1]?.t ?? String(next.stage),
+        bdt_state_snapshot: next as never, diff_summary: {} as never,
+        checks_summary: tally as never, released_by: u.user?.id ?? null,
+        released_by_name: u.user?.email ?? null,
+      });
+      if (!error) loadSnaps();
+    })();
     setDirty(false);
     toast.success('Digital Term Sheet saved');
   };
@@ -214,27 +246,43 @@ export default function TermSheetFill({ deal, canEdit, onSave }: Props) {
           {STAGES.map((s: { k: string; t: string }, i: number) => {
             const n = i + 1;
             const active = n === stageIdx;
-            const done = n < stageIdx;
+            const done = n < liveStage;
+            const hasSnap = snaps.some(x => x.stage === n);
+            const clickable = n === liveStage || (n < liveStage && hasSnap);
             return (
               <div key={s.k} className="flex items-center gap-1.5">
-                <span
+                <button
+                  type="button"
+                  disabled={!clickable}
+                  onClick={() => setViewStage(n === liveStage ? null : n)}
+                  title={clickable ? (n === liveStage ? 'Current stage' : `View what was entered at ${s.t}`) : n < liveStage ? 'No saved record for this stage' : undefined}
                   className={[
-                    'text-[11px] px-2 py-1 rounded-md border whitespace-nowrap',
+                    'text-[11px] px-2 py-1 rounded-md border whitespace-nowrap transition-colors',
                     active
                       ? 'border-primary text-primary bg-primary/10 font-medium'
                       : done
                         ? 'border-border/60 text-muted-foreground'
                         : 'border-border/40 text-muted-foreground/50',
+                    clickable && !active ? 'hover:border-primary/60 hover:text-foreground cursor-pointer' : '',
+                    n === liveStage && !active ? 'ring-1 ring-primary/40' : '',
+                    !clickable ? 'cursor-default' : '',
                   ].join(' ')}
                 >
                   {n}. {s.t}
-                </span>
+                </button>
                 {i < STAGES.length - 1 && <ChevronRight className="h-3 w-3 text-muted-foreground/30" />}
               </div>
             );
           })}
         </div>
 
+        {viewSnap && (
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-xs">
+            <span className="font-medium text-primary">Viewing {STAGES[(viewStage as number) - 1]?.t} (read-only)</span>
+            <span className="text-muted-foreground">saved {new Date(viewSnap.released_at).toUTCString().slice(5, 22)} UTC{viewSnap.released_by_name ? ` by ${viewSnap.released_by_name}` : ''}</span>
+            <Button size="sm" variant="outline" className="ml-auto h-7" onClick={() => setViewStage(null)}>Back to current</Button>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-4">
           <div className="min-w-[200px] flex-1">
             <div className="flex items-baseline justify-between mb-1">
