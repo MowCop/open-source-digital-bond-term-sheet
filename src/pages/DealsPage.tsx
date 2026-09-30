@@ -102,10 +102,10 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
         )}
       </div>
 
-      <Tabs defaultValue="view">
+      <Tabs defaultValue="fill">
         <TabsList>
-          <TabsTrigger value="view">View</TabsTrigger>
           <TabsTrigger value="fill">Fill</TabsTrigger>
+          <TabsTrigger value="view">View</TabsTrigger>
         </TabsList>
         <TabsContent value="fill" className="mt-4">
           <TermSheetFill deal={deal} canEdit={canManage} onSave={onSaveFields} />
