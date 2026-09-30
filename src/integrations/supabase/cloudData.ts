@@ -94,6 +94,7 @@ const dealFieldMap: Record<string, string> = {
   ipt: 'ipt', guidance: 'guidance', benchmark: 'benchmark', referenceRate: 'reference_rate',
   createdByOrg: 'created_by_org',
   extractionSnapshot: 'extraction_snapshot',
+  bdtState: 'bdt_state',
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
