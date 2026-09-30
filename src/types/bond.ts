@@ -122,6 +122,14 @@ export interface Deal {
     extractedAt: string;
     extractedBy: string;
   };
+
+  /**
+   * Authoritative ICMA BDT 2.0 term sheet state for this deal.
+   * Every flat field above is a DERIVED CACHE projected from this object on
+   * save (see src/lib/bdt-bridge.ts) and must never be edited independently.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  bdtState?: any;
 }
 
 export interface StageTransition {
