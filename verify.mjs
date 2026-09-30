@@ -1,13 +1,13 @@
 /* Proves the extracted modules reproduce the reference implementation exactly.
    Run: node verify.mjs  (from the handover folder) */
 import { readFileSync, writeFileSync } from "fs";
-import { workedExample } from "./src/example.js";
-import { buildXML } from "./src/bdt-xml.js";
-import { buildEnvelope } from "./src/envelope.js";
-import { checks, tally } from "./src/validate.js";
-import { legendBlocks } from "./src/legends.js";
-import { sheetRows } from "./src/termsheet.js";
-import { FIELDS } from "./src/fields.js";
+import { workedExample } from "./src/lib/termsheet/example.js";
+import { buildXML } from "./src/lib/termsheet/bdt-xml.js";
+import { buildEnvelope } from "./src/lib/termsheet/envelope.js";
+import { checks, tally } from "./src/lib/termsheet/validate.js";
+import { legendBlocks } from "./src/lib/termsheet/legends.js";
+import { sheetRows } from "./src/lib/termsheet/termsheet.js";
+import { FIELDS } from "./src/lib/termsheet/fields.js";
 
 const state = workedExample();
 const xml = buildXML(state);
@@ -26,11 +26,11 @@ if (xml !== ref) {
 }
 
 /* assisted fill smoke test */
-import { ingestBDT, ingestText } from "./src/ingest.js";
-import { emptyState } from "./src/model.js";
+import { ingestBDT, ingestText } from "./src/lib/termsheet/ingest.js";
+import { emptyState } from "./src/lib/termsheet/model.js";
 const blank = emptyState();
 blank.parties = [{ PartyName: "", LEIIdentifier: "", Roles: ["ISSUER"], Ratings: [] }];
-const { JSDOM } = await import("/home/claude/node_modules/jsdom/lib/api.js").catch(() => ({ JSDOM: null }));
+const { JSDOM } = await import("jsdom").catch(() => ({ JSDOM: null }));
 const parser = JSDOM ? new (new JSDOM("").window.DOMParser)() : undefined;
 const fromXml = ingestBDT(blank, readFileSync(process.argv[3] || "schema/icma-bond-data-taxonomy-v2-basic-vanilla-bond.xml", "utf8"), "sample.xml", parser);
 console.log("BDT XML import proposals :", fromXml.length);
