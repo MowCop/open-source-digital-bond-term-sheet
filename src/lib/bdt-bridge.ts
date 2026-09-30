@@ -399,8 +399,7 @@ export function unifiedChecks(state: BdtState, alertText?: string): CheckItem[] 
 
   let extra: ValidationResult[] = [];
   try {
-    const out = validateDeal(deal, { alertText });
-    extra = (Array.isArray(out) ? out : out?.results) ?? [];
+    extra = validateDeal(deal, undefined, deal.stage, alertText)?.results ?? [];
   } catch {
     extra = [];
   }
