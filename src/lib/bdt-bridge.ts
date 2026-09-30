@@ -193,8 +193,24 @@ const FREQ_TO_APP: Record<string, string> = {
   ANNUALLY: 'ANNUAL', SEMIANNUALLY: 'SEMI_ANNUAL', QUARTERLY: 'QUARTERLY', MONTHLY: 'MONTHLY',
 };
 const FREQ_TO_BDT: Record<string, string> = {
-  ANNUAL: 'ANNUALLY', SEMI_ANNUAL: 'SEMIANNUALLY', QUARTERLY: 'QUARTERLY', MONTHLY: 'MONTHLY',
+  ANNUAL: 'ANNUALLY', ANNUALLY: 'ANNUALLY',
+  SEMI_ANNUAL: 'SEMIANNUALLY', SEMIANNUAL: 'SEMIANNUALLY', 'SEMI-ANNUAL': 'SEMIANNUALLY',
+  QUARTERLY: 'QUARTERLY', MONTHLY: 'MONTHLY', 'AT MATURITY': 'ATMATURITY',
 };
+
+/**
+ * Legacy deal columns store dates as free text ("18 October 2036"). BDT date
+ * fields are ISO-8601, so normalise on the way in; unparseable text is dropped
+ * rather than guessed at.
+ */
+export function toISODate(v: unknown): string {
+  const t = s(v).trim();
+  if (!t) return '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+  const d = new Date(t);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
 
 const MANAGER_ROLE_RE = /MANAGER|BOOKRUNNER|COORDINATOR|ARRANGER/;
 
@@ -234,16 +250,17 @@ function seedFromDeal(deal: Deal): BdtState {
   }
 
   set(P.denomination, deal.specifiedDenomination ? String(parseAmount(deal.specifiedDenomination)) : '');
-  set(P.maturityDate, deal.maturityDate);
+  set(P.maturityDate, toISODate(deal.maturityDate));
   set(P.maturityType, 'FIXED');
   set(P.interestType, deal.interestType || 'FIXED');
   const cpn = num(deal.coupon);
   if (Number.isFinite(cpn)) set(P.coupon, String(cpn));
-  set(P.couponFreq, FREQ_TO_BDT[s(deal.interestPaymentFrequency)] || '');
+  set(P.couponFreq, FREQ_TO_BDT[s(deal.interestPaymentFrequency).toUpperCase().replace(/_/g, ' ').trim().replace(/ /g, '_')]
+    || FREQ_TO_BDT[s(deal.interestPaymentFrequency).toUpperCase()] || '');
   set(P.dayCount, s(deal.dayCountFraction).replace(/_/g, '/'));
-  set(P.pricingDate, deal.pricingDate);
-  set(P.issueDate, deal.issueDate);
-  set(P.settlementDate, deal.settlementDate);
+  set(P.pricingDate, toISODate(deal.pricingDate));
+  set(P.issueDate, toISODate(deal.issueDate));
+  set(P.settlementDate, toISODate(deal.settlementDate));
   set(P.issuePrice, num(deal.issuePrice));
   set(P.reofferPrice, num(deal.reofferPrice));
   set(P.reofferYield, num(deal.reofferYield));
