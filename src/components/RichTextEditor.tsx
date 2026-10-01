@@ -137,6 +137,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
       TableHeader.configure({ HTMLAttributes: { class: 'border border-border bg-muted px-2 py-1 text-left font-semibold' } }),
       TableCell.configure({ HTMLAttributes: { class: 'border border-border px-2 py-1 align-top' } }),
     ],
+    shouldRerenderOnTransaction: true,
     content: value || '',
     editorProps: {
       attributes: {

@@ -377,3 +377,11 @@
   margin: 0;
 }
 
+
+/* Editable tables in the rich text editor */
+.tiptap table { table-layout: fixed; position: relative; }
+.tiptap td, .tiptap th { position: relative; min-width: 4rem; }
+.tiptap .selectedCell::after { content: ''; position: absolute; inset: 0; background: hsl(var(--primary) / 0.15); pointer-events: none; }
+.tiptap .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: 0; width: 4px; background: hsl(var(--primary)); pointer-events: none; }
+.tiptap.resize-cursor { cursor: col-resize; }
+.tiptap .tableWrapper { overflow-x: auto; }
