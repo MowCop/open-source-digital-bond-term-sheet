@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import {
   Bold, Italic, Strikethrough, List, ListOrdered, Quote,
   Heading1, Heading2, Link2, Undo, Redo, Code, ChevronDown, ChevronRight,
+  Table as TableIcon, Rows3, Columns3, Trash2, Minus, LayoutTemplate,
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -45,7 +46,11 @@ function ToolbarButton({
   );
 }
 
+const TEMPLATE_ROWS = ['Issuer', 'Rating', 'Format', 'Currency', 'Size', 'Tenor / Maturity', 'Coupon', 'IPT', 'Guidance', 'Pricing date', 'Settlement date', 'Denomination', 'Governing law', 'Listing', 'Bookrunners', 'ISIN'];
+const NEW_ISSUE_TEMPLATE = `<table><tbody><tr><th>Term</th><th>Detail</th></tr>${TEMPLATE_ROWS.map(r => `<tr><td><p>${r}</p></td><td><p></p></td></tr>`).join('')}</tbody></table><p></p>`;
+
 function Toolbar({ editor }: { editor: Editor }) {
+  const inTable = editor.isActive('table');
   const setLink = () => {
     const prev = editor.getAttributes('link').href as string | undefined;
     const url = window.prompt('Link URL', prev || 'https://');
@@ -93,6 +98,22 @@ function Toolbar({ editor }: { editor: Editor }) {
         <Link2 className="h-4 w-4" />
       </ToolbarButton>
       <Separator orientation="vertical" className="mx-1 h-6" />
+      <ToolbarButton onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} title="Insert table (3×3)">
+        <TableIcon className="h-4 w-4" />
+      </ToolbarButton>
+      <ToolbarButton onClick={() => editor.chain().focus().insertContent(NEW_ISSUE_TEMPLATE).run()} title="Insert new issue term sheet template">
+        <LayoutTemplate className="h-4 w-4" />
+      </ToolbarButton>
+      {inTable && (
+        <>
+          <ToolbarButton onClick={() => editor.chain().focus().addRowAfter().run()} title="Add row below"><Rows3 className="h-4 w-4" /></ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().deleteRow().run()} title="Delete row"><Minus className="h-4 w-4" /></ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().addColumnAfter().run()} title="Add column right"><Columns3 className="h-4 w-4" /></ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().deleteColumn().run()} title="Delete column"><Minus className="h-4 w-4 rotate-90" /></ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().deleteTable().run()} title="Delete table"><Trash2 className="h-4 w-4" /></ToolbarButton>
+        </>
+      )}
+      <Separator orientation="vertical" className="mx-1 h-6" />
       <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
         <Undo className="h-4 w-4" />
       </ToolbarButton>
@@ -111,11 +132,12 @@ export default function RichTextEditor({ value, onChange, placeholder, className
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { class: 'text-primary underline underline-offset-2' } }),
       Placeholder.configure({ placeholder: placeholder || 'Write here…' }),
       Image.configure({ inline: false, allowBase64: true, HTMLAttributes: { class: 'max-w-full h-auto rounded' } }),
-      Table.configure({ resizable: false, HTMLAttributes: { class: 'border-collapse w-full my-2' } }),
+      Table.configure({ resizable: true, HTMLAttributes: { class: 'border-collapse w-full my-2' } }),
       TableRow,
       TableHeader.configure({ HTMLAttributes: { class: 'border border-border bg-muted px-2 py-1 text-left font-semibold' } }),
       TableCell.configure({ HTMLAttributes: { class: 'border border-border px-2 py-1 align-top' } }),
     ],
+    shouldRerenderOnTransaction: true,
     content: value || '',
     editorProps: {
       attributes: {
