@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 
 const COLLAPSE_KEY = 'bondvdr.aiDraft.chatOpen';
 const HEIGHT_KEY = 'bondvdr.aiDraft.chatHeight';
-const MIN_HEIGHT = 0;
+const MIN_HEIGHT = 80;
 const DEFAULT_HEIGHT = 192;
 
 interface Props {
@@ -98,7 +98,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
       if (!dragRef.current) return;
       const dy = (ev.clientY - dragRef.current.startY) * (invert ? -1 : 1);
       const next = Math.min(maxH, Math.max(MIN_HEIGHT, dragRef.current.startH + dy));
-      if (empty) setEmptyHeight(next); else setMessagesHeight(next);
+      if (empty) setEmptyHeight(Math.max(0, dragRef.current.startH + dy)); else setMessagesHeight(next);
     };
     const onUp = () => {
       dragRef.current = null;
@@ -298,7 +298,7 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
 
           {/* Resize grip — drag up/down to size the chat area */}
           <div
-            onMouseDown={e => startResize(e, true)}
+            onMouseDown={e => startResize(e)}
             onDoubleClick={() => { setEmptyHeight(0); setMessagesHeight(DEFAULT_HEIGHT); }}
             title="Drag to resize chat"
             className="group h-2 cursor-ns-resize flex items-center justify-center hover:bg-muted/40"
