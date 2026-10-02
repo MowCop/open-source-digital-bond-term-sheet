@@ -225,6 +225,7 @@ export function dealToBdtState(deal: Deal): BdtState {
   const stored = (deal as unknown as { bdtState?: BdtState }).bdtState;
   if (stored && typeof stored === 'object' && stored.f) {
     const st: BdtState = { ...emptyState(), ...stored, f: { ...stored.f } };
+    for (const k of Object.keys(st.f)) if (String(st.f[k]).trim() === 'NaN') delete st.f[k];
     st.stage = stored.stage || bdtStageForDeal(deal.stage);
     st.deal = stored.deal || deal.issuerName || '';
     return st;
@@ -236,7 +237,7 @@ function seedFromDeal(deal: Deal): BdtState {
   const st = emptyState() as BdtState;
   st.stage = bdtStageForDeal(deal.stage);
   st.deal = deal.issuerName || '';
-  const set = (p: string, v: unknown) => { const t = s(v).trim(); if (t) st.f[p] = t; };
+  const set = (p: string, v: unknown) => { const t = s(v).trim(); if (t && t !== 'NaN') st.f[p] = t; };
 
   set(P.dealIdentifier, deal.id);
   set(P.currency, (deal.currency || '').toUpperCase());
@@ -313,7 +314,7 @@ function seedFromDeal(deal: Deal): BdtState {
  * Pure. Called only on save — the flat columns are never edited directly.
  */
 export function bdtToDealCache(state: BdtState): Partial<Deal> {
-  const v = (p: string) => s(state.f?.[p]).trim();
+  const v = (p: string) => { const t = s(state.f?.[p]).trim(); return t === 'NaN' ? '' : t; };
   const issuer = (state.parties ?? []).find(p => (p.Roles ?? []).includes('ISSUER'));
   const managers = (state.parties ?? []).filter(p => (p.Roles ?? []).some(r => MANAGER_ROLE_RE.test(r)));
   const currency = v(P.currency) || v(P.nominalCurrency);
