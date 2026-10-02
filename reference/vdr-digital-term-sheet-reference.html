@@ -179,6 +179,40 @@ pre.out{font-family:var(--mono);font-size:12px;background:var(--surface-2);borde
 button.mini.primary{background:var(--brass);border-color:var(--brass);color:#fff}
 :root[data-theme="dark"] button.mini.primary{color:#171208}
 .footbar .st{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+
+/* ---------- DLT view ---------- */
+.grid.wide{grid-template-columns:minmax(0,1fr)}
+.grid.wide .sidenav,.grid.wide .checkscol{display:none}
+.dlt-intro h2{font-size:17px}
+.dlt-intro .note{margin-top:4px}
+.dlt-models{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:14px 0 20px;max-width:900px}
+button.dlt-model{text-align:left;display:flex;flex-direction:column;gap:5px;padding:14px 16px;border:1px solid var(--rule-strong);border-left:4px solid var(--rule-strong);background:var(--surface-2)}
+button.dlt-model b{font-size:15px;font-weight:600}
+button.dlt-model span{font-size:12.5px;color:var(--muted);line-height:1.4}
+button.dlt-model.on{border-color:var(--brass);border-left-color:var(--brass);background:var(--brass-soft)}
+button.dlt-model.on span{color:var(--ink)}
+.dlt-empty{font-size:13.5px;color:var(--muted);border:1.5px dashed var(--rule-strong);padding:18px;max-width:900px}
+.dlt-cols{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start}
+@media(max-width:1000px){.dlt-cols{grid-template-columns:minmax(0,1fr)}}
+.dlt-roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:4px 16px;padding:8px 0}
+.dlt-side{position:sticky;top:150px;border:1px solid var(--rule);padding:14px;background:var(--surface-2)}
+@media(max-width:1000px){.dlt-side{position:static}}
+.dlt-side h3{font-size:11.5px;font-family:var(--mono);color:var(--muted);font-weight:500;margin-bottom:6px}
+.dlt-side .dlt-h3gap{margin-top:18px}
+.dlt-scroll{overflow-x:auto}
+.dlt-diff{width:100%;border-collapse:collapse;font-size:12px}
+.dlt-diff th,.dlt-diff td{text-align:left;vertical-align:top;padding:5px 8px 5px 0;border-bottom:1px solid var(--rule)}
+.dlt-diff tr:first-child th{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:500}
+.dlt-diff td{font-family:var(--mono);font-size:11.5px;word-break:break-word}
+.dlt-diff td:last-child{color:var(--brass)}
+.dlt-include{margin-top:14px;padding-top:10px;border-top:1px solid var(--rule);align-items:flex-start}
+.dlt-include input{margin-top:2px;flex:0 0 auto}
+.dlt-out{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px;border-top:1px solid var(--rule-strong);padding-top:16px}
+@media(max-width:900px){.dlt-out{grid-template-columns:minmax(0,1fr)}}
+.dlt-pane h3{font-size:14px}
+.dlt-pane p{font-size:12.5px;color:var(--muted);margin:3px 0 10px}
+.dlt-pane .inline{max-width:300px}
+.dlt-pane pre.out{max-height:60vh}
 </style>
 </head>
 <body>
@@ -207,6 +241,7 @@ button.mini.primary{background:var(--brass);border-color:var(--brass);color:#fff
       <div class="pane on" id="pane-fill"></div>
       <div class="pane" id="pane-sheet"></div>
       <div class="pane" id="pane-xml"></div>
+      <div class="pane" id="pane-dlt"></div>
       <div class="pane" id="pane-env"></div>
       <div class="pane" id="pane-legends"></div>
       <div class="pane" id="pane-dist"></div>
@@ -568,7 +603,7 @@ const ORDER = {"Document": ["ICMABondDataTaxonomy"], "ICMABondDataTaxonomy": ["D
 const LS = "vdr.dts.vanilla.v1";
 const state = {
   stage: 1, deal: "", ver: "0.1", seq: 0,
-  f: {}, contacts: [], parties: [], ids: [], ratings: [], docs: [], releases: []
+  f: {}, contacts: [], parties: [], ids: [], ratings: [], docs: [], releases: [], dlt: null
 };
 let dl = null;
 let fieldFilter = "";
@@ -1195,7 +1230,7 @@ function ensure(root, parts) {
 }
 function sortTree(nd) {
   const ord = ORDER[nd.n];
-  if (ord) nd.c.sort((a, b) => {
+  if (ord && !nd.keep) nd.c.sort((a, b) => {
     const ia = ord.indexOf(a.n), ib = ord.indexOf(b.n);
     return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
   });
@@ -1319,7 +1354,15 @@ function buildEnvelope() {
     documents: state.docs.map(d => ({ name: d.DocumentName, date: d.DocumentDate || null, link: d.DocumentLink || null, version: d.DocumentVersion || null })),
     distribution: { channels: ["api", "mcp", "email", "instant_bloomberg"], recipients: "governed by the bookrunners on this deal" },
     checks: tally(),
-    payload: { format: "ICMA-BDT", version: "2.0.0", encoding: "xml", reference: (v("DocumentInformation/DocumentId") || "document") + ".xml" }
+    payload: { format: "ICMA-BDT", version: "2.0.0", encoding: "xml", reference: (v("DocumentInformation/DocumentId") || "document") + ".xml" },
+    dltView: state.dlt && state.dlt.include && state.dlt.model ? {
+      issuanceModel: state.dlt.model === "native" ? "DLT_NATIVE" : "DIGITAL_TWIN",
+      platform: state.dlt.name || null,
+      payloads: [
+        { format: "ICMA-BDT", version: "2.0.0", encoding: "xml", group: "DLTPlatform", reference: (v("DocumentInformation/DocumentId") || "document") + ".dlt.xml" },
+        { format: "VDR-TOKEN-DESCRIPTOR", version: "0.1", encoding: "json", reference: (v("DocumentInformation/DocumentId") || "document") + ".token.json" }
+      ]
+    } : null
   };
 }
 
@@ -1611,9 +1654,405 @@ function diffSince() {
 }
 
 /* ============================================================
+   DLT view: the same deal record expressed as a DLT bond.
+   Two outputs from one set of inputs:
+   1. BDT 2.0 XML with the DLTPlatform group populated
+      (validates against icma-bond-data-taxonomy.xsd), and
+   2. a token descriptor (JSON) a tokenisation platform can map
+      to its own smart contract.
+   Questions are numbered after the ICMA DLT Bonds Reference
+   Guide (December 2024) so a banker can trace each field.
+   ============================================================ */
+const DLT_ROLES = [
+  ["ISSUANCE_SETTLEMENT", "Primary issuance and settlement"],
+  ["OWNERSHIP_RECORD", "Record and transfer of ownership"],
+  ["LIFECYCLE", "Coupon and redemption payments"],
+  ["REPORTING", "Reporting and sustainability disclosure"]
+];
+const DLT_E = {
+  access: ["PERMISSIONED", "PRIVATE", "CONSORTIUM", "HYBRID", "SEMI_PUBLIC", "PUBLIC"],
+  registrar: ["CENTRAL_ACCOUNT_KEEPER", "TOKENISATION_MANAGER", "CRYPTO_SECURITIES_REGISTRAR", "REGISTRAR", "CSD_ICSD"],
+  standard: ["ERC-3643", "ERC-1400", "ERC-20", "CIP-56", "Platform proprietary"],
+  cash: ["Commercial bank money, off-chain", "Wholesale CBDC", "Central bank money via DLT trigger", "Tokenised bank deposits", "E-money token (MiCAR)"],
+  record: ["On-chain register", "Off-chain register at the ICSD", "Off-chain register at the registrar"],
+  bridge: ["None", "Euroclear", "Clearstream", "Euroclear and Clearstream"]
+};
+function dltDefault() {
+  return {
+    model: "", include: false, roles: [],
+    name: "", type: "", access: "", operator: "", operatorLei: "", decentralised: "false",
+    registrar: "", mic: "", dti: "", chainAddress: "", contractName: "", contractAddress: "",
+    standard: "", symbol: "", fee: "", cash: "", cycle: "", record: "", bridge: "",
+    platformLaw: "", fallback: ""
+  };
+}
+function D() { if (!state.dlt) state.dlt = dltDefault(); return state.dlt; }
+const DLT_FIELDS = [
+  ["Ledger", [
+    ["name", "Platform name", "text", null, "5a", "As the platform is named in the offering documentation."],
+    ["type", "Network or ledger technology", "text", null, "5b", "For example Hyperledger Besu, Canton or Ethereum."],
+    ["access", "Accessibility", "sel", "access", "5c"],
+    ["operator", "Platform operator", "text", null, "5a"],
+    ["operatorLei", "Operator LEI", "text", null, "5a"],
+    ["decentralised", "Operation is decentralised", "bool", null, "5c"],
+    ["registrar", "Registration role on the platform", "sel", "registrar", "5d", "The DLT-specific role the operator performs: central account keeper (Luxembourg), crypto securities registrar (Germany) and so on."],
+    ["mic", "Platform MIC", "text", null, "5a", "Only if the platform is a trading venue."],
+    ["platformLaw", "Law governing the platform rulebook", "text", null, "3d", "ISO country code. Say so here if it differs from the law governing the notes."]
+  ]],
+  ["Token", [
+    ["standard", "Token standard", "sel", "standard", "7c"],
+    ["contractName", "Smart contract name", "text", null, "7a"],
+    ["contractAddress", "Smart contract address", "text", null, "7a", "Usually known only once the token is deployed, often after pricing."],
+    ["chainAddress", "Platform address on chain", "text", null, "5b"],
+    ["dti", "Digital token identifier (DTI)", "text", null, "5b", "ISO 24165. A functionally fungible group DTI is used where a conventional twin exists."],
+    ["symbol", "Token symbol", "text", null, null, "Left empty, it is derived from the issuer, coupon and maturity."],
+    ["fee", "Platform fees", "text", null, "6a"]
+  ]],
+  ["Settlement and record", [
+    ["record", "Definitive record of holdings", "sel", "record", "28b"],
+    ["cash", "Cash leg", "sel", "cash", "36a"],
+    ["cycle", "Settlement cycle", "text", null, "39", "For example T+0 atomic, or T+5 to align with the conventional tranche."],
+    ["bridge", "Link to the ICSDs", "sel", "bridge", "54c"],
+    ["fallback", "Fallback if the ledger fails", "ta", null, "9b", "How the notes would move to a conventional structure, such as a global note in the ICSDs."]
+  ]]
+];
+
+/* ---------- conversion helpers ---------- */
+const STEP = { ANNUALLY: 12, SEMIANNUALLY: 6, QUARTERLY: 3, MONTHLY: 1, BIMONTHLY: 2, BIANNUALLY: 24 };
+function addMonths(iso, m) {
+  const d = new Date(iso + "T00:00:00Z"); const day = d.getUTCDate();
+  d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() + m);
+  const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(day, last)); return d.toISOString().slice(0, 10);
+}
+function couponDates() {
+  const first = v("IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/FirstPayment/PaymentDate");
+  const mat = v("IssuanceDataGroup/Product/Maturity/MaturityDate");
+  const step = STEP[v("IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/InterestPaymentFrequency")];
+  if (!first || !mat || !step) return [];
+  const out = []; let d = first, i = 0;
+  while (d < mat && i < 400) { out.push(d); i++; d = addMonths(first, step * i); }
+  out.push(mat); return [...new Set(out)];
+}
+function issuerParty() { return state.parties.find(p => (p.Roles || []).includes("ISSUER")) || {}; }
+function tokenSymbol() {
+  if (D().symbol) return D().symbol;
+  const iss = (issuerParty().PartyName || "").replace(/[^A-Za-z ]/g, "").trim().split(/\s+/)[0] || "BOND";
+  const cpn = v("IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestRate");
+  const yy = (v("IssuanceDataGroup/Product/Maturity/MaturityDate") || "").slice(2, 4);
+  return [iss.slice(0, 4).toUpperCase(), cpn, yy].filter(Boolean).join(" ");
+}
+function roleText() {
+  const r = D().roles.map(k => (DLT_ROLES.find(x => x[0] === k) || [k, k])[1]);
+  if (D().model === "twin") r.unshift("Digital twin of an ICSD-held security; the ICSD record is definitive");
+  return r.join("; ");
+}
+function leaf(name, val) { const k = node(name); k.t = String(val); return k; }
+function dropPath(root, parts) {
+  let cur = root;
+  for (let i = 0; i < parts.length - 1; i++) { cur = cur.c.find(x => x.n === parts[i]); if (!cur) return; }
+  cur.c = cur.c.filter(x => x.n !== parts[parts.length - 1]);
+}
+function setLeaf(root, parts, val) { const n = ensure(root, parts); n.c = []; n.t = String(val); }
+
+/* ---------- 1. BDT 2.0 XML with the DLT group ---------- */
+function buildDLTTree() {
+  const d = D(), root = buildTree(), native = d.model === "native";
+  const IDG = "IssuanceDataGroup";
+  setLeaf(root, [IDG, "Product", "DLTBondIndicator"], native ? "true" : "false");
+
+  if (native) {
+    /* a DLT-native note has no global note, depositary or safekeeping structure */
+    ["InitialFormOfNote", "AfterExchangeFormOfNote", "FinalFormOfNote", "SafeKeepingStructure"].forEach(n => dropPath(root, [IDG, "Product", n]));
+    setLeaf(root, [IDG, "Product", "InitialFormOfNote", "PhysicalFormOfNote"], "DEMATERIALISED");
+    setLeaf(root, [IDG, "Product", "InitialFormOfNote", "LegalTitleFormOfNote"], d.record === "On-chain register" ? "REGISTERED" : "BOOK_ENTRY");
+    ["GlobalNoteIdentifier", "PlaceOfDeposit"].forEach(n => dropPath(root, [IDG, "Issuance", n]));
+    if (!d.bridge || d.bridge === "None") ["SecuritiesClearingSystem", "SecuritiesSettlementSystem"].forEach(n => dropPath(root, [IDG, "Issuance", n]));
+    if (d.operator) {
+      const pg = ensure(root, [IDG, "PartyGroup"]);
+      const p = node("Party"); p.c.push(leaf("PartyName", d.operator));
+      if (d.operatorLei) p.c.push(leaf("LEIIdentifier", d.operatorLei));
+      ["PLATFORM_OPERATOR", d.registrar].filter(Boolean).forEach(r => { const pr = node("PartyRole"); pr.c.push(leaf("PartyRoleType", r)); p.c.push(pr); });
+      pg.c.push(p);
+    }
+  }
+  if (d.dti) {
+    const sl = ensure(root, [IDG, "Product", "SecurityIdentifierList"]);
+    const si = node("SecurityIdentifier"); si.c.push(leaf("DTI", d.dti)); sl.c.push(si);
+  }
+
+  /* DLTPlatform, children in schema order */
+  const iss = ensure(root, [IDG, "Issuance"]);
+  iss.c = iss.c.filter(x => x.n !== "DLTPlatform");
+  const P = node("DLTPlatform");
+  if (d.type) P.c.push(leaf("Type", d.type));
+  if (d.access) P.c.push(leaf("Accessibility", d.access));
+  if (roleText()) P.c.push(leaf("Role", roleText()));
+  if (d.operator) {
+    const op = node("Operator"), party = node("Operator");
+    party.c.push(leaf("PartyName", d.operator));
+    if (d.operatorLei) party.c.push(leaf("LEIIdentifier", d.operatorLei));
+    const pr = node("PartyRole"); pr.c.push(leaf("PartyRoleType", "PLATFORM_OPERATOR")); party.c.push(pr);
+    op.c.push(party); op.c.push(leaf("Decentralised", d.decentralised === "true" ? "true" : "false"));
+    P.c.push(op);
+  }
+  if (d.name) P.c.push(leaf("Name", d.name));
+  if (d.fee) P.c.push(leaf("Fee", d.fee));
+  const id = node("Identifier"); id.keep = true;
+  if (d.mic) id.c.push(leaf("MIC", d.mic));
+  if (d.operatorLei) id.c.push(leaf("LEI", d.operatorLei));
+  if (d.dti) id.c.push(leaf("DTI", d.dti));
+  if (d.chainAddress) id.c.push(leaf("BlockChainAddress", d.chainAddress));
+  if (id.c.length) P.c.push(id);
+  if (d.contractName || d.contractAddress || d.standard) {
+    const sc = node("SmartContract");
+    if (d.contractName) sc.c.push(leaf("SmartContractName", d.contractName));
+    sc.c.push(leaf("SmartContractType", native ? "Security token issuance and servicing" : "Digital twin mirror"));
+    if (d.contractAddress) sc.c.push(leaf("SmartContractAddress", d.contractAddress));
+    const tk = node("Token"); tk.c.push(leaf("TokenType", "SECURITY"));
+    if (d.standard) tk.c.push(leaf("TokenTechnicalReference", d.standard));
+    sc.c.push(tk); P.c.push(sc);
+  }
+  if (P.c.length) iss.c.push(P);
+  return sortTree(root);
+}
+function buildDLTXML() {
+  const inner = ser(buildDLTTree(), 1);
+  const m = D().model === "native" ? "DLT-native bond" : "digital twin of a conventional bond";
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<!-- VDR DLT view: ${m}. Stage: ${STAGES[state.stage - 1].t}. Version ${state.ver}.\n     BDT 2.0 payload with the DLTPlatform group. The legal documentation prevails over this digital record. -->\n<Document xmlns="urn:icma:xsd:ICMABondDataTaxonomy">\n${inner}\n</Document>\n`;
+}
+
+/* ---------- 2. Token descriptor ---------- */
+function buildToken() {
+  const d = D(), native = d.model === "native";
+  const den = Number(v("IssuanceDataGroup/Issuance/SpecifiedDenomination/Value")) || null;
+  const size = Number(v("IssuanceDataGroup/Issuance/TotalAggregateAmount/Value")) || null;
+  const rate = Number(v("IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestRate"));
+  const freq = v("IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/InterestPayments/InterestPaymentFrequency");
+  const per = STEP[freq] ? 12 / STEP[freq] : null;
+  const mult = Number(v("IssuanceDataGroup/Issuance/IntegralMultiples/Value")) || null;
+  const unit = mult && den && mult < den && den % mult === 0 ? mult : den;   /* one token per tradable increment */
+  const minTokens = unit && den ? den / unit : null;
+  const regular = unit && rate && per ? +(unit * rate / 100 / per).toFixed(2) : null;
+  const dates = couponDates(), mat = v("IssuanceDataGroup/Product/Maturity/MaturityDate");
+  const tm = v("IssuanceDataGroup/Issuance/TargetMarket/ManufacturerTargetMarketType");
+  const priips = v("IssuanceDataGroup/Issuance/SellingRestrictions/PRIIPsRestriction");
+  const regs = v("IssuanceDataGroup/Issuance/SellingRestrictions/REGS/RegSCode");
+  const claims = [];
+  if (/PROF_AND_ECPS$/.test(tm)) claims.push("PROFESSIONAL_CLIENT_OR_ECP");
+  if (regs && !/NA|NoCode/.test(regs)) claims.push("NON_US_PERSON");
+  if (priips === "NO_EEA") claims.push("NOT_EEA_RETAIL");
+  if (priips === "NO_UK" || v("IssuanceDataGroup/Issuance/SellingRestrictions/CCIRestriction") === "APPLICABLE") claims.push("NOT_UK_RETAIL");
+  const iss = issuerParty();
+  return {
+    vdrTokenDescriptor: "0.1",
+    notice: "Descriptor for mapping to a tokenisation platform. It is not deployable code: the platform's smart contract, rulebook and the offering documentation govern.",
+    issuanceModel: native ? "DLT_NATIVE" : "DIGITAL_TWIN",
+    definitiveRecord: d.record || (native ? null : "Off-chain register at the ICSD"),
+    instrument: {
+      name: v("IssuanceDataGroup/Product/SecurityShortName") || state.deal || null,
+      issuer: { name: iss.PartyName || null, lei: iss.LEIIdentifier || null },
+      isin: (state.ids.find(x => x.Type === "ISIN") || state.ids.find(x => x.Type === "TEMPORARY_ISIN") || {}).Value || null,
+      dti: d.dti || null,
+      currency: v("IssuanceDataGroup/Issuance/SpecifiedCurrency") || null,
+      nominalAmount: size, denomination: den,
+      issueDate: v("IssuanceDataGroup/Issuance/IssueDate") || null, maturityDate: mat || null,
+      seniority: v("IssuanceDataGroup/Product/StatusOfNote/Seniority") || null,
+      governingLaw: v("IssuanceDataGroup/Issuance/GoverningLaw/CountryCode") || null,
+      platformLaw: d.platformLaw || null
+    },
+    token: {
+      standard: d.standard || null, type: "SECURITY", symbol: tokenSymbol(),
+      decimals: 0, unitNominal: unit,
+      totalSupply: size && unit ? String(Math.round(size / unit)) : null,
+      mint: { date: v("IssuanceDataGroup/Issuance/SettlementDate") || null, to: native ? "Issuer distribution wallet, then managers' wallets against payment" : "Mirror of ICSD positions" },
+      burn: { date: mat || null, reason: "Redemption at maturity" }
+    },
+    network: {
+      platform: d.name || null, ledger: d.type || null, accessibility: d.access || null,
+      operator: d.operator ? { name: d.operator, lei: d.operatorLei || null, decentralised: d.decentralised === "true" } : null,
+      registrationRole: d.registrar || null, contract: d.contractAddress || null, platformAddress: d.chainAddress || null
+    },
+    compliance: {
+      identityRegistry: "Required. Only whitelisted, identity-verified wallets may hold or receive tokens.",
+      eligibilityClaims: claims,
+      minimumHolding: minTokens ? minTokens + " tokens (" + den + " " + (v("IssuanceDataGroup/Issuance/SpecifiedCurrency") || "") + " nominal, the minimum denomination)" : null,
+      transferIncrement: unit ? "1 token (" + unit + " nominal). A transfer that leaves either wallet holding fewer than the minimum, other than zero, is rejected." : null
+    },
+    lifecycle: {
+      automated: d.roles.includes("LIFECYCLE"),
+      dayCount: v("IssuanceDataGroup/Product/DayCountFraction") || null,
+      coupon: rate ? { rate: rate, frequency: freq || null, regularAmountPerToken: regular } : null,
+      schedule: dates.map((dt, i) => ({ date: dt, event: dt === mat ? "COUPON_AND_REDEMPTION" : "COUPON", amountPerToken: dt === mat && unit ? +(unit + (regular || 0)).toFixed(2) : regular, note: i === 0 ? "First period may be broken; confirm with the calculation agent" : undefined })),
+      redemption: { date: mat || null, percentOfNominal: Number(v("IssuanceDataGroup/Issuance/Redemption/FinalRedemptionPercentage")) || 100 }
+    },
+    settlement: {
+      model: v("IssuanceDataGroup/Issuance/Delivery") || null, cashLeg: d.cash || null, cycle: d.cycle || null,
+      settlementDate: v("IssuanceDataGroup/Issuance/SettlementDate") || null, icsdLink: d.bridge || null
+    },
+    fallback: d.fallback || null,
+    references: {
+      bdtPayload: (v("DocumentInformation/DocumentId") || "termsheet") + ".dlt.xml",
+      stage: STAGES[state.stage - 1].k, termSheetVersion: state.ver,
+      legalPrevails: true
+    }
+  };
+}
+
+/* ---------- readiness against the ICMA DLT Bonds Reference Guide ---------- */
+function dltChecks() {
+  const d = D(), out = [], native = d.model === "native";
+  const add = (q, l, ok, msg, level) => out.push({ q, l, lv: ok ? "pass" : (level || "warn"), msg });
+  add("Q1", "Role of DLT stated", d.roles.length, "Tick what the ledger does for this bond.", "fail");
+  add("Q3d", "Platform governing law", d.platformLaw, "State the law governing the platform rulebook.");
+  add("Q5a", "Operator identified", d.operator && d.operatorLei, "Name the operator and give its LEI.", "fail");
+  add("Q5b", "Digital token identifier", d.dti, "Add the DTI once assigned.");
+  add("Q7c", "Token standard", d.standard, "Choose the token standard.", "fail");
+  add("Q28", "Definitive record", d.record, "Say which record is definitive for legal purposes.", "fail");
+  add("Q35", "Settlement model", has("IssuanceDataGroup/Issuance/Delivery"), "Set DvP or free of payment on the Fill tab.");
+  if (v("IssuanceDataGroup/Issuance/Delivery") === "DVP") add("Q36", "Cash leg for DvP", d.cash, "Say what form of cash settles the DvP.", "fail");
+  add("Q39", "Settlement cycle", d.cycle, "State the target settlement cycle.");
+  if (native) {
+    add("Q9", "Fallback if the ledger fails", d.fallback, "Describe how the notes would move to a conventional structure.", "fail");
+    const tefra = v("IssuanceDataGroup/Issuance/SellingRestrictions/TEFRA/TefraCode");
+    if (/TEFRA_[CD]/.test(tefra)) add("Q16b", "TEFRA category", false, `${tefra.replace("_", " ")} is set but the DLT-native notes are in registered form. Confirm the category with counsel.`);
+    if (has("IssuanceDataGroup/Issuance/PlaceOfDeposit") && (!d.bridge || d.bridge === "None")) add("Q24", "Place of deposit", false, "The conventional record names an ICSD depositary. The DLT view drops it because no ICSD link is set.");
+  } else {
+    add("Q37c", "Link to the conventional security", d.dti || d.bridge && d.bridge !== "None", "Give a DTI or ICSD link so the twin can be matched to the ISIN.");
+  }
+  return out;
+}
+
+/* ---------- what changes between the two records ---------- */
+function dltDiffRows() {
+  const native = D().model === "native", d = D();
+  const conv = {
+    form: [v("IssuanceDataGroup/Product/InitialFormOfNote/LegalTitleFormOfNote"), v("IssuanceDataGroup/Product/SafeKeepingStructure")].filter(Boolean).join(", ") || "Global note",
+    hold: v("IssuanceDataGroup/Issuance/PlaceOfDeposit") || "Common safekeeper or depositary",
+    settle: [v("IssuanceDataGroup/Issuance/SecuritiesSettlementSystem/Code"), v("IssuanceDataGroup/Issuance/Delivery")].filter(Boolean).join(", ") || "ICSD",
+    pay: (state.parties.find(p => (p.Roles || []).includes("PRINCIPAL_PAYING_AGENT")) || {}).PartyName || "Principal paying agent"
+  };
+  return [
+    ["Form of note", conv.form, native ? "Dematerialised token, " + (d.record === "On-chain register" ? "registered on chain" : "book entry") : "Unchanged. The token mirrors the global note"],
+    ["Record of holders", conv.hold, native ? (d.record || "Choose the definitive record") : "ICSD record is definitive; ledger mirrors it"],
+    ["Settlement", conv.settle, [d.name || "Platform", d.cash, d.cycle].filter(Boolean).join(", ")],
+    ["Coupon and redemption", conv.pay, d.roles.includes("LIFECYCLE") ? "Smart contract pays " + (d.cash ? d.cash.charAt(0).toLowerCase() + d.cash.slice(1) : "the cash leg") + " to token holders" : conv.pay + ", off chain"],
+    ["Identifiers", (state.ids.find(x => /ISIN/.test(x.Type)) || {}).Value || "ISIN", [((state.ids.find(x => /ISIN/.test(x.Type)) || {}).Value), d.dti && "DTI " + d.dti].filter(Boolean).join(" + ") || "ISIN, DTI to follow"]
+  ];
+}
+
+/* ---------- pane ---------- */
+function dltInput(key, label, type, enumKey, q, hint) {
+  const d = D(), row = el("div", "row");
+  row.appendChild(el("div", "num", q ? "Q" + q : ""));
+  const lab = el("label", null, label); lab.htmlFor = "dlt_" + key; row.appendChild(lab);
+  const wrap = el("div", "val"); let n;
+  if (type === "sel") {
+    n = el("select"); n.appendChild(el("option", null, ""));
+    DLT_E[enumKey].forEach(o => { const op = el("option", null, o); op.value = o; n.appendChild(op); });
+    n.value = d[key];
+  } else if (type === "bool") {
+    const lb = el("label", "chk"); n = document.createElement("input"); n.type = "checkbox"; n.checked = d[key] === "true";
+    n.id = "dlt_" + key; lb.appendChild(n); lb.appendChild(el("span", null, n.checked ? "Yes" : "No")); wrap.appendChild(lb);
+    n.addEventListener("change", () => { d[key] = n.checked ? "true" : "false"; renderDLT(); save(); });
+    row.appendChild(wrap); return row;
+  } else if (type === "ta") { n = el("textarea"); n.className = "plain"; n.value = d[key]; }
+  else { n = document.createElement("input"); n.type = "text"; n.value = d[key]; }
+  n.id = "dlt_" + key;
+  n.addEventListener("input", () => { d[key] = n.value; });
+  n.addEventListener("change", () => { d[key] = n.value; renderDLT(); save(); });
+  wrap.appendChild(n); if (hint) wrap.appendChild(el("div", "hint", hint));
+  row.appendChild(wrap); return row;
+}
+function renderDLT() {
+  const host = document.getElementById("pane-dlt"); host.innerHTML = "";
+  const d = D();
+  const intro = el("div", "dlt-intro");
+  intro.appendChild(el("h2", null, "Issue this bond on a ledger"));
+  intro.appendChild(el("p", "note", "The term sheet stays the master record. This view converts it into a DLT bond in two forms: BDT 2.0 XML with the DLT platform group filled in, and a token descriptor a tokenisation platform can map to its smart contract. Numbers beside each question refer to the ICMA DLT Bonds Reference Guide."));
+  host.appendChild(intro);
+
+  /* the model choice is the decision the bank makes per deal */
+  const pick = el("div", "dlt-models"); pick.setAttribute("role", "radiogroup"); pick.setAttribute("aria-label", "Issuance model");
+  [["native", "DLT-native bond", "The token is the security. Ownership is recorded on the platform, and there is no global note or depositary unless the ICSDs are linked in."],
+   ["twin", "Digital twin", "The conventional global note in the ICSDs stays the legal security. The ledger carries a mirror for faster data, servicing and settlement experiments."]]
+    .forEach(([k, t, s]) => {
+      const b = el("button", "dlt-model" + (d.model === k ? " on" : ""));
+      b.setAttribute("role", "radio"); b.setAttribute("aria-checked", d.model === k);
+      b.appendChild(el("b", null, t)); b.appendChild(el("span", null, s));
+      b.onclick = () => { d.model = k; if (!d.roles.length) d.roles = k === "native" ? ["ISSUANCE_SETTLEMENT", "OWNERSHIP_RECORD", "LIFECYCLE"] : ["REPORTING"]; renderDLT(); save(); };
+      pick.appendChild(b);
+    });
+  host.appendChild(pick);
+
+  if (!d.model) {
+    host.appendChild(el("div", "dlt-empty", "Choose a model to see the DLT version of this term sheet. The choice is made per deal, and you can switch it at any time without touching the conventional record."));
+    return;
+  }
+
+  const cols = el("div", "dlt-cols");
+  /* left: questions */
+  const form = el("div");
+  const rs = el("section", "block"); const h = el("h2"); h.appendChild(el("span", null, "What the ledger does")); h.appendChild(el("em", null, "Q1")); rs.appendChild(h);
+  const rl = el("div", "dlt-roles");
+  DLT_ROLES.forEach(([k, l]) => {
+    const lb = el("label", "chk"); const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = d.roles.includes(k);
+    cb.onchange = () => { d.roles = cb.checked ? [...d.roles, k] : d.roles.filter(x => x !== k); renderDLT(); save(); };
+    lb.appendChild(cb); lb.appendChild(el("span", null, l)); rl.appendChild(lb);
+  });
+  rs.appendChild(rl); form.appendChild(rs);
+  DLT_FIELDS.forEach(([title, rows]) => {
+    const s = el("section", "block"); const hh = el("h2"); hh.appendChild(el("span", null, title)); s.appendChild(hh);
+    rows.forEach(r => s.appendChild(dltInput(...r)));
+    form.appendChild(s);
+  });
+  cols.appendChild(form);
+
+  /* right: checks and what changes */
+  const side = el("aside", "dlt-side");
+  const cs = dltChecks(), ok = cs.filter(c => c.lv === "pass").length;
+  side.appendChild(el("h3", null, "Readiness against the ICMA guide"));
+  side.appendChild(el("div", "tally", `${ok} of ${cs.length} answered`));
+  const m = el("div", "meter"); const mi = el("i"); mi.style.width = Math.round(100 * ok / cs.length) + "%"; m.appendChild(mi); side.appendChild(m);
+  cs.forEach(c => {
+    const r = el("div", "check"); r.appendChild(el("span", "dot " + c.lv));
+    const t = el("div"); t.appendChild(el("b", null, c.q + " " + c.l)); if (c.lv !== "pass") t.appendChild(el("p", null, c.msg));
+    r.appendChild(t); side.appendChild(r);
+  });
+  side.appendChild(el("h3", "dlt-h3gap", "What changes from the conventional record"));
+  const tb = el("table", "dlt-diff");
+  const hr = el("tr"); ["", "Conventional", d.model === "native" ? "DLT-native" : "Digital twin"].forEach(x => hr.appendChild(el("th", null, x))); tb.appendChild(hr);
+  dltDiffRows().forEach(([k, a, b]) => { const tr = el("tr"); tr.appendChild(el("th", null, k)); tr.appendChild(el("td", null, a)); tr.appendChild(el("td", null, b)); tb.appendChild(tr); });
+  const sw = el("div", "dlt-scroll"); sw.appendChild(tb); side.appendChild(sw);
+  const inc = el("label", "chk dlt-include"); const ic = document.createElement("input"); ic.type = "checkbox"; ic.checked = !!d.include;
+  ic.onchange = () => { d.include = ic.checked; renderDLT(); save(); };
+  inc.appendChild(ic); inc.appendChild(el("span", null, "Send the DLT view with each release, alongside the standard term sheet"));
+  side.appendChild(inc);
+  cols.appendChild(side);
+  host.appendChild(cols);
+
+  /* outputs, side by side */
+  const out = el("div", "dlt-out");
+  const docId = v("DocumentInformation/DocumentId") || "termsheet";
+  [["BDT 2.0 XML with DLT group", "Validates against the ICMA schema. Any BDT-aware system reads it unchanged.", buildDLTXML(), docId + ".dlt.xml"],
+   ["Token descriptor", "For the tokenisation platform: supply, eligibility claims, coupon schedule and settlement.", JSON.stringify(buildToken(), (k, val) => val === undefined ? undefined : val, 2), docId + ".token.json"]]
+    .forEach(([t, s, body, fn]) => {
+      const c = el("div", "dlt-pane");
+      c.appendChild(el("h3", null, t)); c.appendChild(el("p", null, s));
+      const bar = el("div", "inline");
+      const b1 = el("button", null, "Download"); b1.onclick = () => download(fn, body);
+      const b2 = el("button", null, "Copy"); b2.onclick = () => copy(body);
+      bar.appendChild(b1); bar.appendChild(b2); c.appendChild(bar);
+      const pre = el("pre", "out", body); pre.style.marginTop = "10px"; c.appendChild(pre);
+      out.appendChild(c);
+    });
+  host.appendChild(out);
+}
+
+/* ============================================================
    Chrome
    ============================================================ */
-const TABS = [["fill", "Fill"], ["sheet", "Term sheet"], ["legends", "Legends"], ["xml", "BDT XML"], ["env", "Envelope"], ["dist", "Distribution"], ["log", "Release log"]];
+const TABS = [["fill", "Fill"], ["sheet", "Term sheet"], ["legends", "Legends"], ["xml", "BDT XML"], ["dlt", "DLT view"], ["env", "Envelope"], ["dist", "Distribution"], ["log", "Release log"]];
 let tab = "fill";
 function renderTabs() {
   const host = document.getElementById("tabs"); host.innerHTML = "";
@@ -1623,6 +2062,7 @@ function renderTabs() {
     host.appendChild(b);
   });
   TABS.forEach(([k]) => document.getElementById("pane-" + k).classList.toggle("on", k === tab));
+  document.querySelector(".grid").classList.toggle("wide", tab === "dlt");
   document.getElementById("sidenav").style.visibility = tab === "fill" ? "visible" : "hidden";
   document.getElementById("checkscol").style.visibility = tab === "dist" || tab === "log" || tab === "legends" ? "hidden" : "visible";
 }
@@ -1637,6 +2077,7 @@ function renderRail() {
     li.appendChild(b); host.appendChild(li);
   });
   document.getElementById("stagePill").textContent = `Stage ${state.stage} · ${STAGES[state.stage - 1].t}`;
+  const dn = document.getElementById("dealName"); if (document.activeElement !== dn) dn.value = state.deal || "";
   document.getElementById("verLbl").textContent = state.ver;
   document.getElementById("dealRef").textContent = v("IssuanceDataGroup/Issuance/DealIdentifier") || "no deal reference";
 }
@@ -1657,6 +2098,7 @@ function renderAll() {
   if (tab === "fill") renderForm();
   if (tab === "sheet") renderSheet();
   if (tab === "xml") renderXML();
+  if (tab === "dlt") renderDLT();
   if (tab === "env") renderEnv();
   if (tab === "legends") renderLegends();
   if (tab === "dist") renderDist();
@@ -1877,6 +2319,14 @@ function loadExample() {
     "x:ratingsDisclaimer": "Each rating agency named is registered under Regulation (EC) No 1060/2009 as amended and, for United Kingdom purposes, under that regulation as it forms part of UK domestic law."
   };
   state.f = Object.assign({}, F);
+  state.dlt = Object.assign(dltDefault(), {
+    model: "native", include: true, roles: ["ISSUANCE_SETTLEMENT", "OWNERSHIP_RECORD", "LIFECYCLE"],
+    name: "Meridian Ledger", type: "Hyperledger Besu", access: "PERMISSIONED",
+    operator: "Meridian Digital Markets S.A.", operatorLei: "529900MERIDLEDGER076", decentralised: "false",
+    registrar: "CENTRAL_ACCOUNT_KEEPER", platformLaw: "LU", standard: "ERC-3643", contractName: "AurelisBond2031",
+    cash: "Central bank money via DLT trigger", cycle: "T+5, atomic DvP on the settlement date", record: "On-chain register",
+    bridge: "Euroclear and Clearstream", fallback: "If the platform cannot operate, the issuer may replace the notes with a permanent global note held through Euroclear, under the conversion mechanics in the base prospectus."
+  });
   refreshAuto(); renderAll(); save();
   toast("Worked example loaded. Entities and figures are fictional.");
 }
