@@ -99,6 +99,11 @@ export default function TermSheetFill({ deal, canEdit: canEditProp, onSave }: Pr
 
   const state: BdtState = viewSnap ? { ...viewSnap.bdt_state_snapshot, stage: viewStage as number } : liveState;
   const liveStage = liveState.stage;
+  const baseStage = bdtStageForDeal(deal.stage);
+  // Term sheet steps with no matching deal stage (IPT, Allocated) can be chosen as the save step.
+  const BETWEEN_STAGES = [2, 6];
+  const canPickStep = (n: number) => canEditProp && n === baseStage + 1 && BETWEEN_STAGES.includes(n);
+  const pickStep = (n: number) => { setViewStage(null); setState(st => ({ ...st, stage: n })); setDirty(true); };
   const stageIdx = state.stage;
   const checkItems: CheckItem[] = useMemo(() => {
     try { return unifiedChecks(state); } catch { return []; }
@@ -248,14 +253,14 @@ export default function TermSheetFill({ deal, canEdit: canEditProp, onSave }: Pr
             const active = n === stageIdx;
             const done = n < liveStage;
             const hasSnap = snaps.some(x => x.stage === n);
-            const clickable = n === liveStage || (n < liveStage && hasSnap);
+            const clickable = n === liveStage || (n < liveStage && hasSnap) || canPickStep(n) || (n === baseStage && liveStage !== baseStage);
             return (
               <div key={s.k} className="flex items-center gap-1.5">
                 <button
                   type="button"
                   disabled={!clickable}
-                  onClick={() => setViewStage(n === liveStage ? null : n)}
-                  title={clickable ? (n === liveStage ? 'Current stage' : `View what was entered at ${s.t}`) : n < liveStage ? 'No saved record for this stage' : undefined}
+                  onClick={() => { if (canPickStep(n) && liveStage !== n) pickStep(n); else if (n === baseStage && liveStage !== baseStage && viewStage == null) pickStep(n); else setViewStage(n === liveStage ? null : n); }}
+                  title={canPickStep(n) && liveStage !== n ? `Save this update as ${s.t}` : clickable ? (n === liveStage ? 'Current stage' : `View what was entered at ${s.t}`) : n < liveStage ? 'No saved record for this stage' : undefined}
                   className={[
                     'text-[11px] px-2 py-1 rounded-md border whitespace-nowrap transition-colors',
                     active
@@ -276,6 +281,11 @@ export default function TermSheetFill({ deal, canEdit: canEditProp, onSave }: Pr
           })}
         </div>
 
+        {!viewSnap && liveStage !== baseStage && (
+          <div className="rounded-md border border-primary/40 px-3 py-1.5 text-xs text-primary">
+            Saving as: {STAGES[liveStage - 1]?.t}. The deal's own stage stays the same.
+          </div>
+        )}
         {viewSnap && (
           <div className="flex flex-wrap items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-xs">
             <span className="font-medium text-primary">Viewing {STAGES[(viewStage as number) - 1]?.t} (read-only)</span>
