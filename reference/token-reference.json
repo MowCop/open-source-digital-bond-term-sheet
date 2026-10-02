@@ -1,0 +1,118 @@
+{
+  "vdrTokenDescriptor": "0.1",
+  "notice": "Descriptor for mapping to a tokenisation platform. It is not deployable code: the platform's smart contract, rulebook and the offering documentation govern.",
+  "issuanceModel": "DLT_NATIVE",
+  "definitiveRecord": "On-chain register",
+  "instrument": {
+    "name": "AURL 3 3/8 10/13/31",
+    "issuer": {
+      "name": "Aurelis Utilities N.V.",
+      "lei": "5299001QNPFY8V4JEP73"
+    },
+    "isin": "XS3012345677",
+    "dti": null,
+    "currency": "EUR",
+    "nominalAmount": 500000000,
+    "denomination": 100000,
+    "issueDate": "2026-10-13",
+    "maturityDate": "2031-10-13",
+    "seniority": "SENIOR",
+    "governingLaw": "GB",
+    "platformLaw": "LU"
+  },
+  "token": {
+    "standard": "ERC-3643",
+    "type": "SECURITY",
+    "symbol": "AURE 3.375 31",
+    "decimals": 0,
+    "unitNominal": 1000,
+    "totalSupply": "500000",
+    "mint": {
+      "date": "2026-10-13",
+      "to": "Issuer distribution wallet, then managers' wallets against payment"
+    },
+    "burn": {
+      "date": "2031-10-13",
+      "reason": "Redemption at maturity"
+    }
+  },
+  "network": {
+    "platform": "Meridian Ledger",
+    "ledger": "Hyperledger Besu",
+    "accessibility": "PERMISSIONED",
+    "operator": {
+      "name": "Meridian Digital Markets S.A.",
+      "lei": "529900MERIDLEDGER076",
+      "decentralised": false
+    },
+    "registrationRole": "CENTRAL_ACCOUNT_KEEPER",
+    "contract": null,
+    "platformAddress": null
+  },
+  "compliance": {
+    "identityRegistry": "Required. Only whitelisted, identity-verified wallets may hold or receive tokens.",
+    "eligibilityClaims": [
+      "PROFESSIONAL_CLIENT_OR_ECP",
+      "NON_US_PERSON",
+      "NOT_EEA_RETAIL",
+      "NOT_UK_RETAIL"
+    ],
+    "minimumHolding": "100 tokens (100000 EUR nominal, the minimum denomination)",
+    "transferIncrement": "1 token (1000 nominal). A transfer that leaves either wallet holding fewer than the minimum, other than zero, is rejected."
+  },
+  "lifecycle": {
+    "automated": true,
+    "dayCount": "ICMA_ACT/ACT",
+    "coupon": {
+      "rate": 3.375,
+      "frequency": "ANNUALLY",
+      "regularAmountPerToken": 33.75
+    },
+    "schedule": [
+      {
+        "date": "2027-10-13",
+        "event": "COUPON",
+        "amountPerToken": 33.75,
+        "note": "First period may be broken; confirm with the calculation agent"
+      },
+      {
+        "date": "2028-10-13",
+        "event": "COUPON",
+        "amountPerToken": 33.75
+      },
+      {
+        "date": "2029-10-13",
+        "event": "COUPON",
+        "amountPerToken": 33.75
+      },
+      {
+        "date": "2030-10-13",
+        "event": "COUPON",
+        "amountPerToken": 33.75
+      },
+      {
+        "date": "2031-10-13",
+        "event": "COUPON_AND_REDEMPTION",
+        "amountPerToken": 1033.75
+      }
+    ],
+    "redemption": {
+      "date": "2031-10-13",
+      "percentOfNominal": 100
+    }
+  },
+  "settlement": {
+    "model": "DVP",
+    "cashLeg": "Central bank money via DLT trigger",
+    "cycle": "T+5, atomic DvP on the settlement date",
+    "settlementDate": "2026-10-13",
+    "icsdLink": "Euroclear and Clearstream"
+  },
+  "fallback": "If the platform cannot operate, the issuer may replace the notes with a permanent global note held through Euroclear, under the conversion mechanics in the base prospectus.",
+  "references": {
+    "bdtPayload": "VDR-2026-AURL-001-004.dlt.xml",
+    "stage": "PRICED",
+    "termSheetVersion": "0.4",
+    "legalPrevails": true
+  }
+}
