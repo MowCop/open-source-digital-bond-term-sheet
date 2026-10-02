@@ -225,6 +225,7 @@ export function dealToBdtState(deal: Deal): BdtState {
   const stored = (deal as unknown as { bdtState?: BdtState }).bdtState;
   if (stored && typeof stored === 'object' && stored.f) {
     const st: BdtState = { ...emptyState(), ...stored, f: { ...stored.f } };
+    for (const k of Object.keys(st.f)) if (String(st.f[k]).trim() === 'NaN') delete st.f[k];
     st.stage = stored.stage || bdtStageForDeal(deal.stage);
     st.deal = stored.deal || deal.issuerName || '';
     return st;
