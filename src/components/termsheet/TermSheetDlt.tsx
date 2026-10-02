@@ -2,8 +2,8 @@
  * Digital Term Sheet — DLT view. All logic comes from src/lib/termsheet/dlt.js.
  * Reads the conventional record and writes only state.dlt.
  */
-import { useEffect, useMemo, useState } from 'react';
-import { Copy, Download, Save } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Copy, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,7 +49,16 @@ export default function TermSheetDlt({ deal, canEdit, onSave }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
-  const save = () => { onSave({ bdtState: state }); setDirty(false); toast.success('DLT view saved'); };
+  // Autosave: persist shortly after each change, and flush any pending change on leaving the tab.
+  const pending = useRef<BdtState | null>(null);
+  const saveRef = useRef(onSave); saveRef.current = onSave;
+  useEffect(() => {
+    if (!dirty || !canEdit) return;
+    pending.current = state;
+    const t = setTimeout(() => { saveRef.current({ bdtState: state }); pending.current = null; setDirty(false); }, 600);
+    return () => clearTimeout(t);
+  }, [state, dirty, canEdit]);
+  useEffect(() => () => { if (pending.current) saveRef.current({ bdtState: pending.current }); }, []);
   const passed = view ? view.checks.filter(c => c.lv === 'pass').length : 0;
 
   const card = (key: 'native' | 'twin', title: string, body: string) => (
@@ -69,7 +78,7 @@ export default function TermSheetDlt({ deal, canEdit, onSave }: Props) {
             The same deal expressed as a bond on a distributed ledger. The conventional term sheet stays the master record; this view converts it into BDT 2.0 XML with the DLT platform group and a token descriptor a tokenisation platform can map. Question numbers follow the ICMA DLT Bonds Reference Guide (December 2024).
           </p>
         </div>
-        {canEdit && <Button size="sm" onClick={save} disabled={!dirty}><Save className="h-4 w-4 mr-1" />Save</Button>}
+        {canEdit && <span className="text-xs text-muted-foreground pt-1">{dirty ? 'Saving…' : 'All changes saved'}</span>}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
