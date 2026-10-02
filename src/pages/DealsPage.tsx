@@ -22,6 +22,14 @@ import DealCheckFlag from '@/components/DealCheckFlag';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TermSheetFill from '@/components/termsheet/TermSheetFill';
+import TermSheetDlt from '@/components/termsheet/TermSheetDlt';
+import { buildXML, refreshAuto } from '@/lib/termsheet/index.js';
+import { dealToBdtState } from '@/lib/bdt-bridge';
+
+function BdtXmlPanel({ deal }: { deal: Deal }) {
+  const xml = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return buildXML(s) as string; }, [deal]);
+  return <pre className="max-h-[600px] overflow-auto rounded-md border border-border/70 bg-card/60 p-3 text-[11px]">{xml}</pre>;
+}
 
 const STAGES: DealStage[] = ['Mandate', 'Announced', 'Launched', 'Books Open', 'Books Closed', 'Priced', 'Settled'];
 const stageColors: Record<string, string> = {
@@ -103,12 +111,20 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
       </div>
 
       <Tabs defaultValue="fill">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="fill">Fill</TabsTrigger>
           <TabsTrigger value="view">View</TabsTrigger>
+          <TabsTrigger value="xml">BDT XML</TabsTrigger>
+          <TabsTrigger value="dlt">DLT view</TabsTrigger>
         </TabsList>
         <TabsContent value="fill" className="mt-4">
           <TermSheetFill deal={deal} canEdit={canManage} onSave={onSaveFields} />
+        </TabsContent>
+        <TabsContent value="xml" className="mt-4">
+          <BdtXmlPanel deal={deal} />
+        </TabsContent>
+        <TabsContent value="dlt" className="mt-4">
+          <TermSheetDlt deal={deal} canEdit={canManage} onSave={onSaveFields} />
         </TabsContent>
         <TabsContent value="view" className="mt-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
