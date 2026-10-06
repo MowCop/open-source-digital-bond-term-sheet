@@ -84,24 +84,37 @@ export default function TermSheetFill({ deal, canEdit: canEditProp, onSave }: Pr
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Re-seed when the deal identity changes (never mid-edit).
+  // Term sheet steps with no matching deal stage (IPT, Allocated) can be chosen as the save step.
+  const BETWEEN_STAGES = [2, 6];
+
+  // Re-seed when the deal identity changes (never mid-edit). A stage saved as an
+  // in-between step (IPT/Allocated) is kept; any other stale stored stage snaps back.
   useEffect(() => {
-    setState(dealToBdtState(deal));
+    setState(s => {
+      const seeded = dealToBdtState(deal);
+      const base = bdtStageForDeal(deal.stage);
+      const ok = seeded.stage === base
+        || (BETWEEN_STAGES.includes(seeded.stage) && seeded.stage === base + 1);
+      return ok ? seeded : { ...seeded, stage: base };
+    });
     setDirty(false);
     setProposals([]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deal.id]);
 
-  // The BDT stage follows the deal's lifecycle stage.
+  // The BDT stage follows the deal's lifecycle stage — but only when the deal's
+  // stage actually changes. Without the ref guard this effect also runs on mount
+  // and wipes a saved in-between step (IPT/Allocated) on every tab remount.
+  const prevDealStage = useRef(deal.stage);
   useEffect(() => {
+    if (prevDealStage.current === deal.stage) return;
+    prevDealStage.current = deal.stage;
     setState(s => (s.stage === bdtStageForDeal(deal.stage) ? s : { ...s, stage: bdtStageForDeal(deal.stage) }));
   }, [deal.stage]);
 
   const state: BdtState = viewSnap ? { ...viewSnap.bdt_state_snapshot, stage: viewStage as number } : liveState;
   const liveStage = liveState.stage;
   const baseStage = bdtStageForDeal(deal.stage);
-  // Term sheet steps with no matching deal stage (IPT, Allocated) can be chosen as the save step.
-  const BETWEEN_STAGES = [2, 6];
   const canPickStep = (n: number) => canEditProp && n === baseStage + 1 && BETWEEN_STAGES.includes(n);
   const pickStep = (n: number) => { setViewStage(null); setState(st => ({ ...st, stage: n })); setDirty(true); };
   const stageIdx = state.stage;
