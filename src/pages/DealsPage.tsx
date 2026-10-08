@@ -50,13 +50,23 @@ interface DealDetailProps {
   canManage: boolean;
   fromBoard?: boolean;
   onSaveFields: (patch: Partial<Deal>) => void;
+  initialFiles?: File[];
+  onInitialFilesConsumed?: () => void;
 }
 
-function DealDetail({ deal, canManage, fromBoard, onSaveFields }: DealDetailProps) {
+function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, onInitialFilesConsumed }: DealDetailProps) {
   const [checkerState, setCheckerState] = useState<BdtState>(() => dealToBdtState(deal));
   const navigate = useNavigate();
   const fillRef = useRef<TermSheetFillHandle>(null);
   const [tab, setTab] = useState('fill');
+  const consumedFiles = useRef<File[] | null>(null);
+
+  useEffect(() => {
+    if (!initialFiles?.length || consumedFiles.current === initialFiles || !fillRef.current) return;
+    consumedFiles.current = initialFiles;
+    setTab('fill');
+    void fillRef.current.ingestFiles(initialFiles).finally(() => onInitialFilesConsumed?.());
+  }, [initialFiles, onInitialFilesConsumed]);
 
   // The drop panel sits in this header row; the Fill tab owns the proposals.
   const ingest = async (files: FileList) => {
@@ -205,6 +215,8 @@ export default function DealsPage() {
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [newDealFiles, setNewDealFiles] = useState<File[]>([]);
+  const [pendingDocuments, setPendingDocuments] = useState<{ dealId: string; files: File[] } | null>(null);
   const [newDeal, setNewDeal] = useState({
     issuerName: '', currency: 'EUR', size: '', tenor: '', coupon: 'TBD',
     issuerRating: '', issuanceType: '' as string, governingLaw: '' as string,
@@ -240,7 +252,7 @@ export default function DealsPage() {
   };
 
   const handleCreateDeal = () => {
-    createDeal({
+    const created = createDeal({
       issuerName: newDeal.issuerName,
       currency: newDeal.currency,
       size: newDeal.size,
@@ -252,6 +264,11 @@ export default function DealsPage() {
       issuanceType: (newDeal.issuanceType as any) || undefined,
       governingLaw: (newDeal.governingLaw as any) || undefined,
     });
+    if (newDealFiles.length) {
+      setPendingDocuments({ dealId: created.id, files: newDealFiles });
+      setExpandedDealId(created.id);
+    }
+    setNewDealFiles([]);
     setShowCreate(false);
     setNewDeal({ issuerName: '', currency: 'EUR', size: '', tenor: '', coupon: 'TBD', issuerRating: '', issuanceType: '', governingLaw: '' });
     setNewBookrunners([]);
@@ -359,6 +376,18 @@ export default function DealsPage() {
                 </div>
 
                 <Button onClick={handleCreateDeal} className="w-full" disabled={!newDeal.issuerName || !newDeal.size}>Create Deal</Button>
+                <IngestDropzone onFiles={files => setNewDealFiles(prev => [...prev, ...Array.from(files)])} className="w-full" />
+                {newDealFiles.length > 0 && (
+                  <div className="space-y-1">
+                    {newDealFiles.map((file, i) => (
+                      <div key={`${file.name}-${i}`} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <FileText className="h-3.5 w-3.5 shrink-0" />
+                        <span className="min-w-0 flex-1 truncate">{file.name}</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label={`Remove ${file.name}`} onClick={() => setNewDealFiles(prev => prev.filter((_, index) => index !== i))}><X className="h-3 w-3" /></Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>
