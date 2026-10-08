@@ -210,7 +210,7 @@ function DealDetail({ deal, canManage, fromBoard, hasBulletin, onGenerateBulleti
 }
 
 export default function DealsPage() {
-  const { deals, messages, createDeal, updateDeal, updateDealStage, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser, addAuditEntry } = useScopedApp();
+  const { deals, messages, createDeal, updateDeal, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser, addAuditEntry } = useScopedApp();
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
