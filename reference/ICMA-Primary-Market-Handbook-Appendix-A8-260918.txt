@@ -1,0 +1,1348 @@
+Appendix A8
+Final terms and pricing
+supplement
+
+
+
+
+               Insert 2018-09
+Appendix A8 - Final terms and pricing supplement
+
+         Part I – General introduction                                            A8-3
+         Part II – Introduction to Pro Forma 1                                    A8-7
+         Part III – Pro Forma 1                                                   A8-9
+         Part IV – Notes relating to Pro Forma 1                                  A8-26
+         Part V – Introduction to Pro Forma 2                                     A8-31
+         Part VI – Pro Forma 2                                                    A8-33
+         Part VII – Notes relating to Pro Forma 2                                 A8-46
+         Part VIII – Introduction to Pro Forma 3                                  A8-51
+         Part IX – Pro Forma 3                                                    A8-52
+         Part X – Notes relating to Pro Forma 3                                   A8-66
+
+
+Part I - General Introduction
+1.       Below are suggested pro formas:                                          September
+                                                                                       2018
+         (a) Pro forma 1 - Final terms for medium term note programmes for
+             use in connection with issues of securities with a denomination of
+             less than €100,000 to be admitted to trading on an EEA regulated
+             market and/or offered to the public in the EEA, based on the
+             requirements of Annex V of the Prospectus Directive implementing
+             Regulation;
+         (b) Pro forma 2 - Final terms for medium term note programmes for
+             use in connection with issues of securities with a denomination
+             of at least €100,000 to be admitted to trading on an EEA
+             regulated market, based on Annex XIII of the Prospectus Directive
+             implementing Regulation; and
+         (c) Pro forma 3 - A pricing supplement for medium term note
+             programmes for use in connection with issues of securities which
+             are not subject to the Prospectus Directive.
+2.       The pro formas have been prepared with the help of the ICMA              September
+         members and a group of City of London capital markets law firms               2015
+         and have been circulated to a number of other law firms prior to
+         publication. The ICMA is extremely grateful for the advice and
+         assistance it has received.
+
+
+
+
+ICMA Primary Market Handbook                 Insert 2018-09                               A8‑3
+3.     The pro formas are appropriate for most medium term note                       September
+       programmes for which the base prospectus is approved in the United                  2015
+       Kingdom. ICMA also understands that they are appropriate for most
+       medium term note programmes for which the base prospectus is
+       approved in many other EEA Member States, in particular since the
+       Prospectus Directive was intended to be a maximum harmonisation
+       directive creating a uniform approach to base prospectuses and
+       final terms throughout the EEA. However, it should be noted that
+       there remain potential local law issues in individual EEA Member
+       States, including in relation to the particular implementation of the
+       Prospectus Directive or amendments to it in those Member States, or
+       local market practices or competent authority approaches which may
+       mean that modifications to the pro formas may be appropriate. The
+       endnotes to the pro formas aim to give some further guidance in this
+       regard.
+3A.    The pro formas may require amendment in due course to reflect                  September
+       the UK’s withdrawal from the European Union and/or the full                         2018
+       implementation of the Prospectus Regulation in July 2019.
+4.     The purpose of the pro formas is to assist market efficiency by                September
+       providing a generally accepted standard format and to assist the                    2015
+       market with the implementation of the requirements of the Prospectus
+       Directive, Regulation and amendments made to them. They are
+       an assessment of the legal requirements and practices but will be
+       subject to change as actual practice develops.
+5.     The pro formas have not been approved by any competent authority.              September
+       They are not legal advice and it is for issuers and their advisers to decide        2015
+       how to comply with the requirements in the context of the provisions of
+       their programmes and the characteristics of particular drawdowns under
+       them, as well as applicable national laws and regulations.
+6.     The pro formas are intended to be as helpful as possible at the time           September
+       of their publication. They may not, however, contain all language                   2018
+       appropriate in every situation. In particular, when using the ICMA pro
+       formas to assist with the production of pro forma final terms within
+       a base prospectus, it is important to check that all amendments
+       and/or additions necessary are made in order that the pro formas
+       conform to the conditions of the bonds and other aspects of the base
+       prospectus. For example, language relating to the “Prohibition of
+       Sales to EEA Retail Investors” in the pro formas is intended to interact
+       with any PRIIPs Regulation selling restrictions and legends set out in
+       the base prospectus. See further Appendix A13.
+7.     The numbering of the pro formas is designed to retain a reference              September
+       to all material items while producing a final document which is as                  2015
+       short as possible. Where a heading requires a number of additional
+       items to be included, these should be in the form of sub-paragraphs
+       designated (i), (ii) and so on, without the numbering being affected.
+
+
+
+
+A8‑4                                  Insert 2018-09                ICMA Primary Market Handbook
+8.       Pro formas 1 and 2 above reflect the Prospectus Directive                     September
+         requirements applicable to final terms prepared in conjunction with a              2018
+         base prospectus approved on or after 1 July 2012. The Prospectus
+         Directive implementing Regulation requires a base prospectus to
+         indicate which information will be included in the final terms and to
+         include a template form of final terms (Article 22(5)(1) and (1a)). The
+         base prospectus will therefore need to contain the relevant form
+         or forms of the final terms. The Prospectus Directive implementing
+         Regulation provides that the final terms shall only contain the
+         information items from the various securities note schedules
+         according to which the base prospectus is drawn up which are
+         listed as Categories B and C in Annex XX of the Prospectus Directive
+         implementing Regulation (with the base prospectus providing the
+         general principles where relevant), together with any permitted
+         "additional information" set out in Annex XXI and any replication of
+         or reference to options already provided for in the base prospectus
+         which are applicable to the individual issue (Article 22(4)). The
+         Prospectus Directive implementing Regulation also provides that
+         final terms may determine which options, with regard to Category
+         A, B and C information items disclosed in the base prospectus, are
+         applicable to the individual issue (Article 22(1a)). It expressly provides,
+         however, that the final terms may not amend or replace information in
+         the base prospectus (Article 22(4)). For programmes which envisage
+         issues of debt securities having a denomination below €100,000
+         as well as €100,000 or above, it will be appropriate to include both
+         forms 1 and 2 in the base prospectus.
+9.       If the revised pro formas are included by way of an amendment to an           September
+         existing programme, careful consideration should be given to conforming            2018
+         changes in the terms and conditions in the base prospectus that are
+         necessary as a result of the A, B and C categorisations in Annex XX of
+         the Prospectus Directive implementing Regulation referred to above.
+10.      Issuers and their advisers should be aware that if securities are             September
+         offered to the public on a non-exempt basis in the EEA or admitted to              2018
+         trading on an EEA regulated market, it is the issuer’s responsibility to
+         ensure that final terms are (a) filed with (i) the competent authority that
+         approved the base prospectus, and (ii) the competent authority of
+         the host Member State(s), as soon as practicable and, if possible, in
+         advance of the beginning of the public offer or admission to trading,
+         in accordance with Article 5(4) of the Prospectus Directive and (b)
+         published in accordance with Article 14 of the Prospectus Directive
+         and Article 33 of the Prospectus Directive implementing Regulation.
+
+
+
+
+ICMA Primary Market Handbook                   Insert 2018-09                                A8‑5
+11.    When forwarding final terms to a relevant competent authority,              September
+       issuers, their agents or advisers should take care to ensure that the            2015
+       authority is aware of the purpose of the filing and in particular whether
+       it is intended that the securities are to be admitted to trading on a
+       regulated market and, if so, from what date. Final terms should not
+       be submitted to a competent authority without specific instructions to
+       do so and a clear understanding of the purpose of that submission.
+       Application for admission to trading and/or submission in respect of
+       a non-exempt offer of notes should not be made in circumstances
+       where a supplement to the base prospectus is required until such
+       time as the supplement has been approved and published in
+       accordance with the Prospectus Directive.
+12.    It may also be appropriate to include Pro forma 3 in the base               September
+       prospectus where an issuer envisages issuing securities in a scenario            2015
+       where the Prospectus Directive does not apply (i.e. where securities
+       are not being admitted to trading on a regulated market and are being
+       offered on an exempt basis).
+13.    If an issue originally documented under a different form or version         September
+       of one of the pro formas is increased, careful consideration should              2018
+       be given to the appropriate form of documentation for the increase,
+       although differences in the form of final terms alone are not a bar to
+       doing a tap issue by way of final terms. The pro forma final terms
+       in the current base prospectus, which would ordinarily be the first
+       port of call for documenting the further issue, will have been drafted
+       to reflect the Prospectus Directive implementing Regulation (with
+       its more restrictive approach on final terms) as it stands after 1 July
+       2012. Whilst that pro forma is drafted to complete the conditions set
+       out in the current base prospectus, it may not work in all respects
+       with the conditions of the original issue being tapped. The conditions
+       of the original issue being tapped should be reviewed to ensure that
+       they would not require the final terms documenting the further issue
+       to include information which is no longer permitted in final terms.
+
+
+
+
+A8‑6                                Insert 2018-09               ICMA Primary Market Handbook
+Part II - Introduction to Pro Forma 1
+1.       The attached pro forma Final Terms is intended to be used in                September
+         circumstances where the Euro Medium Term Note Programme:                         2015
+
+            (i)    is subject to the Prospectus Directive, i.e. where the relevant
+                   Prospectus has been approved by a competent authority
+                   for the purpose of issuing Notes which are to be admitted
+                   to trading on an EEA regulated market and/or offered to the
+                   public (within the meaning of the Prospectus Directive) in
+                   the EEA in circumstances where a prospectus is required
+                   under the Prospectus Directive (i.e. a “non-exempt offer”)
+                   and where the Notes issued in the drawdown have a
+                   denomination of less than €100,000; and
+            (ii)   includes terms and conditions for the issue of fixed rate,
+                   floating rate and zero coupon notes.
+2.       The disclosure is based on Annex V of the Prospectus Directive              September
+         implementing Regulation ((EC) No 809/2004, as amended (the                       2018
+         “Prospectus Regulation”)). Where an Issuer intends to issue
+         securities other than fixed rate, floating rate (including fixed to
+         floating rate) and zero coupon notes, all relevant provisions should
+         be included in the Conditions with relevant options and placeholders
+         included in the pro forma Final Terms in the base prospectus or
+         consideration should, instead, be given to adopting a Pricing
+         Supplement (see the ICMA pro forma Pricing Supplement for use
+         in connection with issues of securities which are not subject to the
+         Prospectus Directive).
+3.       The following pro forma Final Terms reflects the Prospectus Directive       September
+         requirements applicable to final terms prepared in conjunction with a            2015
+         base prospectus approved on or after 1 July 2012 and replaces the
+         pro forma Final Terms published in June 2007.
+4.       The Prospectus Regulation requires a base prospectus to indicate which      September
+         information will be included in the final terms and to include a template        2015
+         form of final terms (Article 22(5)(1) and (1a)). The base prospectus will
+         therefore need to contain the relevant form or forms of the final terms.
+5.       The Prospectus Regulation provides that the final terms shall only          September
+         contain the information items from the various securities note                   2015
+         schedules according to which the base prospectus is drawn up
+         which are listed as Categories B and C in Annex XX of the Prospectus
+         Regulation (with the base prospectus providing the general principles
+         where relevant), together with any permitted "additional information"
+         set out in Annex XXI and any replication of or reference to options
+         already provided for in the base prospectus which are applicable to
+         the individual issue (Article 22(4)). The Prospectus Regulation also
+         provides that final terms may determine which options, with regard
+         to Category A, B and C information items disclosed in the base
+         prospectus, are applicable to the individual issue (Article 22(1a)). It
+         expressly provides, however, that the final terms may not amend or
+         replace information in the base prospectus (Article 22(4)).
+
+
+
+ICMA Primary Market Handbook                   Insert 2018-09                              A8‑7
+ Part III - Pro Forma 1
+     ICMA pro forma final terms for use in connection with issues of
+  securities with a denomination of less than €100,000 to be admitted
+ to trading on an EEA regulated market and/or offered to the public on
+                     a non-exempt basis in the EEA
+ [PROHIBITION OF SALES TO EEA RETAIL INVESTORS – The                                            September
+                                                                                                     2018
+ Notes are not intended to be offered, sold or otherwise made
+ available to and should not be offered, sold or otherwise made
+ available to any retail investor in the European Economic Area
+ (“EEA”). For these purposes, a retail investor means a person
+ who is one (or more) of: (i) a retail client as defined in point (11) of
+ Article 4(1) of Directive 2014/65/EU (as amended, “MiFID II”); (ii) a
+ customer within the meaning of Directive 2002/92/EC (as amended
+ or superseded, the “Insurance Mediation Directive”), where
+ that customer would not qualify as a professional client as defined
+ in point (10) of Article 4(1) of MiFID II; or (iii) not a qualified investor
+ as defined in Directive 2003/71/EC (as amended or superseded,
+ the “Prospectus Directive”). Consequently no key information
+ document required by Regulation (EU) No 1286/2014 (as amended,
+ the “PRIIPs Regulation”) for offering or selling the Notes or
+ otherwise making them available to retail investors in the EEA has
+ been prepared and therefore offering or selling the Notes or otherwise
+ making them available to any retail investor in the EEA may be
+ unlawful under the PRIIPS Regulation.]A
+ [Legends relating to the MiFID II product governance regime may
+ be included here. Information is available on the ICMA MiFID II/R in
+ primary markets webpage: https://www.icmagroup.org/Regulatory-
+ Policy-and-Market-Practice/Primary-Markets/primary-market-topics/
+ mifid-ii-r-in-primary-markets/.]
+                           Final Terms dated •
+                             [Name of Issuer]                                      PD Reg       September
+                                                                                    22.4 +           2018
+                   Legal entity identifier (LEI): [      ]
+                                                         B                          26.5 -
+                                                                                comprehen-
+     Issue of [Aggregate Nominal Amount of Tranche] [Title of                        sibility
+                             Notes]
+                 [Guaranteed by [Name of Guarantor]]
+       under the [insert Programme Amount] [Debt Issuance
+                            Programme]
+                [Euro Medium Term Note Programme]
+ [Any person making or intending to make an offer of the Notes may                              September
+                                                                                                     2018
+ only {do so[:
+
+
+
+
+ICMA Primary Market Handbook                    Insert 2018-09                                       A8‑9
+ (i) in those Non-exempt Offer Jurisdictions mentioned in Paragraph                    XXI Add.    September
+                                                                                            Info        2018
+ 8(vii) of Part B below, provided such person is a Dealer, Manager or
+ Authorised Offeror (as such term is defined in the [Base] Prospectus)
+ and that such offer is made during the Offer Period specified for such
+ purpose therein and that any conditions relevant to the use of the
+ [Base] Prospectus are complied with; or
+ (ii) otherwise]* in circumstances in which no obligation arises for the                           September
+                                                                                                        2015
+ Issuer or any Dealer to publish a prospectus pursuant to Article 3 of
+ the Prospectus Directive or supplement a prospectus pursuant to
+ Article 16 of the Prospectus Directive, in each case, in relation to such
+ offer.}**
+ Neither the Issuer nor any Dealer has authorised, nor do                                          September
+                                                                                                        2015
+ they authorise, the making of any offer of Notes in any other
+ circumstances.
+ The expression “Prospectus Directive” means Directive 2003/71/                                    September
+                                                                                                        2018
+ EC (as amended or superseded) and includes any relevant
+ implementing measure in the relevant Member State.1]***
+
+
+ * Include this wording where a non-exempt offer of Notes is anticipated.                         September
+                                                                                                        2015
+
+ ** Where the UKLA is approving the prospectus and the prospectus has not                         September
+     been prepared in accordance with the requirements of UKLA Technical                                2015
+     Note 632.1, this language should be deleted and replaced with the following
+     language: “offer Notes to any legal entity which is a qualified investor as
+     defined in the Prospectus Directive.”
+ *** Do not include this wording in the pro forma final terms if the base                          September
+     prospectus contains PRIIPs Regulation selling restriction and legend Option                        2018
+     1 (a blanket prohibition on marketing and sales to EEA retail investors in
+     respect of all issuance under the programme). See further Appendix A13,
+     2.1.
+   If the base prospectus contains PRIIPs Regulation selling restriction and
+   legend Option 2:
+   • include this language in the pro forma final terms in square brackets;
+   • delete this language from the final terms if the “Prohibition of Sales to
+      EEA Retail Investors” legend is included in the final terms (because the
+      Notes potentially constitute “packaged” products and no key information
+      document will be prepared) and the “Prohibition of Sales to EEA Retail
+      Investors” is specified to be “Applicable”.
+   See further Appendix A13, 2.2.
+
+
+
+
+A8‑10                                      Insert 2018-09                    ICMA Primary Market Handbook
+ 6.     [Floating Rate Notes only - HISTORIC INTEREST RATES                               September
+                                                                                               2015
+        Details of historic [LIBOR/EURIBOR/replicate other as                V 4.7 (ix)
+                                                                                Cat C
+        specified in the Conditions] rates can be obtained from
+        [Reuters].]
+ 7.     OPERATIONAL INFORMATION                                                           September
+                                                                                               2018
+        ISIN:                         [    ]                                 V 4.1 (ii)
+                                                                               Cat C
+
+        Common Code:                  [    ]
+        [CUSIP:                       [        ]]
+        [CINS:                        [        ]] 26
+        CFI26A:                       [[       ]/Not Applicable]
+        FISN      :
+                26B
+                                      [[       ]/Not Applicable]
+                                      (If the CFI and/or FISN is not
+                                      required, requested or available,
+                                      it/they should be specified to be
+                                      “Not Applicable”.)
+        Any clearing system(s)        [Not Applicable/give name(s)           V 4.3 (ii)
+                                                                               Cat C
+        other than [DTC,]             and number(s)]
+        Euroclear Bank S.A./N.V.
+        and Clearstream Banking,
+        société anonyme and
+        the relevant identification
+        number(s):
+        Delivery:                     Delivery [against/free of]              V 5.1.6
+                                                                               Cat C
+                                      payment
+        Names and addresses of        [    ]                                  V 5.4.2
+                                                                               Cat C
+        additional Paying Agent(s)
+        (if any):
+
+
+
+
+A8‑22                                 Insert 2018-09               ICMA Primary Market Handbook
+         (viii) Offer period:             [Specify date] until [specify date]    XXX 1.3
+                                                                                   Cat C
+
+         (ix) Financial intermediaries    [Insert names and addresses of        XXX 2A.1
+                                                                                   Cat C
+         granted specific consent         financial intermediaries receiving
+         to use the [Base]                consent (specific consent)]
+         Prospectus in accordance
+         with the conditions in it:
+         (x) General Consent:             [Not Applicable][Applicable]            XXX 2B
+                                                                                  PD Reg
+                                                                                   22.1a
+
+         (xi) Other Authorised            [Not Applicable][Add here any          XXX 1.5
+                                                                                   Cat C
+         Offeror Terms:                   other Authorised Offeror Terms]
+                                          (Authorised Offeror Terms should
+                                          only be included here where
+                                          General Consent is Applicable)
+         [(xii) Prohibition of Sales to   [Applicable][Not Applicable]            V 5.2.1
+                                                                                   Cat A
+         EEA Retail Investors:
+                                                                                  PD Reg
+                                          (If the Notes clearly do not             22.1a
+                                          constitute “packaged” products,
+                                          or the Notes do constitute
+                                          “packaged” products and a
+                                          key information document will
+                                          be prepared, “Not Applicable”
+                                          should be specified. If the Notes
+                                          may constitute “packaged”
+                                          products and no key information
+                                          document will be prepared,
+                                          “Applicable” should be
+                                          specified.)]31A
+ [9.     TERMS AND CONDITIONS OF THE OFFER32                                                  September
+                                                                                                   2015
+         Offer Price:                     [Issue Price][specify]                V 5.3.1 (i)
+                                                                                    Cat C
+
+         Conditions to which the          [Not Applicable/give details]           V 5.1.1
+                                                                                   Cat C
+         offer is subject:
+         Description of the               [Not Applicable/give details]           V 5.1.3
+                                                                                   Cat C
+         application process:
+         Description of possibility       [Not Applicable/give details]           V 5.1.4
+                                                                                   Cat C
+         to reduce subscriptions
+         and manner for refunding
+         excess amount paid by
+         applicants:
+         Details of the minimum           [Not Applicable/give details]           V 5.1.5
+                                                                                   Cat C
+         and/or maximum amount
+         of application:
+
+
+
+
+ICMA Primary Market Handbook                     Insert 2018-09                                   A8‑25
+ Part IV - Notes relating to Pro Forma 1
+ A.      Where the base prospectus includes PRIIPs Regulation selling restriction          September
+                                                                                                2018
+         Option 1 (a blanket prohibition on marketing and sales to EEA retail
+         investors in respect of all issuance under the programme), include this
+         legend in the pro forma final terms without square brackets. See further
+         Appendix A13, 2.1.
+         Where the base prospectus includes PRIIPs Regulation selling restriction
+         Option 2:
+         • include this legend in square brackets in the pro forma final terms; and
+         • this legend should be included on the front of the final terms if
+            the Notes potentially constitute “packaged” products and no key
+            information document will be prepared or the issuer wishes to prohibit
+            offers to EEA retail investors for any other reason, in which case the
+            “Prohibition of Sales to EEA Retail Investors” in Part B, item 8(xii) should
+            also be specified to be “Applicable”.
+         See further Appendix A13, 2.2.
+ B.      Consider inserting the issuer’s LEI here. Where the LEI was not included          September
+                                                                                                2018
+         on an application to a stock exchange at the point of programme
+         establishment or update it may be required at the point of submission
+         to a stock exchange of the final terms on a drawdown and may also
+         be required when drawdown final terms are published/uploaded to
+         the relevant Officially Appointed Mechanism. Including the LEI in the
+         overview section of a base prospectus and on the front page of the
+         pro forma final terms may therefore ensure it is readily available when
+         required.
+ 1.      The relevant competent authority may require that this introductory               September
+                                                                                                2015
+         wording is deleted. Deletion of the wording is unlikely to be problematic.
+         It has, however, been retained in this pro forma as it serves as a useful
+         reminder of the EEA public offer selling restriction. Also, note that
+         “Prospectus Directive” does not need to be specifically defined in the
+         pro forma final terms in the base prospectus where it is defined in the
+         Conditions or elsewhere.
+ 2.      This should reflect the name of the document.                                     September
+                                                                                                2015
+
+ 3.      Leave blank in the pro forma final terms in the base prospectus.                  September
+                                                                                                2015
+
+ 4.      Only include details of a supplement in which the Conditions have been            September
+                                                                                                2015
+         amended or information added for the purposes of all future issues under
+         the Programme.
+
+
+
+
+ICMA Primary Market Handbook                   Insert 2018-09                                  A8‑27
+ 5.     Include details of the actual method by which the base prospectus,                September
+                                                                                               2018
+        once approved, will be published in the pro forma final terms in the base
+        prospectus. Final terms and any supplement to the base prospectus must
+        be published in accordance with Article 14 of the Prospectus Directive and
+        Article 33 of the Prospectus Directive implementing Regulation. Article 33
+        states that the publication method for the final terms does not need to be the
+        same as that used for the base prospectus, as long as one of the methods
+        indicated in Article 14 is used. Article 16 states that a supplement must be
+        published with at least the same arrangements as were applied when the
+        original base prospectus was published.
+        Article 14 specifies the following alternative methods of publication:
+        (a) by insertion in one or more newspapers of the kind specified in Article
+            14(2)(a);
+        (b) in printed form to be made available, free of charge, to the public at:
+           (i)    the offices of the market on which the securities are being
+                  admitted to trading; or
+           (ii)   at the registered office of the issuer and at the offices of the
+                  financial intermediaries placing or selling the securities, including
+                  paying agents; or
+        (c) in electronic form on the issuer’s website or, if applicable, on the
+            website of the financial intermediaries placing or selling the securities,
+            including paying agents; or
+        (d) in an electronic form on the website of the regulated market where the
+            admission to trading is sought; or
+        (e) in electronic form on the website of the competent authority of the
+            home Member State if the said authority has decided to offer this
+            service.
+        If publication is made in accordance with (a) or (b), publication must also
+        be made in accordance with (c). This means that electronic publication
+        will always be required (under either (c), (d) or (e)).
+        As well as filing the final terms with the home Member State, they must
+        also be filed with the competent authority of the host Member State(s).
+        In addition, a home Member State (and some host Member States)
+        may require publication of a notice stating how the final terms or any
+        supplement have been made available and where they can be obtained
+        by the public. Other local law requirements may also apply, see note 31
+        below.
+ 6.     Where a competent authority requires the removal of the Issuer and                September
+                                                                                               2015
+        Guarantor name placeholders from the pro forma in the base prospectus
+        this should not, where there is only one Issuer or Guarantor, be problematic
+        as their names are included in the final terms heading. The name
+        placeholders are necessary in a multi issuer/guarantor programme, however,
+        to identify the relevant Issuer/Guarantor.
+
+
+
+
+A8‑28                                  Insert 2018-09                ICMA Primary Market Handbook
+ 23.     Include the name of the relevant regulated market, for example the Bourse de             September
+                                                                                                       2015
+         Luxembourg, the London Stock Exchange’s Regulated Market or the Regulated
+         Market of the Irish Stock Exchange and, if relevant, to admission to an official
+         list, for example the official list of the UK Listing Authority. In general, competent
+         authorities are likely to require that the pro forma final terms in the base
+         prospectus actually lists out the relevant markets where an issuer may want to
+         list, with final terms for a drawdown picking from those listed options. Where
+         a non-regulated market listing is likely to be sought (e.g. on the Freiverkehr) in
+         addition to a regulated market listing or in conjunction with a non-exempt offer,
+         consider whether it is possible to list out those details in the pro forma final terms
+         in the base prospectus. This may depend on competent authority approach.
+         If the notes are not to be admitted to trading on a regulated market nor offered
+         to the public on a non-exempt basis, consider using the Pro Forma Pricing
+         Supplement contained in the ICMA Primary Market Handbook (see A8).
+ 24.     Where the UKLA are approving the base prospectus, they may require                       September
+                                                                                                       2015
+         that the pro forma final terms in the base prospectus should provide for
+         the specific rating agency entity that may rate notes under the programme
+         or use the defined term for that entity (although credit ratings assigned to
+         securities is a Category C disclosure item) so that the ratings disclosure
+         in the final terms matches the statement required to be included in a
+         prospectus by the Credit Rating Agency Regulation.
+ 25.     Exactly what will need to be inserted in the pro forma final terms in the                September
+                                                                                                       2015
+         base prospectus will depend on the approach of the competent authority
+         on yield at the time of drafting.
+ 26.     A CUSIP number is applicable to securities cleared through DTC and a                     September
+                                                                                                       2015
+         CINS number is a US-allocated number relevant to securities traded on
+         an international basis and underwritten outside the US and Canada. The
+         Agent would normally apply for these.
+ 26A.    A CFI is a Classification of Financial Instruments code. Further information is          September
+                                                                                                       2018
+         available on the ANNA website: https://www.anna-web.org/.
+ 26B.    A FISN is a Financial Instrument Short Name. Further information is available            September
+                                                                                                       2018
+         on the ANNA website: https://www.anna-web.org/.
+ 27.     Include if the programme allows a choice between NGNs, NSS or CGNs                       September
+                                                                                                       2015
+         or if the Programme specifies NGNs or NSS only. Where the UKLA are
+         approving the base prospectus this information should not be included in
+         the pro forma final terms in the base prospectus but should, instead, be
+         provided to the ICSDs separately at the time of issue. Furthermore, where
+         any other competent authority requires the deletion of this information from
+         pro forma final terms, again it should be provided to the ICSDs separately at
+         the time of an issue. This enables the ICSDs to complete their operational
+         checks on eligibility criteria.
+ 28.     Where the programme provides for notes which may be issued through                       September
+                                                                                                       2015
+         a domestic clearing system, this wording will need to be amended to
+         reflect the fact that notes issued through a domestic clearing system may
+         also be ECB eligible.
+
+
+
+
+ICMA Primary Market Handbook                       Insert 2018-09                                     A8‑31
+ 29.    Where the UKLA are approving the base prospectus, the pro forma final             September
+                                                                                               2015
+        terms within it will not be permitted to include (i) Method of distribution and
+        (ii) Stabilisation Manager(s). Furthermore, the UKLA may require that the
+        Distribution section is expanded such that each requirement in paragraph
+        5.4.3 of Annex V is addressed as a separate line item.
+ 30.    Where the UKLA are approving the base prospectus, the placeholder in the          September
+                                                                                               2015
+        pro forma final terms within it should be entitled “Public offer where there is
+        no exemption from the obligation under the Prospectus Directive to publish a
+        prospectus”, instead of “Non-exempt Offer”.
+ 31.    Consider any local regulatory requirements necessary to be fulfilled so as        September
+                                                                                               2015
+        to be able to make a non-exempt offer in relevant jurisdictions. No such
+        offer should be made in any relevant jurisdiction until those requirements
+        have been met. Non-exempt offers may only be made into jurisdictions
+        in which the base prospectus (and any supplement) has been notified/
+        passported.
+        The start date for non-exempt offers will typically be no earlier than
+        the publication date of the Final Terms. The start date in certain
+        jurisdictions may need to be delayed until after compliance with any local
+        requirements (e.g. publication of newspaper notices) and accordingly
+        may not necessarily be an actual date. For example, instead of a specific
+        date it could be expressed as “the business day following publication of
+        the [relevant notice]” or similar. The end date will be as agreed between
+        the Issuer and the Managers.
+ 31A.   Include this wording where the base prospectus includes PRIIPs                    September
+                                                                                               2018
+        Regulation selling restriction and legend Option 2. See further Appendix
+        A13, 2.2. Otherwise, do not include this wording.
+ 32.    Consider the circumstances in which the items specified below need                September
+                                                                                               2015
+        to be completed or marked “Not Applicable” by reference to the
+        requirements of the relevant home and/or host member states where
+        any non-exempt public offer is being made, in compliance with the
+        Prospectus Directive, as implemented in such member states. Note that
+        if sub-paragraph 8(vi) above is marked as Not Applicable (because the
+        offer is an exempt offer) then section 9 can be deleted.
+ 33.    This placeholder would need to be included in the pro forma final terms in        September
+                                                                                               2015
+        the base prospectus if it is intended that notes issued under the programme
+        will be admitted to the London Stock Exchange's Order book for Retail
+        Bonds where there is a requirement for market makers.
+
+
+
+
+A8‑32                                  Insert 2018-09                 ICMA Primary Market Handbook
+Part V - Introduction to Pro Forma 2
+1.       The attached pro forma Final Terms is intended to be used in                September
+         circumstances where the Euro Medium Term Note Programme:                         2015
+
+            (i)    is subject to the Prospectus Directive, i.e. where the relevant
+                   Prospectus has been approved by the competent authority
+                   for the purpose of issuing Notes which are to be admitted
+                   to trading on an EEA regulated market and/or offered to the
+                   public (within the meaning of the Prospectus Directive) in the
+                   EEA and where the Notes issued in the drawdown have a
+                   denomination of at least €100,000 (i.e. an “exempt offer”);
+                   and
+            (ii)   includes terms and conditions for the issue of fixed rate,
+                   floating rate and zero coupon notes.
+2.       The disclosure is based on Annex XIII of the Prospectus Directive           September
+         implementing Regulation ((EC) No 809/2004, as amended (the                       2018
+         “Prospectus Regulation”). Where an Issuer intends to issue
+         securities other than fixed rate, floating rate (including fixed to
+         floating rate) and zero coupon notes, all relevant provisions should
+         be included in the Conditions with relevant options and placeholders
+         included in the pro forma Final Terms in the base prospectus or
+         consideration should, instead, be given to adopting a Pricing
+         Supplement (see the ICMA pro forma Pricing Supplement for use
+         in connection with issues of securities which are not subject to the
+         Prospectus Directive).
+3.       The attached pro forma Final Terms reflects the Prospectus Directive        September
+         requirements applicable to final terms prepared in conjunction with a            2015
+         base prospectus approved on or after 1 July 2012 and replaces the
+         pro forma Final Terms published in June 2007.
+4.       The Prospectus Regulation requires a base prospectus to indicate            September
+         which information will be included in the final terms and to include             2015
+         a template form of final terms (Article 22(5)(1) and (1a)). The base
+         prospectus will therefore need to contain the relevant form or forms of
+         the final terms.
+5.       The Prospectus Regulation provides that the final terms shall only          September
+         contain the information items from the various securities note                  2015
+         schedules according to which the base prospectus is drawn up
+         which are listed as Categories B and C in Annex XX of the Prospectus
+         Regulation (with the base prospectus providing the general principles
+         where relevant), together with any permitted "additional information"
+         set out in Annex XXI and any replication of or reference to options
+         already provided for in the base prospectus which are applicable to
+         the individual issue (Article 22(4)). The Prospectus Regulation also
+         provides that final terms may determine which options, with regard
+         to Category A, B and C information items disclosed in the base
+         prospectus, are applicable to the individual issue (Article 22(1a)). It
+         expressly provides, however, that the final terms may not amend or
+         replace information in the base prospectus (Article 22(4)).
+
+
+
+ICMA Primary Market Handbook                   Insert 2018-09                             A8‑33
+ Part VI - Pro Forma 2
+   ICMA pro forma final terms for medium term note programmes for
+  use in connection with issues of securities with a denomination of at
+ least €100,000 to be admitted to trading on an EEA regulated market
+ [PROHIBITION OF SALES TO EEA RETAIL INVESTORS – The                                            September
+                                                                                                     2018
+ Notes are not intended to be offered, sold or otherwise made
+ available to and should not be offered, sold or otherwise made
+ available to any retail investor in the European Economic Area
+ (“EEA”). For these purposes, a retail investor means a person
+ who is one (or more) of: (i) a retail client as defined in point (11)
+ of Article 4(1) of Directive 2014/65/EU (as amended, “MiFID II”);
+ (ii) a customer within the meaning of Directive 2002/92/EC (as
+ amended or superseded, the “Insurance Mediation Directive”),
+ where that customer would not qualify as a professional client as
+ defined in point (10) of Article 4(1) of MiFID II; or (iii) not a qualified
+ investor as defined in Directive 2003/71/EC (as amended or
+ superseded, the “Prospectus Directive”)A. Consequently no key
+ information document required by Regulation (EU) No 1286/2014
+ (as amended, the “PRIIPs Regulation”) for offering or selling the
+ Notes or otherwise making them available to retail investors in the
+ EEA has been prepared and therefore offering or selling the Notes or
+ otherwise making them available to any retail investor in the EEA may
+ be unlawful under the PRIIPS Regulation.]B
+ [Legends relating to the MiFID II product governance regime may                                September
+                                                                                                     2018
+ be included here. Information is available on the ICMA MiFID II/R in
+ primary markets webpage: https://www.icmagroup.org/Regulatory-
+ Policy-and-Market-Practice/Primary-Markets/primary-market-topics/
+ mifid-ii-r-in-primary-markets/.]
+                           Final Terms dated •
+                            [Name of Issuer]                                   PD Reg 22.4      September
+                                                                                   + 26.5 -          2018
+                   Legal entity identifier (LEI): [     ]C                      comprehen-
+                                                                                     sibility
+    Issue of [Aggregate Nominal Amount of Tranche] [Title of
+                            Notes]
+                 [Guaranteed by [Name of Guarantor]]
+      under the [insert Programme Amount] [Debt Issuance
+                           Programme]
+               [Euro Medium Term Note Programme]
+
+                  PART A – CONTRACTUAL TERMS
+
+
+
+
+ICMA Primary Market Handbook                    Insert 2018-09                                      A8‑35
+ Terms used herein shall be deemed to be defined as such for the                        September
+                                                                                             2018
+ purposes of the Conditions set forth in the Prospectus1 dated •2
+ [and the supplement(s) to it dated • ]3 which [together] constitute[s]
+ a base prospectus (the “[Base] Prospectus”) for the purposes of
+ [Directive 2003/71/EC (as amended or superseded, the “Prospectus
+ Directive”)]/[the Prospectus Directive]. This document constitutes the
+ Final Terms of the Notes described herein for the purposes of Article 5.4
+ of the Prospectus Directive and must be read in conjunction with the
+ [Base] Prospectus. Full information on the Issuer [, the Guarantor(s)] and
+ the offer of the Notes is only available on the basis of the combination
+ of these Final Terms and the [Base] Prospectus. The [Base] Prospectus
+ has been published on [Issuer's/financial intermediaries'/ regulated
+ market/ competent authority] website.4
+ The following alternative language applies if the first tranche of an                  September
+                                                                                             2015
+ issue which is being increased was issued under a base prospectus
+ with an earlier date. N.B. when using a post- 1 July 2012 approved
+ base prospectus to tap a previous issue under a pre- 1 July 2012
+ approved base prospectus, the final terms in the post- 1 July 2012 base
+ prospectus will take a different form due to the more restrictive approach
+ to final terms. The Conditions of the original issue being tapped should
+ be reviewed to ensure that they would not require the final terms
+ documenting the further issue to include information which is no longer
+ permitted in final terms. Where the final terms documenting the further
+ issue would need to include such information, it will not be possible to
+ tap using final terms and a drawdown prospectus (incorporating the
+ original Conditions and final terms) will instead need to be prepared.
+ Terms used herein shall be deemed to be defined as such for the                        September
+                                                                                             2018
+ purposes of the Conditions (the “Conditions”) set forth in the
+ Prospectus1 dated [original date] [and the supplement(s) to it dated
+ •]3 which are incorporated by reference in the Prospectus dated
+ [current date]. This document constitutes the Final Terms of the Notes
+ described herein for the purposes of Article 5.4 of [Directive 2003/71/
+ EC (as amended or superseded, the “Prospectus Directive”)]/
+ [the Prospectus Directive] and must be read in conjunction with the
+ Prospectus dated [current date] [and the supplement(s) to it dated •],
+ which [together] constitute[s] a base prospectus for the purposes of
+ the Prospectus Directive (the “[Base] Prospectus”), save in respect of
+ the Conditions which are extracted from the Prospectus dated [original
+ date] [and the supplement(s) to it dated •]3. Full information on the
+ Issuer [, the Guarantor(s)] and the offer of the Notes is only available
+ on the basis of the combination of these Final Terms, the [Base]
+ Prospectus [and the supplement(s) dated •]. The [Base] Prospectus
+ has been published on [Issuer's/financial intermediaries'/ regulated
+ market/ competent authority] website.4
+
+
+
+
+A8‑36                                   Insert 2018-09                ICMA Primary Market Handbook
+        [Save for any fees payable to the [Managers/Dealers], so far
+        as the Issuer is aware, no person involved in the offer of the
+        Notes has an interest material to the offer. The [Managers/
+        Dealers] and their affiliates have engaged, and may in the
+        future engage, in investment banking and/or commercial
+        banking transactions with, and may perform other services
+        for, the Issuer [and the Guarantor] and [its/their] affiliates in the
+        ordinary course of business. (Amend as appropriate if there
+        are other interests)]
+        [(When adding any other description, consideration should
+        be given as to whether such matters described constitute
+        “significant new factors” and consequently trigger the need
+        for a supplement to the Prospectus under Article 16 of the
+        Prospectus Directive.)] 25
+ 4.     [Fixed Rate Notes only – YIELD                                          XIII 4.10(i)    September
+                                                                                     Cat C           2015
+
+        Indication of yield:            [           ]
+                                        The yield is calculated at the
+                                        Issue Date on the basis of the
+                                        Issue Price. It is not an indication
+                                        of future yield.]
+ 5.     OPERATIONAL INFORMATION                                                                 September
+                                                                                                     2018
+        ISIN:                           [    ]                                   XIII 4.2(ii)
+                                                                                     Cat C
+
+        Common Code:                    [    ]
+        [CUSIP:                         [    ]]
+        [CINS:                          [        ]]26
+        CFI26A:                         [[        ]/Not Applicable]
+        FISN      :
+                26B
+                                        [[        ]/Not Applicable]
+                                        (If the CFI and/or FISN is not
+                                        required, requested or available,
+                                        it/they should be specified to be
+                                        “Not Applicable”.)
+        Any clearing system(s)          [Not Applicable/give name(s)             XIII 4.4(ii)
+                                                                                     Cat C
+        other than [DTC,]               and number(s)]
+        Euroclear Bank S.A./N.V.
+        and Clearstream Banking,
+        société anonyme and
+        the relevant identification
+        number(s):
+        Delivery:                       Delivery [against/free of]
+                                        payment
+
+
+
+
+A8‑46                                  Insert 2018-09                 ICMA Primary Market Handbook
+ 6.     DISTRIBUTION29                                                                       September
+                                                                                                  2018
+        (i) Method of distribution:     [Syndicated/Non-syndicated]
+        (ii) If syndicated:
+         (A) Names of Managers:         [Not Applicable/give names]
+         (B) Stabilisation             [Not Applicable/give names]              PD Reg
+                                                                                  22.4(c)
+              Manager(s) (if any):
+        (iii) If non-syndicated,        [Not Applicable/give name]
+        name of Dealer:
+        (iv) US Selling Restrictions:   [Reg. S Compliance Category              PD Reg
+                                                                                  22.4(c)
+                                        [1/2/3]; [Rule 144A;] TEFRA C/
+                                                                                 XIII 4.14
+                                        TEFRA D/ TEFRA not applicable]              Cat A
+                                                                                 PD Reg
+                                                                                  22.1a
+
+        [(v) Prohibition of Sales to    [Applicable/Not Applicable]              PD Reg
+                                                                                  22.4(c)
+        EEA Retail Investors:
+                                                                             XIII 4.14 Cat
+                                        (If the Notes clearly do not           A, PD Reg
+                                                                                     22.1a
+                                        constitute “packaged” products
+                                        or the Notes do constitute
+                                        “packaged” products and a
+                                        key information document will
+                                        be prepared, “Not Applicable”
+                                        should be specified. If the Notes
+                                        may constitute “packaged”
+                                        products and no key information
+                                        document will be prepared,
+                                        “Applicable” should be
+                                        specified.)]30
+
+
+
+
+A8‑48                                   Insert 2018-09                ICMA Primary Market Handbook
+ Part VII - Notes relating to Pro Forma 2
+ A.      Because a PD selling restriction is not required where the programme            September
+                                                                                              2018
+         contains a blanket prohibition on the issue of notes with a denomination
+         of less than EUR 100,000 or equivalent, the third limb of the definition of
+         retail investor (which relates to the PD public offer regime) does not need
+         to be included where the programme contains such blanket prohibition.
+ B.      Where the base prospectus includes PRIIPs Regulation selling restriction        September
+                                                                                              2018
+         Option 1 (a blanket prohibition on marketing and sales to EEA retail
+         investors in respect of all issuance under the programme), include this
+         legend in the pro forma final terms without square brackets. See further
+         Appendix A13, 2.1.
+         Where the base prospectus includes PRIIPs Regulation selling restriction
+         Option 2:
+         • include this legend in square brackets in the pro forma final terms; and
+         • legend to be included on front of the final terms if the Notes potentially
+            constitute “packaged” products and no key information document
+            will be prepared or the issuer wishes to prohibit offers to EEA retail
+            investors for any other reason, in which case the “Prohibition of Sales
+            to EEA Retail Investors” in Part B, item 6(v) should be specified to be
+            “Applicable”.
+         See further Appendix A13, 2.2.
+ C.      Consider inserting the issuer’s LEI here. Where the LEI was not included        September
+                                                                                              2018
+         on an application to a stock exchange at the point of programme
+         establishment or update it may be required at the point of submission
+         to a stock exchange of the final terms on a drawdown and may also
+         be required when drawdown final terms are published/uploaded to
+         the relevant Officially Appointed Mechanism. Including the LEI in the
+         overview section of a base prospectus and on the front page of the
+         pro forma final terms may therefore ensure it is readily available when
+         required.
+ 1.      This should reflect the name of the document.                                   September
+                                                                                              2015
+
+ 2.      Leave blank in the pro forma final terms in the base prospectus.                September
+                                                                                              2015
+
+ 3.      Only include details of a supplement in which the Conditions have been          September
+                                                                                              2015
+         amended or information added for the purposes of all future issues under
+         the Programme.
+
+
+
+
+ICMA Primary Market Handbook                  Insert 2018-09                                 A8‑49
+ 4.     Include details of the actual method by which the base prospectus,                September
+                                                                                               2018
+        once approved, will be published in the pro forma final terms in the base
+        prospectus. Final terms and any supplement to the base prospectus
+        must be made available to the public and published in accordance with
+        Article 14 of the Prospectus Directive and Article 33 of the Prospectus
+        Directive implementing Regulation. Article 33 states that the publication
+        method for the final terms does not need to be the same as that used for
+        the base prospectus, as long as one of the methods indicated in Article
+        14 is used. Article 16 states that a supplement must be published with
+        at least the same arrangements as were applied when the original base
+        prospectus was published.
+        Article 14 specifies the following alternative methods of publication:
+        (a) by insertion in one or more newspapers of the kind specified in Article
+            14(2)(a);
+        (b) in printed form to be made available, free of charge, to the public at:
+           (i)    the offices of the market on which the securities are being
+                  admitted to trading; or
+           (ii)   at the registered office of the issuer and at the offices of the
+                  financial intermediaries placing or selling the securities, including
+                  paying agents; or
+        (c) in electronic form on the issuer’s website or, if applicable, on the
+            website of the financial intermediaries placing or selling the securities,
+            including paying agents; or
+        (d) in an electronic form on the website of the regulated market where the
+            admission to trading is sought; or
+        (e) in electronic form on the website of the competent authority of the
+            home Member State if the said authority has decided to offer this
+            service.
+        If publication is made in accordance with (a) or (b), publication must also
+        be made in accordance with (c). This means that electronic publication
+        will always be required (under either (c), (d) or (e)).
+        As well as filing the final terms with the home Member State, they must
+        also be filed with the competent authority of the host Member State(s).
+ 5.     Where a competent authority requires the removal of the Issuer                    September
+                                                                                               2015
+        and Guarantor name placeholders from the pro forma in the base
+        prospectus this should not, where there is only one Issuer or Guarantor,
+        be problematic as their names are included in the final terms heading.
+        The name placeholders are necessary in a multi Issuer/Guarantor
+        programme, however, to identify the relevant Issuer/Guarantor.
+
+
+
+
+A8‑50                                  Insert 2018-09                ICMA Primary Market Handbook
+ 26.    A CUSIP number is applicable to securities cleared through DTC and a           September
+                                                                                            2015
+        CINS number is a US-allocated number relevant to securities traded on
+        an international basis and underwritten outside the US and Canada. The
+        Agent would normally apply for these.
+ 26A.   A CFI is a Classification of Financial Instruments code. Further information   September
+                                                                                            2018
+        is available on the ANNA website: https://www.anna-web.org/.
+ 26B.   A FISN is a Financial Instrument Short Name. Further information is            September
+                                                                                            2018
+        available on the ANNA website: https://www.anna-web.org/.
+ 27.    Include if the programme allows a choice between NGNs, NSS or CGNs             September
+                                                                                            2015
+        or if the programme specifies NGNs or NSS only. Where the UKLA are
+        approving the base prospectus this information should not be included
+        in the pro forma final terms in the base prospectus but should, instead,
+        be provided to the ICSDs separately at the time of issue. Furthermore,
+        where any other competent authority requires the deletion of this
+        information from pro forma final terms, again it should be provided to
+        the ICSDs separately at the time of an issue. This enables the ICSDs to
+        complete their operational checks on eligibility criteria.
+ 28.    Where the programme provides for notes which may be issued through             September
+                                                                                            2015
+        a domestic clearing system, this wording will need to be amended to
+        reflect the fact that notes issued through a domestic clearing system may
+        also be ECB eligible.
+ 29.    Where the UKLA are approving the base prospectus it may not be                 September
+                                                                                            2015
+        possible to include 6 (i) to (iii).
+ 30.    Include this wording where the base prospectus includes PRIIPs                 September
+                                                                                            2018
+        Regulation selling restriction and legend Option 2. See further Appendix
+        A13, 2.2. Otherwise, do not include this wording.
+
+
+
+
+A8‑54                                Insert 2018-09              ICMA Primary Market Handbook
+ Part IX - Pro Forma 3
+      ICMA pro forma pricing supplement for medium term note
+ programmes for use in connection with issues of securities which are
+              not subject to the Prospective Directive
+     NO PROSPECTUS IS REQUIRED IN ACCORDANCE WITH                                        September
+                                                                                              2015
+  DIRECTIVE 2003/71/EC FOR THE ISSUE OF NOTES DESCRIBED
+                          BELOW
+ [PROHIBITION OF SALES TO EEA RETAIL INVESTORS – The                                     September
+                                                                                              2018
+ Notes are not intended to be offered, sold or otherwise made
+ available to and should not be offered, sold or otherwise made
+ available to any retail investor in the European Economic Area
+ (“EEA”). For these purposes, a retail investor means a person
+ who is one (or more) of: (i) a retail client as defined in point (11) of
+ Article 4(1) of Directive 2014/65/EU (as amended, “MiFID II”); (ii) a
+ customer within the meaning of Directive 2002/92/EC (as amended
+ or superseded, the “Insurance Mediation Directive”), where
+ that customer would not qualify as a professional client as defined
+ in point (10) of Article 4(1) of MiFID II; or (iii) not a qualified investor
+ as defined in Directive 2003/71/EC (as amended or superseded,
+ the “Prospectus Directive”)A. Consequently no key information
+ document required by Regulation (EU) No 1286/2014 (as amended,
+ the “PRIIPs Regulation”) for offering or selling the Notes or
+ otherwise making them available to retail investors in the EEA has
+ been prepared and therefore offering or selling the Notes or otherwise
+ making them available to any retail investor in the EEA may be
+ unlawful under the PRIIPS Regulation.]B
+ [Legends relating to the MiFID II product governance regime may                         September
+                                                                                              2018
+ be included here. Information is available on the ICMA MiFID II/R in
+ primary markets webpage: https://www.icmagroup.org/Regulatory-
+ Policy-and-Market-Practice/Primary-Markets/primary-market-topics/
+ mifid-ii-r-in-primary-markets/.]
+                      Pricing Supplement dated •
+                             [Name of Issuer]
+                   Legal entity identifier (LEI): [      ]C                              September
+                                                                                              2018
+
+     Issue of [Aggregate Nominal Amount of Tranche] [Title of
+                             Notes]
+                 [Guaranteed by [Name of Guarantor]]
+        under the [insert Programme Amount] [Debt Issuance
+                             Programme]
+                [Euro Medium Term Note Programme]
+
+
+
+
+A8‑56                                   Insert 2018-09                 ICMA Primary Market Handbook
+                    PART A – CONTRACTUAL TERMS
+ [Any person making or intending to make an offer of the Notes may only do so in                   September
+                                                                                                        2018
+ circumstances in which no obligation arises for the Issuer or any Dealer to publish
+ a prospectus pursuant to Article 3 of the Prospectus Directive or supplement a
+ prospectus pursuant to Article 16 of the Prospectus Directive, in each case, in
+ relation to such offer.]*
+ This document constitutes the Pricing Supplement for the Notes described                          September
+                                                                                                        2015
+ herein. This document must be read in conjunction with the [Prospectus]1 dated
+ [date]2 [and the supplement to it dated • ] (the [“Prospectus”]). Full information
+ on the Issuer [, the Guarantor(s)] and the offer of the Notes is only available on the
+ basis of the combination of this Pricing Supplement and the Prospectus. Copies
+ of the Prospectus may be obtained from [address]].3
+ Terms used herein shall be deemed to be defined as such for the purposes of the                   September
+                                                                                                        2015
+ Conditions (the “Conditions”) set forth in the [Prospectus] dated [original date] [and the
+ supplement dated •]4 which are incorporated by reference in the [Prospectus].**
+ [Include whichever of the following apply or specify as “Not Applicable” (N/A).                   September
+                                                                                                        2015
+ Note that the numbering should remain as set out below, even if “Not Applicable”
+ is indicated for individual paragraphs or sub-paragraphs. Italics denote guidance
+ for completing the Pricing Supplement.]
+ * Do not include this wording in the pro forma final terms if the base prospectus                 September
+   contains PRIIPs Regulation selling restriction and legend Option 1 (a blanket prohibition            2018
+   on marketing and sales to EEA retail investors in respect of all issuance under the
+   programme). See further Appendix A13, 2.1.
+   If the base prospectus contains PRIIPs Regulation selling restriction and legend Option 2:
+   • include this language in the pro forma final terms in square brackets;
+   • delete this language from the final terms if the “Prohibition of Sales to EEA Retail
+      Investors” legend is included in the final terms (because the Notes potentially constitute
+      “packaged” products and no key information document will be prepared) and the
+      “Prohibition of Sales to EEA Retail Investors” is specified to be “Applicable”.
+   See further Appendix A13, 2.2.
+ ** Only include this language where it is a fungible issue and the original Tranche was issued   September
+     under a [Prospectus] with a different date.                                                        2018
+
+
+
+
+ICMA Primary Market Handbook                        Insert 2018-09                                     A8‑57
+                    PART B – OTHER INFORMATION
+ 1.     LISTING20                     [Application has been made by the Issuer           September
+                                                                                              2015
+                                      (or on its behalf) for the Notes to be listed on
+                                      [specify relevant market - note this must not
+                                      be a regulated market]20 with effect from [
+                                      ].] [Application is expected to be made by
+                                      the Issuer (or on its behalf) for the Notes to
+                                      be listed on [specify relevant market - note
+                                      this must not be a regulated market]20 with
+                                      effect from [            ].] [Not Applicable.]
+                                      (Where documenting a fungible issue need
+                                      to indicate that original Notes are already
+                                      admitted to trading.)
+ [2.    RATINGS
+        Ratings:                      The Notes to be issued have been rated:            September
+                                                                                              2015
+
+                                      [S & P: [       ]]
+                                      [Moody’s: [           ]]
+                                      [[Fitch: [            ]]
+                                      [[Other]: [      ]]
+                                      (The above disclosure should reflect the
+                                      rating allocated to Notes of the type being
+                                      issued under the Programme generally or,
+                                      where the issue has been specifically rated,
+                                      that rating.)]
+ 3.     INTERESTS OF NATURAL AND LEGAL PERSONS                                           September
+                                                                                              2015
+        INVOLVED IN THE ISSUE/OFFER
+        [Save for any fees payable to the [Managers/Dealers], so far as the Issuer
+        is aware, no person involved in the offer of the Notes has an interest
+        material to the offer. The [Managers/Dealers] and their affiliates have
+        engaged, and may in the future engage, in investment banking and/or
+        commercial banking transactions with, and may perform other services
+        for, the Issuer [and the Guarantor] and [its/their] affiliates in the ordinary
+        course of business. (Amend as appropriate if there are other interests)]
+ 4.     OPERATIONAL INFORMATION                                                          September
+                                                                                              2018
+        ISIN:                         [     ]
+        Common Code:                  [     ]
+        [CUSIP:                       [     ]]21
+        [CINS:                        [         ]]
+        CFI21A
+                :                     [[        ]/Not Applicable]
+
+
+
+
+A8‑68                                 Insert 2018-09                ICMA Primary Market Handbook
+   FISN21B:                      [[       ]/Not Applicable]
+                                 (If the CFI and/or FISN is not
+                                 required, requested or available,
+                                 it/they should be specified to be
+                                 “Not Applicable”.)
+   Any clearing system(s)        [Not Applicable/give name(s) and number(s)]
+   other than [DTC,]
+   Euroclear Bank S.A./N.V
+   and Clearstream Banking,
+   société anonyme and
+   the relevant identification
+   number(s):
+   Delivery:                     Delivery [against/free of] payment
+   Names and addresses of        [    ]
+   additional Paying Agent(s)
+   (if any):
+   [Intended to be held in a     [Yes. Note that the designation “yes” simply
+   manner which would allow      means that the Notes are intended upon
+   Eurosystem eligibility22 23   issue to be deposited with one of the ICSDs
+                                 as common safekeeper [(and registered
+                                 in the name of a nominee of one of the
+                                 ICSDs acting as common safekeeper)]
+                                 [include this text for registered notes] and
+                                 does not necessarily mean that the Notes
+                                 will be recognised as eligible collateral for
+                                 Eurosystem monetary policy and intra day
+                                 credit operations by the Eurosystem either
+                                 upon issue or at any or all times during their
+                                 life. Such recognition will depend upon
+                                 the ECB being satisfied that Eurosystem
+                                 eligibility criteria have been met.]/
+
+
+
+
+ICMA Primary Market Handbook                     Insert 2018-09                   A8‑69
+                                         [No. Whilst the designation is specified as
+                                         “no” at the date of this Pricing Supplement,
+                                         should the Eurosystem eligibility criteria be
+                                         amended in the future such that the Notes
+                                         are capable of meeting them the Notes may
+                                         then be deposited with one of the ICSDs as
+                                         common safekeeper [(and registered in the
+                                         name of a nominee of one of the ICSDs acting
+                                         as common safekeeper) [include this text for
+                                         registered notes]. Note that this does not
+                                         necessarily mean that the Notes will then be
+                                         recognised as eligible collateral for Eurosystem
+                                         monetary policy and intra day credit
+                                         operations by the Eurosystem at any time
+                                         during their life. Such recognition will depend
+                                         upon the ECB being satisfied that Eurosystem
+                                         eligibility criteria have been met.]]
+ 5.     DISTRIBUTION                                                                        September
+                                                                                                 2018
+        (i) Method of distribution:      [Syndicated/Non-syndicated]
+        (ii) If syndicated, names of     [Not Applicable/give names]
+        Managers:
+        (iii) Stabilisation              [Not Applicable/give names]
+        Manager(s) (if any):
+        (iv) If non-syndicated,          [Not Applicable/give name]
+        name of Dealer:
+        (v) US Selling Restrictions:     [Reg. S Compliance Category [1/2/3]; [Rule
+                                         144A;] TEFRA C/ TEFRA D/ TEFRA not
+                                         applicable]
+        (vi) Additional selling          [Not Applicable/give details]
+        restrictions:
+        [(vii) Prohibition of Sales to   [Applicable/Not Applicable]
+        EEA Retail Investors:
+                                         (If the Notes clearly do not
+                                         constitute “packaged” products
+                                         or the Notes do constitute
+                                         “packaged” products and a
+                                         key information document will
+                                         be prepared, “Not Applicable”
+                                         should be specified. If the Notes
+                                         may constitute “packaged”
+                                         products and no key information
+                                         document will be prepared,
+                                         “Applicable” should be
+                                         specified.)]24
+
+
+
+
+A8‑70                                    Insert 2018-09                ICMA Primary Market Handbook
+Part X - Notes relating to Pro Forma 3
+A.      Because a PD selling restriction is not required where the programme            September
+                                                                                             2018
+        contains a blanket prohibition on the issue of notes with a denomination
+        of less than EUR 100,000 or equivalent, the third limb of the definition of
+        retail investor (which relates to the PD public offer regime) does not need
+        to be included where the programme contains such blanket prohibition.
+B.      Where the base prospectus includes PRIIPs Regulation selling restriction        September
+                                                                                             2018
+        Option 1 (a blanket prohibition on marketing and sales to EEA retail
+        investors in respect of all issuance under the programme), include this
+        legend in the pro forma final terms without square brackets. See further
+        Appendix A13, 2.1.
+        Where the base prospectus includes PRIIPs Regulation selling restriction
+        Option 2:
+        • include this legend in square brackets in the pro forma final terms; and
+        • legend to be included on front of the final terms if the Notes potentially
+           constitute “packaged” products and no key information document
+           will be prepared or the issuer wishes to prohibit offers to EEA retail
+           investors for any other reason, in which case the “Prohibition of Sales
+           to EEA Retail Investors” should be specified to be “Applicable”.
+        See further Appendix A13, 2.2.
+C.      Whilst a pricing supplement is for use where Notes are not to be                September
+                                                                                             2018
+        admitted to a regulated market, stock exchanges may still request the
+        issuer’s LEI where Notes are to be listed on a multi-lateral trading facility
+        (MTF). Therefore, consider inserting the issuer’s LEI here.
+1.      This should reflect the name of the document.                                   September
+                                                                                             2015
+
+2.      Leave blank in the pro forma Pricing Supplement in the base prospectus.         September
+                                                                                             2015
+
+3.      As this is a pro forma Pricing Supplement for securities that are not           September
+                                                                                             2018
+        subject to the Prospectus Directive (because they are not admitted to
+        trading on a regulated market in the EEA and/or are offered within one of
+        the Prospectus Directive exemptions) it is not appropriate to refer to the
+        copies posted on any stock exchange’s website.
+4.      Only include details of a supplement in which the Conditions have been          September
+                                                                                             2015
+        amended or information added for the purposes of all future issues under
+        the Programme.
+
+
+
+
+     ICMA Primary Market Handbook                    Insert 2018-09                                 A8‑71
+ 17.    Note that the ICMSA Recommendation with respect to requirements                September
+                                                                                            2015
+        for Payment Business Days (090428/11) (which can be accessed from
+        the Publications page of the International Capital Markets Services
+        Association website at www.icmsa.org) gives guidance regarding the
+        financial centres to be open for payments.
+ 18.    A number of countries (for example, Iceland, Spain, Portugal and Italy)        September
+                                                                                            2015
+        may require tax certification to enable interest to be paid gross by
+        issuers. Consider including a term providing for tax certification where
+        applicable.
+ 19.    Consider including if third party information is provided, for example         September
+                                                                                            2015
+        in relation to an index or its components, an underlying security or the
+        issuer of an underlying security.
+ 20.    Include the name of the relevant stock exchange and/or market, for             September
+                                                                                            2018
+        example the Euro MTF market of the Luxembourg Stock Exchange,
+        which is not a regulated market (as defined in the Prospectus Directive)
+        within the EEA. If the notes are to be admitted to trading on such a
+        regulated market, this ICMA Pro Forma Pricing Supplement must not be
+        used and one of the alternative Pro Forma Final Terms contained in the
+        ICMA Primary Market Handbook should be considered instead (see A8-III
+        or A8-VI).
+ 21.    A CUSIP number is applicable to securities cleared through DTC and a           September
+                                                                                            2015
+        CINS number is a US-allocated number relevant to securities traded on
+        an international basis and underwritten outside the US and Canada. The
+        Agent would normally apply for these.
+ 21A.   A CFI is a Classification of Financial Instruments code. Further information   September
+                                                                                            2018
+        is available on the ANNA website: https://www.anna-web.org/.
+ 21B.   A FISN is a Financial Instrument Short Name. Further information is            September
+                                                                                            2018
+        available on the ANNA website: https://www.anna-web.org/.
+ 22.    Include if the programme allows a choice between NGNs, NSS or CGNs             September
+                                                                                            2015
+        or if the programme specifies NGNs or NSS only.
+ 23.    Where the programme provides for notes which may be issued through             September
+                                                                                            2015
+        a domestic clearing system, this wording will need to be amended to
+        reflect the fact that notes issued through a domestic clearing system may
+        also be ECB eligible.
+ 24.    Include this wording where the base prospectus includes PRIIPs                 September
+                                                                                            2018
+        Regulation selling restriction and legend Option 2. See further Appendix
+        A13, 2.2. Otherwise, do not include this wording.
+
+
+
+
+A8‑74                                Insert 2018-09              ICMA Primary Market Handbook
+
