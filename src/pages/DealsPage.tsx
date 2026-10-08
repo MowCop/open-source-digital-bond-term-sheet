@@ -49,12 +49,10 @@ interface DealDetailProps {
   deal: Deal;
   canManage: boolean;
   fromBoard?: boolean;
-  hasBulletin: boolean;
-  onGenerateBulletin: () => void;
   onSaveFields: (patch: Partial<Deal>) => void;
 }
 
-function DealDetail({ deal, canManage, fromBoard, hasBulletin, onGenerateBulletin, onSaveFields }: DealDetailProps) {
+function DealDetail({ deal, canManage, fromBoard, onSaveFields }: DealDetailProps) {
   const [checkerState, setCheckerState] = useState<BdtState>(() => dealToBdtState(deal));
   const navigate = useNavigate();
   const fillRef = useRef<TermSheetFillHandle>(null);
@@ -86,21 +84,6 @@ function DealDetail({ deal, canManage, fromBoard, hasBulletin, onGenerateBulleti
         )}
         {canManage && (
           <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
-            {hasBulletin ? (
-              <Button
-                size="default"
-                variant="outline"
-                className="opacity-50 text-muted-foreground"
-                title="Bulletin published — view on New Issue Board"
-                onClick={() => navigate(`/messages?dealId=${deal.id}`)}
-              >
-                <Megaphone className="h-4 w-4 mr-1 text-muted-foreground" /> Bulletin published
-              </Button>
-            ) : (
-              <Button size="default" variant="outline" className="btn-champagne" onClick={onGenerateBulletin}>
-                <Megaphone className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} /> Generate New Issue Bulletin
-              </Button>
-            )}
             <IngestDropzone onFiles={ingest} />
           </div>
         )}
@@ -520,8 +503,6 @@ export default function DealsPage() {
                     deal={deal}
                     canManage={canManageDeals}
                     fromBoard={!!searchParams.get('dealId')}
-                    hasBulletin={bulletinByDeal.has(deal.id)}
-                    onGenerateBulletin={() => setBulletinDealId(deal.id)}
                     onSaveFields={(patch) => {
                       updateDeal(deal.id, { ...patch, updatedAt: new Date() });
                       addAuditEntry({
