@@ -116,7 +116,7 @@ function DealDetail({ deal, canManage, fromBoard, hasBulletin, onGenerateBulleti
           <TabsTrigger value="dlt">DLT view</TabsTrigger>
         </TabsList>
         <TabsContent value="fill" forceMount className="mt-4">
-          <TermSheetFill ref={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} />
+          <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} />
         </TabsContent>
         <TabsContent value="xml" className="mt-4">
           <BdtXmlPanel deal={deal} />
