@@ -661,7 +661,7 @@ function GroupEditor({ g, rows, canEdit, onChange }: GroupProps) {
                     </div>
                   );
                 }
-                return (
+                const field = (
                   <TermSheetField
                     key={key}
                     fd={{ p: `${g}.${i}.${key}`, l: label, t: type === 'sel' ? 'sel' : type, e: enumKey }}
@@ -671,6 +671,19 @@ function GroupEditor({ g, rows, canEdit, onChange }: GroupProps) {
                     onChange={v => setCell(i, key, v)}
                   />
                 );
+                if (g === 'parties' && key === 'LEIIdentifier') {
+                  return [
+                    field,
+                    <LeiSuggest
+                      key={`${key}-suggest`}
+                      name={row.PartyName ?? ''}
+                      lei={row.LEIIdentifier ?? ''}
+                      canEdit={canEdit}
+                      onUse={v => setCell(i, 'LEIIdentifier', v)}
+                    />,
+                  ];
+                }
+                return field;
               })}
             </div>
             {canEdit && (
