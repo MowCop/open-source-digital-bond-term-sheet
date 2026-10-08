@@ -55,7 +55,7 @@ export interface BdtState {
 }
 
 export type CheckLevel = 'pass' | 'warn' | 'fail';
-export interface CheckItem { l: CheckLevel; t: string; d?: string; src?: 'bdt' | 'vdr' | 'gleif' }
+export interface CheckItem { l: CheckLevel; t: string; d?: string; src?: 'bdt' | 'vdr' | 'gleif' | 'openfigi' }
 
 // ─── Canonical field paths (single source: FIELDS entries are selected by path) ──
 
