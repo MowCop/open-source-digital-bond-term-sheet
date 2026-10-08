@@ -273,6 +273,10 @@ export default function TermSheetFill({
     FIELDS.filter((f: FieldDef) => f.sec === secId && f.t === 'group');
 
   const priority = useMemo(() => priorityFields().filter(matches), [q]);
+  // Collapsed unless the user opened it, or a search is narrowing the form.
+  const priOpen = open.priority ?? !!q;
+  const priMissing = priority.filter((f: FieldDef) => isRequired(f) && !filled(state, f)).length;
+
 
   // ── render ──────────────────────────────────────────────────────────────────
 
