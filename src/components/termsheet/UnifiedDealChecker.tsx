@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { tallyChecks, unifiedChecks, type BdtState, type CheckItem, type CheckLevel } from '@/lib/bdt-bridge';
 import { validLEI } from '@/lib/termsheet/index.js';
+import { OPENFIGI_REGULATIONS_URL, OPENFIGI_SEARCH_URL, figiChecks, lookupFigis, reportingChecks, type FigiRecord } from '@/lib/openfigi';
 import { GLEIF_ACCESS_URL, GLEIF_SEARCH_URL, gleifCheck, lookupLeis, missingLeiCheck, searchLeiByName, type GleifRecord } from '@/lib/gleif';
 
 const LEVEL_META: Record<CheckLevel, {
@@ -93,6 +94,18 @@ export default function UnifiedDealChecker({ state }: Props) {
     return () => { cancelled = true; clearTimeout(t); };
   }, [noLeiKey]);
 
+  const isin = ((state.ids ?? []).find((x: { Type?: string }) => x.Type === 'ISIN')?.Value ?? '').trim().toUpperCase();
+  const [figiRec, setFigiRec] = useState<Record<string, FigiRecord>>({});
+  useEffect(() => {
+    if (!/^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(isin)) return;
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try { const r = await lookupFigis([isin]); if (!cancelled) setFigiRec(prev => ({ ...prev, ...r })); }
+      catch { if (!cancelled) setFigiRec(prev => ({ ...prev, [isin]: { found: false, error: 'OpenFIGI service unreachable' } })); }
+    }, 800);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [isin, refreshTick]);
+
   const checks = useMemo<CheckItem[]>(() => {
     let base: CheckItem[] = [];
     try {
@@ -108,8 +121,9 @@ export default function UnifiedDealChecker({ state }: Props) {
       .map(n => missingLeiCheck(n, matchCounts[n] ?? 0))
       .filter((c): c is CheckItem => !!c)
       .map(c => ({ ...c, src: 'gleif' as const }));
-    return [...base, ...live, ...missing] as CheckItem[];
-  }, [state, refreshTick, leiParties, gleif, noLeiKey, matchCounts]);
+    const figi = [...figiChecks(state, figiRec[isin]), ...reportingChecks(state)].map(c => ({ ...c, src: 'openfigi' as const }));
+    return [...base, ...live, ...missing, ...figi] as CheckItem[];
+  }, [state, refreshTick, leiParties, gleif, noLeiKey, matchCounts, figiRec, isin]);
   const tally = useMemo(() => tallyChecks(checks), [checks]);
   const visible = filter === 'all' ? checks : checks.filter(check => check.l === filter);
   const accent = tally.fail > 0
@@ -202,7 +216,18 @@ export default function UnifiedDealChecker({ state }: Props) {
                   {(check.src as string) === 'gleif' && (
                     <span className="shrink-0 text-[10px] text-muted-foreground">live GLEIF</span>
                   )}
-                  {/LEI/.test(check.t) && (
+                  {check.src === 'openfigi' && (
+                    <>
+                      <span className="shrink-0 text-[10px] text-muted-foreground">OpenFIGI</span>
+                      <a
+                        href={check.d?.match(/BBG[A-Z0-9]{9}/)?.[0] ? OPENFIGI_SEARCH_URL + check.d.match(/BBG[A-Z0-9]{9}/)![0] : OPENFIGI_REGULATIONS_URL}
+                        target="_blank" rel="noreferrer" className="shrink-0 text-primary hover:underline" title="Open in OpenFIGI"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </>
+                  )}
+                  {check.src !== 'openfigi' && /LEI/.test(check.t) && (
                     <a
                       href={(check.d?.match(/[A-Z0-9]{20}/)?.[0] ? GLEIF_SEARCH_URL + check.d.match(/[A-Z0-9]{20}/)![0] : GLEIF_ACCESS_URL)}
                       target="_blank"

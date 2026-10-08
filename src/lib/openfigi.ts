@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { BdtState, CheckItem } from '@/lib/bdt-bridge';
+import { bdtToDealCache, type BdtState, type CheckItem } from '@/lib/bdt-bridge';
 
 /** OpenFIGI enrichment. The offline format/check-digit test is the instant baseline. */
 export const OPENFIGI_SEARCH_URL = 'https://www.openfigi.com/search#!?simpleSearchString=';
@@ -86,7 +86,8 @@ export function reportingChecks(state: BdtState): CheckItem[] {
   if (!isin || !issuerLei)
     out.push({ l: 'warn', t: 'EU/UK reporting: ISIN and issuer LEI needed', d: 'MiFIR/EMIR/SFTR and UK equivalents identify the bond by ISIN and the issuer by LEI.' });
   else out.push({ l: 'pass', t: 'EU/UK reporting identifiers present', d: 'ISIN and issuer LEI recorded (MiFIR/EMIR/SFTR).' });
-  const cur = String((state as Record<string, unknown>).Currency ?? (state as Record<string, unknown>).currency ?? '').toUpperCase();
+  let cur = '';
+  try { cur = String(bdtToDealCache(state).currency ?? '').toUpperCase(); } catch { cur = ''; }
   const hasCusip = !!idOf(state, 'CUSIP');
   if (cur === 'USD' && !hasCusip && !idOf(state, 'FIGI'))
     out.push({ l: 'warn', t: 'US reporting: no CUSIP or FIGI', d: 'FINRA TRACE uses CUSIP; SEC 13F, Reg SHO and CFTC Part 17 accept FIGI as an alternative identifier.' });
