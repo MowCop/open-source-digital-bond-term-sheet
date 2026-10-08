@@ -273,6 +273,10 @@ export default function TermSheetFill({
     FIELDS.filter((f: FieldDef) => f.sec === secId && f.t === 'group');
 
   const priority = useMemo(() => priorityFields().filter(matches), [q]);
+  // Collapsed unless the user opened it, or a search is narrowing the form.
+  const priOpen = open.priority ?? !!q;
+  const priMissing = priority.filter((f: FieldDef) => isRequired(f) && !filled(state, f)).length;
+
 
   // ── render ──────────────────────────────────────────────────────────────────
 
@@ -399,35 +403,53 @@ export default function TermSheetFill({
         </Button>
       </div>
 
-      {/* Priority Execution Layer — FIELDS entries selected by path */}
+      {/* Priority Execution Layer — FIELDS entries selected by path. Collapsed by
+          default, like every other section; a search opens it automatically. */}
       {priority.length > 0 && (
-        <section className="rounded-lg border border-primary/30 bg-card/50 p-4">
-          <h3 className="text-sm font-semibold mb-1">Execution essentials</h3>
-          <p className="text-[11px] text-muted-foreground/70 mb-3">
-            The fields a syndicate desk touches on almost every deal. Each one is the same entry as in its full section below.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
-            {priority.map((fd: FieldDef) => (
-              <TermSheetField
-                key={`pri-${fd.p}`}
-                fd={fd}
-                value={valueOf(fd.p)}
-                required={isRequired(fd)}
-                proposed={proposedPaths.has(fd.p)}
-                invalid={fieldError(state, fd)}
-                disabled={!canEdit}
-                onChange={v => setField(fd.p, v)}
-              />
-            ))}
-          </div>
-          <div className="mt-4 pt-3 border-t border-border/50">
-            <GroupEditor
-              g="parties"
-              rows={state.parties ?? []}
-              canEdit={canEdit}
-              onChange={fn => mutateGroup('parties', fn)}
-            />
-          </div>
+        <section className="rounded-lg border border-border/60 bg-card/40">
+          <button
+            type="button"
+            onClick={() => setOpen(o => ({ ...o, priority: !priOpen }))}
+            className="w-full flex items-center gap-2 px-4 py-3 text-left"
+          >
+            {priOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+            <span className="text-sm font-medium flex-1">Execution essentials</span>
+            {priMissing > 0 && (
+              <Badge variant="outline" className="border-destructive/50 text-destructive text-[10px]">
+                {priMissing} missing
+              </Badge>
+            )}
+            <span className="text-[11px] text-muted-foreground/60">{priority.length + 1}</span>
+          </button>
+          {priOpen && (
+            <div className="px-4 pb-4 space-y-4">
+              <p className="text-[11px] leading-snug text-muted-foreground/70">
+                The fields a syndicate desk touches on almost every deal. Each one is the same entry as in its full section below.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+                {priority.map((fd: FieldDef) => (
+                  <TermSheetField
+                    key={`pri-${fd.p}`}
+                    fd={fd}
+                    value={valueOf(fd.p)}
+                    required={isRequired(fd)}
+                    proposed={proposedPaths.has(fd.p)}
+                    invalid={fieldError(state, fd)}
+                    disabled={!canEdit}
+                    onChange={v => setField(fd.p, v)}
+                  />
+                ))}
+              </div>
+              <div className="pt-3 border-t border-border/50">
+                <GroupEditor
+                  g="parties"
+                  rows={state.parties ?? []}
+                  canEdit={canEdit}
+                  onChange={fn => mutateGroup('parties', fn)}
+                />
+              </div>
+            </div>
+          )}
         </section>
       )}
 
