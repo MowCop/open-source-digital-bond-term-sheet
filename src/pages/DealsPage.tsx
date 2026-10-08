@@ -70,24 +70,22 @@ function DealDetail({ deal, canManage, fromBoard, onSaveFields }: DealDetailProp
 
   return (
     <div className="border-t p-5 bg-card/40 space-y-6">
-      <div className="flex items-center justify-between">
-        {fromBoard && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-xs text-muted-foreground hover:text-foreground -ml-2"
-            onClick={() => navigate(`/messages?dealId=${deal.id}`)}
-          >
-            <ArrowLeft className="h-3 w-3 mr-1" />
-            Back to New Issue Board
-          </Button>
-        )}
-        {canManage && (
-          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
-            <IngestDropzone onFiles={ingest} />
-          </div>
-        )}
-      </div>
+      {fromBoard && (
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-xs text-muted-foreground hover:text-foreground -ml-2"
+          onClick={() => navigate(`/messages?dealId=${deal.id}`)}
+        >
+          <ArrowLeft className="h-3 w-3 mr-1" />
+          Back to New Issue Board
+        </Button>
+      )}
+      {canManage && (
+        <div className="flex w-full items-center">
+          <IngestDropzone onFiles={ingest} className="flex-1" />
+        </div>
+      )}
 
       <UnifiedDealChecker state={checkerState} />
 
