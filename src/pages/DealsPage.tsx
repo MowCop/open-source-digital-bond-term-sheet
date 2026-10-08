@@ -19,7 +19,8 @@ import { supabase } from '@/integrations/supabase/client';
 import DealCheckFlag from '@/components/DealCheckFlag';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import TermSheetFill from '@/components/termsheet/TermSheetFill';
+import TermSheetFill, { type TermSheetFillHandle } from '@/components/termsheet/TermSheetFill';
+import IngestDropzone from '@/components/termsheet/IngestDropzone';
 import TermSheetDlt from '@/components/termsheet/TermSheetDlt';
 import UnifiedDealChecker from '@/components/termsheet/UnifiedDealChecker';
 import { buildXML, refreshAuto } from '@/lib/termsheet/index.js';
@@ -56,6 +57,14 @@ interface DealDetailProps {
 function DealDetail({ deal, canManage, fromBoard, hasBulletin, onGenerateBulletin, onSaveFields }: DealDetailProps) {
   const [checkerState, setCheckerState] = useState<BdtState>(() => dealToBdtState(deal));
   const navigate = useNavigate();
+  const fillRef = useRef<TermSheetFillHandle>(null);
+  const [tab, setTab] = useState('fill');
+
+  // The drop panel sits in this header row; the Fill tab owns the proposals.
+  const ingest = async (files: FileList) => {
+    const found = await fillRef.current?.ingestFiles(files);
+    if (found) setTab('fill');
+  };
 
   useEffect(() => {
     setCheckerState(dealToBdtState(deal));
@@ -76,7 +85,7 @@ function DealDetail({ deal, canManage, fromBoard, hasBulletin, onGenerateBulleti
           </Button>
         )}
         {canManage && (
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
             {hasBulletin ? (
               <Button
                 size="default"
@@ -92,21 +101,22 @@ function DealDetail({ deal, canManage, fromBoard, hasBulletin, onGenerateBulleti
                 <Megaphone className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} /> Generate New Issue Bulletin
               </Button>
             )}
+            <IngestDropzone onFiles={ingest} />
           </div>
         )}
       </div>
 
       <UnifiedDealChecker state={checkerState} />
 
-      <Tabs defaultValue="fill">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="fill">Fill</TabsTrigger>
           <TabsTrigger value="view">View</TabsTrigger>
           <TabsTrigger value="xml">BDT XML</TabsTrigger>
           <TabsTrigger value="dlt">DLT view</TabsTrigger>
         </TabsList>
-        <TabsContent value="fill" className="mt-4">
-          <TermSheetFill deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} />
+        <TabsContent value="fill" forceMount className="mt-4">
+          <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} />
         </TabsContent>
         <TabsContent value="xml" className="mt-4">
           <BdtXmlPanel deal={deal} />

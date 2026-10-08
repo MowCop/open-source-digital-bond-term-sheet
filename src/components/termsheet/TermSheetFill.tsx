@@ -11,10 +11,10 @@
  *    VDR calendar/settlement/benchmark rules appended.
  *  • Fixed-rate single tranche only in this iteration.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject } from 'react';
 import {
-  Check, ChevronDown, ChevronRight, FileUp,
-  Loader2, Plus, Save, Search, Sparkles, Trash2, X,
+  Check, ChevronDown, ChevronRight,
+  Plus, Save, Search, Trash2, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,7 +62,14 @@ const clone = (s: BdtState): BdtState => JSON.parse(JSON.stringify(s));
 
 interface StageSnap { version: number; stage: number; released_at: string; released_by_name: string | null; bdt_state_snapshot: BdtState }
 
-export default function TermSheetFill({ deal, canEdit: canEditProp, onSave, onStateChange }: Props) {
+export interface TermSheetFillHandle {
+  /** Parse dropped/picked documents into proposed values; resolves with the count found. */
+  ingestFiles: (files: FileList | File[] | null) => Promise<number>;
+}
+
+export default function TermSheetFill({
+  deal, canEdit: canEditProp, onSave, onStateChange, ingestRef,
+}: Props & { ingestRef?: RefObject<TermSheetFillHandle> }) {
   const [snaps, setSnaps] = useState<StageSnap[]>([]);
   const [viewStage, setViewStage] = useState<number | null>(null);
   const loadSnaps = async () => {
@@ -83,9 +90,6 @@ export default function TermSheetFill({ deal, canEdit: canEditProp, onSave, onSt
   const [showOptional, setShowOptional] = useState(false);
   const [open, setOpen] = useState<Record<string, boolean>>({ parties: true });
   const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [parsing, setParsing] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   // Term sheet steps with no matching deal stage (IPT, Allocated) can be chosen as the save step.
   const BETWEEN_STAGES = [2, 6];
@@ -167,9 +171,12 @@ export default function TermSheetFill({ deal, canEdit: canEditProp, onSave, onSt
 
   // ── assisted fill ───────────────────────────────────────────────────────────
 
-  async function handleFiles(files: FileList | null) {
-    if (!files?.length || !canEdit) return;
-    setParsing(true);
+  async function handleFiles(files: FileList | File[] | null): Promise<number> {
+    if (!files?.length) return 0;
+    if (!canEdit) {
+      toast.info('Return to the current stage before adding documents');
+      return 0;
+    }
     try {
       const found: Proposal[] = [];
       for (const file of Array.from(files)) {
@@ -192,12 +199,18 @@ export default function TermSheetFill({ deal, canEdit: canEditProp, onSave, onSt
       toast[found.length ? 'success' : 'info'](
         found.length ? `${found.length} proposals to review` : 'Nothing recognisable found in that document',
       );
+      return found.length;
     } catch (err) {
       toast.error(`Could not read that document: ${(err as Error).message}`);
-    } finally {
-      setParsing(false);
+      return 0;
     }
   }
+
+  // The drop panel sits in the deal header above the tabs, so ingest is exposed from here.
+  // A plain prop (not forwardRef) keeps this a function component, so hot reloads reuse the
+  // same fiber type instead of blanking the screen with "Component is not a function".
+  const ownRef = useRef<TermSheetFillHandle>(null);
+  useImperativeHandle(ingestRef || ownRef, () => ({ ingestFiles: handleFiles }));
 
   const acceptProposal = (i: number) => {
     const pr = proposals[i];
@@ -335,34 +348,6 @@ export default function TermSheetFill({ deal, canEdit: canEditProp, onSave, onSt
         </p>
       </div>
 
-      {/* Assisted fill */}
-      {canEdit && (
-        <div
-          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={e => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files); }}
-          className={[
-            'rounded-lg border border-dashed p-4 text-center transition-colors',
-            dragOver ? 'border-primary bg-primary/5' : 'border-border/60 bg-card/30',
-          ].join(' ')}
-        >
-          <input
-            ref={fileRef}
-            type="file"
-            multiple
-            className="hidden"
-            accept=".pdf,.docx,.xml,.html,.htm,.txt"
-            onChange={e => handleFiles(e.target.files)}
-          />
-          <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground">
-            {parsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
-            <span>Drop a term sheet, final terms or BDT XML file here to propose values</span>
-            <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} disabled={parsing}>
-              <Sparkles className="h-3.5 w-3.5 mr-1" /> Choose file
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Proposal review — nothing is applied without acceptance */}
       {proposals.length > 0 && (
@@ -698,3 +683,4 @@ function GroupEditor({ g, rows, canEdit, onChange }: GroupProps) {
     </div>
   );
 }
+
