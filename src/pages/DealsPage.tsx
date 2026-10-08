@@ -44,25 +44,17 @@ const fieldRow = (label: string, value: string | undefined) => (
   <div><span className="text-muted-foreground">{label}:</span> {value && value.trim() ? value : 'TBA'}</div>
 );
 
-const getNextStage = (current: DealStage): DealStage | null => {
-  const idx = STAGES.indexOf(current);
-  return idx < STAGES.length - 1 ? STAGES[idx + 1] : null;
-};
-
 interface DealDetailProps {
   deal: Deal;
   canManage: boolean;
-  onAdvance: (next: DealStage, note?: string) => void;
   fromBoard?: boolean;
   hasBulletin: boolean;
   onGenerateBulletin: () => void;
   onSaveFields: (patch: Partial<Deal>) => void;
 }
 
-function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGenerateBulletin, onSaveFields }: DealDetailProps) {
-  const [stageNote, setStageNote] = useState('');
+function DealDetail({ deal, canManage, fromBoard, hasBulletin, onGenerateBulletin, onSaveFields }: DealDetailProps) {
   const [checkerState, setCheckerState] = useState<BdtState>(() => dealToBdtState(deal));
-  const next = getNextStage(deal.stage);
   const navigate = useNavigate();
 
   useEffect(() => {
