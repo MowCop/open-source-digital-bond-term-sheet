@@ -41,6 +41,7 @@ interface Props {
   deal: Deal;
   canEdit: boolean;
   onSave: (patch: Partial<Deal>) => void;
+  onStateChange?: (state: BdtState) => void;
 }
 
 interface Proposal {
@@ -59,7 +60,7 @@ const clone = (s: BdtState): BdtState => JSON.parse(JSON.stringify(s));
 
 interface StageSnap { version: number; stage: number; released_at: string; released_by_name: string | null; bdt_state_snapshot: BdtState }
 
-export default function TermSheetFill({ deal, canEdit: canEditProp, onSave }: Props) {
+export default function TermSheetFill({ deal, canEdit: canEditProp, onSave, onStateChange }: Props) {
   const [snaps, setSnaps] = useState<StageSnap[]>([]);
   const [viewStage, setViewStage] = useState<number | null>(null);
   const loadSnaps = async () => {
@@ -122,6 +123,10 @@ export default function TermSheetFill({ deal, canEdit: canEditProp, onSave }: Pr
     try { return unifiedChecks(state); } catch { return []; }
   }, [state]);
   const tally = useMemo(() => tallyChecks(checkItems), [checkItems]);
+
+  useEffect(() => {
+    onStateChange?.(liveState);
+  }, [liveState, onStateChange]);
 
   const requiredNow = useMemo(
     () => FIELDS.filter((f: FieldDef) => f.req && f.req <= stageIdx),
@@ -519,31 +524,6 @@ export default function TermSheetFill({ deal, canEdit: canEditProp, onSave }: Pr
         })}
       </div>
 
-      {/* Check list — the single validation surface */}
-      <section className="rounded-lg border border-border/60 bg-card/40 p-4 space-y-2">
-        <h3 className="text-sm font-semibold">Checks</h3>
-        {checkItems.map((c, i) => (
-          <div key={i} className="flex items-start gap-2 text-xs">
-            <span
-              className={[
-                'mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide',
-                c.l === 'fail' ? 'bg-destructive/15 text-destructive'
-                  : c.l === 'warn' ? 'bg-amber-500/15 text-amber-500'
-                    : 'bg-emerald-500/15 text-emerald-500',
-              ].join(' ')}
-            >
-              {c.l}
-            </span>
-            <div className="min-w-0">
-              <div className="text-foreground">{c.t}</div>
-              {c.d && <div className="text-muted-foreground/70">{c.d}</div>}
-            </div>
-            {c.src === 'vdr' && (
-              <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/50">calendar &amp; market rules</span>
-            )}
-          </div>
-        ))}
-      </section>
     </div>
   );
 }
