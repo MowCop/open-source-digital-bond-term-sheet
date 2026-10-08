@@ -106,7 +106,7 @@ function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, on
           <TabsTrigger value="xml">BDT XML</TabsTrigger>
           <TabsTrigger value="dlt">DLT view</TabsTrigger>
         </TabsList>
-        <TabsContent value="fill" forceMount className="mt-4">
+        <TabsContent value="fill" forceMount className="mt-4 data-[state=inactive]:hidden">
           <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} />
         </TabsContent>
         <TabsContent value="xml" className="mt-4">
