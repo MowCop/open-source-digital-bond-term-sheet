@@ -13,7 +13,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AlertTriangle, Check, ChevronDown, ChevronRight, CircleCheck, FileUp,
+  Check, ChevronDown, ChevronRight, FileUp,
   Loader2, Plus, Save, Search, Sparkles, Trash2, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -321,17 +321,6 @@ export default function TermSheetFill({ deal, canEdit: canEditProp, onSave, onSt
               <span className="text-xs font-medium">{pct}%</span>
             </div>
             <Progress value={pct} className="h-1.5" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-emerald-500/50 text-emerald-500">
-              <CircleCheck className="h-3 w-3 mr-1" /> {tally.pass} pass
-            </Badge>
-            <Badge variant="outline" className="border-amber-500/50 text-amber-500">
-              <AlertTriangle className="h-3 w-3 mr-1" /> {tally.warn} warn
-            </Badge>
-            <Badge variant="outline" className={tally.fail ? 'border-destructive/60 text-destructive' : 'text-muted-foreground'}>
-              <X className="h-3 w-3 mr-1" /> {tally.fail} fail
-            </Badge>
           </div>
           {canEdit && (
             <Button size="sm" onClick={save} disabled={!dirty}>
