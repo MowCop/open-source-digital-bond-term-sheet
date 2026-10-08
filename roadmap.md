@@ -17,6 +17,6 @@
 - [x] Fill tab rebuilt on the BDT core (stage rail, priority layer, full sections, assisted fill, save).
 - [ ] Term Sheet / XML / Envelope / Legends tabs.
 - [ ] Release & Audit Log tab writing immutable rows to `deal_term_sheet_releases`.
-- [ ] Point Deal Checker at `unifiedChecks` so the two surfaces become one in the UI.
+- [x] Point Deal Checker at `unifiedChecks` so the two surfaces become one in the UI.
 - [x] Retired the `fieldConfig.ts` prototype — the BDT FIELDS dictionary is the only field list.
 - [ ] Later iteration: floating / zero coupon with dependent fields and validation.
