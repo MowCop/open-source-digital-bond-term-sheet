@@ -88,7 +88,8 @@ export default function TermSheetFill({
   const [dirty, setDirty] = useState(false);
   const [query, setQuery] = useState('');
   const [showOptional, setShowOptional] = useState(false);
-  const [open, setOpen] = useState<Record<string, boolean>>({ parties: true });
+  // Every section — Parties included — starts closed; a search opens what it matches.
+  const [open, setOpen] = useState<Record<string, boolean>>({});
   const [proposals, setProposals] = useState<Proposal[]>([]);
 
   // Term sheet steps with no matching deal stage (IPT, Allocated) can be chosen as the save step.
