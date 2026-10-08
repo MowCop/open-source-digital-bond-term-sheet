@@ -509,7 +509,6 @@ export default function DealsPage() {
                   <DealDetail
                     deal={deal}
                     canManage={canManageDeals}
-                    onAdvance={(next, note) => updateDealStage(deal.id, next, note)}
                     fromBoard={!!searchParams.get('dealId')}
                     hasBulletin={bulletinByDeal.has(deal.id)}
                     onGenerateBulletin={() => setBulletinDealId(deal.id)}
