@@ -35,6 +35,7 @@ import {
   bdtStageForDeal, bdtToDealCache, dealToBdtState, priorityFields,
   unifiedChecks, tallyChecks, type BdtState, type CheckItem,
 } from '@/lib/bdt-bridge';
+import LeiSuggest from './LeiSuggest';
 import TermSheetField, { optionsFor, prettyEnum, type FieldDef } from './TermSheetField';
 
 interface Props {
