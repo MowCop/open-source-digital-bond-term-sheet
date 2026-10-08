@@ -102,6 +102,11 @@ export default function UnifiedDealChecker({ state }: Props) {
       <div className="flex flex-wrap items-center gap-2 px-4 py-3">
         <Shield className={`h-4 w-4 shrink-0 ${accent}`} />
         <span className="text-sm font-semibold uppercase tracking-wider">Deal Checker</span>
+        {gleifBusy && (
+          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" /> Checking GLEIF…
+          </span>
+        )}
 
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
           <Badge variant="outline" className={LEVEL_META.pass.badgeClass}>{tally.pass} pass</Badge>
