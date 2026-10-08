@@ -49,3 +49,49 @@ export function gleifCheck(partyName: string, lei: string, rec: GleifRecord | un
     return { l: 'warn', t: `LEI name mismatch: ${who}`, d: `GLEIF registers ${lei} to "${rec.legalName}".` };
   return { l: 'pass', t: `LEI verified in GLEIF: ${who}`, d: `${rec.legalName} · ${rec.registrationStatus || 'ISSUED'}` };
 }
+
+export interface LeiCandidate {
+  lei: string;
+  legalName: string;
+  country: string;
+  entityStatus: string;
+  registrationStatus: string;
+  best?: boolean;
+}
+
+const searchCache = new Map<string, Promise<LeiCandidate[]>>();
+
+/** Search GLEIF by legal name (cached per name). Never throws: an outage returns []. */
+export function searchLeiByName(name: string): Promise<LeiCandidate[]> {
+  const key = name.trim().toUpperCase();
+  if (key.length < 2) return Promise.resolve([]);
+  if (!searchCache.has(key)) {
+    const p = supabase.functions
+      .invoke('gleif-lookup', { body: { search: { name: name.trim() } } })
+      .then(({ data, error }) => (error ? [] : ((data?.candidates ?? []) as LeiCandidate[])))
+      .catch(() => [] as LeiCandidate[]);
+    p.then(r => { if (r.length === 0) searchCache.delete(key); });
+    searchCache.set(key, p);
+  }
+  return searchCache.get(key)!;
+}
+
+/** Active entities first, name matches first; flag a single active name-matching candidate as best. Max 5. */
+export function rankCandidates(name: string, list: LeiCandidate[]): LeiCandidate[] {
+  const score = (c: LeiCandidate) =>
+    (c.entityStatus === 'ACTIVE' ? 2 : 0) + (c.registrationStatus === 'ISSUED' ? 1 : 0) + (namesMatch(name, c.legalName) ? 4 : 0);
+  const sorted = [...list].sort((a, b) => score(b) - score(a)).slice(0, 5).map(c => ({ ...c, best: false }));
+  const strong = sorted.filter(c => c.entityStatus === 'ACTIVE' && namesMatch(name, c.legalName));
+  if (strong.length === 1) strong[0].best = true;
+  return sorted;
+}
+
+/** Deal Checker warning for a named party with no LEI. */
+export function missingLeiCheck(partyName: string, count: number): CheckItem | null {
+  if (!partyName.trim() || count === 0) return null;
+  return {
+    l: 'warn',
+    t: `Party ${partyName} has no LEI — ${count} GLEIF match${count === 1 ? '' : 'es'} found`,
+    d: 'Open the party in the Fill tab and pick a suggestion under the LEI box.',
+  };
+}
