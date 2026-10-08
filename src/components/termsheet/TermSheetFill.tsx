@@ -13,7 +13,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AlertTriangle, Check, ChevronDown, ChevronRight, CircleCheck, FileUp,
+  Check, ChevronDown, ChevronRight, FileUp,
   Loader2, Plus, Save, Search, Sparkles, Trash2, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
