@@ -40,8 +40,8 @@ export default function IngestDropzone({ onFiles, disabled, className }: Props) 
       onDrop={e => { e.preventDefault(); setDragOver(false); void run(e.dataTransfer.files); }}
       title={HINT}
       className={[
-        'flex items-center gap-2 rounded-lg border border-dashed px-3 py-1.5 transition-colors',
-        dragOver ? 'border-primary bg-primary/5' : 'border-border/60 bg-card/30',
+        'flex items-center gap-2 rounded-lg border px-3 py-1.5 transition-colors',
+        dragOver ? 'border-primary bg-primary/10' : 'border-input bg-background',
         className ?? '',
       ].join(' ')}
     >
