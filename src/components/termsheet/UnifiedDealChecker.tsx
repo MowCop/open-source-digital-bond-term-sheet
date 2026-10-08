@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { tallyChecks, unifiedChecks, type BdtState, type CheckItem, type CheckLevel } from '@/lib/bdt-bridge';
 import { validLEI } from '@/lib/termsheet/index.js';
-import { GLEIF_ACCESS_URL, GLEIF_SEARCH_URL, gleifCheck, lookupLeis, type GleifRecord } from '@/lib/gleif';
+import { GLEIF_ACCESS_URL, GLEIF_SEARCH_URL, gleifCheck, lookupLeis, missingLeiCheck, searchLeiByName, type GleifRecord } from '@/lib/gleif';
 
 const LEVEL_META: Record<CheckLevel, {
   label: string;
@@ -76,6 +76,23 @@ export default function UnifiedDealChecker({ state }: Props) {
     return () => { cancelled = true; clearTimeout(t); };
   }, [leiKey, refreshTick]);
 
+  // Named parties with no LEI: count GLEIF name matches so the checker can point at the suggestions.
+  const noLeiKey = (state.parties ?? [])
+    .filter((p: { PartyName?: string; LEIIdentifier?: string }) => (p.PartyName ?? '').trim().length >= 2 && !(p.LEIIdentifier ?? '').trim())
+    .map((p: { PartyName?: string }) => (p.PartyName ?? '').trim())
+    .join('|');
+  const [matchCounts, setMatchCounts] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!noLeiKey) return;
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      const names = noLeiKey.split('|');
+      const res = await Promise.all(names.map(n => searchLeiByName(n)));
+      if (!cancelled) setMatchCounts(Object.fromEntries(names.map((n, i) => [n, res[i].length])));
+    }, 800);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [noLeiKey]);
+
   const checks = useMemo<CheckItem[]>(() => {
     let base: CheckItem[] = [];
     try {
@@ -87,8 +104,12 @@ export default function UnifiedDealChecker({ state }: Props) {
       .map(p => gleifCheck(p.name, p.lei, gleif[p.lei]))
       .filter((c): c is CheckItem => !!c)
       .map(c => ({ ...c, src: 'gleif' as const }));
-    return [...base, ...live] as CheckItem[];
-  }, [state, refreshTick, leiParties, gleif]);
+    const missing = (noLeiKey ? noLeiKey.split('|') : [])
+      .map(n => missingLeiCheck(n, matchCounts[n] ?? 0))
+      .filter((c): c is CheckItem => !!c)
+      .map(c => ({ ...c, src: 'gleif' as const }));
+    return [...base, ...live, ...missing] as CheckItem[];
+  }, [state, refreshTick, leiParties, gleif, noLeiKey, matchCounts]);
   const tally = useMemo(() => tallyChecks(checks), [checks]);
   const visible = filter === 'all' ? checks : checks.filter(check => check.l === filter);
   const accent = tally.fail > 0
