@@ -11,7 +11,7 @@
  *    VDR calendar/settlement/benchmark rules appended.
  *  • Fixed-rate single tranche only in this iteration.
  */
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject } from 'react';
 import {
   Check, ChevronDown, ChevronRight,
   Plus, Save, Search, Trash2, X,
@@ -67,10 +67,9 @@ export interface TermSheetFillHandle {
   ingestFiles: (files: FileList | File[] | null) => Promise<number>;
 }
 
-const TermSheetFill = forwardRef<TermSheetFillHandle, Props>(function TermSheetFill(
-  { deal, canEdit: canEditProp, onSave, onStateChange }: Props,
-  ref,
-) {
+export default function TermSheetFill({
+  deal, canEdit: canEditProp, onSave, onStateChange, ingestRef,
+}: Props & { ingestRef?: RefObject<TermSheetFillHandle> }) {
   const [snaps, setSnaps] = useState<StageSnap[]>([]);
   const [viewStage, setViewStage] = useState<number | null>(null);
   const loadSnaps = async () => {
@@ -208,7 +207,10 @@ const TermSheetFill = forwardRef<TermSheetFillHandle, Props>(function TermSheetF
   }
 
   // The drop panel sits in the deal header above the tabs, so ingest is exposed from here.
-  useImperativeHandle(ref, () => ({ ingestFiles: handleFiles }));
+  // A plain prop (not forwardRef) keeps this a function component, so hot reloads reuse the
+  // same fiber type instead of blanking the screen with "Component is not a function".
+  const ownRef = useRef<TermSheetFillHandle>(null);
+  useImperativeHandle(ingestRef || ownRef, () => ({ ingestFiles: handleFiles }));
 
   const acceptProposal = (i: number) => {
     const pr = proposals[i];
@@ -500,9 +502,7 @@ const TermSheetFill = forwardRef<TermSheetFillHandle, Props>(function TermSheetF
 
     </div>
   );
-});
-
-export default TermSheetFill;
+}
 
 // ─── Repeating group editor (parties, identifiers, ratings, documents, contacts) ──
 
