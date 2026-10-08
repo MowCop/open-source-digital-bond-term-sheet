@@ -529,6 +529,8 @@ export default function DealsPage() {
                   <DealDetail
                     deal={deal}
                     canManage={canManageDeals}
+                    initialFiles={pendingDocuments?.dealId === deal.id ? pendingDocuments.files : undefined}
+                    onInitialFilesConsumed={() => setPendingDocuments(null)}
                     fromBoard={!!searchParams.get('dealId')}
                     onSaveFields={(patch) => {
                       updateDeal(deal.id, { ...patch, updatedAt: new Date() });
