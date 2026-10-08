@@ -36,6 +36,7 @@ import {
   unifiedChecks, tallyChecks, type BdtState, type CheckItem,
 } from '@/lib/bdt-bridge';
 import LeiSuggest from './LeiSuggest';
+import FigiSuggest from './FigiSuggest';
 import TermSheetField, { optionsFor, prettyEnum, type FieldDef } from './TermSheetField';
 
 interface Props {
@@ -691,6 +692,9 @@ function GroupEditor({ g, rows, canEdit, onChange }: GroupProps) {
           </div>
         ))}
       </div>
+      {g === 'ids' && (
+        <FigiSuggest rows={rows} canEdit={canEdit} onAdd={v => onChange(list => [...list, { Type: 'FIGI', Value: v }])} />
+      )}
     </div>
   );
 }
