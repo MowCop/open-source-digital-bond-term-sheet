@@ -11,21 +11,25 @@ const LEVEL_META: Record<CheckLevel, {
   label: string;
   icon: typeof CheckCircle2;
   badgeClass: string;
+  iconClass: string;
 }> = {
   pass: {
     label: 'Pass',
     icon: CheckCircle2,
     badgeClass: 'border-emerald-500/50 text-emerald-500',
+    iconClass: 'text-emerald-500',
   },
   warn: {
     label: 'Warning',
     icon: AlertTriangle,
     badgeClass: 'border-amber-500/50 text-amber-500',
+    iconClass: 'text-amber-500',
   },
   fail: {
     label: 'Fail',
     icon: XCircle,
     badgeClass: 'border-destructive/60 text-destructive',
+    iconClass: 'text-destructive',
   },
 };
 
@@ -121,7 +125,7 @@ export default function UnifiedDealChecker({ state }: Props) {
               const Icon = meta.icon;
               return (
                 <div key={`${check.l}-${check.t}-${index}`} className="flex items-start gap-2 rounded-md border border-border/60 px-3 py-2 text-xs">
-                  <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${meta.badgeClass.split(' ').at(-1) ?? ''}`} />
+                  <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${meta.iconClass}`} />
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-foreground">{check.t}</div>
                     {check.d && <div className="mt-0.5 text-muted-foreground">{check.d}</div>}
