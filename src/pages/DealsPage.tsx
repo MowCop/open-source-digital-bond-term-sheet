@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Deal, DealStage, BookrunnerRole, UserRole } from '@/types/bond';
-import type { DealCheckerAuditEntry } from '@/lib/bondValidator';
 import { format } from 'date-fns';
 import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2, Undo2 } from 'lucide-react';
 import {
@@ -17,14 +16,14 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
-import DealChecker from '@/components/DealChecker';
 import DealCheckFlag from '@/components/DealCheckFlag';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TermSheetFill from '@/components/termsheet/TermSheetFill';
 import TermSheetDlt from '@/components/termsheet/TermSheetDlt';
+import UnifiedDealChecker from '@/components/termsheet/UnifiedDealChecker';
 import { buildXML, refreshAuto } from '@/lib/termsheet/index.js';
-import { dealToBdtState } from '@/lib/bdt-bridge';
+import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
   const xml = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return buildXML(s) as string; }, [deal]);
@@ -52,8 +51,6 @@ const getNextStage = (current: DealStage): DealStage | null => {
 
 interface DealDetailProps {
   deal: Deal;
-  currentUser?: { id: string; name: string; role: UserRole };
-  onCheckerAudit?: (entries: DealCheckerAuditEntry[]) => void;
   canManage: boolean;
   onAdvance: (next: DealStage, note?: string) => void;
   fromBoard?: boolean;
@@ -62,10 +59,15 @@ interface DealDetailProps {
   onSaveFields: (patch: Partial<Deal>) => void;
 }
 
-function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGenerateBulletin, currentUser, onCheckerAudit, onSaveFields }: DealDetailProps) {
+function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGenerateBulletin, onSaveFields }: DealDetailProps) {
   const [stageNote, setStageNote] = useState('');
+  const [checkerState, setCheckerState] = useState<BdtState>(() => dealToBdtState(deal));
   const next = getNextStage(deal.stage);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setCheckerState(dealToBdtState(deal));
+  }, [deal.id, deal.bdtState]);
 
   return (
     <div className="border-t p-5 bg-card/40 space-y-6">
@@ -110,6 +112,8 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
         )}
       </div>
 
+      <UnifiedDealChecker state={checkerState} />
+
       <Tabs defaultValue="fill">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="fill">Fill</TabsTrigger>
@@ -118,7 +122,7 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
           <TabsTrigger value="dlt">DLT view</TabsTrigger>
         </TabsList>
         <TabsContent value="fill" className="mt-4">
-          <TermSheetFill deal={deal} canEdit={canManage} onSave={onSaveFields} />
+          <TermSheetFill deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} />
         </TabsContent>
         <TabsContent value="xml" className="mt-4">
           <BdtXmlPanel deal={deal} />
@@ -197,15 +201,6 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
       </div>
         </TabsContent>
       </Tabs>
-
-      {/* AI Deal Checker — live, runs through to pricing */}
-      <DealChecker
-        deal={deal}
-        userRole={currentUser?.role}
-        currentUserId={currentUser?.id}
-        currentUserName={currentUser?.name}
-        onAuditEntries={onCheckerAudit}
-      />
 
       {/* Stage History */}
       <div className="space-y-2">
@@ -544,18 +539,6 @@ export default function DealsPage() {
                         details: `Digital Term Sheet updated: ${Object.keys(patch).join(', ')}`,
                       });
                     }}
-                    currentUser={currentUser}
-                    onCheckerAudit={(entries) =>
-                      entries.forEach((e) =>
-                        addAuditEntry({
-                          action: 'deal_checker_override',
-                          entityType: 'deal_checker_override',
-                          entityId: deal.id,
-                          userId: e.adminUserId,
-                          details: JSON.stringify(e),
-                        })
-                      )
-                    }
                   />
                 </CardContent>
               )}
