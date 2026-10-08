@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, RefreshCw, Shield, XCircle,
+  AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Loader2, RefreshCw, Shield, XCircle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { tallyChecks, unifiedChecks, type BdtState, type CheckItem, type CheckLevel } from '@/lib/bdt-bridge';
+import { validLEI } from '@/lib/termsheet/index.js';
+import { GLEIF_ACCESS_URL, GLEIF_SEARCH_URL, gleifCheck, lookupLeis, type GleifRecord } from '@/lib/gleif';
 
 const LEVEL_META: Record<CheckLevel, {
   label: string;
@@ -41,14 +43,52 @@ export default function UnifiedDealChecker({ state }: Props) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<CheckLevel | 'all'>('all');
   const [refreshTick, setRefreshTick] = useState(0);
+  const [gleif, setGleif] = useState<Record<string, GleifRecord>>({});
+  const [gleifBusy, setGleifBusy] = useState(false);
+
+  // Parties whose LEI already passes the instant offline check — only these go to GLEIF.
+  const leiParties = useMemo(
+    () => (state.parties ?? [])
+      .map((p: { PartyName?: string; LEIIdentifier?: string }) => ({ name: p.PartyName ?? '', lei: (p.LEIIdentifier ?? '').trim().toUpperCase() }))
+      .filter(p => p.lei && validLEI(p.lei)),
+    [state.parties],
+  );
+  const leiKey = leiParties.map(p => p.lei).sort().join(',');
+
+  useEffect(() => {
+    if (!leiKey) return;
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      setGleifBusy(true);
+      try {
+        const res = await lookupLeis(leiKey.split(','));
+        if (!cancelled) setGleif(prev => ({ ...prev, ...res }));
+      } catch {
+        if (!cancelled) setGleif(prev => {
+          const next = { ...prev };
+          for (const l of leiKey.split(',')) next[l] = { found: false, error: 'GLEIF service unreachable' };
+          return next;
+        });
+      } finally {
+        if (!cancelled) setGleifBusy(false);
+      }
+    }, 800);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [leiKey, refreshTick]);
 
   const checks = useMemo<CheckItem[]>(() => {
+    let base: CheckItem[] = [];
     try {
-      return unifiedChecks(state);
+      base = unifiedChecks(state);
     } catch {
-      return [];
+      base = [];
     }
-  }, [state, refreshTick]);
+    const live = leiParties
+      .map(p => gleifCheck(p.name, p.lei, gleif[p.lei]))
+      .filter((c): c is CheckItem => !!c)
+      .map(c => ({ ...c, src: 'gleif' as const }));
+    return [...base, ...live] as CheckItem[];
+  }, [state, refreshTick, leiParties, gleif]);
   const tally = useMemo(() => tallyChecks(checks), [checks]);
   const visible = filter === 'all' ? checks : checks.filter(check => check.l === filter);
   const accent = tally.fail > 0
@@ -132,6 +172,20 @@ export default function UnifiedDealChecker({ state }: Props) {
                   </div>
                   {check.src === 'vdr' && (
                     <span className="shrink-0 text-[10px] text-muted-foreground">calendar &amp; market rules</span>
+                  )}
+                  {(check.src as string) === 'gleif' && (
+                    <span className="shrink-0 text-[10px] text-muted-foreground">live GLEIF</span>
+                  )}
+                  {/LEI/.test(check.t) && (
+                    <a
+                      href={(check.d?.match(/[A-Z0-9]{20}/)?.[0] ? GLEIF_SEARCH_URL + check.d.match(/[A-Z0-9]{20}/)![0] : GLEIF_ACCESS_URL)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="shrink-0 text-primary hover:underline"
+                      title="Open in GLEIF"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
                   )}
                 </div>
               );
