@@ -44,25 +44,17 @@ const fieldRow = (label: string, value: string | undefined) => (
   <div><span className="text-muted-foreground">{label}:</span> {value && value.trim() ? value : 'TBA'}</div>
 );
 
-const getNextStage = (current: DealStage): DealStage | null => {
-  const idx = STAGES.indexOf(current);
-  return idx < STAGES.length - 1 ? STAGES[idx + 1] : null;
-};
-
 interface DealDetailProps {
   deal: Deal;
   canManage: boolean;
-  onAdvance: (next: DealStage, note?: string) => void;
   fromBoard?: boolean;
   hasBulletin: boolean;
   onGenerateBulletin: () => void;
   onSaveFields: (patch: Partial<Deal>) => void;
 }
 
-function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGenerateBulletin, onSaveFields }: DealDetailProps) {
-  const [stageNote, setStageNote] = useState('');
+function DealDetail({ deal, canManage, fromBoard, hasBulletin, onGenerateBulletin, onSaveFields }: DealDetailProps) {
   const [checkerState, setCheckerState] = useState<BdtState>(() => dealToBdtState(deal));
-  const next = getNextStage(deal.stage);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -99,14 +91,6 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
               <Button size="default" variant="outline" className="btn-champagne" onClick={onGenerateBulletin}>
                 <Megaphone className="h-4 w-4 mr-1" style={{ color: '#f3d98a' }} /> Generate New Issue Bulletin
               </Button>
-            )}
-            {next && (
-              <>
-                <Input value={stageNote} onChange={e => setStageNote(e.target.value)} placeholder="Stage transition note..." className="w-64 h-8 text-xs" />
-                <Button size="sm" onClick={() => { onAdvance(next, stageNote || undefined); setStageNote(''); }}>
-                  Advance to {next} <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </>
             )}
           </div>
         )}
@@ -226,7 +210,7 @@ function DealDetail({ deal, canManage, onAdvance, fromBoard, hasBulletin, onGene
 }
 
 export default function DealsPage() {
-  const { deals, messages, createDeal, updateDeal, updateDealStage, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser, addAuditEntry } = useScopedApp();
+  const { deals, messages, createDeal, updateDeal, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser, addAuditEntry } = useScopedApp();
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -525,7 +509,6 @@ export default function DealsPage() {
                   <DealDetail
                     deal={deal}
                     canManage={canManageDeals}
-                    onAdvance={(next, note) => updateDealStage(deal.id, next, note)}
                     fromBoard={!!searchParams.get('dealId')}
                     hasBulletin={bulletinByDeal.has(deal.id)}
                     onGenerateBulletin={() => setBulletinDealId(deal.id)}
