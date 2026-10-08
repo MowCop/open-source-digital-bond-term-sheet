@@ -363,7 +363,7 @@ export default function DealsPage() {
                     </div>
                   ))}
                   <div className="flex items-end gap-2">
-                    <div className="flex-1"><Input value={brName} onChange={e => setBrName(e.target.value)} placeholder="Bank name" className="h-8 text-xs" /></div>
+                    <div className="min-w-0 flex-1"><Input value={brName} onChange={e => setBrName(e.target.value)} placeholder="Bank name" className="h-8 text-xs" /></div>
                     <Select value={brRole} onValueChange={v => setBrRole(v as BookrunnerRole)}>
                       <SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="passive">Passive</SelectItem></SelectContent>
