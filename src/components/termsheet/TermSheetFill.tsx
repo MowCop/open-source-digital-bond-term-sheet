@@ -37,6 +37,7 @@ import {
 } from '@/lib/bdt-bridge';
 import LeiSuggest from './LeiSuggest';
 import FigiSuggest from './FigiSuggest';
+import type { CheckTarget } from '@/lib/checkActions';
 import TermSheetField, { optionsFor, prettyEnum, type FieldDef } from './TermSheetField';
 
 interface Props {
@@ -65,6 +66,10 @@ interface StageSnap { version: number; stage: number; released_at: string; relea
 export interface TermSheetFillHandle {
   /** Parse dropped/picked documents into proposed values; resolves with the count found. */
   ingestFiles: (files: FileList | File[] | null) => Promise<number>;
+  /** Open the section holding a checker target and scroll/flash it. */
+  focusTarget: (t: CheckTarget) => void;
+  /** Apply a Deal Checker fix to the live (unsaved) state. */
+  applyFix: (fn: (s: BdtState) => BdtState) => boolean;
 }
 
 export default function TermSheetFill({
@@ -211,7 +216,31 @@ export default function TermSheetFill({
   // A plain prop (not forwardRef) keeps this a function component, so hot reloads reuse the
   // same fiber type instead of blanking the screen with "Component is not a function".
   const ownRef = useRef<TermSheetFillHandle>(null);
-  useImperativeHandle(ingestRef || ownRef, () => ({ ingestFiles: handleFiles }));
+  const focusTarget = (t: CheckTarget) => {
+    setViewStage(null);
+    setQuery('');
+    setShowOptional(true);
+    setOpen(o => ({ ...o, priority: false, [t.sec]: true }));
+    const elId = t.kind === 'field' ? `f-${t.path}` : `g-${t.g}`;
+    let tries = 0;
+    const go = () => {
+      const el = document.getElementById(elId);
+      if (!el) { if (tries++ < 10) setTimeout(go, 80); return; }
+      const box = (t.kind === 'field' ? el.parentElement : el) as HTMLElement;
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (t.kind === 'field') (el as HTMLElement).focus({ preventScroll: true });
+      box.classList.add('ring-2', 'ring-amber-500', 'rounded-md');
+      setTimeout(() => box.classList.remove('ring-2', 'ring-amber-500', 'rounded-md'), 2200);
+    };
+    setTimeout(go, 50);
+  };
+  const applyFix = (fn: (s: BdtState) => BdtState) => {
+    if (!canEdit || viewStage != null) return false;
+    setState(s => { const next = clone(fn(clone(s))); refreshAuto(next); return next; });
+    setDirty(true);
+    return true;
+  };
+  useImperativeHandle(ingestRef || ownRef, () => ({ ingestFiles: handleFiles, focusTarget, applyFix }));
 
   const acceptProposal = (i: number) => {
     const pr = proposals[i];
@@ -498,14 +527,15 @@ export default function TermSheetFill({
                     </div>
                   )}
                   {groups.map((fd: FieldDef) => (
+                    <div key={fd.p} id={`g-${fd.g}`} className="scroll-mt-24 transition-shadow">
                     <GroupEditor
-                      key={fd.p}
                       g={fd.g}
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       rows={((state as any)[fd.g] ?? []) as any[]}
                       canEdit={canEdit}
                       onChange={fn => mutateGroup(fd.g, fn)}
                     />
+                    </div>
                   ))}
                   {hidden > 0 && (
                     <button
