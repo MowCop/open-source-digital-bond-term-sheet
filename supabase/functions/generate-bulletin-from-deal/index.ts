@@ -1,5 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { runModel, pickModel } from '../_shared/ai-model.ts';
 
 /**
  * generate-bulletin-from-deal
@@ -63,35 +64,10 @@ Deno.serve(async (req) => {
     if (dealErr) return jsonResponse({ error: 'db_error', message: dealErr.message }, 500);
     if (!deal) return jsonResponse({ error: 'deal_not_found' }, 404);
 
-    const apiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!apiKey) throw new Error('LOVABLE_API_KEY is not configured');
 
-    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        response_format: { type: 'json_object' },
-        max_tokens: 4000,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: `Deal record JSON:\n${JSON.stringify(deal, null, 2)}` },
-        ],
-      }),
-    });
-
-    if (res.status === 429) return jsonResponse({ error: 'rate_limit', message: 'AI rate limit reached. Try again in a moment.' }, 429);
-    if (res.status === 402) return jsonResponse({ error: 'credits_exhausted', message: 'AI credits exhausted. Add credits in workspace settings.' }, 402);
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`AI gateway failed [${res.status}]: ${body.slice(0, 300)}`);
-    }
-
-    const data = await res.json();
-    let raw: string = data?.choices?.[0]?.message?.content ?? '';
+    const ai = await runModel({ model: pickModel((payload as { model?: unknown })?.model), system: SYSTEM_PROMPT, user: `Deal record JSON:\n${JSON.stringify(deal, null, 2)}`, maxTokens: 4000 });
+    if (!ai.ok) return jsonResponse({ error: ai.error, message: ai.message }, ai.status);
+    let raw: string = ai.text;
     raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
 
     let obj: { subject?: unknown; body?: unknown };

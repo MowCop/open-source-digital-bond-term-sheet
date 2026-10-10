@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type MouseEvent } from 'react';
+import AiModelPicker from '@/components/AiModelPicker';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp, useScopedApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
@@ -561,7 +562,8 @@ export default function MessagesPage() {
                   <span className="block text-xs text-muted-foreground">{docCount} attached</span>
                 </span>
               </label>
-              <div className="flex justify-end pt-1">
+              <div className="flex items-center justify-between gap-2 pt-1" onClick={e => e.stopPropagation()}>
+                <AiModelPicker compact />
                 <Button
                   size="sm"
                   variant="outline"

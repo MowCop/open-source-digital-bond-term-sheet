@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { getAiModel } from '@/lib/aiModel';
+import AiModelPicker from '@/components/AiModelPicker';
 import { useApp } from '@/context/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -262,7 +264,7 @@ export default function AIDraftPage() {
       .slice(0, AI_MAX_CHARS);
     try {
       const { data, error } = await supabase.functions.invoke('extract-deal-fields-ai', {
-        body: { text: forAI },
+        body: { text: forAI, model: getAiModel() },
       });
 
       if (error) throw error;
@@ -608,7 +610,7 @@ export default function AIDraftPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Create New Issue</h1>
+        <div className="flex items-center gap-3 flex-wrap"><h1 className="text-2xl font-bold">Create New Issue</h1><AiModelPicker compact /></div>
       </div>
 
       <div>
