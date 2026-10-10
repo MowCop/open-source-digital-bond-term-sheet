@@ -215,19 +215,22 @@ export default function TermSheetFill({
         toast.error(`Could not read ${file.name}: ${(err as Error).message}`);
       }
     }
-    // Propose stored files for the Documentation list (never auto-added).
-    const existing = ((state as unknown as { docs?: Record<string, string>[] }).docs ?? []);
+    // Stored files are cited in the Documentation list straight away (user still presses Save).
     const added = list
       .map((file, i) => ({ file, link: links[i] }))
-      .filter(({ file, link }) => link && !existing.some(d => d.DocumentName === file.name))
+      .filter(({ link }) => link)
       .map(({ file, link }) => ({ DocumentName: file.name, DocumentDate: new Date().toISOString().slice(0, 10), DocumentLink: link as string, DocumentVersion: '' }));
     if (added.length) {
-      found.push({
-        kind: 'group', g: 'docs', l: 'Deal documents',
-        val: added.map(d => d.DocumentName).join(', '),
-        cur: existing.map(d => d.DocumentName).filter(Boolean).join(', '),
-        src: 'Dropped file', payload: [...existing, ...added],
+      setState(s => {
+        const cur = ((s as unknown as { docs?: Record<string, string>[] }).docs ?? []);
+        const fresh = added.filter(a => !cur.some(d => d.DocumentName === a.DocumentName));
+        if (!fresh.length) return s;
+        const next = clone(s) as BdtState;
+        (next as unknown as { docs: Record<string, string>[] }).docs = [...cur, ...fresh];
+        refreshAuto(next);
+        return next;
       });
+      setDirty(true);
     }
     setProposals(found);
     if (found.length) toast.success(`${found.length} proposals to review`);

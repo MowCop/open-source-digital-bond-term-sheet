@@ -10,7 +10,7 @@ import { validLEI } from '@/lib/termsheet/index.js';
 import { OPENFIGI_REGULATIONS_URL, OPENFIGI_SEARCH_URL, figiChecks, lookupFigis, reportingChecks, type FigiRecord } from '@/lib/openfigi';
 import { checkFix, checkKey, checkTarget, type CheckTarget } from '@/lib/checkActions';
 import { toast } from 'sonner';
-import { listDealDocuments } from '@/lib/dealDocuments';
+import { listDealDocuments, DOCS_CHANGED } from '@/lib/dealDocuments';
 import { GLEIF_ACCESS_URL, GLEIF_SEARCH_URL, gleifCheck, lookupLeis, missingLeiCheck, searchLeiByName, type GleifRecord } from '@/lib/gleif';
 
 const LEVEL_META: Record<CheckLevel, {
@@ -125,6 +125,17 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
     return () => { cancelled = true; clearTimeout(t); };
   }, [isin, refreshTick]);
 
+  const [storedDocs, setStoredDocs] = useState(0);
+  useEffect(() => {
+    if (!dealId) return;
+    let cancelled = false;
+    const load = () => listDealDocuments(dealId).then(d => { if (!cancelled) setStoredDocs(d.length); }).catch(() => {});
+    load();
+    const on = (e: Event) => { if ((e as CustomEvent).detail === dealId) load(); };
+    window.addEventListener(DOCS_CHANGED, on);
+    return () => { cancelled = true; window.removeEventListener(DOCS_CHANGED, on); };
+  }, [dealId, refreshTick]);
+
   const checks = useMemo<CheckItem[]>(() => {
     let base: CheckItem[] = [];
     try {
@@ -132,6 +143,10 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
     } catch {
       base = [];
     }
+    // Files saved in the deal's Documents store count as attached.
+    if (storedDocs > 0) base = base.map(c => c.t === 'No deal documents attached'
+      ? { l: 'pass', t: `${storedDocs} deal document${storedDocs > 1 ? 's' : ''} stored`, d: 'Saved in this deal\'s Documents tab.' } as CheckItem
+      : c);
     const live = leiParties
       .map(p => gleifCheck(p.name, p.lei, gleif[p.lei]))
       .filter((c): c is CheckItem => !!c)
