@@ -7,3 +7,4 @@
 - LEI suggestions from GLEIF name search are shown for the user to pick and are never auto-applied — common names match several legal entities.
 - FIGI checks mirror the LEI pattern: offline format/check-digit baseline plus live OpenFIGI lookup via the openfigi-lookup edge function, appended to unifiedChecks with src openfigi; FIGI suggestions are never auto-applied — one source of truth for identifier validation.
 - Imperative handles are passed as a plain prop (ingestRef), never React.forwardRef — a default-exported function component that becomes a forwardRef object changes the fiber type and hot reloads blank the preview with "Component is not a function".
+- Deal AI tools (document extraction, chat extraction, bulletin) route through supabase/functions/_shared/ai-model.ts, which allowlists the selectable models and calls the gateway's native messages endpoint; the browser only sends the chosen model id from src/lib/aiModel.ts — one place to add or remove models.
