@@ -10,6 +10,7 @@ import { validLEI } from '@/lib/termsheet/index.js';
 import { OPENFIGI_REGULATIONS_URL, OPENFIGI_SEARCH_URL, figiChecks, lookupFigis, reportingChecks, type FigiRecord } from '@/lib/openfigi';
 import { checkFix, checkKey, checkTarget, type CheckTarget } from '@/lib/checkActions';
 import { toast } from 'sonner';
+import { listDealDocuments } from '@/lib/dealDocuments';
 import { GLEIF_ACCESS_URL, GLEIF_SEARCH_URL, gleifCheck, lookupLeis, missingLeiCheck, searchLeiByName, type GleifRecord } from '@/lib/gleif';
 
 const LEVEL_META: Record<CheckLevel, {
@@ -61,6 +62,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<CheckLevel | 'all'>('all');
   const [refreshTick, setRefreshTick] = useState(0);
+  const [spinning, setSpinning] = useState(false);
   const [gleif, setGleif] = useState<Record<string, GleifRecord>>({});
   const [gleifBusy, setGleifBusy] = useState(false);
 
@@ -146,7 +148,29 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
   const ignoredCount = checks.length - active.length;
   const tally = useMemo(() => tallyChecks(active), [active]);
   const visible = filter === 'all' ? active : active.filter(check => check.l === filter);
-  const tryFix = (c: CheckItem) => {
+  const tryFix = async (c: CheckItem) => {
+    // Documents already saved to the deal can fill the Documentation list.
+    if (/deal documents/i.test(c.t) && dealId) {
+      try {
+        const stored = await listDealDocuments(dealId);
+        if (stored.length) {
+          const ok = onFix?.(s => {
+            const cur = ((s as unknown as { docs?: Record<string, string>[] }).docs ?? []).filter(d => d.DocumentName);
+            const add = stored.filter(d => !cur.some(x => x.DocumentName === d.name)).map(d => ({
+              DocumentName: d.name, DocumentDate: d.created_at.slice(0, 10),
+              DocumentLink: `vdr://deal-documents/${d.path}`, DocumentVersion: '',
+            }));
+            return { ...s, docs: [...cur, ...add] } as BdtState;
+          });
+          if (ok) {
+            toast.success(`Added ${stored.length} saved document${stored.length > 1 ? 's' : ''} — review and save the term sheet`);
+            const target = checkTarget(c);
+            if (target) onNavigate?.(target);
+            return;
+          }
+        }
+      } catch { /* fall through to the normal path */ }
+    }
     const fix = checkFix(c, state);
     const target = checkTarget(c);
     if (fix && onFix?.(fix.apply)) {
@@ -192,9 +216,15 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
             className="h-7 w-7"
             aria-label="Refresh Deal Checker"
             title="Refresh Deal Checker"
-            onClick={() => setRefreshTick(value => value + 1)}
+            onClick={() => {
+              setRefreshTick(value => value + 1);
+              setOpen(true);
+              setSpinning(true);
+              setTimeout(() => setSpinning(false), 800);
+              toast.info('Deal Checker re-run');
+            }}
           >
-            <RefreshCw className="h-3.5 w-3.5" />
+            <RefreshCw className={`h-3.5 w-3.5 ${spinning ? 'animate-spin' : ''}`} />
           </Button>
           <CollapsibleTrigger asChild>
             <Button
