@@ -132,6 +132,10 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
     } catch {
       base = [];
     }
+    // Files saved in the deal's Documents store count as attached.
+    if (storedDocs > 0) base = base.map(c => c.t === 'No deal documents attached'
+      ? { l: 'pass', t: `${storedDocs} deal document${storedDocs > 1 ? 's' : ''} stored`, d: 'Saved in this deal\'s Documents tab.' } as CheckItem
+      : c);
     const live = leiParties
       .map(p => gleifCheck(p.name, p.lei, gleif[p.lei]))
       .filter((c): c is CheckItem => !!c)
