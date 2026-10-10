@@ -446,7 +446,7 @@ export default function DealsPage() {
         {sortedDeals.map(deal => {
           const expanded = expandedDealId === deal.id;
           return (
-            <Card key={deal.id} ref={(el) => { rowRefs.current[deal.id] = el; }} className="overflow-hidden">
+            <Card key={deal.id} ref={(el) => { rowRefs.current[deal.id] = el; }} className={`overflow-hidden transition-colors ${expanded ? 'border-2 border-active-panel' : ''}`}>
               <div className="flex items-center">
                 <button
                   type="button"
