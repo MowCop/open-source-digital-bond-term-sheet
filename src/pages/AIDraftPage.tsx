@@ -610,7 +610,7 @@ export default function AIDraftPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Create New Issue</h1>
+        <div className="flex items-center gap-3 flex-wrap"><h1 className="text-2xl font-bold">Create New Issue</h1><AiModelPicker compact /></div>
       </div>
 
       <div>
