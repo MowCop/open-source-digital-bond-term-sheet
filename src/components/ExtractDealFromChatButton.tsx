@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { getAiModel } from '@/lib/aiModel';
-import AiModelPicker from '@/components/AiModelPicker';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Sparkles, Loader2 } from 'lucide-react';
