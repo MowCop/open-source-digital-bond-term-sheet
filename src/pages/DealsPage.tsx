@@ -25,6 +25,7 @@ import TermSheetFill, { type TermSheetFillHandle } from '@/components/termsheet/
 import IngestDropzone from '@/components/termsheet/IngestDropzone';
 import TermSheetDlt from '@/components/termsheet/TermSheetDlt';
 import UnifiedDealChecker from '@/components/termsheet/UnifiedDealChecker';
+import DealDocuments from '@/components/termsheet/DealDocuments';
 import { buildXML, refreshAuto } from '@/lib/termsheet/index.js';
 import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
 import { termSheetView } from '@/lib/termSheetView';
@@ -116,9 +117,13 @@ function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, on
           <TabsTrigger value="view">View</TabsTrigger>
           <TabsTrigger value="xml">BDT XML</TabsTrigger>
           <TabsTrigger value="dlt">DLT view</TabsTrigger>
+          <TabsTrigger value="docs">Documents</TabsTrigger>
         </TabsList>
         <TabsContent value="fill" forceMount className="mt-4 data-[state=inactive]:hidden">
           <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} />
+        </TabsContent>
+        <TabsContent value="docs" className="mt-4">
+          <DealDocuments dealId={deal.id} canManage={canManage} />
         </TabsContent>
         <TabsContent value="xml" className="mt-4">
           <BdtXmlPanel deal={deal} />

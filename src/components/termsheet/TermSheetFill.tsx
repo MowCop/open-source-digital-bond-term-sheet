@@ -203,6 +203,24 @@ export default function TermSheetFill({
         const out = ingestText(state, text.slice(0, 150000), file.name);
         if (Array.isArray(out)) found.push(...(out as Proposal[]));
       }
+      // Keep each file in the deal's document store and propose it for the Documentation list.
+      const existing = ((state as unknown as { docs?: Record<string, string>[] }).docs ?? []);
+      const added: Record<string, string>[] = [];
+      for (const file of Array.from(files)) {
+        let link = '';
+        try { link = await uploadDealDocument(deal.id, file); }
+        catch (e) { toast.error(`${file.name} was read but not stored: ${(e as Error).message}`); }
+        if (existing.some(d => d.DocumentName === file.name)) continue;
+        added.push({ DocumentName: file.name, DocumentDate: new Date().toISOString().slice(0, 10), DocumentLink: link, DocumentVersion: '' });
+      }
+      if (added.length) {
+        found.push({
+          kind: 'group', g: 'docs', l: 'Deal documents',
+          val: added.map(d => d.DocumentName).join(', '),
+          cur: existing.map(d => d.DocumentName).filter(Boolean).join(', '),
+          src: 'Dropped file', payload: [...existing, ...added],
+        });
+      }
       setProposals(found);
       toast[found.length ? 'success' : 'info'](
         found.length ? `${found.length} proposals to review` : 'Nothing recognisable found in that document',
