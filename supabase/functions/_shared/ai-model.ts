@@ -1,7 +1,7 @@
 /**
  * Shared model routing for the deal AI tools.
- * - No/unknown model  → existing Gemini chat-completions call (unchanged default).
- * - anthropic/* model → native /v1/messages, streamed and accumulated.
+ * All tools run on Claude via native /v1/messages, streamed and accumulated.
+ * No/unknown model → Claude Sonnet 5.
  */
 export const CLAUDE_MODELS = [
   'anthropic/claude-haiku-4-5',
@@ -11,7 +11,7 @@ export const CLAUDE_MODELS = [
   'anthropic/claude-fable-5-1',
 ] as const;
 
-export const DEFAULT_MODEL = 'google/gemini-2.5-flash';
+export const DEFAULT_MODEL = 'anthropic/claude-sonnet-5';
 
 export function pickModel(input: unknown): string {
   return typeof input === 'string' && (CLAUDE_MODELS as readonly string[]).includes(input) ? input : DEFAULT_MODEL;
@@ -37,22 +37,6 @@ export async function runModel(opts: {
 }): Promise<ModelResult> {
   const apiKey = Deno.env.get('LOVABLE_API_KEY');
   if (!apiKey) throw new Error('LOVABLE_API_KEY is not configured');
-
-  if (!opts.model.startsWith('anthropic/')) {
-    const res = await fetch(`${GATEWAY}/chat/completions`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: opts.model,
-        response_format: { type: 'json_object' },
-        ...(opts.maxTokens ? { max_tokens: opts.maxTokens } : {}),
-        messages: [{ role: 'system', content: opts.system }, { role: 'user', content: opts.user }],
-      }),
-    });
-    if (!res.ok) return failure(res.status, await res.text());
-    const data = await res.json();
-    return { ok: true, text: data?.choices?.[0]?.message?.content ?? '' };
-  }
 
   const res = await fetch(`${GATEWAY}/messages`, {
     method: 'POST',
