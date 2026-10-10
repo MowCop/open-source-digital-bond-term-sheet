@@ -1,5 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { runModel, pickModel } from '../_shared/ai-model.ts';
 
 /**
  * extract-deal-from-chat
@@ -190,8 +191,6 @@ Deno.serve(async (req) => {
       isin: String(d.isin ?? ''),
     })).filter(d => d.id);
 
-    const apiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!apiKey) throw new Error('LOVABLE_API_KEY is not configured');
 
     const userMsg = [
       conversationLabel ? `Conversation label: ${conversationLabel}` : '',
@@ -202,32 +201,9 @@ Deno.serve(async (req) => {
       transcript,
     ].filter(Boolean).join('\n');
 
-    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        response_format: { type: 'json_object' },
-        max_tokens: 4000,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userMsg },
-        ],
-      }),
-    });
-
-    if (res.status === 429) return jsonResponse({ error: 'rate_limit', message: 'AI rate limit reached. Try again in a moment.' }, 429);
-    if (res.status === 402) return jsonResponse({ error: 'credits_exhausted', message: 'AI credits exhausted. Add credits in workspace settings.' }, 402);
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`AI gateway failed [${res.status}]: ${body.slice(0, 300)}`);
-    }
-
-    const data = await res.json();
-    let raw: string = data?.choices?.[0]?.message?.content ?? '';
+    const ai = await runModel({ model: pickModel(payload?.model), system: SYSTEM_PROMPT, user: userMsg, maxTokens: 4000 });
+    if (!ai.ok) return jsonResponse({ error: ai.error, message: ai.message }, ai.status);
+    let raw: string = ai.text;
     raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
 
     let obj: any;
