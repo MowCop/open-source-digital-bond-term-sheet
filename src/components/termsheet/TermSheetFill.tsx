@@ -186,13 +186,21 @@ export default function TermSheetFill({
       toast.info('Return to the current stage before adding documents');
       return 0;
     }
-    try {
-      const found: Proposal[] = [];
-      for (const file of Array.from(files)) {
+    const list = Array.from(files);
+    // Store every file first, so a document that cannot be read is still kept with the deal.
+    const links = await Promise.all(list.map(file => uploadDealDocument(deal.id, file).catch(e => {
+      toast.error(`${file.name} could not be saved: ${(e as Error).message}`);
+      return null;
+    })));
+    const stored = links.filter(Boolean).length;
+    if (stored) toast.success(`${stored} document${stored > 1 ? 's' : ''} saved to this deal`);
+
+    const found: Proposal[] = [];
+    for (const file of list) {
+      try {
         const name = file.name.toLowerCase();
         if (name.endsWith('.xml')) {
-          const xml = await file.text();
-          const out = ingestBDT(state, xml, file.name);
+          const out = ingestBDT(state, await file.text(), file.name);
           if (Array.isArray(out)) found.push(...(out as Proposal[]));
           continue;
         }
@@ -203,34 +211,28 @@ export default function TermSheetFill({
         else text = await file.text();
         const out = ingestText(state, text.slice(0, 150000), file.name);
         if (Array.isArray(out)) found.push(...(out as Proposal[]));
+      } catch (err) {
+        toast.error(`Could not read ${file.name}: ${(err as Error).message}`);
       }
-      // Keep each file in the deal's document store and propose it for the Documentation list.
-      const existing = ((state as unknown as { docs?: Record<string, string>[] }).docs ?? []);
-      const added: Record<string, string>[] = [];
-      for (const file of Array.from(files)) {
-        let link = '';
-        try { link = await uploadDealDocument(deal.id, file); }
-        catch (e) { toast.error(`${file.name} was read but not stored: ${(e as Error).message}`); }
-        if (existing.some(d => d.DocumentName === file.name)) continue;
-        added.push({ DocumentName: file.name, DocumentDate: new Date().toISOString().slice(0, 10), DocumentLink: link, DocumentVersion: '' });
-      }
-      if (added.length) {
-        found.push({
-          kind: 'group', g: 'docs', l: 'Deal documents',
-          val: added.map(d => d.DocumentName).join(', '),
-          cur: existing.map(d => d.DocumentName).filter(Boolean).join(', '),
-          src: 'Dropped file', payload: [...existing, ...added],
-        });
-      }
-      setProposals(found);
-      toast[found.length ? 'success' : 'info'](
-        found.length ? `${found.length} proposals to review` : 'Nothing recognisable found in that document',
-      );
-      return found.length;
-    } catch (err) {
-      toast.error(`Could not read that document: ${(err as Error).message}`);
-      return 0;
     }
+    // Propose stored files for the Documentation list (never auto-added).
+    const existing = ((state as unknown as { docs?: Record<string, string>[] }).docs ?? []);
+    const added = list
+      .map((file, i) => ({ file, link: links[i] }))
+      .filter(({ file, link }) => link && !existing.some(d => d.DocumentName === file.name))
+      .map(({ file, link }) => ({ DocumentName: file.name, DocumentDate: new Date().toISOString().slice(0, 10), DocumentLink: link as string, DocumentVersion: '' }));
+    if (added.length) {
+      found.push({
+        kind: 'group', g: 'docs', l: 'Deal documents',
+        val: added.map(d => d.DocumentName).join(', '),
+        cur: existing.map(d => d.DocumentName).filter(Boolean).join(', '),
+        src: 'Dropped file', payload: [...existing, ...added],
+      });
+    }
+    setProposals(found);
+    if (found.length) toast.success(`${found.length} proposals to review`);
+    else toast.info('Nothing recognisable found in that document');
+    return found.length;
   }
 
   // The drop panel sits in the deal header above the tabs, so ingest is exposed from here.
