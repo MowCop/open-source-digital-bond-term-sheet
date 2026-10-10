@@ -43,11 +43,12 @@ interface Props {
   dealId?: string;
   onNavigate?: (t: CheckTarget) => void;
   onFix?: (fn: (s: BdtState) => BdtState) => boolean;
+  onDocFix?: (c: CheckItem) => string[];
 }
 
 const ignoreKey = (id: string) => `vdr.checker.ignored.${id}`;
 
-export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix }: Props) {
+export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, onDocFix }: Props) {
   const [ignored, setIgnored] = useState<string[]>([]);
   useEffect(() => {
     if (!dealId) return;
@@ -150,6 +151,12 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix }:
     const target = checkTarget(c);
     if (fix && onFix?.(fix.apply)) {
       toast.success(`${fix.label} — review and save the term sheet`);
+      if (target) onNavigate?.(target);
+      return;
+    }
+    const fromDoc = onDocFix?.(c) ?? [];
+    if (fromDoc.length) {
+      toast.success(`Filled from the dropped file — ${fromDoc.join('; ').slice(0, 160)}. Review and save the term sheet`);
       if (target) onNavigate?.(target);
       return;
     }
@@ -286,14 +293,14 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix }:
                       <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                   )}
-                  {check.l === 'warn' && (
+                  {check.l !== 'pass' && (
                     <>
                       <Button type="button" size="sm" variant="outline" className="h-6 shrink-0 gap-1 px-2 text-[11px]" onClick={() => tryFix(check)} title={checkFix(check, state)?.label ?? 'Open the field to fix it'}>
                         <Wand2 className="h-3 w-3" /> Try to fix
                       </Button>
-                      <Button type="button" size="icon" variant="ghost" className="h-6 w-6 shrink-0" aria-label="Ignore this warning" title="Ignore this warning" onClick={() => saveIgnored([...ignored, checkKey(check)])}>
+                      {check.l === 'warn' && <Button type="button" size="icon" variant="ghost" className="h-6 w-6 shrink-0" aria-label="Ignore this warning" title="Ignore this warning" onClick={() => saveIgnored([...ignored, checkKey(check)])}>
                         <X className="h-3.5 w-3.5" />
-                      </Button>
+                      </Button>}
                     </>
                   )}
                 </div>

@@ -37,7 +37,7 @@ import {
 } from '@/lib/bdt-bridge';
 import LeiSuggest from './LeiSuggest';
 import FigiSuggest from './FigiSuggest';
-import type { CheckTarget } from '@/lib/checkActions';
+import { docTopics, proposalMatches, type CheckTarget } from '@/lib/checkActions';
 import TermSheetField, { optionsFor, prettyEnum, type FieldDef } from './TermSheetField';
 
 interface Props {
@@ -70,6 +70,8 @@ export interface TermSheetFillHandle {
   focusTarget: (t: CheckTarget) => void;
   /** Apply a Deal Checker fix to the live (unsaved) state. */
   applyFix: (fn: (s: BdtState) => BdtState) => boolean;
+  /** Accept pending proposals from the last dropped file that match the check; returns accepted labels. */
+  fixFromDocument: (c: CheckItem) => string[];
 }
 
 export default function TermSheetFill({
@@ -240,7 +242,25 @@ export default function TermSheetFill({
     setDirty(true);
     return true;
   };
-  useImperativeHandle(ingestRef || ownRef, () => ({ ingestFiles: handleFiles, focusTarget, applyFix }));
+  const fixFromDocument = (c: CheckItem): string[] => {
+    if (!canEdit || viewStage != null) return [];
+    const topics = docTopics(c);
+    const picked = proposals.filter(pr => topics.some(t => proposalMatches(t, pr)));
+    if (!picked.length) return [];
+    setState(s => {
+      const next = clone(s);
+      for (const pr of picked) {
+        if (pr.kind === 'group' && pr.g) (next as unknown as Record<string, unknown>)[pr.g] = pr.payload ?? [];
+        else if (pr.p) next.f[pr.p] = pr.val;
+      }
+      refreshAuto(next);
+      return next;
+    });
+    setDirty(true);
+    setProposals(list => list.filter(pr => !picked.includes(pr)));
+    return picked.map(pr => `${pr.l}: ${pr.val}`);
+  };
+  useImperativeHandle(ingestRef || ownRef, () => ({ ingestFiles: handleFiles, focusTarget, applyFix, fixFromDocument }));
 
   const acceptProposal = (i: number) => {
     const pr = proposals[i];

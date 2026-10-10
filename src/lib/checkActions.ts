@@ -65,3 +65,29 @@ export function checkFix(c: CheckItem, state: BdtState): CheckFix | null {
 }
 
 export const checkKey = (c: CheckItem) => `${c.src ?? ''}|${c.t}`;
+
+/* ── Fixes from the last dropped document ───────────────────────────────────
+   A dropped file yields pending proposals in the Fill tab. "Try to fix" may
+   accept the ones matching the check's topic — an explicit click, never automatic. */
+export type DocTopic = 'currency' | 'tenor' | 'benchmark' | 'bookrunner';
+export interface DocProposal { kind: 'field' | 'group'; p?: string; g?: string }
+
+export function docTopics(c: CheckItem): DocTopic[] {
+  const text = `${c.t} ${c.d ?? ''}`;
+  const out: DocTopic[] = [];
+  if (/currenc/i.test(text)) out.push('currency');
+  if (/tenor|maturity/i.test(text)) out.push('tenor');
+  if (/benchmark/i.test(text)) out.push('benchmark');
+  if (/bookrunner|manager|ISSUER role|\bpart(y|ies)\b/i.test(text)) out.push('bookrunner');
+  return out;
+}
+
+export function proposalMatches(topic: DocTopic, pr: DocProposal): boolean {
+  const p = pr.p ?? '';
+  switch (topic) {
+    case 'currency': return pr.kind === 'field' && /Currency/.test(p);
+    case 'tenor': return pr.kind === 'field' && /Maturity/.test(p) && !/Benchmark/.test(p);
+    case 'benchmark': return pr.kind === 'field' && /\/Benchmark\//.test(p);
+    case 'bookrunner': return pr.kind === 'group' && pr.g === 'parties';
+  }
+}
