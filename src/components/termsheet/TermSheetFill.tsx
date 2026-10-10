@@ -11,6 +11,7 @@
  *    VDR calendar/settlement/benchmark rules appended.
  *  • Fixed-rate single tranche only in this iteration.
  */
+import { uploadDealDocument } from '@/lib/dealDocuments';
 import { useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject } from 'react';
 import {
   Check, ChevronDown, ChevronRight,
