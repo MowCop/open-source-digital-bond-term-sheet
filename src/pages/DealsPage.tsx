@@ -27,6 +27,7 @@ import TermSheetDlt from '@/components/termsheet/TermSheetDlt';
 import UnifiedDealChecker from '@/components/termsheet/UnifiedDealChecker';
 import { buildXML, refreshAuto } from '@/lib/termsheet/index.js';
 import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
+import { termSheetView } from '@/lib/termSheetView';
 import { emptyNewDeal, canCreateNewDeal, extractNewDealIssuer, fillEmptyIssuer } from '@/lib/newDeal';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
@@ -59,6 +60,7 @@ interface DealDetailProps {
 
 function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, onInitialFilesConsumed }: DealDetailProps) {
   const [checkerState, setCheckerState] = useState<BdtState>(() => dealToBdtState(deal));
+  const view = useMemo(() => termSheetView(checkerState), [checkerState]);
   const navigate = useNavigate();
   const fillRef = useRef<TermSheetFillHandle>(null);
   const [tab, setTab] = useState('fill');
@@ -130,15 +132,15 @@ function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, on
         <div className="space-y-2">
           <h3 className="font-medium text-sm border-b pb-1">Party / Issuer</h3>
           <div className="text-sm space-y-1">
-            {fieldRow('Issuer', deal.issuerName)}
-            {fieldRow('LEI', deal.issuerLEI)}
-            {fieldRow('Rating', deal.issuerRating)}
-            {fieldRow('Outlook', deal.ratingOutlook)}
+            {fieldRow('Issuer', view.issuerName)}
+            {fieldRow('LEI', view.issuerLEI)}
+            {fieldRow('Rating', view.issuerRating)}
+            {fieldRow('Outlook', view.ratingOutlook)}
           </div>
           <div className="mt-2">
             <h4 className="text-xs font-medium text-muted-foreground mb-1">Bookrunners</h4>
             <div className="space-y-1">
-              {deal.bookrunners.map((br, i) => (
+              {view.bookrunners.map((br, i) => (
                 <div key={i} className="flex items-center gap-1.5 text-sm">
                   <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
                   <span className="flex-1">{br.name}</span>
@@ -154,21 +156,23 @@ function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, on
         <div className="space-y-2">
           <h3 className="font-medium text-sm border-b pb-1">Issuance</h3>
           <div className="text-sm space-y-1">
-            {fieldRow('Type', deal.issuanceType)}
-            {fieldRow('Size', `${deal.currency} ${deal.size}`)}
-            {fieldRow('Denomination', deal.specifiedDenomination)}
-            {fieldRow('Coupon', deal.coupon)}
-            {fieldRow('Issue Price', deal.issuePrice)}
-            {fieldRow('Reoffer Price', deal.reofferPrice)}
-            {fieldRow('Reoffer Yield', deal.reofferYield)}
-            {fieldRow('Reoffer Spread', deal.reofferSpread)}
-            {fieldRow('Mid-Swap Rate', deal.midSwapRate)}
-            {fieldRow('Pricing Date', deal.pricingDate)}
-            {fieldRow('Issue Date', deal.issueDate)}
-            {fieldRow('Settlement Date', deal.settlementDate)}
-            {fieldRow('Governing Law', deal.governingLaw?.replace(/_/g, ' '))}
-            {fieldRow('Selling Restrictions', deal.sellingRestrictions)}
-            {fieldRow('Listing Venue', deal.listingVenue)}
+            {fieldRow('Type', view.issuanceType)}
+            {fieldRow('Currency', view.currency)}
+            {fieldRow('Size', view.size)}
+            {fieldRow('Denomination', view.specifiedDenomination)}
+            {fieldRow('Coupon', view.coupon)}
+            {fieldRow('Issue Price', view.issuePrice)}
+            {fieldRow('Reoffer Price', view.reofferPrice)}
+            {fieldRow('Reoffer Yield', view.reofferYield)}
+            {fieldRow('Reoffer Spread', view.reofferSpread)}
+            {fieldRow('Mid-Swap Rate', view.midSwapRate)}
+            {fieldRow('Benchmark', view.benchmark)}
+            {fieldRow('Pricing Date', view.pricingDate)}
+            {fieldRow('Issue Date', view.issueDate)}
+            {fieldRow('Settlement Date', view.settlementDate)}
+            {fieldRow('Governing Law', view.governingLaw?.replace(/_/g, ' '))}
+            {fieldRow('Selling Restrictions', view.sellingRestrictions)}
+            {fieldRow('Listing Venue', view.listingVenue)}
           </div>
         </div>
 
@@ -176,20 +180,20 @@ function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, on
         <div className="space-y-2">
           <h3 className="font-medium text-sm border-b pb-1">Product</h3>
           <div className="text-sm space-y-1">
-            {fieldRow('ISIN', deal.isin)}
-            {fieldRow('CUSIP', deal.cusip)}
-            {fieldRow('Common Code', deal.commonCode)}
-            {fieldRow('Form of Note', deal.formOfNote?.replace(/_/g, ' '))}
-            {fieldRow('Status', deal.statusOfNote?.replace(/_/g, ' '))}
-            {fieldRow('Tenor', deal.tenor)}
-            {fieldRow('Maturity', deal.maturityDate)}
-            {fieldRow('Interest Type', deal.interestType)}
-            {fieldRow('Interest Rate', deal.interestRate)}
-            {fieldRow('Payment Freq.', deal.interestPaymentFrequency?.replace(/_/g, ' '))}
-            {fieldRow('Day Count', deal.dayCountFraction?.replace(/_/g, '/'))}
-            {fieldRow('Biz Day Conv.', deal.businessDayConvention?.replace(/_/g, ' '))}
-            {fieldRow('Optionality', deal.optionality)}
-            {fieldRow('ESG/Label', deal.taxonomy)}
+            {fieldRow('ISIN', view.isin)}
+            {fieldRow('CUSIP', view.cusip)}
+            {fieldRow('Common Code', view.commonCode)}
+            {fieldRow('Form of Note', view.formOfNote?.replace(/_/g, ' '))}
+            {fieldRow('Status', view.statusOfNote?.replace(/_/g, ' '))}
+            {fieldRow('Tenor', view.tenor)}
+            {fieldRow('Maturity', view.maturityDate)}
+            {fieldRow('Interest Type', view.interestType)}
+            {fieldRow('Interest Rate', view.interestRate)}
+            {fieldRow('Payment Freq.', view.interestPaymentFrequency?.replace(/_/g, ' '))}
+            {fieldRow('Day Count', view.dayCountFraction?.replace(/_/g, '/'))}
+            {fieldRow('Biz Day Conv.', view.businessDayConvention?.replace(/_/g, ' '))}
+            {fieldRow('Optionality', view.optionality)}
+            {fieldRow('ESG/Label', view.taxonomy)}
           </div>
         </div>
       </div>
