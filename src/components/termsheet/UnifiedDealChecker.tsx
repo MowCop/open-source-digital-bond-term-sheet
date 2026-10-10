@@ -125,6 +125,17 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
     return () => { cancelled = true; clearTimeout(t); };
   }, [isin, refreshTick]);
 
+  const [storedDocs, setStoredDocs] = useState(0);
+  useEffect(() => {
+    if (!dealId) return;
+    let cancelled = false;
+    const load = () => listDealDocuments(dealId).then(d => { if (!cancelled) setStoredDocs(d.length); }).catch(() => {});
+    load();
+    const on = (e: Event) => { if ((e as CustomEvent).detail === dealId) load(); };
+    window.addEventListener(DOCS_CHANGED, on);
+    return () => { cancelled = true; window.removeEventListener(DOCS_CHANGED, on); };
+  }, [dealId, refreshTick]);
+
   const checks = useMemo<CheckItem[]>(() => {
     let base: CheckItem[] = [];
     try {
