@@ -23,6 +23,7 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
     --border: 217 30% 18%;
+    --active-panel-border: 0 0% 55%;
     --input: 217 30% 18%;
     --ring: 43 96% 56%;
     --radius: 0.5rem;
@@ -72,6 +73,7 @@
 }
 
 @layer utilities {
+  .border-active-panel { border-color: hsl(var(--active-panel-border)); }
   .role-badge-admin {
     background-color: hsl(var(--role-admin));
     color: hsl(var(--role-admin-foreground));

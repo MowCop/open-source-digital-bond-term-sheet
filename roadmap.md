@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Update New Deal border, blank defaults, issuer extraction, multi-value entries, and issuer/bookrunner creation requirements; verify the flow.
 - [x] Migration: `deals.bdt_state`, `deal_term_sheet_releases` table with RLS and grants.
 - [x] Fix `verify.mjs` import paths; confirm reference XML still matches.
 - [x] CI workflow running `node verify.mjs` + `xmllint` against `schema/icma-bond-data-taxonomy.xsd`.
