@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { getAiModel } from '@/lib/aiModel';
+import { getAiModel, useAiModel } from '@/lib/aiModel';
 import AiModelPicker from '@/components/AiModelPicker';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useScopedApp } from '@/context/AppContext';
@@ -348,7 +348,7 @@ export default function DealsPage() {
               <Button><Plus className="h-4 w-4 mr-2" />New Deal</Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto border-2 border-active-panel">
-              <DialogHeader><DialogTitle>Create New Deal</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle className="flex items-center gap-2">Create New Deal<span className="ml-auto mr-6"><AiModelPicker compact /></span></DialogTitle></DialogHeader>
               <div className="min-w-0 space-y-3">
                 <div><Label htmlFor="new-deal-issuer">Issuer Name *</Label><Input id="new-deal-issuer" required value={newDeal.issuerName} onChange={e => { issuerRevision.current += 1; setNewDeal(p => ({ ...p, issuerName: e.target.value })); }} placeholder="e.g. Republic of France" /></div>
                 <div className="grid grid-cols-2 gap-3">
@@ -614,12 +614,13 @@ function GenerateBulletinDialog({
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [aiModel] = useAiModel();
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id, model: getAiModel() } })
+    supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id, model: aiModel } })
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) {
@@ -632,7 +633,7 @@ function GenerateBulletinDialog({
         setLoading(false);
       });
     return () => { cancelled = true; };
-  }, [deal.id]);
+  }, [deal.id, aiModel]);
 
   const handlePublish = () => {
     if (!subject.trim() || !body.trim()) {
@@ -653,6 +654,7 @@ function GenerateBulletinDialog({
               <Megaphone className="h-4 w-4" />
             </span>
             Generate New Issue Bulletin
+            <span className="ml-auto mr-6"><AiModelPicker compact /></span>
           </DialogTitle>
         </DialogHeader>
         {loading ? (
