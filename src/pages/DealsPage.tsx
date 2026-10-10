@@ -25,6 +25,7 @@ import TermSheetDlt from '@/components/termsheet/TermSheetDlt';
 import UnifiedDealChecker from '@/components/termsheet/UnifiedDealChecker';
 import { buildXML, refreshAuto } from '@/lib/termsheet/index.js';
 import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
+import { emptyNewDeal, canCreateNewDeal, extractNewDealIssuer, fillEmptyIssuer } from '@/lib/newDeal';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
   const xml = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return buildXML(s) as string; }, [deal]);
@@ -217,10 +218,14 @@ export default function DealsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [newDealFiles, setNewDealFiles] = useState<File[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState<{ dealId: string; files: File[] } | null>(null);
-  const [newDeal, setNewDeal] = useState({
-    issuerName: '', currency: 'EUR', size: '', tenor: '', coupon: 'TBD',
-    issuerRating: '', issuanceType: '' as string, governingLaw: '' as string,
-  });
+  const [newDeal, setNewDeal] = useState(emptyNewDeal);
+  const [extractingIssuer, setExtractingIssuer] = useState(false);
+  const issuerRevision = useRef(0);
+  const extractionSession = useRef(0);
+  useEffect(() => {
+    extractionSession.current += 1;
+    setExtractingIssuer(false);
+  }, [showCreate]);
   const [newBookrunners, setNewBookrunners] = useState<{ name: string; role: BookrunnerRole; isGlobalCoordinator: boolean }[]>([]);
   const [brName, setBrName] = useState('');
   const [brRole, setBrRole] = useState<BookrunnerRole>('active');
@@ -252,14 +257,15 @@ export default function DealsPage() {
   };
 
   const handleCreateDeal = () => {
+    if (!canCreateNewDeal(newDeal.issuerName, newBookrunners)) return;
     const created = createDeal({
-      issuerName: newDeal.issuerName,
+      issuerName: newDeal.issuerName.trim(),
       currency: newDeal.currency,
       size: newDeal.size,
       tenor: newDeal.tenor,
       coupon: newDeal.coupon,
       stage: 'Mandate',
-      bookrunners: newBookrunners.length > 0 ? newBookrunners : [{ name: currentUser.organization, role: 'active', isGlobalCoordinator: true }],
+      bookrunners: newBookrunners,
       issuerRating: newDeal.issuerRating || undefined,
       issuanceType: (newDeal.issuanceType as any) || undefined,
       governingLaw: (newDeal.governingLaw as any) || undefined,
@@ -270,8 +276,33 @@ export default function DealsPage() {
     }
     setNewDealFiles([]);
     setShowCreate(false);
-    setNewDeal({ issuerName: '', currency: 'EUR', size: '', tenor: '', coupon: 'TBD', issuerRating: '', issuanceType: '', governingLaw: '' });
+    setNewDeal(emptyNewDeal());
     setNewBookrunners([]);
+  };
+
+  const handleNewDealFiles = async (files: FileList) => {
+    const selected = Array.from(files);
+    setNewDealFiles(prev => [...prev, ...selected]);
+    if (newDeal.issuerName.trim() || extractingIssuer) return;
+    const revision = issuerRevision.current;
+    const session = extractionSession.current;
+    setExtractingIssuer(true);
+    try {
+      for (const file of selected) {
+        const issuer = await extractNewDealIssuer(file);
+        if (session !== extractionSession.current || revision !== issuerRevision.current) return;
+        if (issuer) {
+          setNewDeal(prev => ({ ...prev, issuerName: fillEmptyIssuer(prev.issuerName, issuer) }));
+          toast.success(`Issuer found in ${file.name}; please check the name`);
+          return;
+        }
+      }
+      toast.info('No issuer name found; please enter it manually');
+    } catch {
+      if (session === extractionSession.current) toast.info('Document added, but the issuer could not be identified; please enter it manually');
+    } finally {
+      if (session === extractionSession.current) setExtractingIssuer(false);
+    }
   };
 
   const [searchParams] = useSearchParams();
@@ -314,21 +345,21 @@ export default function DealsPage() {
             <DialogTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-2" />New Deal</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogContent className="max-w-lg w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto border-2 border-active-panel">
               <DialogHeader><DialogTitle>Create New Deal</DialogTitle></DialogHeader>
-              <div className="space-y-3">
-                <div><Label>Issuer Name</Label><Input value={newDeal.issuerName} onChange={e => setNewDeal(p => ({ ...p, issuerName: e.target.value }))} placeholder="e.g. Republic of France" /></div>
+              <div className="min-w-0 space-y-3">
+                <div><Label htmlFor="new-deal-issuer">Issuer Name *</Label><Input id="new-deal-issuer" required value={newDeal.issuerName} onChange={e => { issuerRevision.current += 1; setNewDeal(p => ({ ...p, issuerName: e.target.value })); }} placeholder="e.g. Republic of France" /></div>
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>Currency</Label>
                     <Select value={newDeal.currency} onValueChange={v => setNewDeal(p => ({ ...p, currency: v }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="EUR">EUR</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="GBP">GBP</SelectItem><SelectItem value="CHF">CHF</SelectItem></SelectContent>
+                      <SelectTrigger aria-label="Currency"><SelectValue placeholder="Select..." /></SelectTrigger>
+                      <SelectContent><SelectItem value="EUR">EUR</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="GBP">GBP</SelectItem><SelectItem value="CHF">CHF</SelectItem><SelectItem value="multi currency">multi currency</SelectItem></SelectContent>
                     </Select>
                   </div>
-                  <div><Label>Size</Label><Input value={newDeal.size} onChange={e => setNewDeal(p => ({ ...p, size: e.target.value }))} placeholder="e.g. 2,000,000,000" /></div>
+                  <div><Label>Size</Label><Input value={newDeal.size} onChange={e => setNewDeal(p => ({ ...p, size: e.target.value }))} placeholder="Benchmark" /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Tenor</Label><Input value={newDeal.tenor} onChange={e => setNewDeal(p => ({ ...p, tenor: e.target.value }))} placeholder="e.g. 10Y" /></div>
+                  <div><Label>Tenor</Label><Input value={newDeal.tenor} onChange={e => setNewDeal(p => ({ ...p, tenor: e.target.value }))} placeholder="e.g. 10Y or multi tranche" /></div>
                   <div><Label>Rating</Label><Input value={newDeal.issuerRating} onChange={e => setNewDeal(p => ({ ...p, issuerRating: e.target.value }))} placeholder="e.g. AA/Aa2" /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -353,7 +384,7 @@ export default function DealsPage() {
 
                 {/* Bookrunners */}
                 <div className="border rounded-md p-3 space-y-2">
-                  <Label className="font-medium">Bookrunners</Label>
+                  <Label className="font-medium">Bookrunners *</Label>
                   {newBookrunners.map((br, i) => (
                     <div key={i} className="flex items-center gap-2 text-sm">
                       <span className="flex-1">{br.name}</span>
@@ -375,8 +406,9 @@ export default function DealsPage() {
                   </div>
                 </div>
 
-                <Button onClick={handleCreateDeal} className="w-full" disabled={!newDeal.issuerName || !newDeal.size}>Create Deal</Button>
-                <IngestDropzone onFiles={files => setNewDealFiles(prev => [...prev, ...Array.from(files)])} className="w-full" />
+                <Button onClick={handleCreateDeal} className="w-full" disabled={!canCreateNewDeal(newDeal.issuerName, newBookrunners)}>Create Deal</Button>
+                <IngestDropzone onFiles={handleNewDealFiles} className="w-full min-w-0 overflow-hidden" />
+                {extractingIssuer && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Looking for issuer name…</p>}
                 {newDealFiles.length > 0 && (
                   <div className="space-y-1">
                     {newDealFiles.map((file, i) => (
