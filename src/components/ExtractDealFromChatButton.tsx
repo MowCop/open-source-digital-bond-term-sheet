@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { getAiModel } from '@/lib/aiModel';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -125,7 +126,7 @@ export default function ExtractDealFromChatButton(props: Props) {
       }));
 
       const { data, error } = await supabase.functions.invoke('extract-deal-from-chat', {
-        body: { text, conversationLabel, existingDeals },
+        body: { text, conversationLabel, existingDeals, model: getAiModel() },
       });
 
       if (error) {

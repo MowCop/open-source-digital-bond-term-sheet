@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut, Settings, Menu } from 'lucide-react';
+import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut, Settings, Menu, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -19,6 +19,7 @@ const navItems = [
   { path: '/bond-console', label: 'Bond Console', icon: Settings },
   { path: '/master-admin', label: 'Master Admin', icon: Shield, masterOnly: true },
   { path: '/audit-log', label: 'Audit Log', icon: ClipboardList },
+  { path: '/settings', label: 'Settings', icon: Sparkles },
   
 ];
 

@@ -1,5 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { runModel, pickModel } from '../_shared/ai-model.ts';
 
 /**
  * extract-deal-fields-ai
@@ -94,8 +95,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const apiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!apiKey) throw new Error('LOVABLE_API_KEY is not configured');
 
     // ── Server-side input validation ──────────────────────────────────────
     let payload: unknown;
@@ -133,39 +132,9 @@ Deno.serve(async (req) => {
     const MAX_CHARS = 60_000;
     const input = text.length > MAX_CHARS ? text.slice(0, MAX_CHARS) : text;
 
-    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: `Extract bond deal terms from this document:\n\n${input}` },
-        ],
-      }),
-    });
-
-    if (res.status === 429) {
-      return new Response(JSON.stringify({ error: 'rate_limit', message: 'AI rate limit reached. Try again in a moment.' }), {
-        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    if (res.status === 402) {
-      return new Response(JSON.stringify({ error: 'credits_exhausted', message: 'AI credits exhausted. Add credits in workspace settings.' }), {
-        status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`AI gateway failed [${res.status}]: ${body.slice(0, 300)}`);
-    }
-
-    const data = await res.json();
-    let raw: string = data?.choices?.[0]?.message?.content ?? '';
+    const ai = await runModel({ model: pickModel((payload as { model?: unknown })?.model), system: SYSTEM_PROMPT, user: `Extract bond deal terms from this document:\n\n${input}` });
+    if (!ai.ok) return new Response(JSON.stringify({ error: ai.error, message: ai.message }), { status: ai.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    let raw: string = ai.text;
     raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
 
     let parsed: ExtractResult;

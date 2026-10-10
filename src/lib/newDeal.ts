@@ -1,3 +1,4 @@
+import { getAiModel } from '@/lib/aiModel';
 import { supabase } from '@/integrations/supabase/client';
 
 export const emptyNewDeal = () => ({
@@ -40,7 +41,7 @@ export async function extractNewDealIssuer(file: File): Promise<string> {
   }
   if (!text.trim()) return '';
   const { data, error } = await supabase.functions.invoke('extract-deal-fields-ai', {
-    body: { text: text.slice(0, 150000) },
+    body: { text: text.slice(0, 150000), model: getAiModel() },
   });
   if (error || data?.error) throw new Error('Issuer lookup was unsuccessful');
   return fillEmptyIssuer('', data?.keyTerms?.['Issuer Name']);
