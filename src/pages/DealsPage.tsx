@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { getAiModel } from '@/lib/aiModel';
+import AiModelPicker from '@/components/AiModelPicker';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useScopedApp } from '@/context/AppContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -617,7 +619,7 @@ function GenerateBulletinDialog({
     let cancelled = false;
     setLoading(true);
     setError(null);
-    supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id } })
+    supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id, model: getAiModel() } })
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) {

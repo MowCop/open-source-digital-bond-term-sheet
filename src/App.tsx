@@ -18,6 +18,7 @@ import AuditLogPage from "@/pages/AuditLogPage";
 import SyncAuditLogPage from "@/pages/SyncAuditLogPage";
 import MasterAdminPage from "@/pages/MasterAdminPage";
 import BondConsolePage from "@/pages/BondConsolePage";
+import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
                       <Route path="/audit-log" element={<GuestBlock><AuditLogPage /></GuestBlock>} />
                       <Route path="/sync-log" element={<GuestBlock><SyncAuditLogPage /></GuestBlock>} />
                       <Route path="/master-admin" element={<GuestBlock><MasterAdminPage /></GuestBlock>} />
+                      <Route path="/settings" element={<GuestBlock><SettingsPage /></GuestBlock>} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </AppLayout>
