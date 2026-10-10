@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Loader2, RefreshCw, Shield, XCircle,
+  AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Loader2, RefreshCw, Shield, Wand2, X, XCircle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { tallyChecks, unifiedChecks, type BdtState, type CheckItem, type CheckLevel } from '@/lib/bdt-bridge';
 import { validLEI } from '@/lib/termsheet/index.js';
 import { OPENFIGI_REGULATIONS_URL, OPENFIGI_SEARCH_URL, figiChecks, lookupFigis, reportingChecks, type FigiRecord } from '@/lib/openfigi';
+import { checkFix, checkKey, checkTarget, type CheckTarget } from '@/lib/checkActions';
+import { toast } from 'sonner';
 import { GLEIF_ACCESS_URL, GLEIF_SEARCH_URL, gleifCheck, lookupLeis, missingLeiCheck, searchLeiByName, type GleifRecord } from '@/lib/gleif';
 
 const LEVEL_META: Record<CheckLevel, {
@@ -38,9 +40,23 @@ const LEVEL_META: Record<CheckLevel, {
 
 interface Props {
   state: BdtState;
+  dealId?: string;
+  onNavigate?: (t: CheckTarget) => void;
+  onFix?: (fn: (s: BdtState) => BdtState) => boolean;
 }
 
-export default function UnifiedDealChecker({ state }: Props) {
+const ignoreKey = (id: string) => `vdr.checker.ignored.${id}`;
+
+export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix }: Props) {
+  const [ignored, setIgnored] = useState<string[]>([]);
+  useEffect(() => {
+    if (!dealId) return;
+    try { setIgnored(JSON.parse(localStorage.getItem(ignoreKey(dealId)) ?? '[]')); } catch { setIgnored([]); }
+  }, [dealId]);
+  const saveIgnored = (next: string[]) => {
+    setIgnored(next);
+    if (dealId) localStorage.setItem(ignoreKey(dealId), JSON.stringify(next));
+  };
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<CheckLevel | 'all'>('all');
   const [refreshTick, setRefreshTick] = useState(0);
@@ -124,8 +140,23 @@ export default function UnifiedDealChecker({ state }: Props) {
     const figi = [...figiChecks(state, figiRec[isin]), ...reportingChecks(state)].map(c => ({ ...c, src: 'openfigi' as const }));
     return [...base, ...live, ...missing, ...figi] as CheckItem[];
   }, [state, refreshTick, leiParties, gleif, noLeiKey, matchCounts, figiRec, isin]);
-  const tally = useMemo(() => tallyChecks(checks), [checks]);
-  const visible = filter === 'all' ? checks : checks.filter(check => check.l === filter);
+  const ignoredSet = useMemo(() => new Set(ignored), [ignored]);
+  const active = useMemo(() => checks.filter(c => c.l !== 'warn' || !ignoredSet.has(checkKey(c))), [checks, ignoredSet]);
+  const ignoredCount = checks.length - active.length;
+  const tally = useMemo(() => tallyChecks(active), [active]);
+  const visible = filter === 'all' ? active : active.filter(check => check.l === filter);
+  const tryFix = (c: CheckItem) => {
+    const fix = checkFix(c, state);
+    const target = checkTarget(c);
+    if (fix && onFix?.(fix.apply)) {
+      toast.success(`${fix.label} — review and save the term sheet`);
+      if (target) onNavigate?.(target);
+      return;
+    }
+    if (fix) { toast.error('Fix not applied — the term sheet is read-only here'); return; }
+    if (target) { onNavigate?.(target); toast.info('No automatic fix for this one — opened the field so you can fix it'); }
+    else toast.info('No automatic fix and no single field to open for this check');
+  };
   const accent = tally.fail > 0
     ? 'text-destructive'
     : tally.warn > 0
@@ -191,6 +222,11 @@ export default function UnifiedDealChecker({ state }: Props) {
               </Button>
             );
           })}
+          {ignoredCount > 0 && (
+            <Button type="button" size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => saveIgnored([])}>
+              {ignoredCount} ignored · Restore
+            </Button>
+          )}
         </div>
 
         {visible.length === 0 ? (
@@ -203,11 +239,23 @@ export default function UnifiedDealChecker({ state }: Props) {
             {visible.map((check, index) => {
               const meta = LEVEL_META[check.l];
               const Icon = meta.icon;
+              const target = onNavigate ? checkTarget(check) : null;
               return (
                 <div key={`${check.l}-${check.t}-${index}`} className="flex items-start gap-2 rounded-md border border-border/60 px-3 py-2 text-xs">
                   <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${meta.iconClass}`} />
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-foreground">{check.t}</div>
+                    {target ? (
+                      <button
+                        type="button"
+                        onClick={() => onNavigate?.(target)}
+                        className="text-left font-medium text-foreground underline-offset-2 hover:text-primary hover:underline"
+                        title="Go to this field"
+                      >
+                        {check.t}
+                      </button>
+                    ) : (
+                      <div className="font-medium text-foreground">{check.t}</div>
+                    )}
                     {check.d && <div className="mt-0.5 text-muted-foreground">{check.d}</div>}
                   </div>
                   {check.src === 'vdr' && (
@@ -237,6 +285,16 @@ export default function UnifiedDealChecker({ state }: Props) {
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                     </a>
+                  )}
+                  {check.l === 'warn' && (
+                    <>
+                      <Button type="button" size="sm" variant="outline" className="h-6 shrink-0 gap-1 px-2 text-[11px]" onClick={() => tryFix(check)} title={checkFix(check, state)?.label ?? 'Open the field to fix it'}>
+                        <Wand2 className="h-3 w-3" /> Try to fix
+                      </Button>
+                      <Button type="button" size="icon" variant="ghost" className="h-6 w-6 shrink-0" aria-label="Ignore this warning" title="Ignore this warning" onClick={() => saveIgnored([...ignored, checkKey(check)])}>
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
                   )}
                 </div>
               );

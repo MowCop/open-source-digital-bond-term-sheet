@@ -100,7 +100,12 @@ function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, on
         </div>
       )}
 
-      <UnifiedDealChecker state={checkerState} />
+      <UnifiedDealChecker
+        state={checkerState}
+        dealId={deal.id}
+        onNavigate={t => { setTab('fill'); setTimeout(() => fillRef.current?.focusTarget(t), 30); }}
+        onFix={fn => { setTab('fill'); return fillRef.current?.applyFix(fn) ?? false; }}
+      />
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap h-auto">
