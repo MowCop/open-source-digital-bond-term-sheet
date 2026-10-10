@@ -153,7 +153,6 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
     if (/deal documents/i.test(c.t) && dealId) {
       try {
         const stored = await listDealDocuments(dealId);
-        console.warn("docs fix", stored.length, c.t);
         if (stored.length) {
           const ok = onFix?.(s => {
             const cur = ((s as unknown as { docs?: Record<string, string>[] }).docs ?? []).filter(d => d.DocumentName);
@@ -170,7 +169,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
             return;
           }
         }
-      } catch (e) { console.warn("docs fix", e); }
+      } catch { /* fall through to the normal path */ }
     }
     const fix = checkFix(c, state);
     const target = checkTarget(c);
