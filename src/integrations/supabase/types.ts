@@ -110,6 +110,42 @@ export type Database = {
         }
         Relationships: []
       }
+      deal_documents: {
+        Row: {
+          created_at: string
+          deal_id: string
+          id: string
+          mime: string | null
+          name: string
+          path: string
+          size: number
+          uploaded_by: string | null
+          uploaded_by_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          id?: string
+          mime?: string | null
+          name: string
+          path: string
+          size?: number
+          uploaded_by?: string | null
+          uploaded_by_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          id?: string
+          mime?: string | null
+          name?: string
+          path?: string
+          size?: number
+          uploaded_by?: string | null
+          uploaded_by_name?: string | null
+        }
+        Relationships: []
+      }
       deal_term_sheet_releases: {
         Row: {
           bdt_state_snapshot: Json
