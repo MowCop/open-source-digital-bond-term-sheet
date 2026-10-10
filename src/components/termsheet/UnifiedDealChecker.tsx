@@ -10,7 +10,7 @@ import { validLEI } from '@/lib/termsheet/index.js';
 import { OPENFIGI_REGULATIONS_URL, OPENFIGI_SEARCH_URL, figiChecks, lookupFigis, reportingChecks, type FigiRecord } from '@/lib/openfigi';
 import { checkFix, checkKey, checkTarget, type CheckTarget } from '@/lib/checkActions';
 import { toast } from 'sonner';
-import { listDealDocuments } from '@/lib/dealDocuments';
+import { listDealDocuments, DOCS_CHANGED } from '@/lib/dealDocuments';
 import { GLEIF_ACCESS_URL, GLEIF_SEARCH_URL, gleifCheck, lookupLeis, missingLeiCheck, searchLeiByName, type GleifRecord } from '@/lib/gleif';
 
 const LEVEL_META: Record<CheckLevel, {
