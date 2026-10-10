@@ -105,6 +105,7 @@ function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, on
         dealId={deal.id}
         onNavigate={t => { setTab('fill'); setTimeout(() => fillRef.current?.focusTarget(t), 30); }}
         onFix={fn => { setTab('fill'); return fillRef.current?.applyFix(fn) ?? false; }}
+        onDocFix={c => { setTab('fill'); return fillRef.current?.fixFromDocument(c) ?? []; }}
       />
 
       <Tabs value={tab} onValueChange={setTab}>

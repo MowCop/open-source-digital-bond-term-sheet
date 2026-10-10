@@ -20,3 +20,18 @@ describe('Deal Checker actions', () => {
     expect(checkTarget({ l: 'warn', t: '3 parties without an LEI' })).toMatchObject({ kind: 'group', g: 'parties' });
   });
 });
+
+import { docTopics, proposalMatches } from '@/lib/checkActions';
+describe('Try to fix from the dropped document', () => {
+  it('reads currency, tenor, benchmark and bookrunner gaps from a required-fields fail', () => {
+    expect(docTopics({ l: 'fail', t: '5 required fields are empty', d: 'Specified currency; Maturity date; Benchmark security' }))
+      .toEqual(['currency', 'tenor', 'benchmark']);
+    expect(docTopics({ l: 'warn', t: '3 managers named' })).toContain('bookrunner');
+  });
+  it('matches proposals only to their own topic', () => {
+    expect(proposalMatches('currency', { kind: 'field', p: 'IssuanceDataGroup/Issuance/SpecifiedCurrency' })).toBe(true);
+    expect(proposalMatches('tenor', { kind: 'field', p: 'IssuanceDataGroup/Issuance/Benchmark/Maturity/MaturityDate' })).toBe(false);
+    expect(proposalMatches('benchmark', { kind: 'field', p: 'IssuanceDataGroup/Issuance/Benchmark/Ticker/Ticker' })).toBe(true);
+    expect(proposalMatches('bookrunner', { kind: 'group', g: 'parties' })).toBe(true);
+  });
+});
