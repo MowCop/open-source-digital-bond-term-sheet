@@ -40,8 +40,8 @@ export interface CheckFix { label: string; apply: (s: BdtState) => BdtState }
 
 /** A safe, explicit repair for this check, or null when it needs a human. */
 export function checkFix(c: CheckItem, state: BdtState): CheckFix | null {
-  const ids: Row[] = state.ids ?? [];
-  const parties: Row[] = state.parties ?? [];
+  const ids = (state.ids ?? []) as unknown as Row[];
+  const parties = (state.parties ?? []) as unknown as Row[];
   if (/^FIGI available but not recorded/.test(c.t)) {
     const figi = c.d?.match(/BBG[A-Z0-9]{9}/)?.[0];
     if (figi) return { label: `Add FIGI ${figi}`, apply: s => ({ ...s, ids: [...(s.ids ?? []), { Type: 'FIGI', Value: figi }] }) };
@@ -59,7 +59,7 @@ export function checkFix(c: CheckItem, state: BdtState): CheckFix | null {
   if (mm && legal) {
     const [, lei, name] = legal;
     if (parties.some(p => (p.LEIIdentifier ?? '').toUpperCase() === lei))
-      return { label: `Use GLEIF legal name "${name}"`, apply: s => ({ ...s, parties: (s.parties ?? []).map((p: Row) => (p.LEIIdentifier ?? '').toUpperCase() === lei ? { ...p, PartyName: name } : p) }) };
+      return { label: `Use GLEIF legal name "${name}"`, apply: s => ({ ...s, parties: (s.parties ?? []).map(p => (p.LEIIdentifier ?? '').toUpperCase() === lei ? { ...p, PartyName: name } : p) }) };
   }
   return null;
 }
