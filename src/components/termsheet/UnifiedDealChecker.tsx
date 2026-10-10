@@ -62,6 +62,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<CheckLevel | 'all'>('all');
   const [refreshTick, setRefreshTick] = useState(0);
+  const [spinning, setSpinning] = useState(false);
   const [gleif, setGleif] = useState<Record<string, GleifRecord>>({});
   const [gleifBusy, setGleifBusy] = useState(false);
 
