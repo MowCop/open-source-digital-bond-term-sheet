@@ -169,7 +169,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
             return;
           }
         }
-      } catch { /* fall through to the normal path */ }
+      } catch (e) { console.warn("docs fix", e); }
     }
     const fix = checkFix(c, state);
     const target = checkTarget(c);
