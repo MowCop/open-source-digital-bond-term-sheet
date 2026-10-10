@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { getAiModel, useAiModel } from '@/lib/aiModel';
+import { useAiModel } from '@/lib/aiModel';
 import AiModelPicker from '@/components/AiModelPicker';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useScopedApp } from '@/context/AppContext';
