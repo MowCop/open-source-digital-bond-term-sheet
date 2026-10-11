@@ -22,7 +22,7 @@ import DraftChatStrip from '@/components/DraftChatStrip';
 import FieldDiffDialog, { buildDiffRows } from '@/components/FieldDiffDialog';
 
 // Trigger mode for AI extraction in the bulletin builder. Persisted in
-// localStorage from Bond Console > AI Bulletin Extraction.
+// localStorage from Bond Console > AI Control & Compliance.
 // - 'live'   = also call AI as the user types (debounced)
 // - 'onSave' = run AI on every document drop + on explicit Save/Send  (default)
 // - 'manual' = only run AI when the user clicks "Run AI extraction"
