@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -45,6 +46,21 @@ const VENDOR_APIS: VendorAPI[] = [
   { id: 'symphony', name: 'Symphony Messaging', category: 'Communications', description: 'Compliant chat bridge', status: 'connected' },
   { id: 'globalcapital', name: 'GlobalCapital', category: 'News & Wires', description: 'New issue news feeds', status: 'available' },
 ];
+
+/** A Bond Console section: click its heading to open or close everything inside. */
+function FoldCard({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Card
+      data-open={open}
+      className="relative [&>*:first-child]:cursor-pointer [&>*:first-child]:pr-12 [&:not([data-open=true])>*:not(:first-child):not(.fold-chev)]:hidden"
+      onClick={e => { if ((e.currentTarget.firstElementChild as HTMLElement | null)?.contains(e.target as Node)) setOpen(o => !o); }}
+    >
+      {children}
+      <ChevronDown aria-hidden className={`fold-chev pointer-events-none absolute right-5 top-6 h-5 w-5 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
+    </Card>
+  );
+}
 
 export default function BondConsolePage() {
   const { currentUser } = useApp();
@@ -97,7 +113,7 @@ export default function BondConsolePage() {
       </div>
 
       {/* PROFILE */}
-      <Card>
+      <FoldCard>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><User className="h-4 w-4" /> Profile</CardTitle>
           <CardDescription>Your personal details visible to other syndicate users</CardDescription>
@@ -145,10 +161,10 @@ export default function BondConsolePage() {
             <Button onClick={() => toast({ title: 'Profile saved (demo)', description: 'No changes were persisted.' })}>Save profile</Button>
           </div>
         </CardContent>
-      </Card>
+      </FoldCard>
 
       {/* AI BULLETIN EXTRACTION */}
-      <Card>
+      <FoldCard>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Sparkles className="h-4 w-4" /> AI Bulletin Extraction
@@ -186,10 +202,10 @@ export default function BondConsolePage() {
             );
           })}
         </CardContent>
-      </Card>
+      </FoldCard>
 
       {/* VENDOR CONNECTORS */}
-      <Card>
+      <FoldCard>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><Plug className="h-4 w-4" /> Vendor & Market Data Connectors</CardTitle>
           <CardDescription>
@@ -223,10 +239,10 @@ export default function BondConsolePage() {
             </div>
           ))}
         </CardContent>
-      </Card>
+      </FoldCard>
 
       {/* NOTIFICATIONS */}
-      <Card>
+      <FoldCard>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><Bell className="h-4 w-4" /> Notifications</CardTitle>
           <CardDescription>How you receive new issue alerts and chat activity</CardDescription>
@@ -247,10 +263,10 @@ export default function BondConsolePage() {
             </div>
           ))}
         </CardContent>
-      </Card>
+      </FoldCard>
 
       {/* SECURITY */}
-      <Card>
+      <FoldCard>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><Shield className="h-4 w-4" /> Security & Access</CardTitle>
           <CardDescription>Authentication, sessions and access controls</CardDescription>
@@ -279,10 +295,10 @@ export default function BondConsolePage() {
             <Button variant="outline">Recovery codes</Button>
           </div>
         </CardContent>
-      </Card>
+      </FoldCard>
 
       {/* API & WEBHOOKS */}
-      <Card>
+      <FoldCard>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><Webhook className="h-4 w-4" /> API Keys & Webhooks</CardTitle>
           <CardDescription>Outbound integrations into your own systems</CardDescription>
@@ -306,11 +322,11 @@ export default function BondConsolePage() {
             <Button size="sm" variant="outline">Edit endpoint</Button>
           </div>
         </CardContent>
-      </Card>
+      </FoldCard>
 
       {/* APPEARANCE & LOCALE */}
       <div className="grid grid-cols-2 gap-4">
-        <Card>
+        <FoldCard>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base"><Palette className="h-4 w-4" /> Appearance</CardTitle>
           </CardHeader>
@@ -319,8 +335,8 @@ export default function BondConsolePage() {
             <div className="flex justify-between items-center"><span>Density</span><Button size="sm" variant="outline">Comfortable</Button></div>
             <div className="flex justify-between items-center"><span>Accent colour</span><Button size="sm" variant="outline">Default</Button></div>
           </CardContent>
-        </Card>
-        <Card>
+        </FoldCard>
+        <FoldCard>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base"><Globe className="h-4 w-4" /> Locale & Time</CardTitle>
           </CardHeader>
@@ -330,12 +346,12 @@ export default function BondConsolePage() {
             <div className="flex justify-between items-center"><span>Number format</span><Button size="sm" variant="outline">1,234.56</Button></div>
             <div className="flex justify-between items-center"><span>Default currency</span><Button size="sm" variant="outline">EUR</Button></div>
           </CardContent>
-        </Card>
+        </FoldCard>
       </div>
 
       {/* BILLING & DATA */}
       <div className="grid grid-cols-2 gap-4">
-        <Card>
+        <FoldCard>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base"><CreditCard className="h-4 w-4" /> Billing & Subscription</CardTitle>
           </CardHeader>
@@ -346,8 +362,8 @@ export default function BondConsolePage() {
             <Button size="sm" variant="outline" className="w-full mt-2">Manage subscription</Button>
             <Button size="sm" variant="outline" className="w-full">Download invoices</Button>
           </CardContent>
-        </Card>
-        <Card>
+        </FoldCard>
+        <FoldCard>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base"><FileDown className="h-4 w-4" /> Data & Compliance</CardTitle>
           </CardHeader>
@@ -357,11 +373,11 @@ export default function BondConsolePage() {
             <Button size="sm" variant="outline" className="w-full justify-start">Data retention policy</Button>
             <Button size="sm" variant="outline" className="w-full justify-start text-destructive">Delete account</Button>
           </CardContent>
-        </Card>
+        </FoldCard>
       </div>
 
       {/* SUPPORT */}
-      <Card>
+      <FoldCard>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><HelpCircle className="h-4 w-4" /> Support & About</CardTitle>
         </CardHeader>
@@ -372,7 +388,7 @@ export default function BondConsolePage() {
           <Button variant="outline" className="justify-start">Status page</Button>
           <div className="col-span-2 text-xs text-muted-foreground pt-2">BondVDR v1.0.0 · © 2026 EuroBondMarkets</div>
         </CardContent>
-      </Card>
+      </FoldCard>
     </div>
   );
 }
