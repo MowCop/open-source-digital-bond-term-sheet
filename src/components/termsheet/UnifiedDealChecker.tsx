@@ -157,7 +157,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
       .map(c => ({ ...c, src: 'gleif' as const }));
     const figi = [...figiChecks(state, figiRec[isin]), ...reportingChecks(state)].map(c => ({ ...c, src: 'openfigi' as const }));
     return [...base, ...live, ...missing, ...figi] as CheckItem[];
-  }, [state, refreshTick, leiParties, gleif, noLeiKey, matchCounts, figiRec, isin]);
+  }, [state, refreshTick, leiParties, gleif, noLeiKey, matchCounts, figiRec, isin, storedDocs]);
   const ignoredSet = useMemo(() => new Set(ignored), [ignored]);
   const active = useMemo(() => checks.filter(c => c.l !== 'warn' || !ignoredSet.has(checkKey(c))), [checks, ignoredSet]);
   const ignoredCount = checks.length - active.length;
