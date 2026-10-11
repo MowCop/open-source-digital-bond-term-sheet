@@ -82,7 +82,7 @@ export default function BondConsolePage() {
   const [twoFA, setTwoFA] = useState(true);
   const [ssoEnabled, setSsoEnabled] = useState(false);
 
-  // AI Bulletin Extraction trigger mode — controls how aggressively
+  // AI Control & Compliance trigger mode — controls how aggressively
   // AIDraftPage runs AI extraction on the New Issue Bulletin.
   const [aiTrigger, setAiTrigger] = useState<AITriggerMode>(() => getAITriggerMode());
   useEffect(() => {
@@ -163,11 +163,11 @@ export default function BondConsolePage() {
         </CardContent>
       </FoldCard>
 
-      {/* AI BULLETIN EXTRACTION */}
+      {/* AI CONTROL & COMPLIANCE */}
       <FoldCard>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            <Sparkles className="h-4 w-4" /> AI Bulletin Extraction
+            <Sparkles className="h-4 w-4" /> AI Control &amp; Compliance
           </CardTitle>
           <CardDescription>
             How aggressively the New Issue Bulletin builder runs AI extraction over headline, body and dropped documents.
