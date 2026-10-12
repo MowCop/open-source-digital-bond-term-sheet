@@ -13,3 +13,4 @@
 - Files dropped on a deal are stored in the private deal-documents bucket and indexed in public.deal_documents (src/lib/dealDocuments.ts), added to the unsaved term sheet Documentation list on drop (user still saves), and counted by the Deal Checker as attached — one store for deal files.
 
 - reference/deal-checker-capabilities.md is the living summary of Deal Checker checks and knowledge sources; any change to Deal Checker rules, fixes or sources must review and update it in the same change — keeps the knowledge base accurate.
+- The Al Rajhi demo deal (seed, chat replay script, term sheet stage snapshots) is defined only in src/data/alRajhiDemo.ts and driven by src/components/AlRajhiDemoPanel.tsx — one source for the demo flow; replayed messages go through the normal Fill parser, never auto-accepted.
