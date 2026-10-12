@@ -38,9 +38,9 @@ export const DEMO_BASE: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHist
   maturityDate: '2037-03-10',
   specifiedDenomination: '200000',
   benchmark: 'Interpolated 5.5-year US Treasury',
-  governingLaw: 'English' as Deal['governingLaw'],
+  governingLaw: 'ENGLISH_LAW',
   listingVenue: 'London Stock Exchange ISM',
-  interestType: 'FIXED' as Deal['interestType'],
+  interestType: 'FIXED',
   interestPaymentFrequency: 'SEMI_ANNUAL' as Deal['interestPaymentFrequency'],
 };
 
