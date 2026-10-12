@@ -41,7 +41,8 @@ export const DEMO_BASE: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHist
   governingLaw: 'ENGLISH_LAW',
   listingVenue: 'London Stock Exchange ISM',
   interestType: 'FIXED',
-  interestPaymentFrequency: 'SEMI_ANNUAL' as Deal['interestPaymentFrequency'],
+  interestPaymentFrequency: 'SEMI_ANNUAL',
+  dayCountFraction: '30_360',
 };
 
 export interface DemoStep {
