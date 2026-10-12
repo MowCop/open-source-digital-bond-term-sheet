@@ -27,6 +27,9 @@ import TermSheetDlt from '@/components/termsheet/TermSheetDlt';
 import UnifiedDealChecker from '@/components/termsheet/UnifiedDealChecker';
 import DealDocuments from '@/components/termsheet/DealDocuments';
 import { buildXML, refreshAuto } from '@/lib/termsheet/index.js';
+import AlRajhiDemoPanel, { setupAlRajhiDemo } from '@/components/AlRajhiDemoPanel';
+import { isDemoDeal } from '@/data/alRajhiDemo';
+import { useApp } from '@/context/AppContext';
 import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
 import { termSheetView } from '@/lib/termSheetView';
 import { emptyNewDeal, canCreateNewDeal, extractNewDealIssuer, fillEmptyIssuer } from '@/lib/newDeal';
@@ -101,6 +104,17 @@ function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, on
         <div className="flex w-full items-center">
           <IngestDropzone onFiles={ingest} className="flex-1" />
         </div>
+      )}
+
+      {canManage && isDemoDeal(deal) && (
+        <AlRajhiDemoPanel
+          deal={deal}
+          ingest={async files => {
+            const found = await fillRef.current?.ingestFiles(files);
+            setTab('fill');
+            return found;
+          }}
+        />
       )}
 
       <UnifiedDealChecker
@@ -230,6 +244,20 @@ function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, on
 
 export default function DealsPage() {
   const { deals, messages, createDeal, updateDeal, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser, addAuditEntry } = useScopedApp();
+  const fullApp = useApp();
+  const [demoBusy, setDemoBusy] = useState(false);
+  const demoDeal = deals.find(isDemoDeal);
+  const loadDemo = async () => {
+    if (demoDeal) { setExpandedDealId(demoDeal.id); return; }
+    setDemoBusy(true);
+    try {
+      const d = await setupAlRajhiDemo(fullApp);
+      setExpandedDealId(d.id);
+      toast.success('Al Rajhi demo deal ready', { description: 'Use "Next message" to replay the syndicate blasts.' });
+    } catch (e) {
+      toast.error('Could not set up the demo deal', { description: (e as Error).message });
+    } finally { setDemoBusy(false); }
+  };
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -357,6 +385,12 @@ export default function DealsPage() {
           <h1 className="text-2xl font-bold">Digital Term Sheet</h1>
           <p className="text-muted-foreground text-sm">Track bond deals from Mandate to Settled · ICMA Bond Data Taxonomy aligned</p>
         </div>
+        {canManageDeals && (
+          <Button variant="outline" className="ml-auto mr-2" onClick={loadDemo} disabled={demoBusy}>
+            {demoBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {demoDeal ? 'Open Al Rajhi demo' : 'Load Al Rajhi demo'}
+          </Button>
+        )}
         {canManageDeals && (
           <Dialog open={showCreate} onOpenChange={setShowCreate}>
             <DialogTrigger asChild>
