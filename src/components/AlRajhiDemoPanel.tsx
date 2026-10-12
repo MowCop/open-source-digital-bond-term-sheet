@@ -109,7 +109,10 @@ export default function AlRajhiDemoPanel({ deal, ingest }: Props) {
         : [];
       app.sendChatMessage(ch.id, `[Syndicate blast ${next.id} · ${time} UTC]\n${next.body}`, attachments, undefined, deal.id);
       if (next.stage !== deal.stage) app.updateDeal(deal.id, { stage: next.stage });
-      const found = await ingest([new File([next.body], `Al Rajhi blast ${next.id}.txt`, { type: 'text/plain' })]);
+      const blast = new File([next.body], `Al Rajhi blast ${next.id}.txt`, { type: 'text/plain' });
+      // Parsed for Fill proposals only — demo texts are never stored in the deal vault.
+      (blast as File & { skipStore?: boolean }).skipStore = true;
+      const found = await ingest([blast]);
       toast.success(`Message ${next.id} sent — ${next.label}`, {
         description: found ? `${found} values proposed in Fill for review` : 'No new values to propose',
       });
