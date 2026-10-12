@@ -15,7 +15,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { deleteChatMessagesByChannel } from '@/integrations/supabase/cloudData';
 import { useApp } from '@/context/AppContext';
 import { uploadDealDocument } from '@/lib/dealDocuments';
-import { dealToBdtState, refreshAuto, bdtStageLabel } from '@/lib/bdt-bridge';
+import { dealToBdtState, bdtStageLabel } from '@/lib/bdt-bridge';
+import { refreshAuto } from '@/lib/termsheet/index.js';
 import type { Deal, ChatChannel } from '@/types/bond';
 import {
   DEMO_BASE, DEMO_STEPS, PRE_MARKETING, DEMO_ATTACHMENTS, demoStageSnapshots,
@@ -68,7 +69,7 @@ export async function setupAlRajhiDemo(app: App): Promise<Deal> {
   for (const s of demoStageSnapshots()) {
     const st = dealToBdtState({ ...deal, ...s.deal, id: deal.id, bdtState: undefined } as Deal);
     st.stage = s.bdtStage;
-    st.docs = DEMO_ATTACHMENTS.map(a => ({ name: a.name.replace(/\.pdf$/, ''), date: '2026-09-03', link: a.url, version: '' })) as never;
+    st.docs = DEMO_ATTACHMENTS.map(a => ({ DocumentName: a.name, DocumentDate: '2026-09-03', DocumentLink: a.url, DocumentVersion: '' })) as never;
     refreshAuto(st);
     version += 1;
     const { error } = await supabase.from('deal_term_sheet_releases').insert({
