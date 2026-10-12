@@ -109,7 +109,7 @@ export const DEMO_STEPS: DemoStep[] = [
 
 /** Cumulative deal fields at each Digital Term Sheet step (Announcement + the four blasts). */
 export function demoStageSnapshots(): { bdtStage: number; label: string; sentAt?: string; deal: Partial<Deal> }[] {
-  const out: { bdtStage: number; label: string; sentAt?: string; deal: Partial<Deal> }[] = [{ bdtStage: 1, label: 'Announcement', deal: { ...DEMO_BASE, stage: 'Announced' as DealStage } as Partial<Deal> }];
+  const out: { bdtStage: number; label: string; sentAt?: string; deal: Partial<Deal> }[] = [{ bdtStage: 1, label: 'Announcement', sentAt: '2026-09-03T08:00:00Z', deal: { ...DEMO_BASE, stage: 'Announced' as DealStage } as Partial<Deal> }];
   let acc: Partial<Deal> = { ...DEMO_BASE };
   for (const s of DEMO_STEPS) {
     acc = { ...acc, ...s.patch };
