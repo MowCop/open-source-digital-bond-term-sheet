@@ -19,3 +19,6 @@ Note: the 2.0 and 3.0 files carry the sender's (Intesa Sanpaolo London Branch) d
 - Message text: this folder (`*.txt`, extracted from the original Word files).
 - PDFs: stored as file links in `src/assets/al-rajhi/*.asset.json`.
 - Demo script (chat replay + term sheet stages): `src/data/alRajhiDemo.ts`. Pre-marketing chat messages in it are illustrative, not from the real files.
+
+## New Issue Board and timing
+All four blasts are on the New Issue Board for the demo deal as sent updates with their full original text (footer included), timed 3 Sep 2026 at 08:49, 10:30, 12:15 and 15:40 UTC. The saved term sheet stages use the same times (Announcement 08:00 UTC). "Next message" no longer posts to the deal chat; the chat is to be revised later.

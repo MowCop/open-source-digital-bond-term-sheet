@@ -7,17 +7,17 @@
  *   each one is posted to the deal chat and sent through the normal document
  *   parser, so its values appear as Fill proposals for review (never auto-applied).
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Play, RotateCcw, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { deleteChatMessagesByChannel } from '@/integrations/supabase/cloudData';
+import { insertMessage } from '@/integrations/supabase/cloudData';
 import { useApp } from '@/context/AppContext';
 import { uploadDealDocument } from '@/lib/dealDocuments';
 import { dealToBdtState, bdtStageLabel } from '@/lib/bdt-bridge';
 import { refreshAuto } from '@/lib/termsheet/index.js';
-import type { Deal, ChatChannel } from '@/types/bond';
+import type { Deal, ChatChannel, Message } from '@/types/bond';
 import {
   DEMO_BASE, DEMO_STEPS, PRE_MARKETING, DEMO_ATTACHMENTS, demoStageSnapshots,
 } from '@/data/alRajhiDemo';
@@ -46,6 +46,34 @@ async function postPreMarketing(app: App, dealId: string, channelId: string) {
     app.sendChatMessage(channelId, text, [], undefined, dealId);
     await sleep(150);
   }
+}
+
+const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+/** Plain message text → board HTML, keeping every line. */
+const toHtml = (t: string) => t.split(/\r?\n/).map(l => `<p>${esc(l) || '<br>'}</p>`).join('');
+export const boardMessageId = (dealId: string, stepId: string) => `demo-${dealId}-${stepId.replace('.', '-')}`;
+
+/** Puts all four syndicate blasts on the New Issue Board with their original times. Skips any already there. */
+export async function seedDemoBoard(dealId: string, senderId: string) {
+  const ids = DEMO_STEPS.map(s => boardMessageId(dealId, s.id));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any).from('messages').select('id').in('id', ids);
+  const have = new Set((data ?? []).map((r: { id: string }) => r.id));
+  let added = 0;
+  for (const s of DEMO_STEPS) {
+    const id = boardMessageId(dealId, s.id);
+    if (have.has(id)) continue;
+    const at = new Date(s.sentAt);
+    const m: Message = {
+      id, dealIds: [dealId], subject: s.subject, body: toHtml(s.body), status: 'sent',
+      senderId, recipients: [], createdAt: at, updatedAt: at, sentAt: at, bulletinSource: 'manual',
+      attachments: s.attachments
+        ? DEMO_ATTACHMENTS.map((a, i) => ({ id: `demo-${i}`, name: a.name, type: 'pdf' as const, size: a.size, url: a.url, mimeType: 'application/pdf' }))
+        : [],
+    } as Message;
+    try { await insertMessage(m); added++; } catch (e) { console.error('[demo] board insert failed', s.id, e); }
+  }
+  return added;
 }
 
 export async function setupAlRajhiDemo(app: App): Promise<Deal> {
@@ -77,9 +105,11 @@ export async function setupAlRajhiDemo(app: App): Promise<Deal> {
       bdt_state_snapshot: st as never, diff_summary: { demo: true, source: s.label } as never,
       checks_summary: {} as never, released_by: u.user?.id ?? null,
       released_by_name: 'Demo seed (Al Rajhi reference files)',
+      ...(s.sentAt ? { released_at: s.sentAt } : {}),
     });
     if (error) console.error('[demo] snapshot insert failed', error);
   }
+  await seedDemoBoard(deal.id, app.currentUser.id);
   localStorage.setItem(stepKey(deal.id), '0');
   return deal;
 }
@@ -96,18 +126,15 @@ export default function AlRajhiDemoPanel({ deal, ingest }: Props) {
   const [busy, setBusy] = useState(false);
   const next = DEMO_STEPS[step];
 
+  // Make sure the full message history is on the New Issue Board (once per deal).
+  useEffect(() => { seedDemoBoard(deal.id, app.currentUser.id).catch(() => {}); }, [deal.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const save = (n: number) => { localStorage.setItem(stepKey(deal.id), String(n)); setStep(n); };
 
   const playNext = async () => {
     if (!next) return;
     setBusy(true);
     try {
-      const ch = demoChannel(app, deal.id);
-      const time = new Date(next.sentAt).toISOString().slice(11, 16);
-      const attachments = next.attachments
-        ? DEMO_ATTACHMENTS.map((a, i) => ({ id: `demo-${i}`, name: a.name, type: 'pdf' as const, size: a.size, url: a.url, mimeType: 'application/pdf' }))
-        : [];
-      app.sendChatMessage(ch.id, `[Syndicate blast ${next.id} · ${time} UTC]\n${next.body}`, attachments, undefined, deal.id);
       if (next.stage !== deal.stage) app.updateDeal(deal.id, { stage: next.stage });
       const blast = new File([next.body], `Al Rajhi blast ${next.id}.txt`, { type: 'text/plain' });
       // Parsed for Fill proposals only — demo texts are never stored in the deal vault.
@@ -123,9 +150,6 @@ export default function AlRajhiDemoPanel({ deal, ingest }: Props) {
   const reset = async () => {
     setBusy(true);
     try {
-      const ch = demoChannel(app, deal.id);
-      await deleteChatMessagesByChannel(ch.id);
-      await postPreMarketing(app, deal.id, ch.id);
       app.updateDeal(deal.id, { stage: 'Announced' });
       save(0);
       toast.success('Demo replay reset to the start');
