@@ -188,8 +188,10 @@ export default function TermSheetFill({
       return 0;
     }
     const list = Array.from(files);
+    // Demo replay texts (marked by AlRajhiDemoPanel) are parsed for proposals but never stored.
+    const storable = list.filter(f => !(f as File & { skipStore?: boolean }).skipStore);
     // Store every file first, so a document that cannot be read is still kept with the deal.
-    const links = await Promise.all(list.map(file => uploadDealDocument(deal.id, file).catch(e => {
+    const links = await Promise.all(storable.map(file => uploadDealDocument(deal.id, file).catch(e => {
       toast.error(`${file.name} could not be saved: ${(e as Error).message}`);
       return null;
     })));
