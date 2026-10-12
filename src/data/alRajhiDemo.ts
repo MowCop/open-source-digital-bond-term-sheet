@@ -5,8 +5,8 @@
  * stage each one represents. Real message files are kept verbatim in the reference folder.
  */
 import type { Bookrunner, Deal, DealStage } from '@/types/bond';
-import ocAsset from '../../reference/al-rajhi-tier2/1.2_Al_Rajhi_Bank_-_Offering_Circular.pdf.asset.json';
-import suppAsset from '../../reference/al-rajhi-tier2/1.3_Al_Rajhi_Bank_-_Supplement.pdf.asset.json';
+import ocAsset from '@/assets/al-rajhi/1.2_Al_Rajhi_Bank_-_Offering_Circular.pdf.asset.json';
+import suppAsset from '@/assets/al-rajhi/1.3_Al_Rajhi_Bank_-_Supplement.pdf.asset.json';
 
 export const DEMO_DEAL_NAME = 'Al Rajhi Bank – Tier 2 US$ Reg S 10.5NC5.5 Social Sukuk';
 export const isDemoDeal = (d: Pick<Deal, 'issuerName'>) => d.issuerName === DEMO_DEAL_NAME;
