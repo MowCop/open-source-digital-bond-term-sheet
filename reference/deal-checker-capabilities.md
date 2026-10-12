@@ -37,13 +37,14 @@ Checks update live as terms are typed, stages advance, or documents are uploaded
 - **ISDA definitions:** missing → warning; 2006 → warning (2021 carries the risk-free-rate fallbacks); 2021 → pass.
 - **Floor/cap:** floor above cap → fail; no floor → warning (zero floor is standard).
 - **Fixed coupon on an FRN:** warning.
-- Limitation: BDT 2.0 in this template has no reference-rate or margin field, so SOFR/€STR/SONIA pairing is not yet checked.
+- **Reference rate vs currency:** VDR boxes "Reference rate" (x:referenceRate) and "Margin (bp)" (x:floatingMargin) appear in the Interest section for floating deals (not part of BDT 2.0, not in the XML). SOFR→USD, €STR/EURIBOR→EUR, SONIA→GBP, SARON→CHF, TONA/TIBOR→JPY, CORRA→CAD, BBSW/AONIA→AUD; mismatch → fail, missing rate or margin → warning, non-numeric margin → fail.
 
 ### 2b. ESG disclosure (ICMA Green/Social/Sustainability Bond and SLB Principles)
 - **Framework cited:** labelled bonds without a document named "framework" in the Documentation list → warning.
 - **External review:** no second party opinion / external review / verification cited → warning.
 - **Sustainability-linked:** no coupon step-up margin → fail.
 - **Use-of-proceeds (green, social, sustainability):** no allocation/impact reporting document cited → warning.
+- **Auto-citation:** every file dropped on a deal (ESG documents included) is cited in the Documentation list by file name on drop; checks match on those names.
 - **Unlabelled:** green/social/sustainability documents cited but no ESG label → warning.
 
 ### 3. Live entity & security registry checks (hybrid)
