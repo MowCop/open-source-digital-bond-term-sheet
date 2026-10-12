@@ -1,0 +1,115 @@
+Subject: €€€ MBH Bank EUR 500m RegS 5NC4 Senior Preferred - Priced €€€
+
+€€€ MBH Bank EUR 500m RegS 5NC4 Senior Preferred - Priced €€€
+
++--------------------+-------------------------------------------------+
+| Issuer:            | MBH Bank Nyrt.                                  |
++====================+=================================================+
+| Issuer LEI:        | 3H0Q3U74FVFED2SHZT16                            |
++--------------------+-------------------------------------------------+
+| Issuer Rating:     | Baa3, stable (Moody’s)                          |
++--------------------+-------------------------------------------------+
+| Expected Notes     | Ba2 (Moody’s)                                   |
+| Rating:            |                                                 |
++--------------------+-------------------------------------------------+
+| Status:            | Unsubordinated and unsecured, Senior Preferred  |
+|                    | Notes                                           |
++--------------------+-------------------------------------------------+
+| Form of the Notes: | Regulation S, Registered Notes, New Safekeeping |
+|                    | Structure                                       |
++--------------------+-------------------------------------------------+
+| Tenor:             | 5NC4                                            |
++--------------------+-------------------------------------------------+
+| Maturity:          | 2 February 2031                                 |
++--------------------+-------------------------------------------------+
+| Optional           | 2 February 2030                                 |
+| Redemption Date:   |                                                 |
++--------------------+-------------------------------------------------+
+| Currency:          | EUR                                             |
++--------------------+-------------------------------------------------+
+| Size:              | EUR 500m                                        |
++--------------------+-------------------------------------------------+
+| Coupon:            | 4.750 %                                         |
++--------------------+-------------------------------------------------+
+| Reoffer:           | MS+230bps // 4.798% // Price: 99.829            |
++--------------------+-------------------------------------------------+
+| Benchmark:         | OBL 2.4 30 #191 @ 99.980 (HR: 90%) B+239.5bps   |
++--------------------+-------------------------------------------------+
+| Settlement Date:   | 2 February 2026 (T+6)                           |
++--------------------+-------------------------------------------------+
+| Initial Coupon:    | Fixed, Annual, Act/Act (ICMA)                   |
++--------------------+-------------------------------------------------+
+| Reset Coupon:      | If not redeemed, 3-month Euribor + the margin   |
+|                    | (3-month Euribor + original issue spread) p.a.  |
+|                    | thereafter payable quarterly, Act/360           |
++--------------------+-------------------------------------------------+
+| Business Day       | Following Business Day Convention for the fixed |
+| Convention         | rate note until the Optional Redemption Date.   |
+|                    | If not redeemed on the Optional Redemption      |
+|                    | Date, Modified Following Business Day           |
+|                    | Convention adjusted for the FRN until the       |
+|                    | Maturity Date                                   |
++--------------------+-------------------------------------------------+
+| Clean-up Call      | If, at any time, 75% or more of the principal   |
+|                    | amount outstanding of the Notes originally      |
+|                    | issued have been redeemed or purchased and      |
+|                    | subsequently cancelled, the Issuer may, subject |
+|                    | to the pre-condition to such redemption, redeem |
+|                    | all (but not some only) of the remaining        |
+|                    | outstanding Notes at par together with any      |
+|                    | accrued and unpaid interest thereon             |
++--------------------+-------------------------------------------------+
+| Use of Proceeds:   | General Corporate Purposes                      |
++--------------------+-------------------------------------------------+
+| ISIN / Common      | XS3276127514 / 327612751                        |
+| Code:              |                                                 |
++--------------------+-------------------------------------------------+
+| Law:               | The Notes shall be governed by English law,     |
+|                    | except for the provisions of the Notes relating |
+|                    | to status, ranking and waiver of set-off that   |
+|                    | shall be governed by, and shall be construed in |
+|                    | accordance with, the laws of Hungary            |
++--------------------+-------------------------------------------------+
+| Denominations:     | EUR 100k x EUR 1k                               |
++--------------------+-------------------------------------------------+
+| Documentation:     | Under the Issuer’s EUR 2.5bn EMTN Programme     |
+|                    | dated 26 November 2025, as supplemented by the  |
+|                    | first supplement dated 16 January 2026          |
++--------------------+-------------------------------------------------+
+| Listing:           | Luxembourg Stock Exchange (Regulated Market)    |
++--------------------+-------------------------------------------------+
+| Clearing System:   | Euroclear and Clearstream, Luxembourg           |
++--------------------+-------------------------------------------------+
+| Business Days:     | TARGET                                          |
++--------------------+-------------------------------------------------+
+| Joint Global       | Citi (B&D), ING, MBH Investment Bank, UniCredit |
+| Coordinators:      |                                                 |
++--------------------+-------------------------------------------------+
+| Joint Bookrunners: | Citi (B&D), ING, MBH Investment Bank,           |
+|                    | UniCredit, IMI-Intesa Sanpaolo                  |
++--------------------+-------------------------------------------------+
+| Stabilization:     | ICMA / FCA stabilization applies                |
++--------------------+-------------------------------------------------+
+| Target Market:     | MiFID II professionals/ECPs-only – Manufacturer |
+|                    | target market (MiFID II product governance) is  |
+|                    | eligible counterparties and professional        |
+|                    | investors only (all distribution channels). No  |
+|                    | PRIIPs key information document has been        |
+|                    | prepared as not available to retail in EEA.     |
+|                    |                                                 |
+|                    | UK MiFIR professionals/ECPs-only - Manufacturer |
+|                    | target market (UK MiFIR product governance) is  |
+|                    | eligible counterparties and professional        |
+|                    | investors only (all distribution channels). No  |
+|                    | UK PRIIPs key information document has been     |
+|                    | prepared as not available to retail in the UK.  |
++--------------------+-------------------------------------------------+
+| Timing:            | Priced. TOE: 16:12 UKT / 17:12 CET // FTT:      |
+|                    | 16:30 UKT / 17:30 CET                           |
++--------------------+-------------------------------------------------+
+
+EEA MiFID II / UK MiFIR professionals/ECPs-only /No EEA or UK PRIIPS
+KID - Manufacturer target market (MIFID II/ UK MiFIR product governance)
+is eligible counterparties and professional clients only (all
+distribution channels). No EEA or UK PRIIPs key information document
+(KID) has been prepared as not available to retail in EEA or UK.

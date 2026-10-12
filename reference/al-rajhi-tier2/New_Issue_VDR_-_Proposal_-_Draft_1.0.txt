@@ -1,0 +1,209 @@
+Wednesday 15^(th) April
+
+The New Issue VDR — Unique Selling Points
+
+The Problem with the Status Quo
+
+The international bond market's new issue dissemination infrastructure
+is antiquated relative to the volumes and speeds involved:
+
+- Outlook/Email is the default channel for term sheets and new issue
+  alerts, but it is irreversible — once sent, a document cannot be
+  retracted, corrected, or versioned. In a market where deal terms
+  change rapidly during bookbuild, this is a meaningful operational and
+  compliance risk.
+
+- Bloomberg offers messaging and IB Chat as an alternative, but at
+  significant cost. For banks (middle office) or investors who only need
+  it for new issue alert dissemination, the Bloomberg terminal licence
+  is a very expensive solution to a relatively narrow problem. It is
+  also a closed, proprietary ecosystem.
+
+- Taxonomy standardisation has historically been left entirely to the
+  data vendors that is until recently — Whilst the ICMA taxonomy is
+  agreed in principal the standard is not rigorously applied at source,
+  at the point of origination by the bank. The result is fragmentation,
+  reconciliation costs, and data inconsistency across vendor systems –
+  it is an improving picture however.
+
+- Pre-AI, there was no *easy* way to automate structured data extraction
+  from free-form term sheet documents or chat rooms at source. Though
+  complex algorithms can do this, human analysts at most vendors
+  manually re-keyed the same data. This is expensive, slow, error-prone,
+  and entirely unnecessary given current AI technology.
+
+i) The Opportunity AI Creates — Automation at Source
+
+AI changes the fundamental economics and architecture of new issue data
+dissemination. For the first time, it is possible to automate structured
+data extraction at the point of origination — the bank itself — rather
+than leaving each downstream vendor to solve the same problem
+independently.
+
+This is the core insight: today, if there are ten data vendors in the
+market, the same term sheet is being manually processed ten times, by
+ten different teams, with ten slightly different results. The New Issue
+VDR eliminates this redundancy entirely. The bank deposits the document
+once. The AI extracts the data once, to a single agreed standard. Every
+vendor receives the same clean, structured output simultaneously and
+notably all vendors are included and synced into the entire process.
+
+This is not incremental improvement — it is a structural shift in where
+intelligence sits in the workflow.
+
+ii) The Bank-Facing Product — A New Issue VDR with a Native Alert Thread
+
+The product given to syndicate banks is intentionally simple. Banks do
+not need to integrate new systems into their technology stack or change
+their internal processes significantly. The interface is a New Issue
+Alert Thread via a secure app/portal — conceptually familiar to any
+banker who uses Bloomberg IB Chat or a group email chain, but
+purpose-built for new issue dissemination.
+
+Workflow……..
+
+The bank's syndicate desk drops into this thread:
+
+- The new issue alert (free text announcement)
+
+- The term sheet (PDF, Word, or plain text)
+
+- Any subsequent updates — revised size, tightened spread, final terms,
+  pricing supplement
+
+The VDR's AI layer immediately processes every item deposited into data
+and suggested text (if required):
+
+- Extracts all structured data fields against the ICMA bond data
+  taxonomy (borrower, currency, size, tenor, coupon, spread, ratings,
+  bookrunners, ISIN, settlement date, and all other standard fields)
+
+- Populates the vendor database in real time.
+
+- Pushes structured data to any subscribed vendors API or MCP.
+
+- Flags version changes — if a second document is uploaded, the system
+  detects what changed and updates only the affected fields, with a full
+  audit trail and HITL controls.
+
+The bank's workflow is reduced to a single action: drop content into the
+thread. Everything downstream is automated.
+
+iii) ICMA Taxonomy as the Universal Standard — Built In, Not Bolted On
+
+One of the most commercially and structurally significant aspects of
+this system is the decision to build the ICMA bond data taxonomy
+directly into the AI extraction layer, rather than leaving taxonomy
+decisions to individual vendors.
+
+ICMA (the International Capital Market Association) is the recognised
+self-regulatory body for the international bond markets and has
+published data standards for primary market disclosure. By anchoring the
+New Issue VDR to ICMA taxonomy:
+
+- Every field extracted by the AI maps to an agreed, industry-recognised
+  definition
+
+- Vendors receiving the data do not need to reconcile different naming
+  conventions
+
+- Regulators and compliance teams have a clear, auditable standard
+  against which disclosures can be assessed
+
+- The system naturally aligns with emerging regulatory expectations
+  around structured primary market data
+
+The native messaging system within the VDR complements this. The alert
+thread is not just a document drop — it is a structured communication
+layer where messages are parsed alongside documents. A syndicate banker
+typing "we are increasing the deal size to EUR 750m" in the thread is
+treated as a data update, not just a note. The AI reads it, maps it to
+the size field, and updates the record accordingly.
+
+Outlook integration is offered as an optional channel for banks that
+prefer to continue using email internally — messages sent from
+designated syndicate email addresses can sync into the VDR thread
+automatically, meaning the bank does not even need to change its
+outward-facing workflow at all.
+
+iv) Flexible, Usage-Based Pricing — Accessible to All Bank Sizes
+
+Pricing is structured to reflect the reality that bond issuance activity
+varies enormously across institutions:
+
+- A tier-one global bank may price dozens of deals per week across
+  multiple currencies and formats
+
+- A smaller regional or national bank may bring only a handful of deals
+  per year to international markets
+
+A flat subscription model unfairly burdens smaller participants and
+creates a barrier to adoption that reduces the network's value for
+everyone. The New Issue VDR instead offers:
+
+- Pay-per-deal pricing: a fee is charged per new issue processed through
+  the platform, with volume discounts at defined thresholds
+
+- AI-metered usage: computational costs scale with actual usage, passed
+  through transparently
+
+- Tiered access levels: basic alert dissemination at low cost; full
+  structured data extraction, API access, and analytics at higher tiers
+
+For a smaller bank doing ten international deals per year, the cost is
+genuinely modest — far below the cost of a Bloomberg terminal licence,
+and requiring no additional headcount. For a large bank, the cost is
+offset almost immediately by the elimination of manual data entry and
+the reduction in compliance risk.
+
+v) Compliance — Bank-Hosted, Bank-Authorised, Bank-Controlled
+
+This is arguably the most important selling point for the compliance and
+legal functions at syndicate banks, and it directly addresses the single
+greatest institutional resistance to any new fintech product in capital
+markets.
+
+The New Issue VDR is hosted and authorised by the banks themselves. This
+means:
+
+- Data sovereignty: The bank controls where its term sheets and deal
+  data reside. Nothing is processed on infrastructure the bank has not
+  approved.
+
+- Retractability: Unlike Outlook, documents and alerts deposited in the
+  VDR can be retracted, corrected, or superseded — with a full version
+  history maintained. This is critical when deal terms change
+  mid-execution that may have errors that need quickly correcting.
+
+- Permissioned access: The bank determines precisely which vendors,
+  investors, or counterparties can see which documents, at what stage of
+  the deal lifecycle. A preliminary term sheet can be restricted; final
+  terms can be released to all.
+
+- Audit trail: Every upload, every AI extraction, every data push to a
+  vendor API is timestamped and logged. Compliance teams have a
+  complete, immutable record of what was disclosed, to whom, and when.
+
+- Regulatory alignment: As regulators in the EU, UK, and US move toward
+  greater transparency requirements in primary bond markets, having a
+  structured, auditable dissemination system that maps to ICMA taxonomy
+  positions the bank well ahead of likely mandatory requirements.
+
+- MiFID II / MAR considerations: The controlled environment of the VDR
+  supports compliance with market abuse regulations by ensuring that
+  price-sensitive information (new issue alerts, deal terms) is
+  disseminated in a controlled, permissioned, and logged manner — not
+  broadcast indiscriminately via email.
+
+The bank is not adopting a third-party dissemination service it does not
+control. It is operating its own authorised infrastructure, with AI
+embedded as a processing layer within that infrastructure.
+
+The Competitive Position in One Sentence
+
+The New Issue VDR is the first purpose-built, AI-native, ICMA-compliant
+primary bond market data platform that automates dissemination and
+structured data extraction at source, replacing the fragmented,
+irreversible, costly patchwork of Outlook, Bloomberg, and manual vendor
+rekeying — at a price accessible to every bank in the market, with
+compliance controls owned by the banks themselves.
