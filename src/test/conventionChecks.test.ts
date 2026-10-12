@@ -22,6 +22,12 @@ describe('floating rate conventions', () => {
   });
 });
 
+describe('reference rate vs currency', () => {
+  const frn = (rate: string, ccy: string) => floatingRateChecks({ f: { 'IssuanceDataGroup/Product/InterestPayment/InterestType': 'FLOATING', 'IssuanceDataGroup/Product/AggregateNominalAmount/Currency': ccy, 'x:referenceRate': rate, 'x:floatingMargin': '85' } });
+  it('fails SOFR on a EUR deal', () => { expect(frn('SOFR', 'EUR').find(x => x.t.includes('does not suit'))?.l).toBe('fail'); });
+  it('passes SONIA on a GBP deal', () => { expect(frn('SONIA', 'GBP').find(x => x.t.includes('suits GBP'))?.l).toBe('pass'); });
+});
+
 describe('ESG disclosure', () => {
   it('fails a sustainability-linked bond with no step-up', () => {
     expect(esgChecks(st({ 'Product/ESGLabel': 'SUSTAINABILITY_LINKED' })).find(x => x.l === 'fail')).toBeTruthy();

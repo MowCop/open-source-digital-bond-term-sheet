@@ -1,3 +1,4 @@
+import { FRN_FIELDS } from '@/lib/conventionChecks';
 /**
  * Digital Term Sheet — Fill tab.
  *
@@ -564,6 +565,18 @@ export default function TermSheetFill({
                           required={isRequired(fd)}
                           proposed={proposedPaths.has(fd.p)}
                           invalid={fieldError(state, fd)}
+                          disabled={!canEdit}
+                          onChange={v => setField(fd.p, v)}
+                        />
+                      ))}
+                      {sec.id === 'interest' && state.f?.['IssuanceDataGroup/Product/InterestPayment/InterestType'] === 'FLOATING' && FRN_FIELDS.map(fd => (
+                        <TermSheetField
+                          key={fd.p}
+                          fd={fd as unknown as FieldDef}
+                          value={valueOf(fd.p)}
+                          required={false}
+                          proposed={false}
+                          invalid={null}
                           disabled={!canEdit}
                           onChange={v => setField(fd.p, v)}
                         />
