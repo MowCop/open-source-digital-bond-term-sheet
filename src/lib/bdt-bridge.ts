@@ -1,3 +1,4 @@
+import { floatingRateChecks, esgChecks } from './conventionChecks';
 /**
  * bdt-bridge.ts
  * ─────────────────────────────────────────────────────────────────────────────
@@ -431,7 +432,8 @@ export function unifiedChecks(state: BdtState, alertText?: string): CheckItem[] 
       src: 'vdr' as const,
     }));
 
-  return [...core, ...appended];
+  const conventions: CheckItem[] = [...floatingRateChecks(state), ...esgChecks(state)].map(c => ({ ...c, src: 'vdr' as const }));
+  return [...core, ...appended, ...conventions];
 }
 
 export function tallyChecks(items: CheckItem[]) {
