@@ -11,3 +11,5 @@
 - Deal AI tools (document extraction, chat extraction, bulletin) route through supabase/functions/_shared/ai-model.ts, which allowlists the selectable models and calls the gateway's native messages endpoint; the browser only sends the chosen model id from src/lib/aiModel.ts — one place to add or remove models.
 - Deal Checker navigation targets and 'Try to fix' repairs live in src/lib/checkActions.ts; fixes only edit the unsaved Fill state (user still saves) and ignored warnings are stored per deal in the browser — one place for checker actions, nothing auto-saved.
 - Files dropped on a deal are stored in the private deal-documents bucket and indexed in public.deal_documents (src/lib/dealDocuments.ts), added to the unsaved term sheet Documentation list on drop (user still saves), and counted by the Deal Checker as attached — one store for deal files.
+
+- reference/deal-checker-capabilities.md is the living summary of Deal Checker checks and knowledge sources; any change to Deal Checker rules, fixes or sources must review and update it in the same change — keeps the knowledge base accurate.
