@@ -2,7 +2,7 @@
 
 Keep this document in step with the Deal Checker. Any change to its checks, fixes or knowledge sources must update this file in the same change.
 
-Code map: `src/lib/bdt-bridge.ts` (unifiedChecks), `src/lib/termsheet/validate.js` (vendored, read-only), `src/lib/bondValidator.ts`, `src/lib/gleif.ts`, `src/lib/openfigi.ts`, `src/lib/checkActions.ts`, `src/components/termsheet/UnifiedDealChecker.tsx`.
+Code map: `src/lib/bdt-bridge.ts` (unifiedChecks), `src/lib/termsheet/validate.js` (vendored, read-only), `src/lib/bondValidator.ts`, `src/lib/gleif.ts`, `src/lib/openfigi.ts`, `src/lib/conventionChecks.ts`, `src/lib/checkActions.ts`, `src/components/termsheet/UnifiedDealChecker.tsx`.
 
 ## Overview
 
@@ -30,6 +30,22 @@ Checks update live as terms are typed, stages advance, or documents are uploaded
 - **Settlement cycles:** non-standard horizons, US SEC T+1 and Eurobond T+2.
 - **Benchmark & currency pairing:** EUR vs Bund/DBR/OBL/Bobl; USD vs US Treasuries; GBP vs Gilts; CHF vs Eidgenossen; JPY vs JGBs; governing law compatibility.
 
+### 2a. Floating-rate conventions (when Interest type is FLOATING)
+- **Day count vs currency:** ACT/360 for EUR, USD, CHF; ACT/365F for GBP, CAD, AUD; ACT/360 or ACT/365F for JPY (warning otherwise).
+- **Business days:** Modified Following expected; unadjusted interest periods flagged.
+- **Coupon frequency:** annual, biannual or at-maturity payment flagged as unusual.
+- **ISDA definitions:** missing → warning; 2006 → warning (2021 carries the risk-free-rate fallbacks); 2021 → pass.
+- **Floor/cap:** floor above cap → fail; no floor → warning (zero floor is standard).
+- **Fixed coupon on an FRN:** warning.
+- Limitation: BDT 2.0 in this template has no reference-rate or margin field, so SOFR/€STR/SONIA pairing is not yet checked.
+
+### 2b. ESG disclosure (ICMA Green/Social/Sustainability Bond and SLB Principles)
+- **Framework cited:** labelled bonds without a document named "framework" in the Documentation list → warning.
+- **External review:** no second party opinion / external review / verification cited → warning.
+- **Sustainability-linked:** no coupon step-up margin → fail.
+- **Use-of-proceeds (green, social, sustainability):** no allocation/impact reporting document cited → warning.
+- **Unlabelled:** green/social/sustainability documents cited but no ESG label → warning.
+
 ### 3. Live entity & security registry checks (hybrid)
 - **GLEIF LEI registry:** valid LEIs checked live for active status and legal-name match.
 - **Unidentified entity matching:** name without LEI → live GLEIF search with ranked suggestions (never auto-applied).
@@ -46,6 +62,8 @@ Checks update live as terms are typed, stages advance, or documents are uploaded
 | :--- | :--- | :--- |
 | ICMA Bond Data Taxonomy (BDT v2.0) | `schema/icma-bond-data-taxonomy.xsd`, enums and type-restriction schemas | Data dictionary, required fields by stage, XML schema validation. |
 | ICMA Primary Market Handbook | Appendix A8 pro formas (`reference/ICMA-Primary-Market-Handbook-Appendix-A8-260918.pdf` + `.txt`) | Final terms fields, selling restrictions, document citation conventions (Sept 2018; flag conflicts with EU Prospectus Regulation). |
+| ICMA Sustainable Finance Principles | Green Bond, Social Bond, Sustainability Bond Guidelines and Sustainability-Linked Bond Principles | ESG framework, external review, reporting and SLB step-up disclosure rules. |
+| ISDA Definitions & money-market conventions | 2006/2021 ISDA Definitions; currency day-count conventions | Floating-rate determination, fallbacks and accrual conventions. |
 | GLEIF Global Registry | `api.gleif.org` via the gleif-lookup function | Live source of truth for LEIs, legal names, registration status. |
 | OpenFIGI & global reporting | `api.openfigi.com` + ESMA RTS 23 / MiFIR / EMIR / SFTR, FINRA TRACE | Security identifiers and cross-border reporting requirements. |
 | Central bank & ICSD calendars | TARGET2 (ECB), London (BoE), US Federal Reserve schedules through 2027 | Business-day settlement and coupon date integrity. |
