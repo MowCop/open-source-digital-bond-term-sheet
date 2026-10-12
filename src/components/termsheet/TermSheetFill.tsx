@@ -219,7 +219,7 @@ export default function TermSheetFill({
       }
     }
     // Stored files are cited in the Documentation list straight away (user still presses Save).
-    const added = list
+    const added = storable
       .map((file, i) => ({ file, link: links[i] }))
       .filter(({ link }) => link)
       .map(({ file, link }) => ({ DocumentName: file.name, DocumentDate: new Date().toISOString().slice(0, 10), DocumentLink: link as string, DocumentVersion: '' }));
