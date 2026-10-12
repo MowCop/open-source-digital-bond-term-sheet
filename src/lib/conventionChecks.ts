@@ -6,6 +6,18 @@ type State = { f?: Record<string, unknown>; docs?: { DocumentName?: string }[] }
 const P = 'IssuanceDataGroup/';
 const get = (s: State, p: string) => String(s.f?.[P + p] ?? '').trim();
 
+// VDR envelope boxes (not in BDT 2.0) shown in the Interest section when the deal is FLOATING.
+export const REF_RATE_PATH = 'x:referenceRate';
+export const MARGIN_PATH = 'x:floatingMargin';
+export const RATE_CURRENCY: Record<string, string[]> = {
+  SOFR: ['USD'], ESTR: ['EUR'], EURIBOR: ['EUR'], SONIA: ['GBP'], SARON: ['CHF'],
+  TONA: ['JPY'], TIBOR: ['JPY'], CORRA: ['CAD'], BBSW: ['AUD'], AONIA: ['AUD'],
+};
+export const FRN_FIELDS = [
+  { sec: 'interest', p: REF_RATE_PATH, l: 'Reference rate', t: 'sel', e: [...Object.keys(RATE_CURRENCY), 'OTHER'], ext: 1, from: 1, req: 0, hint: 'Floating rate notes only. VDR field, not part of BDT 2.0.' },
+  { sec: 'interest', p: MARGIN_PATH, l: 'Margin (bp)', t: 'num', ext: 1, from: 1, req: 0, ph: '85', hint: 'Spread over the reference rate, in basis points.' },
+];
+
 const FRN_DAYCOUNT: Record<string, string[]> = {
   EUR: ['ACT/360'], USD: ['ACT/360'], CHF: ['ACT/360'], JPY: ['ACT/360', 'ACT/365F'],
   GBP: ['ACT/365F', 'ACT/365'], CAD: ['ACT/365F', 'ACT/365'], AUD: ['ACT/365F', 'ACT/365'],
@@ -14,6 +26,15 @@ const FRN_DAYCOUNT: Record<string, string[]> = {
 export function floatingRateChecks(s: State): CheckItem[] {
   if (get(s, 'Product/InterestPayment/InterestType') !== 'FLOATING') return [];
   const out: CheckItem[] = [];
+  const rate = String(s.f?.[REF_RATE_PATH] ?? '').trim().toUpperCase();
+  const margin = String(s.f?.[MARGIN_PATH] ?? '').trim();
+  const ccy0 = (get(s, 'Issuance/TotalAggregateAmount/Currency') || get(s, 'Product/AggregateNominalAmount/Currency')).toUpperCase();
+  if (!rate) out.push({ l: 'warn', t: 'Floating rate note without a reference rate', d: 'Pick the reference rate (e.g. SOFR, €STR, SONIA) in the Interest section.' });
+  else if (RATE_CURRENCY[rate] && ccy0) out.push(RATE_CURRENCY[rate].includes(ccy0)
+    ? { l: 'pass', t: `Reference rate ${rate} suits ${ccy0}` }
+    : { l: 'fail', t: `Reference rate ${rate} does not suit ${ccy0}`, d: `${rate} is a ${RATE_CURRENCY[rate].join('/')} rate.` });
+  if (!margin) out.push({ l: 'warn', t: 'Floating rate note without a margin', d: 'Enter the spread over the reference rate in basis points.' });
+  else if (!Number.isFinite(Number(margin))) out.push({ l: 'fail', t: 'Floating rate margin is not a number' });
   const ccy = get(s, 'Issuance/TotalAggregateAmount/Currency') || get(s, 'Product/AggregateNominalAmount/Currency');
   const dc = get(s, 'Product/DayCountFraction');
   const want = FRN_DAYCOUNT[ccy.toUpperCase()];
