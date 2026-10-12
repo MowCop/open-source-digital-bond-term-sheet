@@ -22,3 +22,4 @@
 - [x] Point Deal Checker at `unifiedChecks` so the two surfaces become one in the UI.
 - [x] Retired the `fieldConfig.ts` prototype — the BDT FIELDS dictionary is the only field list.
 - [ ] Later iteration: floating / zero coupon with dependent fields and validation.
+- [x] Al Rajhi demo deal: library files, demo deal setup, chat replay, stage snapshots
