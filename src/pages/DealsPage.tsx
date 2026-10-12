@@ -386,6 +386,12 @@ export default function DealsPage() {
           <p className="text-muted-foreground text-sm">Track bond deals from Mandate to Settled · ICMA Bond Data Taxonomy aligned</p>
         </div>
         {canManageDeals && (
+          <Button variant="outline" className="ml-auto mr-2" onClick={loadDemo} disabled={demoBusy}>
+            {demoBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {demoDeal ? 'Open Al Rajhi demo' : 'Load Al Rajhi demo'}
+          </Button>
+        )}
+        {canManageDeals && (
           <Dialog open={showCreate} onOpenChange={setShowCreate}>
             <DialogTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-2" />New Deal</Button>
