@@ -1,3 +1,4 @@
+import { sendAndLog } from '../_shared/send-and-log.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -117,29 +118,17 @@ Deno.serve(async (req) => {
 
   const idempotencyKey = `support-${crypto.randomUUID()}`
 
-  const { data: invokeData, error: invokeError } = await supabase.functions.invoke(
-    'send-transactional-email',
-    {
-      body: {
-        templateName: 'support-request',
-        idempotencyKey,
-        replyTo: email,
-        templateData: {
-          name,
-          email,
-          subject,
-          message,
-          submittedAt: now.toISOString(),
-        },
-      },
-    },
-  )
-
-  if (invokeError) {
-    console.error('send-transactional-email invocation failed', invokeError)
+  try {
+    await sendAndLog('support-request', '', {
+      idempotencyKey,
+      replyTo: email,
+      templateData: { name, email, subject, message, submittedAt: now.toISOString() },
+    })
+  } catch (invokeError) {
+    console.error('support-request send failed', invokeError)
     return jsonResponse({ error: 'Failed to send support request' }, 502)
   }
 
-  console.log('Support request enqueued', { idempotencyKey, invokeData })
+  console.log('Support request sent', { idempotencyKey })
   return jsonResponse({ success: true }, 200)
 })
