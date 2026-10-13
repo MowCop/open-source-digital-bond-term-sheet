@@ -2,7 +2,7 @@
 
 Keep this document in step with the Deal Checker. Any change to its checks, fixes or knowledge sources must update this file in the same change.
 
-Code map: `src/lib/bdt-bridge.ts` (unifiedChecks), `src/lib/termsheet/validate.js` (vendored, read-only), `src/lib/bondValidator.ts`, `src/lib/gleif.ts`, `src/lib/openfigi.ts`, `src/lib/conventionChecks.ts`, `src/lib/checkActions.ts`, `src/components/termsheet/UnifiedDealChecker.tsx`.
+Code map: `src/lib/bdt-bridge.ts` (unifiedChecks), `src/lib/termsheet/validate.js` (vendored, read-only), `src/lib/bondValidator.ts`, `src/lib/gleif.ts`, `src/lib/openfigi.ts`, `src/lib/conventionChecks.ts`, `src/lib/checkActions.ts`, `src/lib/deepAudit.ts`, `supabase/functions/audit-deal-fields-ai`, `src/components/termsheet/UnifiedDealChecker.tsx`.
 
 ## Overview
 
@@ -56,6 +56,12 @@ Checks update live as terms are typed, stages advance, or documents are uploaded
 ### 4. Document repository alignment & "Try to Fix"
 - **Vault document verification:** documents stored in the deal's Documents tab turn "No deal documents attached" green.
 - **Auto-fix actions:** "Try to Fix" (warnings and fails) fills currency, benchmark, tenor, bookrunners, common code, FIGI, GLEIF legal name or saved documents from the last dropped file or registry data. Fixes edit only the unsaved Fill state; the user still presses Save. Warnings can be ignored per deal (per browser).
+
+### 5. AI Deep Audit (on demand, Claude)
+- **Trigger:** "Run Deep Audit" in the Deal Checker header; disabled until the deal has stored documents. Uses the Claude model chosen in Settings.
+- **Scope:** compares only the live Fill field values against text from the deal's stored documents (high-value sections: terms and conditions, use of proceeds/ESG, redemption/dissolution, pricing supplement/final terms). Chat blasts are not audited.
+- **Severity:** every finding is a **warning** (marked AI), never a fail. A clean run shows one pass.
+- **Actions:** click to open the field; "Try to fix" writes the document value into the unsaved Fill state only when the document states it unambiguously; the user still saves. Results are kept per deal in the browser until the next run.
 
 ## Knowledge base
 
