@@ -32,7 +32,7 @@ import { isDemoDeal } from '@/data/alRajhiDemo';
 import { useApp } from '@/context/AppContext';
 import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
 import { termSheetView } from '@/lib/termSheetView';
-import { parseDtsStage } from '@/lib/dtsNavigation';
+import { parseDtsStage, boardLink } from '@/lib/dtsNavigation';
 import { emptyNewDeal, canCreateNewDeal, extractNewDealIssuer, fillEmptyIssuer } from '@/lib/newDeal';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
@@ -71,6 +71,8 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
   const navigate = useNavigate();
   const fillRef = useRef<TermSheetFillHandle>(null);
   const [tab, setTab] = useState('fill');
+  const { messages } = useApp();
+  const [shownStage, setShownStage] = useState<number>(requestedStage ?? 1);
   const consumedFiles = useRef<File[] | null>(null);
   useEffect(() => { if (requestedStage) setTab('fill'); }, [requestedStage, requestedAt]);
 
@@ -98,7 +100,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
           size="sm"
           variant="ghost"
           className="text-xs text-muted-foreground hover:text-foreground -ml-2"
-          onClick={() => navigate(`/messages?dealId=${deal.id}`)}
+          onClick={() => navigate(boardLink(messages, deal, shownStage))}
         >
           <ArrowLeft className="h-3 w-3 mr-1" />
           Back to New Issue Board
@@ -138,7 +140,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
           <TabsTrigger value="docs">Documents</TabsTrigger>
         </TabsList>
         <TabsContent value="fill" forceMount className="mt-4 data-[state=inactive]:hidden">
-          <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} requestedStage={requestedStage} requestedAt={requestedAt} />
+          <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} onDisplayedStage={setShownStage} requestedStage={requestedStage} requestedAt={requestedAt} />
         </TabsContent>
         <TabsContent value="docs" className="mt-4">
           <DealDocuments dealId={deal.id} canManage={canManage} />

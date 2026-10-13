@@ -251,8 +251,14 @@ export default function MessagesPage() {
       const groupKey = group.dealIds.join(',');
       setExpandedAlertId(groupKey);
       setActivePanel('history');
+      const messageId = searchParams.get('messageId');
+      if (messageId && openedFromLinkRef.current !== messageId && group.messages.some(m => m.id === messageId)) {
+        openedFromLinkRef.current = messageId;
+        openOverlay(group, group.messages[0]?.id !== messageId, messageId);
+      }
     }
   }, [searchParams, alertGroups]);
+  const openedFromLinkRef = useRef<string | null>(null);
 
   // Backfill: if an existing deal's stage is behind what its latest message
   // body says (e.g. subject contains "PRICED" but deal is still at Mandate),
