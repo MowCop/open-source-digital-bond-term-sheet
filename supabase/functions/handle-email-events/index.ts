@@ -34,15 +34,15 @@ const handler = createEmailWebhookHandler({
   on: {
     'email.bounced': async (event) => {
       await record(event.event_id, event.data.recipient, 'bounce', 'bounced',
-        'Permanent bounce — email address is invalid or rejected', event.data.message_id)
+        'Permanent bounce — email address is invalid or rejected', (event.data as { message_id?: string }).message_id)
     },
     'email.complaint': async (event) => {
       await record(event.event_id, event.data.recipient, 'complaint', 'complained',
-        'Spam complaint — recipient marked email as spam', event.data.message_id)
+        'Spam complaint — recipient marked email as spam', (event.data as { message_id?: string }).message_id)
     },
     'email.unsubscribed': async (event) => {
       await record(event.event_id, event.data.recipient, 'unsubscribe', 'suppressed',
-        'Recipient unsubscribed', event.data.message_id)
+        'Recipient unsubscribed', (event.data as { message_id?: string }).message_id)
     },
   },
 })
