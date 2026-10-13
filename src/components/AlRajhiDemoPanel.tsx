@@ -98,6 +98,7 @@ export async function setupAlRajhiDemo(app: App): Promise<Deal> {
   for (const s of demoStageSnapshots()) {
     const st = dealToBdtState({ ...deal, ...s.deal, id: deal.id, bdtState: undefined } as Deal);
     st.stage = s.bdtStage;
+    Object.assign(st.f, s.bdtExtra ?? {});
     st.docs = DEMO_ATTACHMENTS.map(a => ({ DocumentName: a.name, DocumentDate: '2026-09-03', DocumentLink: a.url, DocumentVersion: '' })) as never;
     refreshAuto(st);
     version += 1;
