@@ -17,6 +17,7 @@ Note: the 2.0 and 3.0 files carry the sender's (Intesa Sanpaolo London Branch) d
 
 ## Where the files live
 - Message text: this folder (`*.txt`, extracted from the original Word files).
+- Board formatting: matching `*.html` files converted directly from the original Word documents, preserving tables, paragraphs, emphasis and links. Plain text remains the replay extraction input.
 - PDFs: stored as file links in `src/assets/al-rajhi/*.asset.json`.
 - Demo script (chat replay + term sheet stages): `src/data/alRajhiDemo.ts`. Pre-marketing chat messages in it are illustrative, not from the real files.
 

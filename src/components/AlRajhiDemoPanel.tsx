@@ -12,7 +12,7 @@ import { Play, RotateCcw, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { insertMessage } from '@/integrations/supabase/cloudData';
+import { insertMessage, updateMessageRow } from '@/integrations/supabase/cloudData';
 import { useApp } from '@/context/AppContext';
 import { uploadDealDocument } from '@/lib/dealDocuments';
 import { dealToBdtState, bdtStageLabel } from '@/lib/bdt-bridge';
@@ -57,15 +57,20 @@ export const boardMessageId = (dealId: string, stepId: string) => `demo-${dealId
 export async function seedDemoBoard(dealId: string, senderId: string) {
   const ids = DEMO_STEPS.map(s => boardMessageId(dealId, s.id));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any).from('messages').select('id').in('id', ids);
-  const have = new Set((data ?? []).map((r: { id: string }) => r.id));
+  const { data } = await (supabase as any).from('messages').select('id, body').in('id', ids);
+  const have = new Map<string, string>((data ?? []).map((r: { id: string; body: string }) => [r.id, r.body]));
   let added = 0;
   for (const s of DEMO_STEPS) {
     const id = boardMessageId(dealId, s.id);
-    if (have.has(id)) continue;
+    if (have.has(id)) {
+      // Upgrade only the old generated plain-text copy, never a user's edits.
+      // Body-only update preserves the board and stage history timestamps.
+      if (have.get(id) === toHtml(s.body)) await updateMessageRow(id, { body: s.bodyHtml });
+      continue;
+    }
     const at = new Date(s.sentAt);
     const m: Message = {
-      id, dealIds: [dealId], subject: s.subject, body: toHtml(s.body), status: 'sent',
+      id, dealIds: [dealId], subject: s.subject, body: s.bodyHtml, status: 'sent',
       senderId, recipients: [], createdAt: at, updatedAt: at, sentAt: at, bulletinSource: 'manual',
       attachments: s.attachments
         ? DEMO_ATTACHMENTS.map((a, i) => ({ id: `demo-${i}`, name: a.name, type: 'pdf' as const, size: a.size, url: a.url, mimeType: 'application/pdf' }))
