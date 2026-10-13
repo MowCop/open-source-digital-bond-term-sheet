@@ -70,6 +70,8 @@ export interface DemoStep {
   bodyHtml: string;
   attachments?: boolean;
   patch: Partial<Deal>;
+  /** Term sheet values read from the message that have no flat deal column (BDT path → value). */
+  bdtExtra?: Record<string, string>;
 }
 
 /** Illustrative only — written for the demo, not from the real files. */
@@ -115,6 +117,14 @@ export const DEMO_STEPS: DemoStep[] = [
       reofferYield: '6.232', coupon: '6.232', interestRate: '6.232',
       isin: 'XS3489932593', commonCode: '348993259', stage: 'Priced',
     },
+    bdtExtra: {
+      'IssuanceDataGroup/Product/StatusOfNote/Subordinated': 'SUBORDINATED',
+      'IssuanceDataGroup/Product/Optionality': 'CALL',
+      'IssuanceDataGroup/Product/ESGLabel': 'SOCIAL',
+      'IssuanceDataGroup/Issuance/SellingRestrictions/REGS/RegSCode': 'REGS_CAT2',
+      'IssuanceDataGroup/Issuance/SellingRestrictions/PRIIPsRestriction': 'NO_EEA',
+      'IssuanceDataGroup/Issuance/ReofferSpreadToBenchmark/Value': '170',
+    },
   },
 ];
 
@@ -129,12 +139,14 @@ export function demoBoardBody(id: string, body: string): string {
 }
 
 /** Cumulative deal fields at each Digital Term Sheet step (Announcement + the four blasts). */
-export function demoStageSnapshots(): { bdtStage: number; label: string; sentAt?: string; deal: Partial<Deal> }[] {
-  const out: { bdtStage: number; label: string; sentAt?: string; deal: Partial<Deal> }[] = [{ bdtStage: 1, label: 'Announcement', sentAt: '2026-09-03T08:00:00Z', deal: { ...DEMO_BASE, stage: 'Announced' as DealStage } as Partial<Deal> }];
+export function demoStageSnapshots(): { bdtStage: number; label: string; sentAt?: string; deal: Partial<Deal>; bdtExtra?: Record<string, string> }[] {
+  const out: { bdtStage: number; label: string; sentAt?: string; deal: Partial<Deal>; bdtExtra?: Record<string, string> }[] = [{ bdtStage: 1, label: 'Announcement', sentAt: '2026-09-03T08:00:00Z', deal: { ...DEMO_BASE, stage: 'Announced' as DealStage } as Partial<Deal> }];
   let acc: Partial<Deal> = { ...DEMO_BASE };
+  let extra: Record<string, string> = {};
   for (const s of DEMO_STEPS) {
     acc = { ...acc, ...s.patch };
-    out.push({ bdtStage: s.bdtStage, label: s.label, sentAt: s.sentAt, deal: { ...acc } });
+    extra = { ...extra, ...(s.bdtExtra ?? {}) };
+    out.push({ bdtStage: s.bdtStage, label: s.label, sentAt: s.sentAt, deal: { ...acc }, bdtExtra: { ...extra } });
   }
   return out;
 }
