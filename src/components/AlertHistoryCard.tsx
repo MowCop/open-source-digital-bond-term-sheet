@@ -10,6 +10,7 @@ import RichTextEditor from '@/components/RichTextEditor';
 import { isHtml } from '@/lib/htmlText';
 import { demoBoardBody } from '@/data/alRajhiDemo';
 import { dtsLink } from '@/lib/dtsNavigation';
+import { shortBorrowerName } from '@/lib/borrowerName';
 import { formatUTCDateTime } from '@/lib/utils';
 import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft, ChevronUp, MessageSquare, BookOpen, Minus, ShieldCheck, Sparkles } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -901,7 +902,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
           {editDeal && (
             <div className="absolute left-1/2 bottom-2 -translate-x-1/2 h-10 flex items-center max-w-[50%] pointer-events-none">
               <span className="truncate text-xl md:text-2xl font-bold text-white leading-none tracking-tight">
-                {editDeal.issuerName}
+                {shortBorrowerName(editDeal.issuerName)}
               </span>
             </div>
           )}
