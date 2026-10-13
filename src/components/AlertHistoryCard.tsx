@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import LinkifiedText from '@/components/LinkifiedText';
 import RichTextEditor from '@/components/RichTextEditor';
 import { isHtml } from '@/lib/htmlText';
+import { demoBoardBody } from '@/data/alRajhiDemo';
 import { formatUTCDateTime } from '@/lib/utils';
 import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft, ChevronUp, MessageSquare, BookOpen, Minus, ShieldCheck, Sparkles } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -77,13 +78,13 @@ interface AlertHistoryCardProps {
 }
 
 export default function AlertHistoryCard({
-  message,
+  message: sourceMessage,
   senderName,
   recipientNames,
   canManage: canManageProp,
   readOnly = false,
   versionLabel,
-  versions,
+  versions: sourceVersions,
   editableVersionId,
   isLatest = false,
   editSignal = 0,
@@ -101,6 +102,8 @@ export default function AlertHistoryCard({
   onPostUpdate,
   onDelete,
 }: AlertHistoryCardProps) {
+  const message = { ...sourceMessage, body: demoBoardBody(sourceMessage.id, sourceMessage.body) };
+  const versions = sourceVersions?.map(m => ({ ...m, body: demoBoardBody(m.id, m.body) }));
 
 function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => void }) {
   const [open, setOpen] = useState(false);
