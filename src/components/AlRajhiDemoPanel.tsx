@@ -12,7 +12,7 @@ import { Play, RotateCcw, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { insertMessage, updateMessageRow } from '@/integrations/supabase/cloudData';
+import { insertMessage } from '@/integrations/supabase/cloudData';
 import { useApp } from '@/context/AppContext';
 import { uploadDealDocument } from '@/lib/dealDocuments';
 import { dealToBdtState, bdtStageLabel } from '@/lib/bdt-bridge';
@@ -63,9 +63,8 @@ export async function seedDemoBoard(dealId: string, senderId: string) {
   for (const s of DEMO_STEPS) {
     const id = boardMessageId(dealId, s.id);
     if (have.has(id)) {
-      // Upgrade only the old generated plain-text copy, never a user's edits.
-      // Body-only update preserves the board and stage history timestamps.
-      if (have.get(id) === toHtml(s.body)) await updateMessageRow(id, { body: s.bodyHtml });
+      // Existing records are rendered using the Word reference without writes,
+      // so their original publication timestamps remain unchanged.
       continue;
     }
     const at = new Date(s.sentAt);

@@ -5,6 +5,7 @@
  * stage each one represents. Real message files are kept verbatim in the reference folder.
  */
 import type { Bookrunner, Deal, DealStage } from '@/types/bond';
+import { stripHtml } from '@/lib/htmlText';
 import ocAsset from '@/assets/al-rajhi/1.2_Al_Rajhi_Bank_-_Offering_Circular.pdf.asset.json';
 import suppAsset from '@/assets/al-rajhi/1.3_Al_Rajhi_Bank_-_Supplement.pdf.asset.json';
 // Full verbatim message texts (including the bank's legal footer).
@@ -116,6 +117,16 @@ export const DEMO_STEPS: DemoStep[] = [
     },
   },
 ];
+
+/** Present legacy generated board bodies with original Word structure, without
+ * rewriting dated records or replacing subsequent user edits. */
+export function demoBoardBody(id: string, body: string): string {
+  if (!id.startsWith('demo-') || /<table\b/i.test(body)) return body;
+  const step = DEMO_STEPS.find(s => id.endsWith(`-${s.id.replace('.', '-')}`));
+  if (!step) return body;
+  const normalize = (text: string) => text.replace(/\s+/g, ' ').trim();
+  return normalize(stripHtml(body)) === normalize(step.body) ? step.bodyHtml : body;
+}
 
 /** Cumulative deal fields at each Digital Term Sheet step (Announcement + the four blasts). */
 export function demoStageSnapshots(): { bdtStage: number; label: string; sentAt?: string; deal: Partial<Deal> }[] {
