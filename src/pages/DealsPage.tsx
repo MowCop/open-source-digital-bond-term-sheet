@@ -32,6 +32,7 @@ import { isDemoDeal } from '@/data/alRajhiDemo';
 import { useApp } from '@/context/AppContext';
 import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
 import { termSheetView } from '@/lib/termSheetView';
+import { parseDtsStage } from '@/lib/dtsNavigation';
 import { emptyNewDeal, canCreateNewDeal, extractNewDealIssuer, fillEmptyIssuer } from '@/lib/newDeal';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
@@ -57,18 +58,21 @@ interface DealDetailProps {
   deal: Deal;
   canManage: boolean;
   fromBoard?: boolean;
+  requestedStage?: number;
+  requestedAt?: string;
   onSaveFields: (patch: Partial<Deal>) => void;
   initialFiles?: File[];
   onInitialFilesConsumed?: () => void;
 }
 
-function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, onInitialFilesConsumed }: DealDetailProps) {
+function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, onSaveFields, initialFiles, onInitialFilesConsumed }: DealDetailProps) {
   const [checkerState, setCheckerState] = useState<BdtState>(() => dealToBdtState(deal));
   const view = useMemo(() => termSheetView(checkerState), [checkerState]);
   const navigate = useNavigate();
   const fillRef = useRef<TermSheetFillHandle>(null);
   const [tab, setTab] = useState('fill');
   const consumedFiles = useRef<File[] | null>(null);
+  useEffect(() => { if (requestedStage) setTab('fill'); }, [requestedStage, requestedAt]);
 
   useEffect(() => {
     if (!initialFiles?.length || consumedFiles.current === initialFiles || !fillRef.current) return;
@@ -134,7 +138,7 @@ function DealDetail({ deal, canManage, fromBoard, onSaveFields, initialFiles, on
           <TabsTrigger value="docs">Documents</TabsTrigger>
         </TabsList>
         <TabsContent value="fill" forceMount className="mt-4 data-[state=inactive]:hidden">
-          <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} />
+          <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} requestedStage={requestedStage} requestedAt={requestedAt} />
         </TabsContent>
         <TabsContent value="docs" className="mt-4">
           <DealDocuments dealId={deal.id} canManage={canManage} />
@@ -615,6 +619,8 @@ export default function DealsPage() {
                     initialFiles={pendingDocuments?.dealId === deal.id ? pendingDocuments.files : undefined}
                     onInitialFilesConsumed={() => setPendingDocuments(null)}
                     fromBoard={!!searchParams.get('dealId')}
+                    requestedStage={searchParams.get('dealId') === deal.id ? parseDtsStage(searchParams.get('stage')) : undefined}
+                    requestedAt={searchParams.get('at') ?? undefined}
                     onSaveFields={(patch) => {
                       updateDeal(deal.id, { ...patch, updatedAt: new Date() });
                       addAuditEntry({
