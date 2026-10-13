@@ -526,7 +526,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
       {/* Body */}
       {bodyHasHtml ? (
         <div
-          className="tiptap prose prose-sm dark:prose-invert max-w-none text-sm text-muted-foreground"
+          className="alert-message-body tiptap prose prose-sm dark:prose-invert max-w-none text-sm text-muted-foreground"
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(message.body) }}
         />
       ) : (
@@ -1007,7 +1007,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
               {viewingArchive ? (
                 <div className="h-full overflow-auto px-3 py-3 text-sm">
                   {isHtml(activeVersion.body) ? (
-                    <div className="prose-alert" dangerouslySetInnerHTML={{ __html: sanitizeHtml(activeVersion.body) }} />
+                    <div className="alert-message-body prose-alert" dangerouslySetInnerHTML={{ __html: sanitizeHtml(activeVersion.body) }} />
                   ) : (
                     <LinkifiedText text={activeVersion.body} />
                   )}
@@ -1018,7 +1018,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
                 onChange={setEditBody}
                 placeholder="Write the alert body…"
                 className="h-full border-0 rounded-none"
-                contentClassName="px-3 py-3"
+                contentClassName="alert-message-body px-3 py-3"
               />
               )}
             </div>
