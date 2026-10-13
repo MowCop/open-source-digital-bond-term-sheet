@@ -9,6 +9,7 @@ import LinkifiedText from '@/components/LinkifiedText';
 import RichTextEditor from '@/components/RichTextEditor';
 import { isHtml } from '@/lib/htmlText';
 import { demoBoardBody } from '@/data/alRajhiDemo';
+import { dtsLink } from '@/lib/dtsNavigation';
 import { formatUTCDateTime } from '@/lib/utils';
 import { Edit2, RotateCcw, Save, Send, Trash2, Upload, FileText, Eye, Download, X, ChevronDown, ChevronRight, Users, ArrowLeft, ChevronUp, MessageSquare, BookOpen, Minus, ShieldCheck, Sparkles } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -834,12 +835,14 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
                 size="icon"
                 variant="outline"
                 className="toolbar-square-btn"
-                onClick={() => toast({ title: 'OrderBook', description: 'OrderBook module coming soon.' })}
+                aria-label="Digital Term Sheet"
+                disabled={!editDeal}
+                onClick={() => { if (editDeal) navigate(dtsLink(message, editDeal)); }}
               >
-                <BookOpen className="h-4 w-4" />
+                <span className="text-xs font-semibold">DTS</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>OrderBook</TooltipContent>
+            <TooltipContent>Digital Term Sheet</TooltipContent>
           </Tooltip>
 
           <Tooltip>
