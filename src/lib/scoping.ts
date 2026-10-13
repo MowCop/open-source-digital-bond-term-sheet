@@ -12,11 +12,15 @@ export interface ScopeContext {
   currentOrg: string | null;
   currentAuthUserId?: string | null;
   currentUserId?: string | null;
+  currentEmail?: string | null;
   isGuest?: boolean;
   guestDealIds?: string[];
 }
 
 const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
+
+/** Syndicate Admins granted visibility of every deal regardless of organisation. */
+export const ALL_DEALS_ACCESS = ['dana.marzouq@hotmail.com'];
 
 export function scopeDeals(deals: Deal[], ctx: ScopeContext): Deal[] {
   if (ctx.isGuest) {
@@ -24,6 +28,7 @@ export function scopeDeals(deals: Deal[], ctx: ScopeContext): Deal[] {
     return deals.filter(d => allowed.has(d.id));
   }
   if (ctx.isMaster || !ctx.isSyndicateAdmin) return deals;
+  if (ALL_DEALS_ACCESS.includes(norm(ctx.currentEmail))) return deals;
   const org = norm(ctx.currentOrg);
   if (!org) return [];
   return deals.filter(d => {

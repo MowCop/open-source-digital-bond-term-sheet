@@ -923,6 +923,7 @@ export function useScopedApp() {
     isSyndicateAdmin,
     currentOrg: profileOrg,
     currentAuthUserId: authUser?.id ?? null,
+    currentEmail: authUser?.email ?? null,
     currentUserId: app.currentUser?.id ?? null,
     isGuest: !!guest,
     guestDealIds: guest?.dealIds ?? [],
