@@ -263,7 +263,8 @@ function seedFromDeal(deal: Deal): BdtState {
   set(P.pricingDate, toISODate(deal.pricingDate));
   set(P.issueDate, toISODate(deal.issueDate));
   set(P.settlementDate, toISODate(deal.settlementDate));
-  set(P.issuePrice, num(deal.issuePrice));
+  // Issue price defaults to the re-offer price when the update omits it.
+  set(P.issuePrice, num(deal.issuePrice || deal.reofferPrice));
   set(P.reofferPrice, num(deal.reofferPrice));
   set(P.reofferYield, num(deal.reofferYield));
   set(P.spreadToMS, num(deal.reofferSpread));
