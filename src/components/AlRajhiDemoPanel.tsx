@@ -87,7 +87,10 @@ export async function setupAlRajhiDemo(app: App): Promise<Deal> {
   // Stored documents (sent with message 1.1).
   for (const a of DEMO_ATTACHMENTS) {
     try {
-      const blob = await (await fetch(a.url)).blob();
+      const res = await fetch(a.url);
+      const blob = await res.blob();
+      // A missing asset returns the app's HTML page — never store that as a PDF.
+      if (!res.ok || (await blob.slice(0, 5).text()) !== '%PDF-') throw new Error('asset is not a PDF');
       await uploadDealDocument(deal.id, new File([blob], a.name, { type: 'application/pdf' }));
     } catch (e) { console.error('[demo] document upload failed', a.name, e); }
   }
