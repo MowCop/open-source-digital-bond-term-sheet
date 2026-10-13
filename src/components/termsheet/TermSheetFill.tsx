@@ -47,6 +47,8 @@ interface Props {
   canEdit: boolean;
   onSave: (patch: Partial<Deal>) => void;
   onStateChange?: (state: BdtState) => void;
+  requestedStage?: number;
+  requestedAt?: string;
 }
 
 interface Proposal {
@@ -77,21 +79,29 @@ export interface TermSheetFillHandle {
 }
 
 export default function TermSheetFill({
-  deal, canEdit: canEditProp, onSave, onStateChange, ingestRef,
+  deal, canEdit: canEditProp, onSave, onStateChange, ingestRef, requestedStage, requestedAt,
 }: Props & { ingestRef?: RefObject<TermSheetFillHandle> }) {
   const [snaps, setSnaps] = useState<StageSnap[]>([]);
   const [viewStage, setViewStage] = useState<number | null>(null);
+  const [snapsLoaded, setSnapsLoaded] = useState(false);
   const loadSnaps = async () => {
     const { data } = await supabase.from('deal_term_sheet_releases')
       .select('version,stage,released_at,released_by_name,bdt_state_snapshot')
       .eq('deal_id', deal.id).order('version', { ascending: false });
     setSnaps((data ?? []) as unknown as StageSnap[]);
+    setSnapsLoaded(true);
   };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { setViewStage(null); loadSnaps(); }, [deal.id]);
+  useEffect(() => {
+    if (!requestedStage || !snapsLoaded) return;
+    setViewStage(requestedStage === dealToBdtState(deal).stage ? null : requestedStage);
+    setOpen(o => ({ ...o, priority: true }));
+  }, [requestedStage, requestedAt, snapsLoaded, deal.id]);
   // Latest snapshot saved while the deal was at (or before) the chosen stage.
   const viewSnap = viewStage == null ? null
-    : snaps.find(s => s.stage === viewStage) ?? null;
+    : snaps.find(s => s.stage === viewStage && (!requestedAt || new Date(s.released_at).getTime() <= new Date(requestedAt).getTime()))
+      ?? snaps.find(s => s.stage === viewStage) ?? null;
   const canEdit = canEditProp && viewStage == null;
   const [liveState, setState] = useState<BdtState>(() => dealToBdtState(deal));
   const [dirty, setDirty] = useState(false);
@@ -359,6 +369,9 @@ export default function TermSheetFill({
 
   return (
     <div className="space-y-5">
+      {requestedStage && snapsLoaded && viewStage !== null && !viewSnap && (
+        <p role="status" className="text-xs text-primary">No saved record for {STAGES[requestedStage - 1]?.t}. Showing current terms; no historical values have been created.</p>
+      )}
       {/* Masthead: stage rail, readiness, checks */}
       <div className="rounded-lg border border-border/70 bg-card/60 p-4 space-y-4">
         <div className="flex flex-wrap items-center gap-1.5">

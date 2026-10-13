@@ -17,6 +17,7 @@ import DealCheckFlag from '@/components/DealCheckFlag';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction, detectStage } from '@/lib/alertParsing';
 import { stripHtml } from '@/lib/htmlText';
+import { dtsLink } from '@/lib/dtsNavigation';
 import { formatUTCDateTime } from '@/lib/utils';
 import {
   Dialog,
@@ -607,15 +608,18 @@ export default function MessagesPage() {
             size="icon"
             variant="outline"
             className="toolbar-square-btn"
+            aria-label="Digital Term Sheet"
+            disabled={!deals.some(d => d.id === group.dealIds[0])}
             onClick={(e) => {
               e.stopPropagation();
-              toast({ title: 'OrderBook', description: 'OrderBook module coming soon.' });
+              const deal = deals.find(d => d.id === group.dealIds[0]);
+              if (deal) navigate(dtsLink(group.latestMessage, deal));
             }}
           >
-            <BookOpen className="h-4 w-4" />
+            <span className="text-xs font-semibold">DTS</span>
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="bottom">OrderBook</TooltipContent>
+        <TooltipContent side="bottom">Digital Term Sheet</TooltipContent>
       </Tooltip>
       <span className="relative">
         <Tooltip>
