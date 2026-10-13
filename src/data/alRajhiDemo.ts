@@ -5,6 +5,7 @@
  * stage each one represents. Real message files are kept verbatim in the reference folder.
  */
 import type { Bookrunner, Deal, DealStage } from '@/types/bond';
+import { stripHtml } from '@/lib/htmlText';
 import ocAsset from '@/assets/al-rajhi/1.2_Al_Rajhi_Bank_-_Offering_Circular.pdf.asset.json';
 import suppAsset from '@/assets/al-rajhi/1.3_Al_Rajhi_Bank_-_Supplement.pdf.asset.json';
 // Full verbatim message texts (including the bank's legal footer).
@@ -12,6 +13,10 @@ import raw11 from '../../reference/al-rajhi-tier2/1.1_AL_RAJHI_BANK_-_TIER_2_US$
 import raw20 from '../../reference/al-rajhi-tier2/2.0_AL_RAJHI_BANK_-_Tier_II_-_Books_Over_$_1.6bn_ex_JLM_Interest.txt?raw';
 import raw30 from '../../reference/al-rajhi-tier2/3.0_AL_RAJHI_BANK_-_Tier_II_-_Launched.txt?raw';
 import raw40 from '../../reference/al-rajhi-tier2/4.0_AL_RAJHI_BANK_-_Tier_II_-_PRICED.txt?raw';
+import html11 from '../../reference/al-rajhi-tier2/1.1_AL_RAJHI_BANK_-_TIER_2_US$_REG_S_10.5NC5.5_SOCIAL_SUKUK_-_IPTs_T_200bp.html?raw';
+import html20 from '../../reference/al-rajhi-tier2/2.0_AL_RAJHI_BANK_-_Tier_II_-_Books_Over_$_1.6bn_ex_JLM_Interest.html?raw';
+import html30 from '../../reference/al-rajhi-tier2/3.0_AL_RAJHI_BANK_-_Tier_II_-_Launched.html?raw';
+import html40 from '../../reference/al-rajhi-tier2/4.0_AL_RAJHI_BANK_-_Tier_II_-_PRICED.html?raw';
 
 export const DEMO_DEAL_NAME = 'Al Rajhi Bank – Tier 2 US$ Reg S 10.5NC5.5 Social Sukuk';
 export const isDemoDeal = (d: Pick<Deal, 'issuerName'>) => d.issuerName === DEMO_DEAL_NAME;
@@ -61,6 +66,8 @@ export interface DemoStep {
   /** Board headline. */
   subject: string;
   body: string;
+  /** Original Word structure for the board; plain body stays the parser input. */
+  bodyHtml: string;
   attachments?: boolean;
   patch: Partial<Deal>;
 }
@@ -78,6 +85,7 @@ export const DEMO_STEPS: DemoStep[] = [
     sentAt: '2026-09-03T08:49:00Z',
     subject: '*** AL RAJHI BANK – TIER 2 US$ REG S 10.5NC5.5 SOCIAL SUKUK – IPTs T+200bps area ***',
     body: raw11,
+    bodyHtml: html11,
     patch: { ipt: 'T+200bps area', stage: 'Announced' },
   },
   {
@@ -85,6 +93,7 @@ export const DEMO_STEPS: DemoStep[] = [
     sentAt: '2026-09-03T10:30:00Z',
     subject: '*** AL RAJHI BANK – Tier II – Books Over $ 1.6bn (ex JLM Interest) ***',
     body: raw20,
+    bodyHtml: html20,
     patch: { guidance: 'Books over USD 1.6bn (ex JLM interest)', stage: 'Books Open' },
   },
   {
@@ -92,6 +101,7 @@ export const DEMO_STEPS: DemoStep[] = [
     sentAt: '2026-09-03T12:15:00Z',
     subject: '*** AL RAJHI BANK – Tier II – Launched ***',
     body: raw30,
+    bodyHtml: html30,
     patch: { size: '600m', reofferSpread: 'T+170', stage: 'Launched' },
   },
   {
@@ -99,6 +109,7 @@ export const DEMO_STEPS: DemoStep[] = [
     sentAt: '2026-09-03T15:40:00Z',
     subject: '*** AL RAJHI BANK – Tier II – PRICED ***',
     body: raw40,
+    bodyHtml: html40,
     patch: {
       size: '600m', reofferSpread: 'T+170', reofferPrice: '100', issuePrice: '100',
       reofferYield: '6.232', coupon: '6.232', interestRate: '6.232',
@@ -106,6 +117,16 @@ export const DEMO_STEPS: DemoStep[] = [
     },
   },
 ];
+
+/** Present legacy generated board bodies with original Word structure, without
+ * rewriting dated records or replacing subsequent user edits. */
+export function demoBoardBody(id: string, body: string): string {
+  if (!id.startsWith('demo-') || /<table\b/i.test(body)) return body;
+  const step = DEMO_STEPS.find(s => id.endsWith(`-${s.id.replace('.', '-')}`));
+  if (!step) return body;
+  const normalize = (text: string) => text.replace(/\s+/g, ' ').trim();
+  return normalize(stripHtml(body)) === normalize(step.body) ? step.bodyHtml : body;
+}
 
 /** Cumulative deal fields at each Digital Term Sheet step (Announcement + the four blasts). */
 export function demoStageSnapshots(): { bdtStage: number; label: string; sentAt?: string; deal: Partial<Deal> }[] {
