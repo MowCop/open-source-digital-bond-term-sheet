@@ -59,12 +59,13 @@ export async function runDeepAudit(dealId: string, state: BdtState, onStep?: (s:
   const stored = (await listDealDocuments(dealId)).slice(0, 6);
   if (!stored.length) throw new Error('No deal documents stored');
   const docs: { name: string; text: string }[] = [];
+  const failed: string[] = [];
   for (const d of stored) {
     onStep?.(`Reading ${d.name}…`);
     try { const t = selectSections(await docText(d.path, d.name, d.mime), Math.floor(150_000 / stored.length)); if (t.trim()) docs.push({ name: d.name, text: t }); }
-    catch { /* unreadable file: skip */ }
+    catch { failed.push(d.name); }
   }
-  if (!docs.length) throw new Error('None of the stored documents could be read');
+  if (!docs.length) throw new Error(`None of the stored documents could be read (${failed.join(', ')}). They may be damaged — re-upload them in the Documents tab.`);
   const model = getAiModel();
   onStep?.('Comparing documents against term sheet fields…');
   const { data, error } = await supabase.functions.invoke('audit-deal-fields-ai', { body: { fields: auditFields(state), docs, model } });
