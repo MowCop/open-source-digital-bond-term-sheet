@@ -48,9 +48,6 @@ async function postPreMarketing(app: App, dealId: string, channelId: string) {
   }
 }
 
-const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-/** Plain message text → board HTML, keeping every line. */
-const toHtml = (t: string) => t.split(/\r?\n/).map(l => `<p>${esc(l) || '<br>'}</p>`).join('');
 export const boardMessageId = (dealId: string, stepId: string) => `demo-${dealId}-${stepId.replace('.', '-')}`;
 
 /** Puts all four syndicate blasts on the New Issue Board with their original times. Skips any already there. */
