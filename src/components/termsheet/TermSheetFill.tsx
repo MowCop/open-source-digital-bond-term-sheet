@@ -448,7 +448,7 @@ export default function TermSheetFill({
                   <div className="text-[11px] text-muted-foreground truncate">
                     <span className="line-through opacity-60">{pr.cur || 'empty'}</span>
                     <span className="mx-1.5">→</span>
-                    <span className="text-foreground">{pr.val}</span>
+                    <span className="font-bold text-foreground">{pr.val}</span>
                   </div>
                 </div>
                 <span className="text-[10px] text-muted-foreground/60 truncate max-w-[120px]">{pr.src}</span>
