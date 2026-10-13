@@ -35,3 +35,19 @@ export function parseDtsStage(value: string | null): number | undefined {
   const n = Number(value);
   return value && Number.isInteger(n) && n >= 1 && n <= 7 ? n : undefined;
 }
+
+/** The board update matching a term-sheet stage: latest update at that stage, else the nearest earlier stage, else the original. */
+export function boardUpdateForStage(messages: Message[], deal: Deal, stage: number): Message | undefined {
+  const own = messages.filter(m => m.dealIds.includes(deal.id))
+    .sort((a, b) => (a.sentAt ?? a.createdAt).getTime() - (b.sentAt ?? b.createdAt).getTime());
+  if (!own.length) return undefined;
+  const staged = own.map(m => ({ m, s: updateTermSheetStage(m, deal) }));
+  const best = Math.max(0, ...staged.filter(x => x.s <= stage).map(x => x.s));
+  const pick = staged.filter(x => x.s === best);
+  return best ? pick[pick.length - 1].m : own[0];
+}
+
+export function boardLink(messages: Message[], deal: Deal, stage: number): string {
+  const msg = boardUpdateForStage(messages, deal, stage);
+  return `/messages?dealId=${encodeURIComponent(deal.id)}${msg ? `&messageId=${encodeURIComponent(msg.id)}` : ''}`;
+}
