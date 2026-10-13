@@ -3,6 +3,7 @@
 - New Deal document selection reuses IngestDropzone and existing document readers/extraction service to fill only an empty issuer, guarding against intervening edits; files are handed to the created deal's Fill tab for review of all other proposals — no duplicate parser or auto-acceptance of other terms.
 - New Deal defaults and creation eligibility live in src/lib/newDeal.ts and are shared by the button and creation handler — optional fields must not accidentally block creation or introduce fallback bookrunners.
 - Digital Term Sheet Fill fields come from the vendored `FIELDS` dictionary and are selected by path through `src/lib/bdt-bridge.ts` — this keeps one definition per field.
+- TermSheetField suppresses dictionary example placeholders and preserves full-contrast recorded values in disabled history fields — presentation must not imply that examples are recorded terms or that historical values are absent.
 - The expanded-deal Deal Checker renders `unifiedChecks` above the term-sheet tabs — this keeps BDT and VDR rules in one visible validation surface.
 - LEI checks are hybrid: the offline MOD 97-10 test is the instant baseline; live GLEIF registry lookups run through the gleif-lookup edge function and are appended to the same Deal Checker list — typing never waits on the network and an outage only downgrades to a warning.
 - LEI suggestions from GLEIF name search are shown for the user to pick and are never auto-applied — common names match several legal entities.
