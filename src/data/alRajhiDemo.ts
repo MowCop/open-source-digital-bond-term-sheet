@@ -124,6 +124,7 @@ export const DEMO_STEPS: DemoStep[] = [
       'IssuanceDataGroup/Issuance/SellingRestrictions/REGS/RegSCode': 'REGS_CAT2',
       'IssuanceDataGroup/Issuance/SellingRestrictions/PRIIPsRestriction': 'NO_EEA',
       'IssuanceDataGroup/Issuance/ReofferSpreadToBenchmark/Value': '170',
+      'x:spreadSet': 'T+170',
     },
   },
 ];
