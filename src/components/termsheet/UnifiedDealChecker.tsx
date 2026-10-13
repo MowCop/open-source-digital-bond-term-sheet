@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Loader2, RefreshCw, Shield, Wand2, X, XCircle,
+  AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Loader2, RefreshCw, Shield, Sparkles, Wand2, X, XCircle,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,9 @@ import { OPENFIGI_REGULATIONS_URL, OPENFIGI_SEARCH_URL, figiChecks, lookupFigis,
 import { checkFix, checkKey, checkTarget, type CheckTarget } from '@/lib/checkActions';
 import { toast } from 'sonner';
 import { listDealDocuments, DOCS_CHANGED } from '@/lib/dealDocuments';
+import { loadAudit, runDeepAudit, type AuditRun } from '@/lib/deepAudit';
+import { AI_MODELS, useAiModel } from '@/lib/aiModel';
+import { FIELDS } from '@/lib/termsheet/index.js';
 import { GLEIF_ACCESS_URL, GLEIF_SEARCH_URL, gleifCheck, lookupLeis, missingLeiCheck, searchLeiByName, type GleifRecord } from '@/lib/gleif';
 
 const LEVEL_META: Record<CheckLevel, {
@@ -136,6 +139,35 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
     return () => { cancelled = true; window.removeEventListener(DOCS_CHANGED, on); };
   }, [dealId, refreshTick]);
 
+  const [audit, setAudit] = useState<AuditRun | null>(null);
+  const [auditStep, setAuditStep] = useState('');
+  const [aiModel] = useAiModel();
+  useEffect(() => { setAudit(dealId ? loadAudit(dealId) : null); }, [dealId]);
+  const runAudit = async () => {
+    if (!dealId || auditStep) return;
+    setOpen(true); setAuditStep('Starting Deep Audit…');
+    try {
+      const r = await runDeepAudit(dealId, state, setAuditStep);
+      setAudit(r);
+      toast.success(r.findings.length ? `Deep Audit: ${r.findings.length} warning${r.findings.length > 1 ? 's' : ''} to review` : 'Deep Audit: no discrepancies found');
+    } catch (e) { toast.error(`Deep Audit failed — ${e instanceof Error ? e.message : 'unknown error'}`); }
+    finally { setAuditStep(''); }
+  };
+  const aiChecks = useMemo<CheckItem[]>(() => !audit ? [] : audit.findings.length === 0
+    ? [{ l: 'pass', t: 'AI Deep Audit: no discrepancies found', d: `Documents compared with term sheet fields on ${new Date(audit.at).toLocaleString()}.`, src: 'ai' }]
+    : audit.findings.map(f => ({
+      l: 'warn', src: 'ai', t: f.title,
+      d: [f.detail, f.currentValue && `Term sheet: ${f.currentValue}`, f.docValue && `Document: ${f.docValue}`, f.docQuote && `"${f.docQuote}"`].filter(Boolean).join(' · '),
+      ai: { fieldPath: f.fieldPath, docValue: f.docValue, docQuote: f.docQuote },
+    })), [audit]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const aiTarget = (c: CheckItem): CheckTarget | null => {
+    const path = c.ai?.fieldPath; if (!path) return null;
+    const fd = (FIELDS as any[]).find(f => f.p === path);
+    return fd ? { kind: 'field', path, sec: fd.sec } : null;
+  };
+  const targetOf = (c: CheckItem) => (c.src === 'ai' ? aiTarget(c) : checkTarget(c));
+
   const checks = useMemo<CheckItem[]>(() => {
     let base: CheckItem[] = [];
     try {
@@ -156,14 +188,22 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
       .filter((c): c is CheckItem => !!c)
       .map(c => ({ ...c, src: 'gleif' as const }));
     const figi = [...figiChecks(state, figiRec[isin]), ...reportingChecks(state)].map(c => ({ ...c, src: 'openfigi' as const }));
-    return [...base, ...live, ...missing, ...figi] as CheckItem[];
-  }, [state, refreshTick, leiParties, gleif, noLeiKey, matchCounts, figiRec, isin, storedDocs]);
+    return [...base, ...live, ...missing, ...figi, ...aiChecks] as CheckItem[];
+  }, [state, refreshTick, leiParties, gleif, noLeiKey, matchCounts, figiRec, isin, storedDocs, aiChecks]);
   const ignoredSet = useMemo(() => new Set(ignored), [ignored]);
   const active = useMemo(() => checks.filter(c => c.l !== 'warn' || !ignoredSet.has(checkKey(c))), [checks, ignoredSet]);
   const ignoredCount = checks.length - active.length;
   const tally = useMemo(() => tallyChecks(active), [active]);
   const visible = filter === 'all' ? active : active.filter(check => check.l === filter);
   const tryFix = async (c: CheckItem) => {
+    if (c.src === 'ai') {
+      const t = aiTarget(c);
+      if (c.ai?.docValue && c.ai.fieldPath && onFix?.(s => ({ ...s, f: { ...s.f, [c.ai!.fieldPath]: c.ai!.docValue } }))) {
+        toast.success(`Set to "${c.ai.docValue}" from the document — review and save the term sheet`);
+      } else toast.info(t ? 'No unambiguous document value — opened the field so you can review it' : 'No single field to open for this finding');
+      if (t) onNavigate?.(t);
+      return;
+    }
     // Documents already saved to the deal can fill the Documentation list.
     if (/deal documents/i.test(c.t) && dealId) {
       try {
@@ -220,10 +260,22 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
           </span>
         )}
 
+        {auditStep && <span className="flex animate-pulse items-center gap-1 text-[11px] text-muted-foreground"><Sparkles className="h-3 w-3" /> {auditStep}</span>}
+        {!auditStep && dealId && <span className="text-[11px] text-muted-foreground">{audit ? `Deep Audit ${new Date(audit.at).toLocaleString()}` : 'Deep Audit not run'}</span>}
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
           <Badge variant="outline" className={LEVEL_META.pass.badgeClass}>{tally.pass} pass</Badge>
           <Badge variant="outline" className={LEVEL_META.warn.badgeClass}>{tally.warn} warn</Badge>
           <Badge variant="outline" className={LEVEL_META.fail.badgeClass}>{tally.fail} fail</Badge>
+          <Button
+            type="button" size="sm" variant="outline" className="h-7 gap-1 text-xs"
+            disabled={!dealId || storedDocs === 0 || !!auditStep}
+            onClick={runAudit}
+            title={storedDocs === 0 ? 'Attach deal documents to run the Deep Audit' : 'Compare stored documents against the term sheet fields with Claude'}
+          >
+            {auditStep ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            Run Deep Audit
+            <span className="text-[10px] text-muted-foreground">{AI_MODELS.find(m => m.id === aiModel)?.label.replace('Claude ', '')}</span>
+          </Button>
           <Button
             type="button"
             size="icon"
@@ -291,7 +343,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
             {visible.map((check, index) => {
               const meta = LEVEL_META[check.l];
               const Icon = meta.icon;
-              const target = onNavigate ? checkTarget(check) : null;
+              const target = onNavigate ? targetOf(check) : null;
               return (
                 <div key={`${check.l}-${check.t}-${index}`} className="flex items-start gap-2 rounded-md border border-border/60 px-3 py-2 text-xs">
                   <Icon className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${meta.iconClass}`} />
@@ -310,6 +362,9 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
                     )}
                     {check.d && <div className="mt-0.5 text-muted-foreground">{check.d}</div>}
                   </div>
+                  {check.src === 'ai' && (
+                    <Badge variant="outline" className="h-5 shrink-0 gap-1 px-1.5 text-[10px]"><Sparkles className="h-3 w-3" /> AI</Badge>
+                  )}
                   {check.src === 'vdr' && (
                     <span className="shrink-0 text-[10px] text-muted-foreground">calendar &amp; market rules</span>
                   )}
@@ -340,7 +395,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
                   )}
                   {check.l !== 'pass' && (
                     <>
-                      <Button type="button" size="sm" variant="outline" className="h-6 shrink-0 gap-1 px-2 text-[11px]" onClick={() => tryFix(check)} title={checkFix(check, state)?.label ?? 'Open the field to fix it'}>
+                      <Button type="button" size="sm" variant="outline" className="h-6 shrink-0 gap-1 px-2 text-[11px]" onClick={() => tryFix(check)} title={check.src === 'ai' ? (check.ai?.docValue ? `Set to "${check.ai.docValue}"` : 'Open the field to review') : checkFix(check, state)?.label ?? 'Open the field to fix it'}>
                         <Wand2 className="h-3 w-3" /> Try to fix
                       </Button>
                       {check.l === 'warn' && <Button type="button" size="icon" variant="ghost" className="h-6 w-6 shrink-0" aria-label="Ignore this warning" title="Ignore this warning" onClick={() => saveIgnored([...ignored, checkKey(check)])}>
