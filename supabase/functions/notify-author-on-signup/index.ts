@@ -1,3 +1,4 @@
+import { sendAndLog } from '../_shared/send-and-log.ts'
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -59,18 +60,14 @@ Deno.serve(async (req) => {
 
     // Send branded notification email via the transactional email pipeline.
     try {
-      await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'signup-notification',
-          recipientEmail: AUTHOR_EMAIL,
-          idempotencyKey: `signup-${userId || email}`,
-          templateData: {
+      await sendAndLog('signup-notification', AUTHOR_EMAIL, {
+        idempotencyKey: `signup-${userId || email}`,
+        templateData: {
             name,
             email,
             organization,
             signedUpAt: new Date().toISOString(),
           },
-        },
       });
     } catch (e) {
       console.log('[notify-author-on-signup] transactional email send failed', e);
@@ -78,18 +75,14 @@ Deno.serve(async (req) => {
 
     // Fallback: send to secondary address so a single bounce can't block all notifications.
     try {
-      await supabase.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'signup-notification',
-          recipientEmail: FALLBACK_EMAIL,
-          idempotencyKey: `signup-fallback-${userId || email}`,
-          templateData: {
+      await sendAndLog('signup-notification', FALLBACK_EMAIL, {
+        idempotencyKey: `signup-fallback-${userId || email}`,
+        templateData: {
             name,
             email,
             organization,
             signedUpAt: new Date().toISOString(),
           },
-        },
       });
     } catch (e) {
       console.log('[notify-author-on-signup] fallback transactional email send failed', e);
@@ -98,13 +91,9 @@ Deno.serve(async (req) => {
     // Also send an acknowledgement email to the new user (best effort).
     if (email) {
       try {
-        await supabase.functions.invoke('send-transactional-email', {
-          body: {
-            templateName: 'signup-acknowledgement',
-            recipientEmail: email,
-            idempotencyKey: `signup-ack-${userId || email}`,
-            templateData: { name, organization },
-          },
+        await sendAndLog('signup-acknowledgement', email, {
+          idempotencyKey: `signup-ack-${userId || email}`,
+          templateData: { name, organization },
         });
       } catch (e) {
         console.log('[notify-author-on-signup] signup-ack email send failed', e);

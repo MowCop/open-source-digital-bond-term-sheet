@@ -1,3 +1,4 @@
+import { sendAndLog } from '../_shared/send-and-log.ts'
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -71,18 +72,13 @@ Deno.serve(async (req) => {
     const loginUrl = 'https://eurobondmarkets.com/auth';
 
     // Send the branded approval email (best effort, but report failure)
-    const { error: invokeErr } = await admin.functions.invoke('send-transactional-email', {
-      body: {
-        templateName: 'account-approved',
-        recipientEmail: profile.email,
+    let invokeErr: { message: string } | null = null;
+    try {
+      await sendAndLog('account-approved', profile.email, {
         idempotencyKey: `approval-${userId}`,
-        templateData: {
-          name: profile.name || 'there',
-          role,
-          loginUrl,
-        },
-      },
-    });
+        templateData: { name: profile.name || 'there', role, loginUrl },
+      });
+    } catch (e) { invokeErr = { message: e instanceof Error ? e.message : String(e) }; }
 
     // Audit log entry
     await admin.from('audit_log').insert({
@@ -93,7 +89,7 @@ Deno.serve(async (req) => {
       user_id: callerId,
       details: invokeErr
         ? `Approval email failed for ${profile.email}: ${invokeErr.message}`
-        : `Approval email queued for ${profile.email}${role ? ` (role: ${role})` : ''}`,
+        : `Approval email sent for ${profile.email}${role ? ` (role: ${role})` : ''}`,
     });
 
     if (invokeErr) {
