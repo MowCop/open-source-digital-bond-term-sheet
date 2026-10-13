@@ -1,6 +1,6 @@
 /**
  * Renders ONE field from the ICMA BDT 2.0 dictionary.
- * The definition (label, type, options, hint, placeholder, requirement) always
+ * The definition (label, type, options, hint, requirement) always
  * comes from the FIELDS entry passed in — there is no second field list.
  */
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,7 @@ export default function TermSheetField({ fd, value, onChange, disabled, required
   const id = `f-${fd.p}`;
   const auto = !!fd.auto || !!fd.fixed;
   const ro = disabled || auto;
+  const valueStyle = 'font-bold text-foreground disabled:opacity-100';
 
   const ring = invalid
     ? 'border-destructive/70 focus-visible:ring-destructive/40'
@@ -62,14 +63,13 @@ export default function TermSheetField({ fd, value, onChange, disabled, required
           value={value}
           disabled={ro}
           rows={3}
-          placeholder={fd.ph}
           onChange={e => onChange(e.target.value)}
-          className={`text-sm ${ring}`}
+          className={`text-sm ${valueStyle} ${ring}`}
         />
       ) : fd.t === 'sel' ? (
         <Select value={value || NONE} disabled={ro} onValueChange={v => onChange(v === NONE ? '' : v)}>
-          <SelectTrigger id={id} className={`h-9 text-sm ${ring}`}>
-            <SelectValue placeholder="Not set" />
+          <SelectTrigger id={id} className={`h-9 text-sm ${valueStyle} ${ring}`}>
+            <SelectValue>{value ? prettyEnum(value) : '\u00a0'}</SelectValue>
           </SelectTrigger>
           <SelectContent className="max-h-72">
             <SelectItem value={NONE}>Not set</SelectItem>
@@ -86,18 +86,17 @@ export default function TermSheetField({ fd, value, onChange, disabled, required
             disabled={ro}
             onCheckedChange={c => onChange(c ? 'true' : 'false')}
           />
-          <span className="text-sm text-muted-foreground">{value === 'true' ? 'Yes' : 'No'}</span>
+          <span className={`text-sm ${valueStyle}`}>{value === 'true' ? 'Yes' : value === 'false' ? 'No' : ''}</span>
         </div>
       ) : (
         <Input
           id={id}
-          type={fd.t === 'date' ? 'date' : fd.t === 'num' ? 'number' : 'text'}
+          type={fd.t === 'date' ? (ro && !value ? 'text' : 'date') : fd.t === 'num' ? 'number' : 'text'}
           step={fd.step}
           value={value}
           disabled={ro}
-          placeholder={fd.ph}
           onChange={e => onChange(e.target.value)}
-          className={`h-9 text-sm ${ring}`}
+          className={`h-9 text-sm ${valueStyle} ${ring}`}
         />
       )}
 
