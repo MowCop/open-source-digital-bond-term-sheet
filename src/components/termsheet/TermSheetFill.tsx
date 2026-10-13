@@ -100,7 +100,7 @@ export default function TermSheetFill({
   }, [requestedStage, requestedAt, snapsLoaded, deal.id]);
   // Latest snapshot saved while the deal was at (or before) the chosen stage.
   const viewSnap = viewStage == null ? null
-    : snaps.find(s => s.stage === viewStage && (!requestedAt || s.released_at <= requestedAt))
+    : snaps.find(s => s.stage === viewStage && (!requestedAt || new Date(s.released_at).getTime() <= new Date(requestedAt).getTime()))
       ?? snaps.find(s => s.stage === viewStage) ?? null;
   const canEdit = canEditProp && viewStage == null;
   const [liveState, setState] = useState<BdtState>(() => dealToBdtState(deal));
