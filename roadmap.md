@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Restore original Word formatting for Al Rajhi board updates and constrain message widths; verify existing updates.
 - [x] Make View reflect the current authoritative Fill values, including accepted document proposals and cleared fields; verify synchronization.
 - [x] Update New Deal border, blank defaults, issuer extraction, multi-value entries, and issuer/bookrunner creation requirements; verify the flow.
 - [x] Migration: `deals.bdt_state`, `deal_term_sheet_releases` table with RLS and grants.
