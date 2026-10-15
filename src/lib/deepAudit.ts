@@ -62,7 +62,8 @@ export async function runDeepAudit(dealId: string, state: BdtState, onStep?: (s:
   const failed: string[] = [];
   for (const d of stored) {
     onStep?.(`Reading ${d.name}…`);
-    try { const t = selectSections(await docText(d.path, d.name, d.mime), Math.floor(150_000 / stored.length)); if (t.trim()) docs.push({ name: d.name, text: t }); }
+    // Per-document budget must stay under the edge function's 120k-per-doc limit.
+    try { const t = selectSections(await docText(d.path, d.name, d.mime), Math.min(100_000, Math.floor(150_000 / stored.length))); if (t.trim()) docs.push({ name: d.name, text: t }); }
     catch { failed.push(d.name); }
   }
   if (!docs.length) throw new Error(`None of the stored documents could be read (${failed.join(', ')}). They may be damaged — re-upload them in the Documents tab.`);
