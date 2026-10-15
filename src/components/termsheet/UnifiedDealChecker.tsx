@@ -149,7 +149,12 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
     try {
       const r = await runDeepAudit(dealId, state, setAuditStep);
       setAudit(r);
-      toast.success(r.findings.length ? `Deep Audit: ${r.findings.length} warning${r.findings.length > 1 ? 's' : ''} to review` : 'Deep Audit: no discrepancies found');
+      const n = r.findings.length;
+      if (n) toast.warning(`Deep Audit: ${n} AI warning${n > 1 ? 's' : ''} added to the Deal Checker`, {
+        description: 'AI findings are always warnings, never fails. They are included in the amber warning count — look for the AI badge.',
+        duration: 8000,
+      });
+      else toast.success('Deep Audit: no discrepancies found');
     } catch (e) { toast.error(`Deep Audit failed — ${e instanceof Error ? e.message : 'unknown error'}`); }
     finally { setAuditStep(''); }
   };
