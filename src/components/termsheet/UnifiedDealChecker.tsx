@@ -268,9 +268,9 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
         {auditStep && <span className="flex animate-pulse items-center gap-1 text-[11px] text-muted-foreground"><Sparkles className="h-3 w-3" /> {auditStep}</span>}
         {!auditStep && dealId && <span className="text-[11px] text-muted-foreground">{audit ? `Deep Audit ${new Date(audit.at).toLocaleString()}` : 'Deep Audit not run'}</span>}
         <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-          <Badge variant="outline" className={LEVEL_META.pass.badgeClass}>{tally.pass} pass</Badge>
-          <Badge variant="outline" className={LEVEL_META.warn.badgeClass}>{tally.warn} warn</Badge>
-          <Badge variant="outline" className={LEVEL_META.fail.badgeClass}>{tally.fail} fail</Badge>
+          <Badge variant="outline" className={LEVEL_META.pass.badgeClass} title="Green — checks that met every rule. No action needed.">{tally.pass} pass</Badge>
+          <Badge variant="outline" className={LEVEL_META.warn.badgeClass} title="Amber — checks worth reviewing: possible issues, missing optional values or items to confirm against documents. Never blocks the deal.">{tally.warn} warn</Badge>
+          <Badge variant="outline" className={LEVEL_META.fail.badgeClass} title="Red — checks that broke a hard rule, such as invalid identifiers or missing mandatory terms. Must be fixed before the deal is ready.">{tally.fail} fail</Badge>
           <Button
             type="button" size="sm" variant="outline" className="h-7 gap-1 text-xs"
             disabled={!dealId || storedDocs === 0 || !!auditStep}
@@ -315,7 +315,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
 
       <CollapsibleContent className="border-t border-border px-4 py-3">
         <div className="mb-3 flex flex-wrap gap-1.5">
-          {(['all', 'fail', 'warn', 'pass'] as const).map(level => {
+          {(['all', 'pass', 'warn', 'fail'] as const).map(level => {
             const count = level === 'all' ? checks.length : tally[level];
             const label = level === 'all' ? 'All' : LEVEL_META[level].label;
             return (
