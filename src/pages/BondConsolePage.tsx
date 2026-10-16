@@ -44,7 +44,18 @@ const VENDOR_APIS: VendorAPI[] = [
   { id: 'cusip', name: 'CUSIP Global Services', category: 'Industry & Standards', description: 'CUSIP allocation API', status: 'available' },
   { id: 'ipreo', name: 'Ipreo / IHS Markit Bookbuilding', category: 'Syndicate Tools', description: 'Investorlink, BookBuilder', status: 'available' },
   { id: 'symphony', name: 'Symphony Messaging', category: 'Communications', description: 'Compliant chat bridge', status: 'connected' },
-  { id: 'globalcapital', name: 'GlobalCapital', category: 'News & Wires', description: 'New issue news feeds', status: 'available' },
+  { id: 'primarynexus', name: 'PrimaryNexus', category: 'Syndicate Tools', description: 'Primary markets intelligence & league tables', status: 'available' },
+  { id: 'finsight', name: 'Finsight', category: 'Market Data', description: 'Capital markets deal data & analytics', status: 'available' },
+  { id: '9fin', name: '9fin (Bond Radar)', category: 'Market Data', description: 'High yield & leveraged finance intelligence', status: 'available' },
+  { id: 'globalcapital', name: 'GlobalCapital', category: 'Market Data', description: 'New issue news feeds', status: 'available' },
+  { id: 'igm', name: 'IGM', category: 'News & Wires', description: 'Capital markets intelligence & commentary', status: 'available' },
+  { id: 'octus', name: 'Octus', category: 'News & Wires', description: 'Credit news, restructurings & distressed intelligence', status: 'available' },
+  { id: 'dealologic', name: 'Dealologic', category: 'Syndicate Tools', description: 'Syndicate workflow & bookbuilding automation', status: 'available' },
+  { id: 'cbonds', name: 'Cbonds', category: 'Market Data', description: 'Global bond database & pricing', status: 'available' },
+  { id: 'factset', name: 'FactSet', category: 'Market Data', description: 'Reference data & fixed income analytics', status: 'available' },
+  { id: 'dowjones', name: 'Dow Jones', category: 'News & Wires', description: 'Newswires: Dow Jones, WSJ, MarketWatch', status: 'available' },
+  { id: 'origin', name: 'Origin Markets', category: 'Syndicate Tools', description: 'Digital bond issuance & investor platform', status: 'available' },
+  { id: 'directbooks', name: 'DirectBooks', category: 'Syndicate Tools', description: 'Investor distribution & e-delivery', status: 'available' },
 ];
 
 /** A Bond Console section: click its heading to open or close everything inside. */
