@@ -1,4 +1,5 @@
 # AGENTS
+- Public Bond Console feeds use the authenticated public-market-feeds function and shared normalization helpers; source dates and partial failures are preserved, and commercial vendor toggles never imply a real feed — prevents fabricated live data and browser CORS dependencies.
 - Board update headings use the presentation-only shortBorrowerName helper to omit a dash-separated bond description; stored issuer and deal records remain unchanged.
 - Digital Term Sheet View reads the live Fill state through src/lib/termSheetView.ts, not saved flat deal columns; empty authoritative fields remain empty — accepted proposals, edits and deletions must agree across tabs without auto-saving.
 - New Deal document selection reuses IngestDropzone and existing document readers/extraction service to fill only an empty issuer, guarding against intervening edits; files are handed to the created deal's Fill tab for review of all other proposals — no duplicate parser or auto-acceptance of other terms.
