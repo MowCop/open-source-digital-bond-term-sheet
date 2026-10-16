@@ -17,6 +17,7 @@ import {
   Palette, FileDown, Webhook, ScrollText, HelpCircle, CheckCircle2, Circle, Sparkles,
 } from 'lucide-react';
 import { AI_TRIGGER_MODE_KEY, getAITriggerMode, type AITriggerMode } from '@/pages/AIDraftPage';
+import PublicMarketFeeds from '@/components/PublicMarketFeeds';
 
 interface VendorAPI {
   id: string;
@@ -59,8 +60,8 @@ const VENDOR_APIS: VendorAPI[] = [
 ];
 
 /** A Bond Console section: click its heading to open or close everything inside. */
-function FoldCard({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+function FoldCard({ children, initialOpen = false }: { children: React.ReactNode; initialOpen?: boolean }) {
+  const [open, setOpen] = useState(initialOpen);
   return (
     <Card
       data-open={open}
@@ -216,20 +217,23 @@ export default function BondConsolePage() {
       </FoldCard>
 
       {/* VENDOR CONNECTORS */}
-      <FoldCard>
+      <FoldCard initialOpen>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base"><Plug className="h-4 w-4" /> Vendor & Market Data Connectors</CardTitle>
           <CardDescription>
-            Connect BondVDR to upstream market data, ratings, trading and post-trade APIs. All toggles are demo placeholders.
+            Public published rates and central bank news. Commercial vendor feeds require licensed access; other connector toggles remain demonstrations.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <PublicMarketFeeds />
+          <Separator />
           {Object.entries(groupedVendors).map(([category, items]) => (
             <div key={category} className="space-y-2">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{category}</div>
               <div className="grid sm:grid-cols-2 gap-2">
                 {items.map(v => {
-                  const on = vendors[v.id];
+                  const commercialFeed = v.category === 'Market Data' || ['primarynexus', 'igm', 'octus', 'dealologic', 'dowjones', 'origin', 'directbooks'].includes(v.id);
+                  const on = !commercialFeed && vendors[v.id];
                   return (
                     <div key={v.id} className="flex items-start gap-3 border rounded-md p-3 bg-card/40">
                       <div className="mt-0.5">
@@ -242,7 +246,7 @@ export default function BondConsolePage() {
                         </div>
                         <div className="text-xs text-muted-foreground truncate">{v.description}</div>
                       </div>
-                      <Switch checked={on} onCheckedChange={() => toggleVendor(v.id)} />
+                      {commercialFeed ? <Badge variant="outline" className="text-[10px] shrink-0">Not connected</Badge> : <Switch checked={on} onCheckedChange={() => toggleVendor(v.id)} />}
                     </div>
                   );
                 })}
