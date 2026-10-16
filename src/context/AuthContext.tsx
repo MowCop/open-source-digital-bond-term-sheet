@@ -25,7 +25,7 @@ interface AuthContextType {
   guest: GuestSession | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  signUp: (email: string, password: string, name: string, organization: string) => Promise<{ error?: string }>;
+  signUp: (email: string, password: string, name: string, organization: string, redirectTo?: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   loginAsGuest: (email: string, passcode: string) => Promise<{ error?: string }>;
   refreshProfile: () => Promise<void>;
@@ -94,8 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return {};
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, name: string, organization: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const signUp = useCallback(async (email: string, password: string, name: string, organization: string, redirectTo?: string) => {
+    const redirectUrl = redirectTo ?? `${window.location.origin}/`;
     const { data, error } = await supabase.auth.signUp({
       email, password,
       options: { emailRedirectTo: redirectUrl, data: { name, organization } },
