@@ -9,7 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
-- [ ] Wire Bond Console to public published rates and central bank headlines; verify authenticated refresh and source dates. Commercial vendor feeds deferred pending licensed access, per user selection.
+- [x] Wire Bond Console to public published SOFR/EFFR, ECB exchange rates and central bank headlines; authenticated loading and refresh verified with source dates. Commercial vendor feeds deferred pending licensed access, per user selection.
 - [x] Replace board OrderBook buttons with DTS and verify matching deal/stage navigation into Fill (Priced and Original IPT checked end-to-end on Al Rajhi; stage resolver tests pass).
 - [x] Remove term-sheet example placeholders and brighten recorded values, including read-only Announcement; preserve proposal review and source-specific benchmarks (verified on the Al Rajhi Announcement snapshot).
 - [x] Restore original Word formatting for Al Rajhi board updates and constrain message widths; verify existing updates.

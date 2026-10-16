@@ -5,6 +5,13 @@ type RecordValue = Record<string, unknown>;
 const record = (v: unknown): RecordValue => v && typeof v === 'object' ? v as RecordValue : {};
 const list = (v: unknown): unknown[] => Array.isArray(v) ? v : v == null ? [] : [v];
 const text = (v: unknown): string => typeof v === 'string' ? v.trim() : '';
+const decodeTitle = (v: string): string => v.replace(/&#(x[0-9a-f]+|\d+);|&(amp|apos|quot|lt|gt);/gi, (match, numeric: string | undefined, named: string | undefined) => {
+  if (numeric) {
+    const code = numeric.toLowerCase().startsWith('x') ? parseInt(numeric.slice(1), 16) : parseInt(numeric, 10);
+    return code > 0 && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff) ? String.fromCodePoint(code) : match;
+  }
+  return ({ amp: '&', apos: "'", quot: '"', lt: '<', gt: '>' } as Record<string, string>)[named?.toLowerCase() ?? ''] ?? match;
+});
 
 export function parseFedRates(input: unknown, type: 'SOFR' | 'EFFR'): PublishedRate[] {
   const rows = list(record(input).refRates).map(record).filter(r => r.type === type && /^\d{4}-\d{2}-\d{2}$/.test(text(r.effectiveDate)) && typeof r.percentRate === 'number' && Number.isFinite(r.percentRate));
@@ -25,7 +32,7 @@ export function parseEcbFx(input: unknown): PublishedRate[] {
 
 export function parsePublicNews(input: unknown, source: string, allowedHost: string): PublicHeadline[] {
   return list(record(record(record(input).rss).channel).item).map(record).flatMap(r => {
-    const title = text(r.title), url = text(r.link), publishedAt = text(r.pubDate);
+    const title = decodeTitle(text(r.title)), url = text(r.link), publishedAt = text(r.pubDate);
     try {
       const parsed = new URL(url);
       if (parsed.protocol !== 'https:' || parsed.hostname !== allowedHost || !title || !Number.isFinite(Date.parse(publishedAt))) return [];
