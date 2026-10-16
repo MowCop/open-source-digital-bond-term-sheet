@@ -25,13 +25,15 @@ interface AuthContextType {
   guest: GuestSession | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  signUp: (email: string, password: string, name: string, organization: string) => Promise<{ error?: string }>;
+  signUp: (email: string, password: string, name: string, organization: string, redirectTo?: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   loginAsGuest: (email: string, passcode: string) => Promise<{ error?: string }>;
   refreshProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+// Kept on globalThis so hot reloads reuse one context object (avoids provider/consumer mismatch).
+const g = globalThis as { __vdrAuthContext?: React.Context<AuthContextType | null> };
+const AuthContext = g.__vdrAuthContext ?? (g.__vdrAuthContext = createContext<AuthContextType | null>(null));
 
 const GUEST_KEY = 'bondvdr.guestSession';
 
@@ -94,8 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return {};
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, name: string, organization: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const signUp = useCallback(async (email: string, password: string, name: string, organization: string, redirectTo?: string) => {
+    const redirectUrl = redirectTo ?? `${window.location.origin}/`;
     const { data, error } = await supabase.auth.signUp({
       email, password,
       options: { emailRedirectTo: redirectUrl, data: { name, organization } },
