@@ -14,50 +14,12 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import {
   Settings, User, Plug, Bell, Shield, KeyRound, CreditCard, Globe,
-  Palette, FileDown, Webhook, ScrollText, HelpCircle, CheckCircle2, Circle, Sparkles,
+  Palette, FileDown, Webhook, ScrollText, HelpCircle, CheckCircle2, Circle, Sparkles, ExternalLink,
 } from 'lucide-react';
 import { AI_TRIGGER_MODE_KEY, getAITriggerMode, type AITriggerMode } from '@/pages/AIDraftPage';
 import PublicMarketFeeds from '@/components/PublicMarketFeeds';
+import { VENDOR_APIS, isCommercialFeed, type VendorAPI } from '@/lib/vendors';
 
-interface VendorAPI {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  status: 'connected' | 'available';
-}
-
-const VENDOR_APIS: VendorAPI[] = [
-  { id: 'bloomberg', name: 'Bloomberg Terminal', category: 'Market Data', description: 'BLOOMBERG <GO> · FIT, ALLQ, MSG1', status: 'connected' },
-  { id: 'refinitiv', name: 'Refinitiv Eikon / LSEG Workspace', category: 'Market Data', description: 'IFR new issue feed & pricing', status: 'connected' },
-  { id: 'ice', name: 'ICE Data Services', category: 'Market Data', description: 'Reference data & evaluated pricing', status: 'available' },
-  { id: 'sp', name: 'S&P Global Market Intelligence', category: 'Ratings & Data', description: 'Ratings, RatingsDirect, CapitalIQ', status: 'available' },
-  { id: 'moodys', name: "Moody's Analytics", category: 'Ratings & Data', description: 'Credit ratings and research', status: 'available' },
-  { id: 'fitch', name: 'Fitch Ratings', category: 'Ratings & Data', description: 'Issuer & instrument ratings', status: 'available' },
-  { id: 'tradeweb', name: 'Tradeweb', category: 'Trading Venue', description: 'AiPrice, NIIP, EU MTF connectivity', status: 'available' },
-  { id: 'marketaxess', name: 'MarketAxess', category: 'Trading Venue', description: 'Open Trading & RFQ APIs', status: 'available' },
-  { id: 'bondcliq', name: 'BondCliQ', category: 'Trading Venue', description: 'Consolidated corporate bond quotes', status: 'available' },
-  { id: 'euroclear', name: 'Euroclear', category: 'Settlement & Custody', description: 'CSDR, EasyWay & post-trade', status: 'connected' },
-  { id: 'clearstream', name: 'Clearstream', category: 'Settlement & Custody', description: 'CreationConnect & Xact APIs', status: 'available' },
-  { id: 'dtcc', name: 'DTCC', category: 'Settlement & Custody', description: 'NIIDS, MyMarketData', status: 'available' },
-  { id: 'icma', name: 'ICMA New Issue Process', category: 'Industry & Standards', description: 'NIP and Bond Data Taxonomy', status: 'connected' },
-  { id: 'anna', name: 'ANNA DSB', category: 'Industry & Standards', description: 'ISIN & OTC ISIN issuance', status: 'available' },
-  { id: 'cusip', name: 'CUSIP Global Services', category: 'Industry & Standards', description: 'CUSIP allocation API', status: 'available' },
-  { id: 'ipreo', name: 'Ipreo / IHS Markit Bookbuilding', category: 'Syndicate Tools', description: 'Investorlink, BookBuilder', status: 'available' },
-  { id: 'symphony', name: 'Symphony Messaging', category: 'Communications', description: 'Compliant chat bridge', status: 'connected' },
-  { id: 'primarynexus', name: 'PrimaryNexus', category: 'Syndicate Tools', description: 'Primary markets intelligence & league tables', status: 'available' },
-  { id: 'finsight', name: 'Finsight', category: 'Market Data', description: 'Capital markets deal data & analytics', status: 'available' },
-  { id: '9fin', name: '9fin (Bond Radar)', category: 'Market Data', description: 'High yield & leveraged finance intelligence', status: 'available' },
-  { id: 'globalcapital', name: 'GlobalCapital', category: 'Market Data', description: 'New issue news feeds', status: 'available' },
-  { id: 'igm', name: 'IGM', category: 'News & Wires', description: 'Capital markets intelligence & commentary', status: 'available' },
-  { id: 'octus', name: 'Octus', category: 'News & Wires', description: 'Credit news, restructurings & distressed intelligence', status: 'available' },
-  { id: 'dealologic', name: 'Dealologic', category: 'Syndicate Tools', description: 'Syndicate workflow & bookbuilding automation', status: 'available' },
-  { id: 'cbonds', name: 'Cbonds', category: 'Market Data', description: 'Global bond database & pricing', status: 'available' },
-  { id: 'factset', name: 'FactSet', category: 'Market Data', description: 'Reference data & fixed income analytics', status: 'available' },
-  { id: 'dowjones', name: 'Dow Jones', category: 'News & Wires', description: 'Newswires: Dow Jones, WSJ, MarketWatch', status: 'available' },
-  { id: 'origin', name: 'Origin Markets', category: 'Syndicate Tools', description: 'Digital bond issuance & investor platform', status: 'available' },
-  { id: 'directbooks', name: 'DirectBooks', category: 'Syndicate Tools', description: 'Investor distribution & e-delivery', status: 'available' },
-];
 
 /** A Bond Console section: click its heading to open or close everything inside. */
 function FoldCard({ children, initialOpen = false }: { children: React.ReactNode; initialOpen?: boolean }) {
@@ -232,21 +194,43 @@ export default function BondConsolePage() {
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{category}</div>
               <div className="grid sm:grid-cols-2 gap-2">
                 {items.map(v => {
-                  const commercialFeed = v.category === 'Market Data' || ['primarynexus', 'igm', 'octus', 'dealologic', 'dowjones', 'origin', 'directbooks'].includes(v.id);
+                  const isLink = Boolean(v.url);
+                  const commercialFeed = isCommercialFeed(v);
                   const on = !commercialFeed && vendors[v.id];
                   return (
                     <div key={v.id} className="flex items-start gap-3 border rounded-md p-3 bg-card/40">
                       <div className="mt-0.5">
-                        {on ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
+                        {isLink ? <ExternalLink className="h-4 w-4 text-primary" /> : on ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-medium">{v.name}</span>
+                          {isLink ? (
+                            <a
+                              href={v.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                            >
+                              {v.name}
+                            </a>
+                          ) : (
+                            <span className="text-sm font-medium">{v.name}</span>
+                          )}
                           {on && <Badge className="text-[9px] h-4 px-1.5 bg-green-500/15 text-green-600 border-0">Connected</Badge>}
+                          {isLink && <Badge variant="outline" className="text-[9px] h-4 px-1.5">Live link</Badge>}
                         </div>
                         <div className="text-xs text-muted-foreground truncate">{v.description}</div>
                       </div>
-                      {commercialFeed ? <Badge variant="outline" className="text-[10px] shrink-0">Not connected</Badge> : <Switch checked={on} onCheckedChange={() => toggleVendor(v.id)} />}
+                      {isLink ? (
+                        <a
+                          href={v.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 inline-flex h-7 items-center gap-1 rounded-md border border-primary/40 px-2.5 text-[11px] font-medium text-primary hover:bg-primary/10"
+                        >
+                          Open <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : commercialFeed ? <Badge variant="outline" className="text-[10px] shrink-0">Not connected</Badge> : <Switch checked={on} onCheckedChange={() => toggleVendor(v.id)} />}
                     </div>
                   );
                 })}
