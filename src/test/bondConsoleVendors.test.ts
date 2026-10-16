@@ -22,9 +22,12 @@ describe('Bond Console connector catalogue', () => {
         expect(isCommercialFeed(v)).toBe(false);
       }
     }
-    // Commercial market-data vendors must still be reported as unlicensed.
+    // Commercial market-data vendors must still be reported as unlicensed,
+    // including the ones already flagged "connected" in the catalogue.
     expect(isCommercialFeed(VENDOR_APIS.find(v => v.id === 'cbonds')!)).toBe(true);
-    expect(isCommercialFeed(VENDOR_APIS.find(v => v.id === 'bloomberg')!)).toBe(false);
+    expect(isCommercialFeed(VENDOR_APIS.find(v => v.id === 'bloomberg')!)).toBe(true);
+    // A non-licensed tool row keeps its demo toggle.
+    expect(isCommercialFeed(VENDOR_APIS.find(v => v.id === 'ipreo')!)).toBe(false);
   });
 
   it('keeps the EDGAR url identical to the constant used in the UI', () => {
