@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Bond Console > Syndicate Tools: "Edgar SEC filings" live link to the SEC EDGAR 424B filing search (catalogue in src/lib/vendors.ts); planned separate build will queue EDGAR-sourced term sheets for deal creation in the Digital Term Sheet.
 - [x] Wire Bond Console to public published SOFR/EFFR, ECB exchange rates and central bank headlines; authenticated loading and refresh verified with source dates. Commercial vendor feeds deferred pending licensed access, per user selection.
 - [x] Replace board OrderBook buttons with DTS and verify matching deal/stage navigation into Fill (Priced and Original IPT checked end-to-end on Al Rajhi; stage resolver tests pass).
 - [x] Remove term-sheet example placeholders and brighten recorded values, including read-only Announcement; preserve proposal review and source-specific benchmarks (verified on the Al Rajhi Announcement snapshot).
