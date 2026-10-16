@@ -28,3 +28,4 @@
 - [x] Retired the `fieldConfig.ts` prototype — the BDT FIELDS dictionary is the only field list.
 - [ ] Later iteration: floating / zero coupon with dependent fields and validation.
 - [x] Al Rajhi demo deal: library files, demo deal setup, chat replay, stage snapshots
+- [x] Bond Console > Vendor & Market Data Connectors: "Public Market Data" and "Central Bank News" each collapsible (chevron, starts open).
