@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "sdk_version": "3.1.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://onvctqwhxrapychscqzg.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "virtual-deal-room",
+      "version": "0.1.0",
+      "title": "Virtual Deal Room"
+    },
+    "tools": [
+      {
+        "name": "list_deals",
+        "title": "List deals",
+        "description": "List bond deals the signed-in user can see, optionally filtered by issuer name.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "issuer": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "Part of the issuer name to filter by."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Maximum rows (default 50)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_deal",
+        "title": "Get deal terms",
+        "description": "Get the key term-sheet fields for one deal the signed-in user can see.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Deal id from list_deals."
+            }
+          },
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
