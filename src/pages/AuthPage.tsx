@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
+import { oauthReturnPath } from '@/lib/oauth-return-path';
 
 const supportSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(100),
@@ -35,6 +36,7 @@ export default function AuthPage() {
   const { signIn, signUp, loginAsGuest } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const nextPath = oauthReturnPath(new URLSearchParams(window.location.search).get('next'));
 
   const [mode, setMode] = useState<'login' | 'signup' | 'guest'>('login');
   const [email, setEmail] = useState('');
@@ -86,7 +88,7 @@ export default function AuthPage() {
       const { error } = await signIn(email, password);
       setBusy(false);
       if (error) return toast({ title: 'Login failed', description: error, variant: 'destructive' });
-      navigate('/');
+      navigate(nextPath);
     } else {
       if (!name || !organization) {
         setBusy(false);
@@ -100,7 +102,7 @@ export default function AuthPage() {
           variant: 'destructive',
         });
       }
-      const { error } = await signUp(email, password, name, organization);
+      const { error } = await signUp(email, password, name, organization, new URL(nextPath, window.location.origin).href);
       setBusy(false);
       if (error) return toast({ title: 'Signup failed', description: error, variant: 'destructive' });
       toast({ title: 'Account created', description: 'Your account is pending approval. The project author has been notified.' });
