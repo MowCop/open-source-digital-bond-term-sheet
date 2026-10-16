@@ -31,7 +31,9 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+// Kept on globalThis so hot reloads reuse one context object (avoids provider/consumer mismatch).
+const g = globalThis as { __vdrAuthContext?: React.Context<AuthContextType | null> };
+const AuthContext = g.__vdrAuthContext ?? (g.__vdrAuthContext = createContext<AuthContextType | null>(null));
 
 const GUEST_KEY = 'bondvdr.guestSession';
 
