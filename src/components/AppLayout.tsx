@@ -9,6 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import GlobalSearch from '@/components/GlobalSearch';
+import AgentBrowserTools from '@/components/AgentBrowserTools';
 
 const navItems = [
   { path: '/messages', label: 'New Issue Board', icon: BellIcon },
