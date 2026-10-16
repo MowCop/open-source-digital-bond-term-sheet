@@ -121,7 +121,7 @@ export default function BondConsolePage() {
           <h1 className="text-2xl font-bold">Bond Console</h1>
           <p className="text-sm text-muted-foreground">Settings, integrations and account preferences</p>
         </div>
-        <Badge variant="outline" className="ml-auto text-xs">Demo · For show only</Badge>
+        <Badge variant="outline" className="ml-auto text-xs">Some settings are demo</Badge>
       </div>
 
       {/* PROFILE */}
