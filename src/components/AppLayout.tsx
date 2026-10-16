@@ -47,6 +47,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden">
+      <AgentBrowserTools />
       {/* Sidebar */}
       <aside className="hidden w-60 bg-sidebar text-sidebar-foreground md:flex flex-col shrink-0">
         <div className="flex items-center border-b border-sidebar-border px-4 pt-[72px] pb-4">
