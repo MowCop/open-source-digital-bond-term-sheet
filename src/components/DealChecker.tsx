@@ -34,7 +34,9 @@ import {
   validateDeal, countBySeverity, isReadyToPublish,
   ValidationResult, Severity, OverrideContext, DealCheckerAuditEntry,
 } from '@/lib/bondValidator';
-import type { UserRole } from '@/types/bond';
+import type { UserRole, Attachment } from '@/types/bond';
+import BoardUpdateAudit from '@/components/BoardUpdateAudit';
+import { stripHtml } from '@/lib/htmlText';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -44,6 +46,7 @@ interface DealCheckerProps {
   deal?: Deal;
   /** Alert subject + body wording, scanned for wrong-benchmark pricing text */
   alertText?: string;
+  attachments?: Attachment[];
   aiBookrunners?: Bookrunner[];
   /** Role of the currently logged-in user */
   userRole?: UserRole;
@@ -389,6 +392,7 @@ export default function DealChecker({
   aiFields = null,
   deal,
   alertText,
+  attachments,
   aiBookrunners = [],
   userRole,
   currentUserId = 'unknown',
@@ -434,7 +438,7 @@ export default function DealChecker({
             overriddenRuleIds: cur.overrides,
           }
         : undefined;
-      const { results: r, auditEntries } = validateDeal(partial, ctx, cur.deal?.stage, cur.alertText);
+      const { results: r, auditEntries } = validateDeal(partial, ctx, cur.deal?.stage, stripHtml(cur.alertText ?? ''));
       setResults(r);
       setLastRunAt(new Date());
       setStatus('done');
@@ -477,12 +481,13 @@ export default function DealChecker({
 
   return (
     <>
+      {attachments && <BoardUpdateAudit text={alertText ?? ''} attachments={attachments} />}
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
           <Shield className={`h-4 w-4 shrink-0 ${headerAccent}`} />
           <span className="font-semibold text-sm uppercase tracking-wider text-foreground">
-            Deal Checker
+            {attachments ? 'Saved deal checks' : 'Deal Checker'}
           </span>
           {overrides.length > 0 && (
             <Badge variant="outline" className="ml-1 text-[9px] bg-violet-900/30 text-violet-400 border-violet-800/60">
