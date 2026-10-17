@@ -4,7 +4,7 @@
 - Digital Term Sheet View reads the live Fill state through src/lib/termSheetView.ts, not saved flat deal columns; empty authoritative fields remain empty — accepted proposals, edits and deletions must agree across tabs without auto-saving.
 - New Deal reuses IngestDropzone/readers, fills only an empty issuer with edit guards, and hands files to Fill for other proposals — no duplicate parser or auto-acceptance.
 - New Deal defaults and creation eligibility live in src/lib/newDeal.ts and are shared by the button and creation handler — optional fields must not accidentally block creation or introduce fallback bookrunners.
-- Digital Term Sheet Fill fields come from the vendored `FIELDS` dictionary and are selected by path through `src/lib/bdt-bridge.ts` — this keeps one definition per field.
+- Digital Term Sheet Fill fields come from the vendored `FIELDS` dictionary and are selected by path through `src/lib/bdt-bridge.ts`; app stage names are display overrides there (final stage = "Settled"), never dictionary edits — one definition per field.
 - TermSheetField suppresses dictionary example placeholders and preserves full-contrast recorded values in disabled history fields — presentation must not imply that examples are recorded terms or that historical values are absent.
 - The expanded-deal Deal Checker renders `unifiedChecks` above the term-sheet tabs — one visible validation surface for BDT and VDR rules.
 - LEI checks are hybrid: the offline MOD 97-10 test is the instant baseline; live GLEIF registry lookups run through the gleif-lookup edge function and are appended to the same Deal Checker list — typing never waits on the network and an outage only downgrades to a warning.
