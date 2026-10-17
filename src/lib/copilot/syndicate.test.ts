@@ -15,14 +15,24 @@ describe("Autonomous syndicate proposals", () => {
     const report = buildSyndicateReport(
       {
         summary: "Review",
-        terms: [{ field: "currency", value: "EUR", quote: "Currency: EUR", location: "Source" }],
+        terms: [
+          {
+            field: "currency",
+            value: "EUR",
+            quote: "Currency: EUR",
+            location: "Source",
+          },
+        ],
         warnings: [],
         risks: [],
       },
       "Currency: EUR",
       deal,
     );
-    expect(report.differences[0]).toMatchObject({ before: "USD", after: "EUR" });
+    expect(report.differences[0]).toMatchObject({
+      before: "USD",
+      after: "EUR",
+    });
     expect(deal.currency).toBe("USD");
   });
   it("withholds unsupported AI risk evidence", () => {

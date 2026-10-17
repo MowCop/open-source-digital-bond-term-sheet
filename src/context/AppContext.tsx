@@ -147,6 +147,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [distributionLists, setDistributionLists] = useState<DistributionList[]>([]);
   const [chatChannels, setChatChannels] = useState<ChatChannel[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  useEffect(() => {
+    const refresh = () => { void fetchDeals().then(setDeals).catch(e => console.error('[Cloud] deal refresh failed', e)); };
+    window.addEventListener('vdr:copilot-approved', refresh);
+    return () => window.removeEventListener('vdr:copilot-approved', refresh);
+  }, []);
 
   // Load users + deals from Cloud, then subscribe to realtime updates.
   useEffect(() => {

@@ -38,7 +38,9 @@ Deno.serve(async(req)=>{
       decideChange:async()=>{throw new Error('Only a human term editor may decide changes');},
     };
     const state=await must(admin.from('copilot_gateway_state').select('*').eq('id','gateway').maybeSingle());
-    if(state?.blocked) return json({message:state.reason??'AI access paused'},403);
+    if(state?.blocked && action!=='resume') return json({message:state.reason??'AI access paused. Use Resume reviews after restoring AI access.'},403);
+    // Only an explicit user resumption may probe a previously blocked provider.
+    if(state?.blocked && action==='resume') await must(admin.from('copilot_gateway_state').update({blocked:false,reason:null,updated_at:new Date().toISOString()}).eq('id','gateway'));
     if(action==='chat') {
       if(!input.data.message) return json({message:'Enter a message'},400);
       const rows=await must(userClient.from('copilot_messages').select('role,body').eq('thread_id',threadId).order('created_at',{ascending:false}).limit(30));
