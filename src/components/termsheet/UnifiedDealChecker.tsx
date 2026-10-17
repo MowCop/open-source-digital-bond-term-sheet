@@ -256,7 +256,8 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="overflow-hidden rounded-lg border border-border bg-card">
-      <div className="flex flex-wrap items-center gap-2 px-4 py-3">
+      {/* px-3 aligns the shield with the drop-zone and Term Sheet icons. */}
+      <div className="flex flex-wrap items-center gap-2 px-3 py-3">
         <Shield className={`h-4 w-4 shrink-0 ${accent}`} />
         <span className="text-sm font-semibold uppercase tracking-wider">Deal Checker</span>
         {gleifBusy && (
