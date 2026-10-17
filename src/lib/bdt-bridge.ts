@@ -148,7 +148,23 @@ const DEAL_STAGE_TO_BDT: Record<DealStage, number> = {
 };
 
 export const bdtStageForDeal = (s: DealStage): number => DEAL_STAGE_TO_BDT[s] ?? 1;
-export const bdtStageLabel = (i: number): string => STAGES[Math.max(0, Math.min(STAGES.length - 1, i - 1))]?.t ?? '';
+
+/** VDR display wording for the BDT stage keys. The vendored dictionary keeps the
+ * ICMA labels (its `t` values feed the BDT payload); the console calls the final
+ * stage "Settled", matching the deal lifecycle the rest of the app already uses. */
+const STAGE_LABEL_OVERRIDES: Record<string, string> = { FINAL: 'Settled' };
+
+export const stageLabel = (i: number): string => {
+  const s = STAGES[Math.max(0, Math.min(STAGES.length - 1, i - 1))] as { k: string; t: string } | undefined;
+  return s ? STAGE_LABEL_OVERRIDES[s.k] ?? s.t : '';
+};
+
+/** Display names for stages 1..n, in dictionary order. */
+export const STAGE_LABELS: string[] = (STAGES as Array<{ k: string; t: string }>).map(
+  s => STAGE_LABEL_OVERRIDES[s.k] ?? s.t,
+);
+
+export const bdtStageLabel = stageLabel;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

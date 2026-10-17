@@ -34,7 +34,7 @@ import {
   ingestBDT, ingestText,
 } from '@/lib/termsheet/index.js';
 import {
-  bdtStageForDeal, bdtToDealCache, dealToBdtState, priorityFields,
+  bdtStageForDeal, bdtToDealCache, dealToBdtState, priorityFields, stageLabel,
   unifiedChecks, tallyChecks, type BdtState, type CheckItem,
 } from '@/lib/bdt-bridge';
 import LeiSuggest from './LeiSuggest';
@@ -336,7 +336,7 @@ export default function TermSheetFill({
       const version = (snaps[0]?.version ?? 0) + 1;
       const { error } = await supabase.from('deal_term_sheet_releases').insert({
         deal_id: deal.id, version, stage: next.stage,
-        stage_label: STAGES[next.stage - 1]?.t ?? String(next.stage),
+        stage_label: stageLabel(next.stage),
         bdt_state_snapshot: next as never, diff_summary: {} as never,
         checks_summary: tally as never, released_by: u.user?.id ?? null,
         released_by_name: u.user?.email ?? null,
@@ -372,7 +372,7 @@ export default function TermSheetFill({
   return (
     <div className="space-y-5">
       {requestedStage && snapsLoaded && viewStage !== null && !viewSnap && (
-        <p role="status" className="text-xs text-primary">No saved record for {STAGES[requestedStage - 1]?.t}. Showing current terms; no historical values have been created.</p>
+        <p role="status" className="text-xs text-primary">No saved record for {stageLabel(requestedStage)}. Showing current terms; no historical values have been created.</p>
       )}
       {/* Masthead: stage rail, readiness, checks */}
       <div className="rounded-lg border border-border/70 bg-card/60 p-4 space-y-4">
@@ -389,7 +389,7 @@ export default function TermSheetFill({
                   type="button"
                   disabled={!clickable}
                   onClick={() => { if (canPickStep(n) && liveStage !== n) pickStep(n); else if (n === baseStage && liveStage !== baseStage && viewStage == null) pickStep(n); else setViewStage(n === liveStage ? null : n); }}
-                  title={canPickStep(n) && liveStage !== n ? `Save this update as ${s.t}` : clickable ? (n === liveStage ? 'Current stage' : `View what was entered at ${s.t}`) : n < liveStage ? 'No saved record for this stage' : undefined}
+                  title={canPickStep(n) && liveStage !== n ? `Save this update as ${stageLabel(n)}` : clickable ? (n === liveStage ? 'Current stage' : `View what was entered at ${stageLabel(n)}`) : n < liveStage ? 'No saved record for this stage' : undefined}
                   className={[
                     'text-[11px] px-2 py-1 rounded-md border whitespace-nowrap transition-colors',
                     active
@@ -402,7 +402,7 @@ export default function TermSheetFill({
                     !clickable ? 'cursor-default' : '',
                   ].join(' ')}
                 >
-                  {n}. {s.t}
+                  {n}. {stageLabel(n)}
                 </button>
                 {i < STAGES.length - 1 && <ChevronRight className="h-3 w-3 text-muted-foreground/30" />}
               </div>
@@ -412,12 +412,12 @@ export default function TermSheetFill({
 
         {!viewSnap && liveStage !== baseStage && (
           <div className="rounded-md border border-primary/40 px-3 py-1.5 text-xs text-primary">
-            Saving as: {STAGES[liveStage - 1]?.t}. The deal's own stage stays the same.
+            Saving as: {stageLabel(liveStage)}. The deal's own stage stays the same.
           </div>
         )}
         {viewSnap && (
           <div className="flex flex-wrap items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-xs">
-            <span className="font-medium text-primary">Viewing {STAGES[(viewStage as number) - 1]?.t} (read-only)</span>
+            <span className="font-medium text-primary">Viewing {stageLabel(viewStage as number)} (read-only)</span>
             <span className="text-muted-foreground">saved {new Date(viewSnap.released_at).toUTCString().slice(5, 22)} UTC{viewSnap.released_by_name ? ` by ${viewSnap.released_by_name}` : ''}</span>
             <Button size="sm" variant="outline" className="ml-auto h-7" onClick={() => setViewStage(null)}>Back to current</Button>
           </div>
