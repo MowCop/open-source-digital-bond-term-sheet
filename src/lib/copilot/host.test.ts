@@ -36,6 +36,8 @@ describe("agent core runs on any host", () => {
       reason: "x",
     });
     await host.decideChange("1", false);
-    await expect(host.decideChange("1", true)).rejects.toThrow("already decided");
+    await expect(host.decideChange("1", true)).rejects.toThrow(
+      "already decided",
+    );
   });
 });
