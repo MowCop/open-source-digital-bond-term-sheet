@@ -550,6 +550,9 @@ export default function DealCopilot({
                       Deterministic · {d.field}: {d.message}
                     </p>
                   ))}
+                  {!!r.report.specialists?.length && (
+                    <SpecialistReports reports={r.report.specialists} />
+                  )}
                 </>
               )}
             </div>
