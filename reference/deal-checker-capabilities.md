@@ -71,6 +71,7 @@ Checks update live as terms are typed, stages advance, or documents are uploaded
 - Conversations, dated reports and corrections persist per VDR deal. Deal members use the agent; only server-authorized term editors decide changes, with stale-original checks. Agents never approve.
 - Event-driven durable jobs, expiring leases, single-flight, superseded-result protection, explicit failed/paused resumption and global provider-credit/access blocks. No scheduled watcher. Historical source workspace records require export/import.
 - Programme-ceiling quotations are withheld from tranche-size corrections; a programme maximum is not this bond's issuance amount.
+- Explicit coupon percentages (including “per annum”) are normalized to numeric Fill values while preserving the verbatim evidence quote.
 
 ## New Issue Board update checker
 - **Check update** uses the selected Claude model to review the current update's subject/body and readable excerpts of its own attachments, not syndicate chat or another update's documents.

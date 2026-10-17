@@ -10,7 +10,11 @@ export function trancheEvidence<T extends Extraction>(extraction: T): T {
   );
   return {
     ...extraction,
-    terms,
+    terms: terms.map(t => {
+      if (t.field !== 'coupon') return t;
+      const match = t.value.trim().match(/^([0-9]+(?:\.[0-9]+)?)\s*%(?:\s*(?:per annum|p\.?a\.?))?$/i);
+      return match ? { ...t, value: match[1] } : t;
+    }),
     warnings:
       terms.length === extraction.terms.length
         ? extraction.warnings
