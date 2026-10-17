@@ -68,6 +68,7 @@ interface DealDetailProps {
 
 function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, onSaveFields, initialFiles, onInitialFilesConsumed }: DealDetailProps) {
   const [checkerState, setCheckerState] = useState<BdtState>(() => dealToBdtState(deal));
+  const [hasUnsavedTerms, setHasUnsavedTerms] = useState(false);
   const view = useMemo(() => termSheetView(checkerState), [checkerState]);
   const navigate = useNavigate();
   const fillRef = useRef<TermSheetFillHandle>(null);
@@ -139,7 +140,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
           </TabsList>
         </div>
         <TabsContent value="fill" forceMount className="mt-4 data-[state=inactive]:hidden">
-          <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} onDisplayedStage={setShownStage} requestedStage={requestedStage} requestedAt={requestedAt} />
+          <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} onDirtyChange={setHasUnsavedTerms} onDisplayedStage={setShownStage} requestedStage={requestedStage} requestedAt={requestedAt} />
         </TabsContent>
         <TabsContent value="docs" className="mt-4">
           <DealDocuments dealId={deal.id} canManage={canManage} />
@@ -224,7 +225,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         </TabsContent>
       </Tabs>
 
-      <DealCopilot deal={deal} hasUnsavedTerms={JSON.stringify(checkerState) !== JSON.stringify(dealToBdtState(deal))} />
+      <DealCopilot deal={deal} hasUnsavedTerms={hasUnsavedTerms} />
 
       {/* Stage History */}
       <div className="space-y-2">
