@@ -1,5 +1,38 @@
 import { checkDeal, validateProposal } from "./domain/deal.ts";
 import type { DealHost } from "./domain/host.ts";
+import { runSpecialist, runSpecialistPanel } from "./specialists.ts";
+import type { SpecialistId } from "./domain/specialists.ts";
+
+const specialistSpecs = [
+  {
+    name: "reviewCompliance",
+    description:
+      "Delegate TEFRA, PRIIPs, UK CCI, MiFID II and sanctions/LEI evidence review to the independent Compliance & Regulatory agent. No legal certification or registry feeds.",
+  },
+  {
+    name: "reviewPricing",
+    description:
+      "Delegate pricing, ACT/360 or ACT/365F math, supplied T+1/T+2 calendars and benchmark evidence to the independent Pricing & Benchmark agent. No live prices.",
+  },
+  {
+    name: "reviewEsg",
+    description:
+      "Delegate green/social/sustainability principles, SPO, reporting and step-up evidence to the independent ESG agent. No certification.",
+  },
+  {
+    name: "draftCommunications",
+    description:
+      "Delegate draft investor bulletin, announcement and unvalidated XML to the independent Communications agent. Never distributes or certifies BDT conformance.",
+  },
+  {
+    name: "reviewSpecialists",
+    description:
+      "Run all four independent specialist agents sequentially. Use once when the user asks for all specialists or a full specialist review. Returns read-only reports and drafts, never applies changes.",
+  },
+].map((s) => ({
+  ...s,
+  input_schema: { type: "object", properties: {}, additionalProperties: false },
+}));
 
 const specs = [
   {
