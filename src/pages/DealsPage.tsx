@@ -131,6 +131,14 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         onDocFix={c => { setTab('fill'); return fillRef.current?.fixFromDocument(c) ?? []; }}
       />
 
+      <div className="flex flex-wrap items-center gap-2 border-b border-border pb-2">
+        <FileText className="h-4 w-4 shrink-0 text-primary" />
+        <span className="text-sm font-semibold uppercase tracking-wider">Term Sheet</span>
+        <span className="text-[11px] text-muted-foreground">
+          Everything below is this deal&apos;s term sheet data — the fields being filled, the read-only view, the BDT XML, the DLT view and the attached documents.
+        </span>
+      </div>
+
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="fill">Fill</TabsTrigger>
