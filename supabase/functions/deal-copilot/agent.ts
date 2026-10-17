@@ -88,6 +88,7 @@ const specs = [
       additionalProperties: false,
     },
   },
+  ...specialistSpecs,
 ];
 
 export class AiFailure extends Error {
@@ -232,6 +233,20 @@ export async function chatAgent(
           };
           await host.proposeChange(proposal);
           output = { ...proposal, status: "pending" };
+        } else if (specialistSpecs.some((s) => s.name === call.name)) {
+          const { deal } = await host.readDeal();
+          const ctx = { model, deal, evidence: deal.sourceText ?? "" };
+          if (call.name === "reviewSpecialists")
+            output = { specialists: await runSpecialistPanel(ctx) };
+          else {
+            const ids: Record<string, SpecialistId> = {
+              reviewCompliance: "compliance",
+              reviewPricing: "pricing",
+              reviewEsg: "esg",
+              draftCommunications: "communications",
+            };
+            output = await runSpecialist({ ...ctx, id: ids[call.name] });
+          }
         } else throw new Error("Unknown tool");
       } catch (e) {
         output = { error: e instanceof Error ? e.message : "Tool failed" };
