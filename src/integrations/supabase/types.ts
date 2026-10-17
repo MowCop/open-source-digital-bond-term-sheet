@@ -1070,6 +1070,10 @@ export type Database = {
     }
     Functions: {
       can_access_deal: { Args: { _deal_id: string }; Returns: boolean }
+      copilot_amount_cache: {
+        Args: { amount: string; currency: string; fallback: string }
+        Returns: string
+      }
       copilot_claim: {
         Args: { _run: string; _token: string }
         Returns: boolean
@@ -1102,6 +1106,10 @@ export type Database = {
       }
       copilot_register_document: {
         Args: { _document: string; _text: string; _thread: string }
+        Returns: string
+      }
+      copilot_tenor_cache: {
+        Args: { fallback: string; maturity: string; start_date: string }
         Returns: string
       }
       current_app_user_ids: { Args: never; Returns: string[] }
