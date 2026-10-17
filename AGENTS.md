@@ -22,4 +22,4 @@
 - AI Deep Audit (src/lib/deepAudit.ts + audit-deal-fields-ai) is on-demand only, compares Fill fields to stored deal document text, and emits warnings only (src 'ai') appended to unifiedChecks — deterministic checks stay AI-free.
 - App MCP (src/lib/mcp/) is read-only and queries as the OAuth caller so RLS decides visibility; consent at /.lovable/oauth/consent.
 
-- Board audits use boardUpdateAudit and audit-deal-fields-ai board_update scope with selected text/attachments, separate from saved deal checks — checks the right source.
+- Board audits use boardUpdateAudit and audit-deal-fields-ai board_update scope, apart from saved deal checks — checks selected text/attachments.
