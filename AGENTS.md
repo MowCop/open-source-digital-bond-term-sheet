@@ -2,7 +2,7 @@
 - Bond Console connectors live in the single catalogue src/lib/vendors.ts: public feeds use the authenticated public-market-feeds function with source dates and partial failures preserved, and rows carrying a url render as live external links in a new tab — commercial toggles never imply a real feed and placeholder rows stay honest (no fabricated data, no browser CORS calls).
 - Board update headings use the presentation-only shortBorrowerName helper to omit a dash-separated bond description; stored issuer and deal records remain unchanged.
 - Digital Term Sheet View reads the live Fill state through src/lib/termSheetView.ts, not saved flat deal columns; empty authoritative fields remain empty — accepted proposals, edits and deletions must agree across tabs without auto-saving.
-- New Deal document selection reuses IngestDropzone and existing document readers/extraction service to fill only an empty issuer, guarding against intervening edits; files are handed to the created deal's Fill tab for review of all other proposals — no duplicate parser or auto-acceptance of other terms.
+- New Deal reuses IngestDropzone/readers, fills only an empty issuer with edit guards, and hands files to Fill for other proposals — no duplicate parser or auto-acceptance.
 - New Deal defaults and creation eligibility live in src/lib/newDeal.ts and are shared by the button and creation handler — optional fields must not accidentally block creation or introduce fallback bookrunners.
 - Digital Term Sheet Fill fields come from the vendored `FIELDS` dictionary and are selected by path through `src/lib/bdt-bridge.ts` — this keeps one definition per field.
 - TermSheetField suppresses dictionary example placeholders and preserves full-contrast recorded values in disabled history fields — presentation must not imply that examples are recorded terms or that historical values are absent.
@@ -21,3 +21,5 @@
 - Board-to-term-sheet links use src/lib/dtsNavigation.ts to resolve the selected update's deal, stage and publication time; Fill reads saved stage snapshots without modifying lifecycle or terms, and reports missing snapshots rather than inventing history — both board toolbars must share this navigation contract.
 - AI Deep Audit (src/lib/deepAudit.ts + audit-deal-fields-ai) is on-demand only, compares Fill fields to stored deal document text, and emits warnings only (src 'ai') appended to unifiedChecks — deterministic checks stay AI-free.
 - App MCP (src/lib/mcp/) is read-only and queries as the OAuth caller so RLS decides visibility; consent at /.lovable/oauth/consent.
+
+- Board audits use boardUpdateAudit and audit-deal-fields-ai board_update scope with selected text/attachments, separate from saved deal checks — checks the right source.

@@ -63,6 +63,13 @@ Checks update live as terms are typed, stages advance, or documents are uploaded
 - **Severity:** every finding is a **warning** (marked AI), never a fail. A clean run shows one pass.
 - **Actions:** click to open the field; "Try to fix" writes the document value into the unsaved Fill state only when the document states it unambiguously; the user still saves. Results are kept per deal in the browser until the next run.
 
+## New Issue Board update checker
+- **Check update** uses the selected Claude model to review the current update's subject/body and readable excerpts of its own attachments, not syndicate chat or another update's documents.
+- Both board checker entry points pass attachments. Shared PDF/DOCX readers extract content; unsupported/unreadable files produce explicit warnings, never a clean verification claim.
+- AI findings are warnings only and never modify data. Earlier indicative terms are not assumed final. Results clear when the selected update, edits or attachments change.
+- **Saved deal checks** remain a separately labelled deterministic assessment. Its Refresh does not run AI; **Check update** reruns the content audit.
+- Invalid AI output reports failure instead of silently reporting zero findings.
+
 ## Knowledge base
 
 | Knowledge layer | Sources | Role |
