@@ -162,6 +162,7 @@ export async function updateDealRow(id: string, updates: Partial<Deal>) {
   const patch = dealUpdatesToRow(updates);
   const { error } = await db.from('deals').update(patch).eq('id', id);
   if (error) throw error;
+  if (updates.bdtState) void import('@/lib/copilot/client').then(c => c.onCopilotTermsSaved(id));
 }
 
 export { rowToDeal, rowToUser };

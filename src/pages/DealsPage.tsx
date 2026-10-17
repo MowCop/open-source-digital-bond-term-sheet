@@ -26,6 +26,7 @@ import IngestDropzone from '@/components/termsheet/IngestDropzone';
 import TermSheetDlt from '@/components/termsheet/TermSheetDlt';
 import UnifiedDealChecker from '@/components/termsheet/UnifiedDealChecker';
 import DealDocuments from '@/components/termsheet/DealDocuments';
+import DealCopilot from '@/components/DealCopilot';
 import { buildXML, refreshAuto } from '@/lib/termsheet/index.js';
 import { setupAlRajhiDemo } from '@/components/AlRajhiDemoPanel';
 import { isDemoDeal } from '@/data/alRajhiDemo';
@@ -222,6 +223,8 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
       </div>
         </TabsContent>
       </Tabs>
+
+      <DealCopilot deal={deal} hasUnsavedTerms={JSON.stringify(checkerState) !== JSON.stringify(dealToBdtState(deal))} />
 
       {/* Stage History */}
       <div className="space-y-2">

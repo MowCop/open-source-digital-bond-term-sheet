@@ -5,6 +5,9 @@ export async function readDocument(file: File): Promise<string> {
   validateDocument(file.name, file.size);
   let text = "";
   if (/\.pdf$/i.test(file.name)) {
+    if (!(await file.slice(0, 5).text()).startsWith('%PDF-')) throw new Error('This file is not a valid PDF.');
+    const math = Math as Math & { sumPrecise?: (values: Iterable<number>) => number };
+    if (!math.sumPrecise) math.sumPrecise = values => Array.from(values).reduce((sum, value) => sum + value, 0);
     const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
     const worker = await import("pdfjs-dist/legacy/build/pdf.worker.min.mjs?url");
     pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
