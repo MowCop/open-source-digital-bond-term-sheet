@@ -23,6 +23,7 @@ beforeAll(async () => {
   for (const file of [
     "0001_vdr_deal_copilot.sql",
     "0002_copilot_atomic_approval_cache.sql",
+    "0003_copilot_review_event_entrypoints.sql",
   ]) {
     let sql = readFileSync(`drizzle/migrations/${file}`, "utf8").replace(
       /CREATE POLICY copilot_members_upload_files[^;]+;/g,
@@ -230,5 +231,14 @@ describe("VDR Co-Pilot database guarantees", () => {
     } finally {
       await db.exec("RESET ROLE");
     }
+  });
+  it('term-save review entrypoint requires term-edit rights and deduplicates a revision', async () => {
+    await identity(member);
+    await expect(q("select copilot_review_saved_terms('test')")).rejects.toThrow('Term-edit rights required');
+    await identity(editor);
+    await q("select copilot_review_saved_terms('test')");
+    const before = (await q("select count(*)::int n from copilot_runs where kind='syndicate'"))[0].n;
+    await q("select copilot_review_saved_terms('test')");
+    expect((await q("select count(*)::int n from copilot_runs where kind='syndicate'"))[0].n).toBe(before);
   });
 });

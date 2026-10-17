@@ -9,7 +9,8 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
-- [ ] Import Deal Co-Pilot agent, document diffs and automatic reviews using its transfer guide and VDR host template; persist against VDR deals, enforce member access and term-editor approvals, and test end to end. Source located in Your AI Agent Creator; implementation plan awaiting review.
+- [x] Import Deal Co-Pilot with deal-linked conversations, document diffs, automatic reviews and atomic human approvals; signed-in PDF/approve/reject/save/reload flow verified, isolated PostgreSQL permission/job tests pass. See reference/deal-copilot/verification.md for exact coverage.
+- [ ] Import historical source Co-Pilot records only if requested: blocked until source export and VDR deal mapping are uploaded.
 - [x] Board update checker reviews selected text and real attachments; verified Italy/Emirates mismatch in signed-in UI, read-failure and input-isolation tests pass.
 - [x] Bond Console > Syndicate Tools: "Edgar SEC filings" live link to the SEC EDGAR 424B filing search (catalogue in src/lib/vendors.ts); planned separate build will queue EDGAR-sourced term sheets for deal creation in the Digital Term Sheet.
 - [x] Wire Bond Console to public published SOFR/EFFR, ECB exchange rates and central bank headlines; authenticated loading and refresh verified with source dates. Commercial vendor feeds deferred pending licensed access, per user selection.
