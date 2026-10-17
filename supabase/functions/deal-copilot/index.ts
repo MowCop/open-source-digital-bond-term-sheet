@@ -77,7 +77,10 @@ Deno.serve(async(req)=>{
       if(!response.ok) throw new AiFailure(response.status,response.message);
       const output=trancheEvidence((job.kind==='document'?extractionSchema:syndicateSchema).parse(JSON.parse(response.text)));
       if(!output.summary.trim()) throw new Error('AI returned no usable review');
-      const report=job.kind==='document'?buildDocumentReport(output,text,await context(),previous):buildSyndicateReport(syndicateSchema.parse(output),text,ctx);
+      // Saved-term and document-completion reviews: one leased coordinator pass, then the four specialists sequentially.
+      const report=job.kind==='document'
+        ?buildDocumentReport(output,text,await context(),previous)
+        :buildSyndicateReport(syndicateSchema.parse(output),text,ctx,await runSpecialistPanel({model,deal:ctx,evidence:text}));
       const saved=await must(admin.rpc('copilot_complete',{_run:job.id,_token:token,_report:report}));
       active=undefined;if(saved)completed.push(job.id);
     }
