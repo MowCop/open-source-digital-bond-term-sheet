@@ -27,7 +27,7 @@ import TermSheetDlt from '@/components/termsheet/TermSheetDlt';
 import UnifiedDealChecker from '@/components/termsheet/UnifiedDealChecker';
 import DealDocuments from '@/components/termsheet/DealDocuments';
 import { buildXML, refreshAuto } from '@/lib/termsheet/index.js';
-import AlRajhiDemoPanel, { setupAlRajhiDemo } from '@/components/AlRajhiDemoPanel';
+import { setupAlRajhiDemo } from '@/components/AlRajhiDemoPanel';
 import { isDemoDeal } from '@/data/alRajhiDemo';
 import { useApp } from '@/context/AppContext';
 import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
@@ -110,17 +110,6 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         <div className="flex w-full items-center">
           <IngestDropzone onFiles={ingest} className="flex-1" />
         </div>
-      )}
-
-      {canManage && isDemoDeal(deal) && (
-        <AlRajhiDemoPanel
-          deal={deal}
-          ingest={async files => {
-            const found = await fillRef.current?.ingestFiles(files);
-            setTab('fill');
-            return found;
-          }}
-        />
       )}
 
       <UnifiedDealChecker
