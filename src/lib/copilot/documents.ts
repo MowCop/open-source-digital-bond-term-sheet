@@ -5,7 +5,15 @@ export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 export const MAX_DOCUMENT_TEXT = 60000;
 export const termSchema = z
   .object({
-    field: z.enum(["issuer", "currency", "size", "coupon", "maturity", "isin", "governingLaw"]),
+    field: z.enum([
+      "issuer",
+      "currency",
+      "size",
+      "coupon",
+      "maturity",
+      "isin",
+      "governingLaw",
+    ]),
     value: z.string(),
     quote: z.string(),
     location: z.string(),
@@ -54,7 +62,9 @@ export function buildDocumentReport(
       text.includes(term.quote) &&
       counts.get(term.field)?.size === 1;
     if (!valid)
-      warnings.push(`No correction proposed for ${term.field}: ambiguous or unsupported evidence.`);
+      warnings.push(
+        `No correction proposed for ${term.field}: ambiguous or unsupported evidence.`,
+      );
     return valid && all.findIndex((t) => t.field === term.field) === index;
   });
   const differences = terms
@@ -63,7 +73,9 @@ export function buildDocumentReport(
   const versionDifferences = previous
     ? terms.flatMap((t) => {
         const old = previous.terms.find((p) => p.field === t.field);
-        return old && old.value !== t.value ? [{ ...t, before: old.value, after: t.value }] : [];
+        return old && old.value !== t.value
+          ? [{ ...t, before: old.value, after: t.value }]
+          : [];
       })
     : [];
   const missing = dealFields.filter(

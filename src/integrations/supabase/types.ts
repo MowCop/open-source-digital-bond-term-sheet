@@ -1108,6 +1108,7 @@ export type Database = {
         Args: { _document: string; _text: string; _thread: string }
         Returns: string
       }
+      copilot_review_saved_terms: { Args: { _deal: string }; Returns: string }
       copilot_tenor_cache: {
         Args: { fallback: string; maturity: string; start_date: string }
         Returns: string

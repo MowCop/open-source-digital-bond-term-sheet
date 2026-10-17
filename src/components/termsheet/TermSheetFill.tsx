@@ -48,6 +48,7 @@ interface Props {
   onSave: (patch: Partial<Deal>) => void;
   onStateChange?: (state: BdtState) => void;
   onDisplayedStage?: (stage: number) => void;
+  onDirtyChange?: (dirty: boolean) => void;
   requestedStage?: number;
   requestedAt?: string;
 }
@@ -80,7 +81,7 @@ export interface TermSheetFillHandle {
 }
 
 export default function TermSheetFill({
-  deal, canEdit: canEditProp, onSave, onStateChange, onDisplayedStage, ingestRef, requestedStage, requestedAt,
+  deal, canEdit: canEditProp, onSave, onStateChange, onDisplayedStage, onDirtyChange, ingestRef, requestedStage, requestedAt,
 }: Props & { ingestRef?: RefObject<TermSheetFillHandle> }) {
   const [snaps, setSnaps] = useState<StageSnap[]>([]);
   const [viewStage, setViewStage] = useState<number | null>(null);
@@ -154,6 +155,11 @@ export default function TermSheetFill({
   useEffect(() => {
     onStateChange?.(liveState);
   }, [liveState, onStateChange]);
+  useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
+  // External human approvals update the saved BDT record. Never replace an unsaved draft.
+  useEffect(() => {
+    if (!dirty) setState(dealToBdtState(deal));
+  }, [deal.bdtState]);
   useEffect(() => { onDisplayedStage?.(state.stage); }, [state.stage, onDisplayedStage]);
 
   const requiredNow = useMemo(

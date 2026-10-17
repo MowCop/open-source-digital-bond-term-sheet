@@ -70,6 +70,7 @@ Checks update live as terms are typed, stages advance, or documents are uploaded
 - Originals remain in VDR's private repository. Copied reader limits: 10 MB, PDF 50 pages with readable text on every page, 60,000 characters; DOCX text excludes interpretation of comments/revisions/images. Oversized/unreadable originals remain saved, but Co-Pilot needs a split/readable source.
 - Conversations, dated reports and corrections persist per VDR deal. Deal members use the agent; only server-authorized term editors decide changes, with stale-original checks. Agents never approve.
 - Event-driven durable jobs, expiring leases, single-flight, superseded-result protection, explicit failed/paused resumption and global provider-credit/access blocks. No scheduled watcher. Historical source workspace records require export/import.
+- Programme-ceiling quotations are withheld from tranche-size corrections; a programme maximum is not this bond's issuance amount.
 
 ## New Issue Board update checker
 - **Check update** uses the selected Claude model to review the current update's subject/body and readable excerpts of its own attachments, not syndicate chat or another update's documents.

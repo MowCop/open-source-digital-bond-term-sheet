@@ -8,12 +8,22 @@ describe("Document evidence review", () => {
       {
         summary: "Review",
         warnings: [],
-        terms: [{ field: "currency", value: "EUR", quote: "Currency: EUR", location: "Page 1" }],
+        terms: [
+          {
+            field: "currency",
+            value: "EUR",
+            quote: "Currency: EUR",
+            location: "Page 1",
+          },
+        ],
       },
       "Currency: EUR",
       baseline,
     );
-    expect(report.differences[0]).toMatchObject({ before: "USD", after: "EUR" });
+    expect(report.differences[0]).toMatchObject({
+      before: "USD",
+      after: "EUR",
+    });
     expect(baseline.currency).toBe("USD");
   });
   it("withholds invented source quotations", () => {
@@ -21,7 +31,14 @@ describe("Document evidence review", () => {
       {
         summary: "Review",
         warnings: [],
-        terms: [{ field: "currency", value: "EUR", quote: "Currency: EUR", location: "Page 1" }],
+        terms: [
+          {
+            field: "currency",
+            value: "EUR",
+            quote: "Currency: EUR",
+            location: "Page 1",
+          },
+        ],
       },
       "Currency: USD",
       blankDeal,
@@ -46,15 +63,27 @@ describe("Document evidence review", () => {
     expect(report.differences).toHaveLength(0);
   });
   it("compares previous document terms separately from deal terms", () => {
-    const term = { field: "currency" as const, value: "EUR", quote: "EUR", location: "Page 1" };
+    const term = {
+      field: "currency" as const,
+      value: "EUR",
+      quote: "EUR",
+      location: "Page 1",
+    };
     const report = buildDocumentReport(
       { summary: "New", warnings: [], terms: [term] },
       "EUR",
       { ...blankDeal, currency: "EUR" },
-      { summary: "Old", warnings: [], terms: [{ ...term, value: "USD", quote: "USD" }] },
+      {
+        summary: "Old",
+        warnings: [],
+        terms: [{ ...term, value: "USD", quote: "USD" }],
+      },
     );
     expect(report.differences).toHaveLength(0);
-    expect(report.versionDifferences[0]).toMatchObject({ before: "USD", after: "EUR" });
+    expect(report.versionDifferences[0]).toMatchObject({
+      before: "USD",
+      after: "EUR",
+    });
   });
   it("rejects unreadable documents", () => {
     expect(() => validateDocument("scan.pdf", 100, "")).toThrow();
@@ -66,12 +95,22 @@ describe("Document evidence review", () => {
       {
         summary: "PDF terms",
         warnings: [],
-        terms: [{ field: "currency", value: "EUR", quote: "Currency: EUR", location: "Page 1" }],
+        terms: [
+          {
+            field: "currency",
+            value: "EUR",
+            quote: "Currency: EUR",
+            location: "Page 1",
+          },
+        ],
       },
       "Currency: EUR",
       liveTermSheet,
     );
-    expect(report.differences[0]).toMatchObject({ before: "GBP", after: "EUR" });
+    expect(report.differences[0]).toMatchObject({
+      before: "GBP",
+      after: "EUR",
+    });
     expect(liveTermSheet.currency).toBe("GBP");
   });
   it("does not propose a correction when the live term sheet already matches the PDF", () => {
@@ -79,7 +118,14 @@ describe("Document evidence review", () => {
       {
         summary: "PDF terms",
         warnings: [],
-        terms: [{ field: "coupon", value: "4.25%", quote: "Coupon: 4.25%", location: "Page 1" }],
+        terms: [
+          {
+            field: "coupon",
+            value: "4.25%",
+            quote: "Coupon: 4.25%",
+            location: "Page 1",
+          },
+        ],
       },
       "Coupon: 4.25%",
       { ...blankDeal, coupon: "4.25%" },

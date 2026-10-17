@@ -1,0 +1,3 @@
+CREATE OR REPLACE FUNCTION public.copilot_review_saved_terms(_deal text) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE tid uuid; BEGIN IF NOT public.copilot_editor(_deal) THEN RAISE EXCEPTION 'Term-edit rights required'; END IF; tid:=public.copilot_open(_deal); PERFORM public.copilot_enqueue(tid); RETURN tid; END $$;
+REVOKE ALL ON FUNCTION public.copilot_review_saved_terms(text) FROM PUBLIC,anon; GRANT EXECUTE ON FUNCTION public.copilot_review_saved_terms(text) TO authenticated;
+REVOKE ALL ON FUNCTION public.copilot_member(text),public.copilot_editor(text) FROM PUBLIC,anon; GRANT EXECUTE ON FUNCTION public.copilot_member(text),public.copilot_editor(text) TO authenticated,service_role;
