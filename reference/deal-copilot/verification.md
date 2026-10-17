@@ -1,6 +1,8 @@
 # VDR Deal Co-Pilot transfer verification
 
 ## Verified 17 October 2026
+- Additional walkthrough retained as “Co-Pilot Walkthrough — 17 Oct 2026”: uploaded a clearly labelled test PDF, reviewed through Claude, approved coupon 4 → 4.25, and confirmed saved approval, original PDF and coupon in both View and Fill after reload. Fixed explicit “4.25% per annum” normalization, with a regression test.
+- Live database rollback test using an existing read-only identity verified outsider RLS denial, member report/approval visibility and server denial of approval. Temporary membership was rolled back and confirmed absent; no user roles were changed.
 - Signed-in Claude conversation on the saved Al Rajhi deal reads real BDT terms and runs source deterministic checks without changing terms.
 - Real extractable PDFs uploaded to an isolated VDR QA deal produce persisted source-quoted document and automatic syndicate reports.
 - Human coupon approval changes authoritative BDT and displayed cache atomically; View and Fill show the approved value, including after reload. Human rejection leaves the approved coupon unchanged.
@@ -9,7 +11,7 @@
 - Narrow 390px layout has no horizontal page overflow. Desktop and narrow screenshots show the actual open panel. Preview had no runtime errors and current build passed; conventional/DLT verification remains unchanged.
 
 ## Boundaries
-- Membership denial and read-only approvals were tested against the actual migration SQL in isolated PostgreSQL, not by signing into other people's live accounts.
+- Membership and approval rules were tested in isolated PostgreSQL and against live policies in a rollback transaction, not by signing into other people's browser accounts.
 - Source historical conversations and records were not imported: the source snapshot contains code only. Import requires an exported dataset with VDR deal mapping.
 - Co-Pilot is event-driven, not a background schedule. Failed/paused work requires explicit resumption. Copied reader limits remain 10 MB, 50 PDF pages, 60,000 readable characters.
 - Programme ceilings are not tranche sizes; the first live Supplement review exposed this risk and an additional evidence guard was added and tested. No Al Rajhi terms were changed.

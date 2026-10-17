@@ -9,7 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
-- [ ] Walk a separate test deal through real PDF upload, Co-Pilot review, human approval and reload; verify member reads, editor-only decisions and outsider denial against live policies.
+- [x] Walk separate “Co-Pilot Walkthrough — 17 Oct 2026” deal through PDF upload, review, coupon approval 4 → 4.25 and reload in View/Fill; live rollback permission test confirms member reads, reader approval denial and outsider denial without permanent membership changes.
 - [x] Import Deal Co-Pilot with deal-linked conversations, document diffs, automatic reviews and atomic human approvals; signed-in PDF/approve/reject/save/reload flow verified, isolated PostgreSQL permission/job tests pass. See reference/deal-copilot/verification.md for exact coverage.
 - [ ] Import historical source Co-Pilot records only if requested: blocked until source export and VDR deal mapping are uploaded.
 - [x] Board update checker reviews selected text and real attachments; verified Italy/Emirates mismatch in signed-in UI, read-failure and input-isolation tests pass.
