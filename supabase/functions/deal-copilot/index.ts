@@ -6,6 +6,7 @@ import { asDeal } from './domain/deal.ts';
 import { buildDocumentReport, extractionSchema } from './domain/documents.ts';
 import { buildSyndicateReport, syndicateSchema } from './domain/syndicate.ts';
 import { trancheEvidence } from './domain/evidence.ts';
+import { runSpecialistPanel } from './specialists.ts';
 import { AiFailure, chatAgent } from './agent.ts';
 import type { DealHost } from './domain/host.ts';
 
