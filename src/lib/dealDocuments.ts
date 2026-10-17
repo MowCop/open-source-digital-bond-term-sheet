@@ -24,12 +24,13 @@ export async function uploadDealDocument(dealId: string, file: File): Promise<st
   const path = `${dealId}/${Date.now()}-${safe}`;
   const up = await supabase.storage.from('deal-documents').upload(path, file, { contentType: file.type || undefined });
   if (up.error) throw up.error;
-  const { error } = await db.from('deal_documents').insert({
+  const { data: saved, error } = await db.from('deal_documents').insert({
     deal_id: dealId, name: file.name, path, size: file.size, mime: file.type || null,
     uploaded_by: u.user?.id, uploaded_by_name: u.user?.user_metadata?.name ?? u.user?.email ?? null,
-  });
+  }).select('id').single();
   if (error) throw error;
   window.dispatchEvent(new CustomEvent(DOCS_CHANGED, { detail: dealId }));
+  if (saved?.id) void import('@/lib/copilot/client').then(c => c.onCopilotDocumentSaved(dealId, saved.id, file));
   return `vdr://deal-documents/${path}`;
 }
 

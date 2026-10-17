@@ -63,6 +63,14 @@ Checks update live as terms are typed, stages advance, or documents are uploaded
 - **Severity:** every finding is a **warning** (marked AI), never a fail. A clean run shows one pass.
 - **Actions:** click to open the field; "Try to fix" writes the document value into the unsaved Fill state only when the document states it unambiguously; the user still saves. Results are kept per deal in the browser until the next run.
 
+## Deal Co-Pilot (deal-linked, separate from the live checker)
+- Source transfer guide and VDR host template: `reference/deal-copilot/`; copied domain rules: `src/lib/copilot/`; Cloud coordinator: `supabase/functions/deal-copilot`.
+- One coordinating Claude agent reads saved BDT terms, runs the source's deterministic checks, reads completed document reports and proposes corrections. It does not replace the VDR checker, registry checks or Deep Audit.
+- Upload starts a document comparison and subsequent automatic syndicate review. Saving BDT terms queues a deduplicated review. Exact source quotes and atomic live comparisons protect against unsupported and stale corrections.
+- Originals remain in VDR's private repository. Copied reader limits: 10 MB, PDF 50 pages with readable text on every page, 60,000 characters; DOCX text excludes interpretation of comments/revisions/images. Oversized/unreadable originals remain saved, but Co-Pilot needs a split/readable source.
+- Conversations, dated reports and corrections persist per VDR deal. Deal members use the agent; only server-authorized term editors decide changes, with stale-original checks. Agents never approve.
+- Event-driven durable jobs, expiring leases, single-flight, superseded-result protection, explicit failed/paused resumption and global provider-credit/access blocks. No scheduled watcher. Historical source workspace records require export/import.
+
 ## New Issue Board update checker
 - **Check update** uses the selected Claude model to review the current update's subject/body and readable excerpts of its own attachments, not syndicate chat or another update's documents.
 - Both board checker entry points pass attachments. Shared PDF/DOCX readers extract content; unsupported/unreadable files produce explicit warnings, never a clean verification claim.
