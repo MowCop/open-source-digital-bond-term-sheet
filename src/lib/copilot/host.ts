@@ -7,7 +7,12 @@ import { asDeal, validateProposal, type Deal } from "./deal";
  * Hosts must enforce authorization themselves and must never apply a
  * proposed change without an explicit human decision.
  */
-export type HostDocument = { id: string; name: string; report: unknown; createdAt: string };
+export type HostDocument = {
+  id: string;
+  name: string;
+  report: unknown;
+  createdAt: string;
+};
 export type ProposedChange = {
   field: string;
   before_value: string;
@@ -18,18 +23,32 @@ export interface DealHost {
   readDeal(): Promise<{ deal: Deal; updatedAt: string }>;
   listDocuments(limit?: number): Promise<HostDocument[]>;
   proposeChange(change: ProposedChange): Promise<void>;
-  decideChange(changeId: string, approve: boolean): Promise<"approved" | "rejected">;
+  decideChange(
+    changeId: string,
+    approve: boolean,
+  ): Promise<"approved" | "rejected">;
 }
 
 /** Host-independent tool logic shared by every host. */
-export async function proposeThroughHost(host: DealHost, input: ProposedChange) {
+export async function proposeThroughHost(
+  host: DealHost,
+  input: ProposedChange,
+) {
   const { deal } = await host.readDeal();
-  const checked = validateProposal(deal, input.field, input.before_value, input.after_value);
+  const checked = validateProposal(
+    deal,
+    input.field,
+    input.before_value,
+    input.after_value,
+  );
   return { ...checked, reason: input.reason, status: "pending" as const };
 }
 
 /** In-memory host for tests and demos; applies changes only on approve. */
-export function createMemoryHost(initial: Partial<Deal>, documents: HostDocument[] = []) {
+export function createMemoryHost(
+  initial: Partial<Deal>,
+  documents: HostDocument[] = [],
+) {
   let deal = asDeal(initial);
   let updatedAt = new Date(0).toISOString();
   const changes = new Map<string, ProposedChange & { status: string }>();
@@ -46,7 +65,8 @@ export function createMemoryHost(initial: Partial<Deal>, documents: HostDocument
     },
     async decideChange(id, approve) {
       const change = changes.get(id);
-      if (!change || change.status !== "pending") throw new Error("Change already decided");
+      if (!change || change.status !== "pending")
+        throw new Error("Change already decided");
       if (approve) {
         if ((deal[change.field as keyof Deal] ?? "") !== change.before_value)
           throw new Error("Deal changed; request a new proposal");
