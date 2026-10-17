@@ -110,6 +110,262 @@ export type Database = {
         }
         Relationships: []
       }
+      copilot_changes: {
+        Row: {
+          after_value: string
+          before_value: string
+          created_at: string
+          created_by: string | null
+          decided_at: string | null
+          decided_by: string | null
+          field: string
+          id: string
+          reason: string
+          run_id: string | null
+          status: string
+          thread_id: string
+        }
+        Insert: {
+          after_value: string
+          before_value: string
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          field: string
+          id?: string
+          reason: string
+          run_id?: string | null
+          status?: string
+          thread_id: string
+        }
+        Update: {
+          after_value?: string
+          before_value?: string
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          field?: string
+          id?: string
+          reason?: string
+          run_id?: string | null
+          status?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "copilot_changes_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "copilot_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copilot_changes_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "copilot_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      copilot_documents: {
+        Row: {
+          content_hash: string
+          created_at: string
+          created_by: string
+          document_id: string
+          extracted_text: string
+          id: string
+          thread_id: string
+        }
+        Insert: {
+          content_hash: string
+          created_at?: string
+          created_by: string
+          document_id: string
+          extracted_text: string
+          id?: string
+          thread_id: string
+        }
+        Update: {
+          content_hash?: string
+          created_at?: string
+          created_by?: string
+          document_id?: string
+          extracted_text?: string
+          id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "copilot_documents_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "deal_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copilot_documents_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "copilot_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      copilot_gateway_state: {
+        Row: {
+          blocked: boolean
+          id: string
+          reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          blocked?: boolean
+          id: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blocked?: boolean
+          id?: string
+          reason?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      copilot_messages: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          role: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "copilot_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "copilot_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      copilot_runs: {
+        Row: {
+          baseline: Json
+          completed_at: string | null
+          created_at: string
+          document_id: string | null
+          error: string | null
+          evidence_text: string
+          id: string
+          kind: string
+          lease_token: string | null
+          lease_until: string | null
+          report: Json | null
+          revision: string
+          status: string
+          thread_id: string
+        }
+        Insert: {
+          baseline?: Json
+          completed_at?: string | null
+          created_at?: string
+          document_id?: string | null
+          error?: string | null
+          evidence_text?: string
+          id?: string
+          kind: string
+          lease_token?: string | null
+          lease_until?: string | null
+          report?: Json | null
+          revision: string
+          status?: string
+          thread_id: string
+        }
+        Update: {
+          baseline?: Json
+          completed_at?: string | null
+          created_at?: string
+          document_id?: string | null
+          error?: string | null
+          evidence_text?: string
+          id?: string
+          kind?: string
+          lease_token?: string | null
+          lease_until?: string | null
+          report?: Json | null
+          revision?: string
+          status?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "copilot_runs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "copilot_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "copilot_runs_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "copilot_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      copilot_threads: {
+        Row: {
+          created_at: string
+          created_by: string
+          deal_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          deal_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deal_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "copilot_threads_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: true
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_documents: {
         Row: {
           created_at: string
@@ -814,6 +1070,48 @@ export type Database = {
     }
     Functions: {
       can_access_deal: { Args: { _deal_id: string }; Returns: boolean }
+      copilot_amount_cache: {
+        Args: { amount: string; currency: string; fallback: string }
+        Returns: string
+      }
+      copilot_claim: {
+        Args: { _run: string; _token: string }
+        Returns: boolean
+      }
+      copilot_complete: {
+        Args: { _report: Json; _run: string; _token: string }
+        Returns: boolean
+      }
+      copilot_context: { Args: { _deal: string }; Returns: Json }
+      copilot_decide: {
+        Args: { _approve: boolean; _change: string }
+        Returns: string
+      }
+      copilot_editor: { Args: { _deal: string }; Returns: boolean }
+      copilot_enqueue: {
+        Args: { _document?: string; _thread: string }
+        Returns: undefined
+      }
+      copilot_member: { Args: { _deal: string }; Returns: boolean }
+      copilot_open: { Args: { _deal: string }; Returns: string }
+      copilot_propose: {
+        Args: {
+          _after: string
+          _before: string
+          _field: string
+          _reason: string
+          _thread: string
+        }
+        Returns: undefined
+      }
+      copilot_register_document: {
+        Args: { _document: string; _text: string; _thread: string }
+        Returns: string
+      }
+      copilot_tenor_cache: {
+        Args: { fallback: string; maturity: string; start_date: string }
+        Returns: string
+      }
       current_app_user_ids: { Args: never; Returns: string[] }
       current_user_org: { Args: never; Returns: string }
       get_user_login_stats: {
