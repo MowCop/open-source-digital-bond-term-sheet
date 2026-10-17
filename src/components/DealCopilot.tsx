@@ -34,7 +34,88 @@ import {
   type DealDocument,
 } from "@/lib/dealDocuments";
 import { toast } from "sonner";
+import {
+  specialistNames,
+  type SpecialistReport,
+} from "@/lib/copilot/specialists";
 import type { Deal } from "@/types/bond";
+
+function SpecialistReports({ reports }: { reports: SpecialistReport[] }) {
+  return (
+    <div className="space-y-2 min-w-0">
+      <p className="text-xs font-medium text-muted-foreground">
+        Specialist panel
+      </p>
+      {reports.map((report) => (
+        <details key={report.id} className="border-t border-border pt-2 text-xs min-w-0">
+          <summary className="cursor-pointer font-medium break-words">
+            {specialistNames[report.id]}
+          </summary>
+          <div className="mt-2 space-y-2 break-words">
+            <p className="whitespace-pre-wrap">{report.summary}</p>
+            {report.findings.map((finding, index) => (
+              <div key={index}>
+                <p className="font-medium">{finding.topic}</p>
+                <p>{finding.message}</p>
+                <blockquote className="mt-1 border-l-2 border-border pl-2 text-muted-foreground">
+                  “{finding.quote}”
+                </blockquote>
+              </div>
+            ))}
+            {!!report.missingEvidence.length && (
+              <div>
+                <h4 className="font-medium">Evidence needed</h4>
+                <ul className="mt-1 list-disc pl-4 space-y-1">
+                  {report.missingEvidence.map((item, i) => (
+                    <li key={i}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {report.warnings.map((warning, i) => (
+              <p key={i} className="text-muted-foreground">
+                {warning}
+              </p>
+            ))}
+            {report.bulletin && (
+              <div>
+                <h4 className="font-medium">Investor bulletin · Draft</h4>
+                <p className="whitespace-pre-wrap">{report.bulletin}</p>
+              </div>
+            )}
+            {report.announcement && (
+              <div>
+                <h4 className="font-medium">Deal announcement · Draft</h4>
+                <p className="whitespace-pre-wrap">{report.announcement}</p>
+              </div>
+            )}
+            {report.xmlDraft && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const url = URL.createObjectURL(
+                    new Blob([report.xmlDraft], { type: "application/xml" }),
+                  );
+                  const link = document.createElement("a");
+                  link.href = url;
+                  link.download = "deal-announcement-draft.xml";
+                  link.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                XML draft (unvalidated)
+              </Button>
+            )}
+            <p className="text-muted-foreground">
+              {new Date(report.reviewedAt).toLocaleString("en-GB")}
+            </p>
+          </div>
+        </details>
+      ))}
+    </div>
+  );
+}
 type Msg = { id: string; role: string; body: string };
 type Change = {
   id: string;
@@ -57,6 +138,7 @@ type Report = {
   risks?: { message: string; quote: string }[];
   deterministic?: { message: string; field: string }[];
   comparison?: { comparedAt: string };
+  specialists?: SpecialistReport[];
 };
 type Run = {
   id: string;
@@ -468,6 +550,9 @@ export default function DealCopilot({
                       Deterministic · {d.field}: {d.message}
                     </p>
                   ))}
+                  {!!r.report.specialists?.length && (
+                    <SpecialistReports reports={r.report.specialists} />
+                  )}
                 </>
               )}
             </div>

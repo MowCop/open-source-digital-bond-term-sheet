@@ -7,8 +7,7 @@
 - Digital Term Sheet Fill fields come from the vendored `FIELDS` dictionary and are selected by path through `src/lib/bdt-bridge.ts`; app stage names are display overrides there (final stage = "Settled"), never dictionary edits — one definition per field.
 - TermSheetField suppresses dictionary example placeholders and preserves full-contrast recorded values in disabled history fields — presentation must not imply that examples are recorded terms or that historical values are absent.
 - The expanded-deal Deal Checker renders `unifiedChecks` above the term-sheet tabs — one visible validation surface for BDT and VDR rules.
-- LEI checks are hybrid: the offline MOD 97-10 test is the instant baseline; live GLEIF registry lookups run through the gleif-lookup edge function and are appended to the same Deal Checker list — typing never waits on the network and an outage only downgrades to a warning.
-- LEI suggestions from GLEIF name search are shown for the user to pick and are never auto-applied — common names match several legal entities.
+- LEI checks are hybrid: offline MOD 97-10 baseline plus live GLEIF lookups via the gleif-lookup edge function, appended to the same Deal Checker list — typing never waits on the network, outages downgrade to a warning, and name-search suggestions are user-picked, never auto-applied.
 - FIGI checks mirror the LEI pattern: offline format/check-digit baseline plus live OpenFIGI lookup via the openfigi-lookup edge function, appended to unifiedChecks with src openfigi; FIGI suggestions are never auto-applied — one ID-check source.
 - Pass imperative handles as ingestRef, never React.forwardRef — fiber type changes blank hot reloads.
 - Deal AI tools (document extraction, chat extraction, bulletin) route through supabase/functions/_shared/ai-model.ts, which allowlists the selectable models and calls the gateway's native messages endpoint; the browser only sends the chosen model id from src/lib/aiModel.ts — one place for models.
@@ -20,7 +19,7 @@
 - Al Rajhi board bodies use Word-derived reference HTML while replay parsing uses plain text; legacy generated bodies are projected at display time without database writes or overwriting user edits — preserve original document structure and stage timing.
 - Board-to-term-sheet links use src/lib/dtsNavigation.ts to resolve the selected update's deal, stage and publication time; Fill reads saved stage snapshots without modifying lifecycle or terms, and reports missing snapshots rather than inventing history — both board toolbars must share this navigation contract.
 - AI Deep Audit (src/lib/deepAudit.ts + audit-deal-fields-ai) is on-demand only, compares Fill fields to stored deal document text, and emits warnings only (src 'ai') appended to unifiedChecks — deterministic checks stay AI-free.
-- App MCP (src/lib/mcp/) is read-only and queries as the OAuth caller so RLS decides visibility; consent at /.lovable/oauth/consent.
+- App MCP (src/lib/mcp/) is read-only, querying as the OAuth caller so RLS decides visibility.
 
-- Board audits use boardUpdateAudit and board_update scope, separate from saved checks.
-- Co-Pilot uses src/lib/copilot and deal-copilot Cloud function; deal-linked durable jobs and atomic human decisions enforce membership, term-edit rights and stale values — AI never approves.
+- Board audits use boardUpdateAudit (board_update scope), separate from saved checks.
+- Co-Pilot uses src/lib/copilot and deal-copilot Cloud function; durable jobs and atomic human decisions enforce membership, term-edit rights and stale values — AI never approves. The coordinator delegates to four specialists (compliance, pricing, ESG, communications) via specialists.ts; panels run on save/upload and persist in report JSON v2 — drafts never sent, communications XML stays an unvalidated draft.

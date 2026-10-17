@@ -29,7 +29,7 @@ The agent reaches deal data through the `DealHost` contract (`src/lib/copilot/ho
 4. Test: sign-in, chat review, PDF upload diff, automatic review on save, approve/reject with stale-value rejection, and that a non-member sees nothing.
 
 ### Agent structure today and next
-One coordinating agent with specialist tools, plus two automatic review jobs (document diff, syndicate review). Candidate independent specialists, not yet built: Compliance & Regulatory, Pricing & Benchmark, ESG, Syndicate Communications. Each must have agreed inputs, read-only tools and cited-evidence output; none gets approval authority. No changes to the VDR project were made from here.
+Transferred 2026-10-17: one coordinating agent now delegates to four independent specialists — Compliance & Regulatory, Pricing & Benchmark (deterministic ACT/360/ACT/365F accrual and T+1/T+2 settlement tools), ESG & Sustainable Finance, and Syndicate Communications (draft bulletin/announcement plus an escaped, explicitly unvalidated non-BDT XML draft). Chat exposes five delegation tools; automatic saved-term and document-completion reviews run one leased coordinator pass followed by the four specialists sequentially, saved atomically as report JSON version 2. No specialist tables were added and no workshop conversations or documents were copied. Specialists flag risks and propose evidenced corrections only; human term editors approve atomically with stale-value checks. No live sanctions/LEI, benchmark, legal or distribution claims; communications drafts are never sent.
 
 ## Verification
 
