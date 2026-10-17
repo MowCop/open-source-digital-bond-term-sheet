@@ -818,6 +818,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
                     size="icon"
                     variant="outline"
                     aria-pressed={checkerOpen}
+                    aria-label="AI Deal Checker"
                     className={`btn-champagne toolbar-square-btn-ai ${checkerOpen ? 'ring-2 ring-primary brightness-110' : ''}`}
                     onClick={() => setCheckerOpen(o => !o)}
                   >
