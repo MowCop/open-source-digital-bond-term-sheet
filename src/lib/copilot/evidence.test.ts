@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { trancheEvidence } from "./evidence";
 describe("Tranche evidence", () => {
+  it('normalizes an explicit 4.25% per annum coupon to the numeric Fill value without altering the quote', () => {
+    const out = trancheEvidence({ summary: 'Coupon', warnings: [], terms: [{ field: 'coupon', value: '4.25% per annum', quote: 'Coupon: 4.25% per annum', location: 'Page 1' }] });
+    expect(out.terms[0]?.value).toBe('4.25');
+    expect(out.terms[0]?.quote).toBe('Coupon: 4.25% per annum');
+  });
   it("withholds the programme ceiling as a bond size correction", () => {
     const out = trancheEvidence({
       summary: "Programme supplement",
