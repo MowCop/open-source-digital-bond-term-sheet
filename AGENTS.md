@@ -21,5 +21,5 @@
 - AI Deep Audit (src/lib/deepAudit.ts + audit-deal-fields-ai) is on-demand only, compares Fill fields to stored deal document text, and emits warnings only (src 'ai') appended to unifiedChecks — deterministic checks stay AI-free.
 - App MCP (src/lib/mcp/) is read-only, querying as the OAuth caller so RLS decides visibility.
 
-- Board audits use boardUpdateAudit and board_update scope, separate from saved checks.
+- Board audits use boardUpdateAudit (board_update scope), separate from saved checks.
 - Co-Pilot uses src/lib/copilot and deal-copilot Cloud function; deal-linked durable jobs and atomic human decisions enforce membership, term-edit rights and stale values — AI never approves.
