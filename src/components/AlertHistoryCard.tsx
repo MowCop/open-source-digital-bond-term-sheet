@@ -1087,6 +1087,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
                 <DealChecker
                   deal={editDeal}
                   alertText={`${editSubject}\n${editBody}`}
+                  attachments={activeVersion.attachments ?? []}
                   userRole={currentUser?.role}
                   currentUserId={currentUser?.id}
                   currentUserName={currentUser?.name}
