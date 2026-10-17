@@ -40,6 +40,7 @@ export default function IngestDropzone({ onFiles, disabled, className }: Props) 
       onDrop={e => { e.preventDefault(); setDragOver(false); void run(e.dataTransfer.files); }}
       title={HINT}
       className={[
+        // px-3 aligns this icon with the Deal Checker and Term Sheet icons below.
         'flex items-center gap-2 rounded-lg border px-3 py-1.5 transition-colors',
         dragOver ? 'border-primary bg-primary/10' : 'border-input bg-background',
         className ?? '',
@@ -54,8 +55,8 @@ export default function IngestDropzone({ onFiles, disabled, className }: Props) 
         onChange={e => { void run(e.target.files); e.target.value = ''; }}
       />
       {busy
-        ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
-        : <FileUp className="h-4 w-4 shrink-0 text-muted-foreground" />}
+        ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground" strokeWidth={2.5} />
+        : <FileUp className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.5} />}
       <span className="hidden min-w-0 flex-1 truncate text-xs text-muted-foreground sm:inline">{HINT}</span>
       <span className="text-xs text-muted-foreground sm:hidden">Drop document</span>
       <Button size="sm" variant="outline" className="shrink-0" onClick={() => inputRef.current?.click()} disabled={busy || disabled}>

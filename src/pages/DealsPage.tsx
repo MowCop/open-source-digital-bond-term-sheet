@@ -121,7 +121,9 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
       />
 
       <Tabs value={tab} onValueChange={setTab}>
-        <div className="flex items-center gap-2 border-b border-border pb-2">
+        {/* pl-[13px] = the 1px panel border + 12px inner padding used above, so
+            this icon sits in the same column as the drop-zone and checker icons. */}
+        <div className="flex items-center gap-2 border-b border-border pb-2 pl-[13px]">
           <FileText className="h-4 w-4 shrink-0 text-primary" />
           <span className="shrink-0 text-sm font-semibold uppercase tracking-wider whitespace-nowrap">Term Sheet</span>
           <span className="hidden min-w-0 flex-1 truncate text-[11px] text-muted-foreground lg:block">
