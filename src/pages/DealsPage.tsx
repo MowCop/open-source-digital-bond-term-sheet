@@ -135,10 +135,10 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         <div className="flex items-center gap-2 border-b border-border pb-2">
           <FileText className="h-4 w-4 shrink-0 text-primary" />
           <span className="shrink-0 text-sm font-semibold uppercase tracking-wider whitespace-nowrap">Term Sheet</span>
-          <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
-            All fields and information below belong to this deal&apos;s term sheet.
+          <span className="hidden min-w-0 flex-1 truncate text-[11px] text-muted-foreground lg:block">
+            All fields below belong to this term sheet.
           </span>
-          <TabsList className="h-auto shrink-0 flex-wrap">
+          <TabsList className="ml-auto h-auto shrink-0 flex-wrap">
             <TabsTrigger value="fill">Fill</TabsTrigger>
             <TabsTrigger value="view">View</TabsTrigger>
             <TabsTrigger value="xml">BDT XML</TabsTrigger>
