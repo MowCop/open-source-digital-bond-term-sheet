@@ -18,6 +18,7 @@ import { checkFix, checkKey, checkTarget, type CheckTarget } from '@/lib/checkAc
 import { toast } from 'sonner';
 import { listDealDocuments, DOCS_CHANGED } from '@/lib/dealDocuments';
 import { loadAudit, runDeepAudit, type AuditRun } from '@/lib/deepAudit';
+import { publishLiveChecks, toLiveChecks } from '@/lib/copilot/liveChecks';
 import { AI_MODELS, useAiModel } from '@/lib/aiModel';
 import { FIELDS } from '@/lib/termsheet/index.js';
 import { GLEIF_ACCESS_URL, GLEIF_SEARCH_URL, gleifCheck, lookupLeis, missingLeiCheck, searchLeiByName, type GleifRecord } from '@/lib/gleif';
@@ -202,6 +203,8 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
     return [...base, ...live, ...missing, ...figi, ...aiChecks] as CheckItem[];
   }, [state, refreshTick, leiParties, gleif, noLeiKey, matchCounts, figiRec, isin, storedDocs, aiChecks]);
   const ignoredSet = useMemo(() => new Set(ignored), [ignored]);
+  // Share the exact results the user sees with Deal Co-Pilot (read-only).
+  useEffect(() => { if (dealId) publishLiveChecks(dealId, toLiveChecks(checks, c => ignoredSet.has(checkKey(c)))); }, [dealId, checks, ignoredSet]);
   const active = useMemo(() => checks.filter(c => c.l !== 'warn' || !ignoredSet.has(checkKey(c))), [checks, ignoredSet]);
   const ignoredCount = checks.length - active.length;
   const tally = useMemo(() => tallyChecks(active), [active]);
