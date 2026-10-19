@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Loader2, RefreshCw, Shield, Sparkles, Wand2, X, XCircle,
+  AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Info, Loader2, RefreshCw, Shield, Sparkles, Wand2, X, XCircle,
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -260,6 +266,39 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
       <div className="flex flex-wrap items-center gap-2 px-3 py-3">
         <Shield className={`h-4 w-4 shrink-0 ${accent}`} />
         <span className="text-sm font-semibold uppercase tracking-wider">Deal Checker</span>
+        <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                role="img"
+                tabIndex={0}
+                aria-label="About Deal Checker"
+                className="inline-flex text-muted-foreground hover:text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+              >
+                <Info className="h-4 w-4" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[380px] whitespace-normal break-words space-y-2 text-left text-xs font-normal leading-relaxed">
+              <p>
+                <strong>Deal Checker</strong> runs a fixed list of written rules over
+                this term sheet: every mandatory term present, dates and coupon maths
+                consistent, and identifier formats valid — with LEI and FIGI confirmed
+                against their official registers. The same terms always give the same
+                answer, instantly, and every result is reproducible for audit.
+              </p>
+              <p>
+                It measures whether the term sheet is <strong>complete and
+                well-formed</strong>, and can say a term sheet is wrong. The Deal
+                Co-Pilot is separate: an AI second opinion on whether the terms match
+                what your documents actually say, which can only warn, never decide.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         {gleifBusy && (
           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
             <Loader2 className="h-3 w-3 animate-spin" /> Checking GLEIF…
