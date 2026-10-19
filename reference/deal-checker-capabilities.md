@@ -94,3 +94,6 @@ Checks update live as terms are typed, stages advance, or documents are uploaded
 | OpenFIGI & global reporting | `api.openfigi.com` + ESMA RTS 23 / MiFIR / EMIR / SFTR, FINRA TRACE | Security identifiers and cross-border reporting requirements. |
 | Central bank & ICSD calendars | TARGET2 (ECB), London (BoE), US Federal Reserve schedules through 2027 | Business-day settlement and coupon date integrity. |
 | Deal-specific vault documents | Offering circulars, term sheets, prospectuses, supplements in the deal repository | Parsed by Claude models to suggest terms, propose citations and feed "Try to Fix". |
+
+## Co-Pilot checker remediation (after every save)
+After a term-sheet save, the Co-Pilot waits for the Deal Checker to recalculate, then its automatic review works through every open fail/warning (ignored warnings skipped). Each finding is reported as "correction proposed" (only when an evidenced, verbatim-quoted term correction survived the evidence guard) or "needs human input". Proposals still require term-editor approval with stale-value checks; nothing is saved automatically. Live pass/warning/fail counts show in the Co-Pilot panel header. Code: src/lib/copilot/liveChecks.ts (waitForFreshChecks), supabase/functions/deal-copilot/domain/remediation.ts.
