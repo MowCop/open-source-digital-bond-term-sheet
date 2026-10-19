@@ -278,6 +278,20 @@ export default function DealCopilot({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingAsk, thread, busy]);
+  /** The header chat box: opens the panel and sends, queueing until the thread exists. */
+  const send = (raw: string) => {
+    const message = raw.trim();
+    if (!message || busy) return;
+    setOpen(true);
+    setText("");
+    if (!thread) {
+      setPendingAsk(message);
+      return;
+    }
+    void perform(async () => {
+      await callCopilot(thread, "chat", message, getLiveChecks(deal.id));
+    });
+  };
   const decide = (id: string, approve: boolean) =>
     perform(async () => {
       if (approve && hasUnsavedTerms)
@@ -434,40 +448,6 @@ export default function DealCopilot({
                 </div>
               ))}
             </div>
-            <form
-              id={`copilot-chat-${deal.id}`}
-              className="space-y-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!thread || !text.trim()) return;
-                const value = text;
-                void perform(async () => {
-                  await callCopilot(thread, "chat", value, getLiveChecks(deal.id));
-                  setText("");
-                });
-              }}
-            >
-              <Textarea
-                aria-label="Message Deal Co-Pilot"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                maxLength={12000}
-                placeholder="Ask about this deal…"
-              />
-              <Button
-                type="submit"
-                size="sm"
-                disabled={!thread || busy || !text.trim()}
-              >
-                {busy ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="mr-2 h-4 w-4" />
-                )}
-                Send
-              </Button>
-            </form>
-          </section>
           <section className="min-w-0 space-y-3">
             <h4 className="text-sm font-semibold">Proposed corrections</h4>
             {!changes.length && (
