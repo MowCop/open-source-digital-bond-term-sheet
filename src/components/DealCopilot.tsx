@@ -329,59 +329,102 @@ export default function DealCopilot({
       onOpenChange={setOpen}
       className="space-y-3 rounded-md border border-border p-3"
     >
-      <CollapsibleTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start gap-2 px-3">
-          <Bot className="h-4 w-4 text-primary" />
-          <span className="font-semibold">Deal Co-Pilot</span>
-          <TooltipProvider delayDuration={150}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span
-                  role="img"
-                  tabIndex={0}
-                  aria-label="About Deal Co-Pilot"
-                  className="inline-flex text-muted-foreground hover:text-foreground"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}
-                >
-                  <Info className="h-4 w-4" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[360px] whitespace-normal break-words space-y-2 text-left text-xs font-normal leading-relaxed">
-                <p>
-                  <strong>Deal Co-Pilot</strong> reviews this deal's saved term
-                  sheet and uploaded documents, answers questions, and proposes
-                  evidenced corrections. Only people with term-edit rights can
-                  approve changes, and nothing is sent externally.
-                </p>
-                <p>
-                  The <strong>Deal Checker</strong> lights sit inside this panel.
-                  Click <strong>Ask Co-Pilot</strong> on any warning or fail for
-                  an explanation and an evidenced fix to approve.
-                </p>
-                <p>It works with four specialists. Ask by name in the chat:</p>
-                <ul className="list-disc space-y-1 pl-4">
-                  <li><strong>Compliance &amp; Regulatory</strong>: "Run a compliance review"</li>
-                  <li><strong>Pricing &amp; Benchmark</strong>: "Check the pricing and settlement date"</li>
-                  <li><strong>ESG &amp; Sustainable Finance</strong>: "Review the ESG disclosures"</li>
-                  <li><strong>Syndicate Communications</strong>: "Draft the investor bulletin" (drafts are never sent)</li>
-                </ul>
-                <p>
-                  Say "Run the full specialist panel" to get all four at once.
-                  They also run automatically when you save terms or upload a
-                  document.
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <span className="ml-auto text-xs font-normal text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            className="h-8 shrink-0 gap-2 px-2 text-sm hover:bg-transparent"
+          >
+            <Bot className="h-4 w-4 shrink-0 text-primary" />
+            <span className="font-semibold">Deal Co-Pilot</span>
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    role="img"
+                    tabIndex={0}
+                    aria-label="About Deal Co-Pilot"
+                    className="inline-flex text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                  >
+                    <Info className="h-4 w-4" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[360px] whitespace-normal break-words space-y-2 text-left text-xs font-normal leading-relaxed">
+                  <p>
+                    <strong>Deal Co-Pilot</strong> reviews this deal's saved term
+                    sheet and uploaded documents, answers questions, and proposes
+                    evidenced corrections. Only people with term-edit rights can
+                    approve changes, and nothing is sent externally.
+                  </p>
+                  <p>
+                    The <strong>Deal Checker</strong> lights sit inside this panel.
+                    Click <strong>Ask Co-Pilot</strong> on any warning or fail for
+                    an explanation and an evidenced fix to approve.
+                  </p>
+                  <p>It works with four specialists. Ask by name in the chat:</p>
+                  <ul className="list-disc space-y-1 pl-4">
+                    <li><strong>Compliance &amp; Regulatory</strong>: "Run a compliance review"</li>
+                    <li><strong>Pricing &amp; Benchmark</strong>: "Check the pricing and settlement date"</li>
+                    <li><strong>ESG &amp; Sustainable Finance</strong>: "Review the ESG disclosures"</li>
+                    <li><strong>Syndicate Communications</strong>: "Draft the investor bulletin" (drafts are never sent)</li>
+                  </ul>
+                  <p>
+                    Say "Run the full specialist panel" to get all four at once.
+                    They also run automatically when you save terms or upload a
+                    document.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </Button>
+        </CollapsibleTrigger>
+        <form
+          id={`copilot-chat-${deal.id}`}
+          className="flex min-w-[12rem] flex-1 items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send(text);
+          }}
+        >
+          <Textarea
+            aria-label="Message Deal Co-Pilot"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={12000}
+            rows={1}
+            placeholder="Ask about this deal…"
+            className="h-9 max-h-28 min-h-0 flex-1 resize-none py-2 text-sm"
+          />
+          <Button
+            type="submit"
+            size="sm"
+            className="h-9 shrink-0"
+            disabled={busy || !text.trim()}
+          >
+            {busy ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="mr-2 h-4 w-4" />
+            )}
+            Send
+          </Button>
+        </form>
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            className="h-8 shrink-0 gap-2 px-2 text-xs font-normal text-muted-foreground"
+          >
             {open ? "Hide chat & reviews" : "Chat, corrections & reviews"}
-          </span>
-          <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
-        </Button>
-      </CollapsibleTrigger>
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+            />
+          </Button>
+        </CollapsibleTrigger>
+      </div>
       {checker}
       <CollapsibleContent className="space-y-5 pt-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -448,6 +491,7 @@ export default function DealCopilot({
                 </div>
               ))}
             </div>
+          </section>
           <section className="min-w-0 space-y-3">
             <h4 className="text-sm font-semibold">Proposed corrections</h4>
             {!changes.length && (
