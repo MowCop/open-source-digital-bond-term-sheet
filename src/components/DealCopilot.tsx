@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getLiveChecks } from "@/lib/copilot/liveChecks";
 import {
   Bot,
   Check,
@@ -403,7 +404,7 @@ export default function DealCopilot({
                 if (!thread || !text.trim()) return;
                 const value = text;
                 void perform(async () => {
-                  await callCopilot(thread, "chat", value);
+                  await callCopilot(thread, "chat", value, getLiveChecks(deal.id));
                   setText("");
                 });
               }}
