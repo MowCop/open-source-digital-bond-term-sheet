@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { COPILOT_ASK, getLiveChecks, type CopilotAsk } from "@/lib/copilot/liveChecks";
+import { COPILOT_ASK, getLiveChecks, onLiveChecks, tally, type CopilotAsk } from "@/lib/copilot/liveChecks";
 import {
   Bot,
   Check,
@@ -148,6 +148,7 @@ type Report = {
   comparison?: { comparedAt: string };
   specialists?: SpecialistReport[];
   dealChecker?: { tally: { pass: number; warn: number; fail: number }; capturedAt: string };
+  checkerFindings?: { check: string; level: 'warn' | 'fail'; resolution: 'proposed' | 'needs_input'; field?: string; note?: string }[];
 };
 type Run = {
   id: string;
@@ -178,6 +179,8 @@ export default function DealCopilot({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
+  const [lights, setLights] = useState(() => tally(getLiveChecks(deal.id)));
+  useEffect(() => onLiveChecks((id) => { if (id === deal.id) setLights(tally(getLiveChecks(id))); }), [deal.id]);
   const input = useRef<HTMLInputElement>(null);
   const refresh = useCallback(
     async (id: string) => {
@@ -380,6 +383,11 @@ export default function DealCopilot({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            <span className="ml-1 flex items-center gap-1 text-[11px] font-normal" aria-label="Deal Checker results" title="Live Deal Checker results (ignored warnings excluded)">
+              <span className="rounded bg-success/15 px-1.5 text-success">{lights.pass}</span>
+              <span className="rounded bg-warning/15 px-1.5 text-warning">{lights.warn}</span>
+              <span className="rounded bg-destructive/15 px-1.5 text-destructive">{lights.fail}</span>
+            </span>
           </Button>
         </CollapsibleTrigger>
         <form
@@ -616,6 +624,21 @@ export default function DealCopilot({
                     <p className="text-xs text-muted-foreground">
                       Deal Checker at review: {r.report.dealChecker.tally.pass} pass · {r.report.dealChecker.tally.warn} warning · {r.report.dealChecker.tally.fail} fail
                     </p>
+                  )}
+                  {r.report.checkerFindings && r.report.checkerFindings.length > 0 && (
+                    <div className="space-y-1 text-xs">
+                      <p className="font-medium">
+                        Checker findings: {r.report.checkerFindings.filter(f => f.resolution === "proposed").length} fixes proposed, {r.report.checkerFindings.filter(f => f.resolution === "needs_input").length} need human input
+                      </p>
+                      <ul className="space-y-0.5">
+                        {r.report.checkerFindings.map((f, i) => (
+                          <li key={i} className="break-words">
+                            <span className={f.level === "fail" ? "text-destructive" : "text-warning"}>{f.level === "fail" ? "Fail" : "Warning"}</span>{" "}
+                            {f.check} — {f.resolution === "proposed" ? <span className="text-primary">correction proposed for {f.field} (awaiting approval)</span> : <span className="text-muted-foreground">{f.note}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                   <p className="text-xs text-muted-foreground">
                     Compared{" "}
