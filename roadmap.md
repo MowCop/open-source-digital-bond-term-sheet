@@ -37,3 +37,4 @@
 
 - [x] Co-Pilot reads all Deal Checker resources (live checks, GLEIF, OpenFIGI, calendars, ICMA/BDT library)
 - [x] Merge Deal Checker into Co-Pilot (checker inside the panel, Ask Co-Pilot per check, checker snapshot on automatic reviews)
+- [x] Co-Pilot works the checker list after every save (fresh results, per-finding proposed / needs input, header counts)
