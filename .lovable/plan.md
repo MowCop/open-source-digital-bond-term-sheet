@@ -1,16 +1,21 @@
-# Where to find the AI Agent (Deal Co-Pilot)
+# Add an info icon next to "Deal Co-Pilot"
 
-No changes needed. It's already in the app. Follow these steps:
+## What you'll see
+A small "i" icon right after the **Deal Co-Pilot** title in each deal. Hovering it (or focusing it with the keyboard) shows a short explanation:
 
-1. Sign in to the app.
-2. In the left-hand menu, click **Digital Term Sheet**.
-3. Click a deal in the list to open it, for example "Al Rajhi Bank".
-4. Scroll down past the term sheet tabs (Fill, View, BDT XML, DLT view, Documents).
-5. Below the term sheet you'll see the **Deal Co-Pilot** panel, just above Stage History.
-6. Type a question in the **"Ask about this deal…"** box and press send.
-7. When the Co-Pilot proposes a change, you'll see Approve and Reject buttons. Only people with term-edit rights see these.
-8. If its reviews have paused or failed, click **Resume reviews**.
+> **Deal Co-Pilot** reviews this deal's saved term sheet and uploaded documents, answers questions, and proposes evidenced corrections. Only people with term-edit rights can approve changes, and nothing is sent externally.
+>
+> It works with four specialists. Ask by name in the chat:
+> - **Compliance & Regulatory**: "Run a compliance review"
+> - **Pricing & Benchmark**: "Check the pricing and settlement date"
+> - **ESG & Sustainable Finance**: "Review the ESG disclosures"
+> - **Syndicate Communications**: "Draft the investor bulletin" (drafts are never sent)
+>
+> Say "Run the full specialist panel" to get all four at once. They also run automatically when you save terms or upload a document.
 
-Tip: when you drop a document on the deal or save the term sheet, the Co-Pilot reviews it automatically.
+Hovering the icon won't open or close the panel.
 
-Optional follow-up, only if you ask for it: add a "Co-Pilot" shortcut button at the top of each deal so you don't have to scroll.
+## Technical details
+- File: `src/components/DealCopilot.tsx` only.
+- Use the existing shadcn `Tooltip` with lucide `Info` inside the collapsible trigger. Call `stopPropagation` on click so the panel doesn't toggle, and give the icon `aria-label="About Deal Co-Pilot"`.
+- Use semantic tokens only, with a max width of about 360px.
