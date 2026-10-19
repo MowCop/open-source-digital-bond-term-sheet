@@ -342,6 +342,11 @@ export default function DealCopilot({
                   evidenced corrections. Only people with term-edit rights can
                   approve changes, and nothing is sent externally.
                 </p>
+                <p>
+                  The <strong>Deal Checker</strong> lights sit inside this panel.
+                  Click <strong>Ask Co-Pilot</strong> on any warning or fail for
+                  an explanation and an evidenced fix to approve.
+                </p>
                 <p>It works with four specialists. Ask by name in the chat:</p>
                 <ul className="list-disc space-y-1 pl-4">
                   <li><strong>Compliance &amp; Regulatory</strong>: "Run a compliance review"</li>
