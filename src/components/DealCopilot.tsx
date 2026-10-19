@@ -306,7 +306,7 @@ export default function DealCopilot({
                   <Info className="h-4 w-4" />
                 </span>
               </TooltipTrigger>
-              <TooltipContent className="max-w-[360px] space-y-2 text-left text-xs font-normal leading-relaxed">
+              <TooltipContent className="max-w-[360px] whitespace-normal break-words space-y-2 text-left text-xs font-normal leading-relaxed">
                 <p>
                   <strong>Deal Co-Pilot</strong> reviews this deal's saved term
                   sheet and uploaded documents, answers questions, and proposes
