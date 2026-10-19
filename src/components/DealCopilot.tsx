@@ -9,7 +9,14 @@ import {
   Loader2,
   FileSearch,
   ChevronDown,
+  Info,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -283,6 +290,44 @@ export default function DealCopilot({
         <Button variant="ghost" className="w-full justify-start gap-2 px-3">
           <Bot className="h-4 w-4 text-primary" />
           <span className="font-semibold">Deal Co-Pilot</span>
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  role="img"
+                  tabIndex={0}
+                  aria-label="About Deal Co-Pilot"
+                  className="inline-flex text-muted-foreground hover:text-foreground"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                >
+                  <Info className="h-4 w-4" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[360px] space-y-2 text-left text-xs font-normal leading-relaxed">
+                <p>
+                  <strong>Deal Co-Pilot</strong> reviews this deal's saved term
+                  sheet and uploaded documents, answers questions, and proposes
+                  evidenced corrections. Only people with term-edit rights can
+                  approve changes, and nothing is sent externally.
+                </p>
+                <p>It works with four specialists. Ask by name in the chat:</p>
+                <ul className="list-disc space-y-1 pl-4">
+                  <li><strong>Compliance &amp; Regulatory</strong>: "Run a compliance review"</li>
+                  <li><strong>Pricing &amp; Benchmark</strong>: "Check the pricing and settlement date"</li>
+                  <li><strong>ESG &amp; Sustainable Finance</strong>: "Review the ESG disclosures"</li>
+                  <li><strong>Syndicate Communications</strong>: "Draft the investor bulletin" (drafts are never sent)</li>
+                </ul>
+                <p>
+                  Say "Run the full specialist panel" to get all four at once.
+                  They also run automatically when you save terms or upload a
+                  document.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <ChevronDown className="ml-auto h-4 w-4" />
         </Button>
       </CollapsibleTrigger>
