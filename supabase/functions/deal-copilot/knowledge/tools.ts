@@ -99,7 +99,7 @@ export async function lookupFigi(input: { isin: string }) {
   const isin = String(input.isin ?? '').trim().toUpperCase();
   if (!/^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(isin)) throw new Error('ISIN must be 12 characters');
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  const key = Deno.env.get('OPENFIGI_API_KEY'); if (key) headers['X-OPENFIGI-APIKEY'] = key;
+  const key = (globalThis as any).Deno?.env.get('OPENFIGI_API_KEY'); if (key) headers['X-OPENFIGI-APIKEY'] = key;
   try {
     const r = await fetch('https://api.openfigi.com/v3/mapping', { method: 'POST', headers, signal: AbortSignal.timeout(8000),
       body: JSON.stringify([{ idType: 'ID_ISIN', idValue: isin }]) });
