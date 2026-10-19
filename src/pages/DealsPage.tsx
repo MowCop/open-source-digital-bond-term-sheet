@@ -114,12 +114,18 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         </div>
       )}
 
-      <UnifiedDealChecker
-        state={checkerState}
-        dealId={deal.id}
-        onNavigate={t => { setTab('fill'); setTimeout(() => fillRef.current?.focusTarget(t), 30); }}
-        onFix={fn => { setTab('fill'); return fillRef.current?.applyFix(fn) ?? false; }}
-        onDocFix={c => { setTab('fill'); return fillRef.current?.fixFromDocument(c) ?? []; }}
+      <DealCopilot
+        deal={deal}
+        hasUnsavedTerms={hasUnsavedTerms}
+        checker={
+          <UnifiedDealChecker
+            state={checkerState}
+            dealId={deal.id}
+            onNavigate={t => { setTab('fill'); setTimeout(() => fillRef.current?.focusTarget(t), 30); }}
+            onFix={fn => { setTab('fill'); return fillRef.current?.applyFix(fn) ?? false; }}
+            onDocFix={c => { setTab('fill'); return fillRef.current?.fixFromDocument(c) ?? []; }}
+          />
+        }
       />
 
       <Tabs value={tab} onValueChange={setTab}>
@@ -225,7 +231,6 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         </TabsContent>
       </Tabs>
 
-      <DealCopilot deal={deal} hasUnsavedTerms={hasUnsavedTerms} />
 
       {/* Stage History */}
       <div className="space-y-2">

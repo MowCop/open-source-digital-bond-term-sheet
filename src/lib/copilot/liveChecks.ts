@@ -15,3 +15,14 @@ export function toLiveChecks(checks: CheckItem[], isIgnored: (c: CheckItem) => b
 }
 export const publishLiveChecks = (dealId: string, checks: LiveCheck[]) => { store.set(dealId, checks); };
 export const getLiveChecks = (dealId: string): LiveCheck[] | undefined => store.get(dealId);
+
+/** Ask Deal Co-Pilot about one check; DealCopilot listens, opens and sends it as a chat turn. */
+export const COPILOT_ASK = 'vdr:copilot-ask';
+export type CopilotAsk = { dealId: string; text: string };
+export function askText(c: Pick<CheckItem, 'l' | 't' | 'd' | 'src'>): string {
+  const level = c.l === 'fail' ? 'fail' : 'warning';
+  return `Explain this Deal Checker ${level} and how to resolve it: "${c.t}"${c.d ? ` (${c.d.slice(0, 600)})` : ''} [source: ${c.src ?? 'bdt'}]. Use the Deal Checker tools and deal documents; if the evidence supports a specific value, propose it as a correction for term-editor approval, otherwise say what evidence is missing.`;
+}
+export function askCopilot(dealId: string, c: Pick<CheckItem, 'l' | 't' | 'd' | 'src'>) {
+  window.dispatchEvent(new CustomEvent<CopilotAsk>(COPILOT_ASK, { detail: { dealId, text: askText(c) } }));
+}

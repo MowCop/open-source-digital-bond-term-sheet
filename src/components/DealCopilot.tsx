@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { getLiveChecks } from "@/lib/copilot/liveChecks";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { COPILOT_ASK, getLiveChecks, type CopilotAsk } from "@/lib/copilot/liveChecks";
 import {
   Bot,
   Check,
@@ -147,6 +147,7 @@ type Report = {
   deterministic?: { message: string; field: string }[];
   comparison?: { comparedAt: string };
   specialists?: SpecialistReport[];
+  dealChecker?: { tally: { pass: number; warn: number; fail: number }; capturedAt: string };
 };
 type Run = {
   id: string;
@@ -160,9 +161,12 @@ type Run = {
 export default function DealCopilot({
   deal,
   hasUnsavedTerms,
+  checker,
 }: {
   deal: Deal;
   hasUnsavedTerms: boolean;
+  /** The Deal Checker, rendered inside the Co-Pilot panel and always visible. */
+  checker?: ReactNode;
 }) {
   const [thread, setThread] = useState<string>();
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -250,6 +254,30 @@ export default function DealCopilot({
       setBusy(false);
     }
   };
+  // "Ask Co-Pilot" on a Deal Checker row: open the chat and send once the thread is ready.
+  const [pendingAsk, setPendingAsk] = useState<string>();
+  useEffect(() => {
+    const h = (e: Event) => {
+      const d = (e as CustomEvent<CopilotAsk>).detail;
+      if (d?.dealId !== deal.id) return;
+      setOpen(true);
+      setPendingAsk(d.text);
+    };
+    window.addEventListener(COPILOT_ASK, h);
+    return () => window.removeEventListener(COPILOT_ASK, h);
+  }, [deal.id]);
+  useEffect(() => {
+    if (!pendingAsk || !thread || busy) return;
+    const value = pendingAsk;
+    setPendingAsk(undefined);
+    setText(value);
+    setTimeout(() => document.getElementById(`copilot-chat-${deal.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+    void perform(async () => {
+      await callCopilot(thread, "chat", value, getLiveChecks(deal.id));
+      setText("");
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingAsk, thread, busy]);
   const decide = (id: string, approve: boolean) =>
     perform(async () => {
       if (approve && hasUnsavedTerms)
@@ -285,7 +313,7 @@ export default function DealCopilot({
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className="border-t border-border pt-3"
+      className="space-y-3 rounded-md border border-border p-3"
     >
       <CollapsibleTrigger asChild>
         <Button variant="ghost" className="w-full justify-start gap-2 px-3">
@@ -314,6 +342,11 @@ export default function DealCopilot({
                   evidenced corrections. Only people with term-edit rights can
                   approve changes, and nothing is sent externally.
                 </p>
+                <p>
+                  The <strong>Deal Checker</strong> lights sit inside this panel.
+                  Click <strong>Ask Co-Pilot</strong> on any warning or fail for
+                  an explanation and an evidenced fix to approve.
+                </p>
                 <p>It works with four specialists. Ask by name in the chat:</p>
                 <ul className="list-disc space-y-1 pl-4">
                   <li><strong>Compliance &amp; Regulatory</strong>: "Run a compliance review"</li>
@@ -329,9 +362,13 @@ export default function DealCopilot({
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <ChevronDown className="ml-auto h-4 w-4" />
+          <span className="ml-auto text-xs font-normal text-muted-foreground">
+            {open ? "Hide chat & reviews" : "Chat, corrections & reviews"}
+          </span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
         </Button>
       </CollapsibleTrigger>
+      {checker}
       <CollapsibleContent className="space-y-5 pt-3">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">Saved terms · Human approval</Badge>
@@ -398,6 +435,7 @@ export default function DealCopilot({
               ))}
             </div>
             <form
+              id={`copilot-chat-${deal.id}`}
               className="space-y-2"
               onSubmit={(e) => {
                 e.preventDefault();
@@ -550,6 +588,11 @@ export default function DealCopilot({
                   <p className="text-sm whitespace-pre-wrap break-words">
                     {r.report.summary}
                   </p>
+                  {r.report.dealChecker && (
+                    <p className="text-xs text-muted-foreground">
+                      Deal Checker at review: {r.report.dealChecker.tally.pass} pass · {r.report.dealChecker.tally.warn} warning · {r.report.dealChecker.tally.fail} fail
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     Compared{" "}
                     {r.report.comparison?.comparedAt

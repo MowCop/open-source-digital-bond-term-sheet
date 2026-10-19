@@ -127,7 +127,10 @@ interface AppContextType {
   deleteDistributionList: (id: string) => void;
 }
 
-const AppContext = createContext<AppContextType | null>(null);
+// Keep one context object across hot reloads (same pattern as AuthContext), so a
+// re-evaluated module never leaves consumers reading a context the provider doesn't supply.
+const appGlobal = globalThis as typeof globalThis & { __vdrAppContext?: React.Context<AppContextType | null> };
+const AppContext = appGlobal.__vdrAppContext ?? (appGlobal.__vdrAppContext = createContext<AppContextType | null>(null));
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = usePersistedState<User>('bondvdr.currentUser', mockUsers[0]);
