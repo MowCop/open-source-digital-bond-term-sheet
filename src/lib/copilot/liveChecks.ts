@@ -13,7 +13,27 @@ export function toLiveChecks(checks: CheckItem[], isIgnored: (c: CheckItem) => b
     ...(c.l === 'warn' && isIgnored(c) ? { ignored: true } : {}),
   }));
 }
-export const publishLiveChecks = (dealId: string, checks: LiveCheck[]) => { store.set(dealId, checks); };
+const versions = new Map<string, number>();
+const listeners = new Set<(dealId: string) => void>();
+export const publishLiveChecks = (dealId: string, checks: LiveCheck[]) => {
+  store.set(dealId, checks);
+  versions.set(dealId, (versions.get(dealId) ?? 0) + 1);
+  listeners.forEach((f) => f(dealId));
+};
+export const liveChecksVersion = (dealId: string) => versions.get(dealId) ?? 0;
+export function onLiveChecks(f: (dealId: string) => void) { listeners.add(f); return () => { listeners.delete(f); }; }
+/** Resolve with checker results published after `since` (post-save recalculation); falls back to the latest after `ms`. */
+export function waitForFreshChecks(dealId: string, since: number, ms = 1500): Promise<{ checks?: LiveCheck[]; fresh: boolean }> {
+  if (liveChecksVersion(dealId) > since) return Promise.resolve({ checks: store.get(dealId), fresh: true });
+  return new Promise((resolve) => {
+    const off = onLiveChecks((id) => { if (id === dealId && liveChecksVersion(id) > since) { off(); clearTimeout(t); resolve({ checks: store.get(id), fresh: true }); } });
+    const t = setTimeout(() => { off(); resolve({ checks: store.get(dealId), fresh: false }); }, ms);
+  });
+}
+export function tally(checks: LiveCheck[] = []) {
+  const open = checks.filter((c) => !c.ignored);
+  return { pass: open.filter((c) => c.l === 'pass').length, warn: open.filter((c) => c.l === 'warn').length, fail: open.filter((c) => c.l === 'fail').length };
+}
 export const getLiveChecks = (dealId: string): LiveCheck[] | undefined => store.get(dealId);
 
 /** Ask Deal Co-Pilot about one check; DealCopilot listens, opens and sends it as a chat turn. */
