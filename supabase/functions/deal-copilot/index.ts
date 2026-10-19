@@ -10,7 +10,7 @@ import { runSpecialistPanel } from './specialists.ts';
 import { AiFailure, chatAgent } from './agent.ts';
 import type { DealHost } from './domain/host.ts';
 
-const schema=z.object({ action:z.enum(['chat','process','resume']), threadId:z.string().uuid(), message:z.string().trim().min(1).max(12000).optional(), model:z.string().optional() });
+const schema=z.object({ action:z.enum(['chat','process','resume']), threadId:z.string().uuid(), message:z.string().trim().min(1).max(12000).optional(), model:z.string().optional(), liveChecks:z.array(z.object({l:z.enum(['pass','warn','fail']),t:z.string().max(300),d:z.string().max(600).optional(),src:z.string().max(20).optional(),ignored:z.boolean().optional()})).max(120).optional() });
 const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...corsHeaders,'Content-Type':'application/json'}});
 
 Deno.serve(async(req)=>{
@@ -23,7 +23,7 @@ Deno.serve(async(req)=>{
     const userClient=createClient(Deno.env.get('SUPABASE_URL')??'',Deno.env.get('SUPABASE_ANON_KEY')??'',{global:{headers:{Authorization:authorization}},auth:{persistSession:false,autoRefreshToken:false}});
     const {data:auth,error:authError}=await userClient.auth.getUser(authorization.replace(/^Bearer /,''));
     if(authError||!auth.user) return json({message:'Sign in to use Co-Pilot'},401);
-    const raw=await req.text(); if(raw.length>20000) return json({message:'Request too large'},400);
+    const raw=await req.text(); if(raw.length>120000) return json({message:'Request too large'},400);
     let input; try { input=schema.safeParse(JSON.parse(raw)); } catch { return json({message:'Invalid request'},400); }
     if(!input.success) return json({message:'Invalid request'},400);
     const {threadId,action}=input.data; const model=pickModel(input.data.model);
@@ -47,7 +47,7 @@ Deno.serve(async(req)=>{
       const rows=await must(userClient.from('copilot_messages').select('role,body').eq('thread_id',threadId).order('created_at',{ascending:false}).limit(30));
       rows.reverse(); const turn={role:'user',body:input.data.message};
       await must(admin.from('copilot_messages').insert({...turn,thread_id:threadId,created_by:auth.user.id}));
-      const answer=await chatAgent(host,[...rows,turn],model);
+      const answer=await chatAgent(host,[...rows,turn],model,input.data.liveChecks);
       await must(admin.from('copilot_messages').insert({thread_id:threadId,role:'assistant',body:answer}));
       return json({answer});
     }
