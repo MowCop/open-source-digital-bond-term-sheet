@@ -71,6 +71,7 @@ Checks update live as terms are typed, stages advance, or documents are uploaded
 - Conversations, dated reports and corrections persist per VDR deal. Deal members use the agent; only server-authorized term editors decide changes, with stale-original checks. Agents never approve.
 - Event-driven durable jobs, expiring leases, single-flight, superseded-result protection, explicit failed/paused resumption and global provider-credit/access blocks. No scheduled watcher. Historical source workspace records require export/import.
 - Programme-ceiling quotations are withheld from tranche-size corrections; a programme maximum is not this bond's issuance amount.
+- **Shared Deal Checker resources:** the coordinator and specialists can read the live checker results the user sees (incl. ignored flags, GLEIF/OpenFIGI, ESG, Deep Audit items), query GLEIF and OpenFIGI live, check dates against the same TARGET2/London/US tables (2024–2027) and search the bundled library (ICMA Appendix A8, BDT v2.0 XSD/enums/types/example, this reference). Compliance: checker results, GLEIF, OpenFIGI, library; Pricing: checker results, calendars, library; ESG and Communications: checker results, library. No sanctions feed. Registry suggestions are never auto-applied. Automatic (save/upload) reviews don't receive browser checker results.
 - Explicit coupon percentages (including “per annum”) are normalized to numeric Fill values while preserving the verbatim evidence quote.
 
 ## New Issue Board update checker
