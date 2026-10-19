@@ -34,3 +34,6 @@
 - [x] Al Rajhi demo deal: library files, demo deal setup, chat replay, stage snapshots
 - [x] Bond Console > Vendor & Market Data Connectors: "Public Market Data" and "Central Bank News" each collapsible (chevron, starts open).
 - [x] Deal Co-Pilot specialists: ported the four workshop specialists (Compliance, Pricing, ESG, Communications) into deal-copilot; chat delegation tools, sequential panel on save/upload reviews, report JSON v2, unvalidated XML draft download.
+
+- [x] Co-Pilot reads all Deal Checker resources (live checks, GLEIF, OpenFIGI, calendars, ICMA/BDT library)
+- [ ] Merge Deal Checker into Co-Pilot as the primary due-diligence surface (next step: design the merged UI)

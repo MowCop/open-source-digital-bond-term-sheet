@@ -22,4 +22,5 @@
 - App MCP (src/lib/mcp/) is read-only, querying as the OAuth caller so RLS decides visibility.
 
 - Board audits use boardUpdateAudit (board_update scope), separate from saved checks.
-- Co-Pilot uses src/lib/copilot and deal-copilot Cloud function; durable jobs and atomic human decisions enforce membership, term-edit rights and stale values — AI never approves. The coordinator delegates to four specialists (compliance, pricing, ESG, communications) via specialists.ts; panels run on save/upload and persist in report JSON v2 — drafts never sent, communications XML stays an unvalidated draft.
+- Co-Pilot uses src/lib/copilot and the deal-copilot Cloud function; human term editors alone approve, with atomic stale-value checks — AI never approves.
+- Subdirectories may have their own AGENTS.md (e.g. supabase/functions/deal-copilot/); read it before changing files there.
