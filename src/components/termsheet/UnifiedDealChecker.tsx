@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Info, Loader2, RefreshCw, Shield, Sparkles, Wand2, X, XCircle,
+  AlertTriangle, Bot, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Info, Loader2, RefreshCw, Shield, Sparkles, Wand2, X, XCircle,
 } from 'lucide-react';
 import {
   Tooltip,
@@ -18,7 +18,7 @@ import { checkFix, checkKey, checkTarget, type CheckTarget } from '@/lib/checkAc
 import { toast } from 'sonner';
 import { listDealDocuments, DOCS_CHANGED } from '@/lib/dealDocuments';
 import { loadAudit, runDeepAudit, type AuditRun } from '@/lib/deepAudit';
-import { publishLiveChecks, toLiveChecks } from '@/lib/copilot/liveChecks';
+import { askCopilot, publishLiveChecks, toLiveChecks } from '@/lib/copilot/liveChecks';
 import { AI_MODELS, useAiModel } from '@/lib/aiModel';
 import { FIELDS } from '@/lib/termsheet/index.js';
 import { GLEIF_ACCESS_URL, GLEIF_SEARCH_URL, gleifCheck, lookupLeis, missingLeiCheck, searchLeiByName, type GleifRecord } from '@/lib/gleif';
@@ -446,6 +446,9 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
                       <Button type="button" size="sm" variant="outline" className="h-6 shrink-0 gap-1 px-2 text-[11px]" onClick={() => tryFix(check)} title={check.src === 'ai' ? (check.ai?.docValue ? `Set to "${check.ai.docValue}"` : 'Open the field to review') : checkFix(check, state)?.label ?? 'Open the field to fix it'}>
                         <Wand2 className="h-3 w-3" /> Try to fix
                       </Button>
+                      {dealId && <Button type="button" size="sm" variant="outline" className="h-6 shrink-0 gap-1 px-2 text-[11px]" title="Ask Deal Co-Pilot to explain this and propose an evidenced fix for approval" onClick={() => askCopilot(dealId, check)}>
+                        <Bot className="h-3 w-3" /> Ask Co-Pilot
+                      </Button>}
                       {check.l === 'warn' && <Button type="button" size="icon" variant="ghost" className="h-6 w-6 shrink-0" aria-label="Ignore this warning" title="Ignore this warning" onClick={() => saveIgnored([...ignored, checkKey(check)])}>
                         <X className="h-3.5 w-3.5" />
                       </Button>}
