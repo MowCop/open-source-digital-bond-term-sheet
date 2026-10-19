@@ -36,4 +36,4 @@
 - [x] Deal Co-Pilot specialists: ported the four workshop specialists (Compliance, Pricing, ESG, Communications) into deal-copilot; chat delegation tools, sequential panel on save/upload reviews, report JSON v2, unvalidated XML draft download.
 
 - [x] Co-Pilot reads all Deal Checker resources (live checks, GLEIF, OpenFIGI, calendars, ICMA/BDT library)
-- [ ] Merge Deal Checker into Co-Pilot as the primary due-diligence surface (next step: design the merged UI)
+- [x] Merge Deal Checker into Co-Pilot (checker inside the panel, Ask Co-Pilot per check, checker snapshot on automatic reviews)
