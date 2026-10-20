@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useAiModel } from '@/lib/aiModel';
 import AiModelPicker from '@/components/AiModelPicker';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -94,6 +95,8 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
   useEffect(() => {
     setCheckerState(dealToBdtState(deal));
   }, [deal.id, deal.bdtState]);
+  const [copilotSlot, setCopilotSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => { setCopilotSlot(document.getElementById('copilot-slot')); }, []);
 
   return (
     <div className="border-t p-5 bg-card/40 space-y-6">
@@ -114,19 +117,20 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         </div>
       )}
 
-      <DealCopilot
-        deal={deal}
-        hasUnsavedTerms={hasUnsavedTerms}
-        checker={
-          <UnifiedDealChecker
-            state={checkerState}
-            dealId={deal.id}
-            onNavigate={t => { setTab('fill'); setTimeout(() => fillRef.current?.focusTarget(t), 30); }}
-            onFix={fn => { setTab('fill'); return fillRef.current?.applyFix(fn) ?? false; }}
-            onDocFix={c => { setTab('fill'); return fillRef.current?.fixFromDocument(c) ?? []; }}
-          />
-        }
-      />
+      <div className="rounded-md border border-border p-3">
+        <UnifiedDealChecker
+          state={checkerState}
+          dealId={deal.id}
+          onNavigate={t => { setTab('fill'); setTimeout(() => fillRef.current?.focusTarget(t), 30); }}
+          onFix={fn => { setTab('fill'); return fillRef.current?.applyFix(fn) ?? false; }}
+          onDocFix={c => { setTab('fill'); return fillRef.current?.fixFromDocument(c) ?? []; }}
+        />
+      </div>
+
+      {copilotSlot && createPortal(
+        <DealCopilot deal={deal} hasUnsavedTerms={hasUnsavedTerms} />,
+        copilotSlot,
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         {/* pl-[13px] = the 1px panel border + 12px inner padding used above, so
