@@ -69,7 +69,8 @@ export const template = {
   component: SignupNotificationEmail,
   subject: (data: Props) => `New BondVDR signup: ${data?.email ?? 'unknown'}`,
   displayName: 'Signup Notification',
-  to: 'karl@eurobondmarkets.com',
+  // No fixed `to`: the caller (notify-author-on-signup) picks the recipient —
+  // karl.mallalieu@gmail.com primary, karl@eurobondmarkets.com fallback.
   previewData: {
     email: 'jane.doe@example.com',
     name: 'Jane Doe',
