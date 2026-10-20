@@ -215,7 +215,7 @@ export default function BondConsolePage() {
             <div key={category} className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{category}</div>
-                <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label={`Add entry to ${category}`} title={`Add entry to ${category}`} onClick={() => setEditingEntry({ id: `custom-${crypto.randomUUID()}`, category, name: '', description: '', status: 'available' })}><Plus className="h-4 w-4" /></Button>
+                <Button size="sm" variant="outline" className="h-7 shrink-0 gap-1 text-xs" aria-label={`Add ${category}`} onClick={() => setEditingEntry({ id: `custom-${crypto.randomUUID()}`, category, name: '', description: '', status: 'available' })}><Plus className="h-3.5 w-3.5" /> Add {category}</Button>
               </div>
               <div className="grid sm:grid-cols-2 gap-2">
                 {items.map(v => {
