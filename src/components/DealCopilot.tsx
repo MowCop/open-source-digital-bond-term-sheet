@@ -330,9 +330,9 @@ export default function DealCopilot({
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className="space-y-3 rounded-md border border-border p-3"
+      className="relative w-full min-w-0"
     >
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+      <div className="flex items-center gap-2">
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
@@ -392,7 +392,7 @@ export default function DealCopilot({
         </CollapsibleTrigger>
         <form
           id={`copilot-chat-${deal.id}`}
-          className="flex min-w-[12rem] flex-1 items-center gap-2"
+          className="flex min-w-0 flex-1 items-center gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             send(text);
@@ -424,17 +424,18 @@ export default function DealCopilot({
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
-            className="h-8 shrink-0 gap-2 px-2 text-xs font-normal text-muted-foreground"
+            size="sm"
+            aria-label={open ? "Hide chat & reviews" : "Chat, corrections & reviews"}
+            title={open ? "Hide chat & reviews" : "Chat, corrections & reviews"}
+            className="h-8 w-8 shrink-0 p-0 text-muted-foreground"
           >
-            {open ? "Hide chat & reviews" : "Chat, corrections & reviews"}
             <ChevronDown
               className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
             />
           </Button>
         </CollapsibleTrigger>
       </div>
-      {checker}
-      <CollapsibleContent className="space-y-5 pt-3">
+      <CollapsibleContent className="absolute left-0 top-full z-50 mt-2 max-h-[75vh] w-[min(95vw,52rem)] space-y-5 overflow-y-auto rounded-md border border-border bg-popover p-4 text-popover-foreground shadow-lg">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">Saved terms · Human approval</Badge>
           <AiModelPicker />
