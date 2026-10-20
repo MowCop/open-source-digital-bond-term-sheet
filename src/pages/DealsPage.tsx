@@ -276,6 +276,8 @@ export default function DealsPage() {
     } finally { setDemoBusy(false); }
   };
   const [expandedDealId, setExpandedDealId] = useState<string | null>(null);
+  const [fullscreenDealId, setFullscreenDealId] = useState<string | null>(null);
+  useEffect(() => { if (fullscreenDealId && fullscreenDealId !== expandedDealId) setFullscreenDealId(null); }, [expandedDealId, fullscreenDealId]);
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newDealFiles, setNewDealFiles] = useState<File[]>([]);
@@ -389,11 +391,12 @@ export default function DealsPage() {
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
       if (document.querySelector('[role="dialog"]')) return;
+      if (fullscreenDealId) { setFullscreenDealId(null); return; }
       setExpandedDealId(null);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [expandedDealId]);
+  }, [expandedDealId, fullscreenDealId]);
 
   return (
     <div className="space-y-6">
@@ -511,9 +514,21 @@ export default function DealsPage() {
         )}
         {sortedDeals.map(deal => {
           const expanded = expandedDealId === deal.id;
+          const full = expanded && fullscreenDealId === deal.id;
           return (
-            <Card key={deal.id} ref={(el) => { rowRefs.current[deal.id] = el; }} className={`overflow-hidden transition-colors ${expanded ? 'border-2 border-active-panel' : ''}`}>
+            <Card key={deal.id} ref={(el) => { rowRefs.current[deal.id] = el; }} className={`transition-colors ${expanded ? 'border-2 border-active-panel' : ''} ${full ? 'fixed inset-x-0 top-12 bottom-0 z-30 overflow-auto rounded-none' : 'overflow-hidden'}`}>
               <div className="flex items-center">
+                {expanded && (
+                  <button
+                    type="button"
+                    onClick={() => setFullscreenDealId(full ? null : deal.id)}
+                    aria-label={full ? 'Exit full screen' : 'Expand term sheet to full screen'}
+                    title={full ? 'Exit full screen (Esc)' : 'Expand to full screen'}
+                    className="ml-2 flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-border text-foreground hover:bg-accent"
+                  >
+                    {full ? <Minimize2 className="h-4 w-4" strokeWidth={3} /> : <Maximize2 className="h-4 w-4" strokeWidth={3} />}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setExpandedDealId(prev => prev === deal.id ? null : deal.id)}
