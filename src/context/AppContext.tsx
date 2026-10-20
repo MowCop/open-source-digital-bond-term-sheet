@@ -112,6 +112,7 @@ interface AppContextType {
   deleteChatChannel: (channelId: string) => void;
   undoExtraction: (dealId: string) => void;
   markNotificationRead: (id: string) => void;
+  addNotification: (n: Notification) => void;
   addAuditEntry: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>) => void;
   sendChatMessage: (channelId: string, body: string, attachments?: ChatMessage['attachments'], linkedMessageId?: string, dealId?: string) => void;
   ensureDraftChannel: (draftKey: string, label: string, participantIds: string[]) => ChatChannel;
@@ -894,11 +895,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addAuditEntry({ action: 'DIST_LIST_DELETED', entityType: 'permission', entityId: id, userId: currentUser.id, details: `Deleted distribution list: ${list?.name}` });
   }, [currentUser.id, addAuditEntry, distributionLists]);
 
+  const addNotification = useCallback((n: Notification) => {
+    setNotifications(prev => prev.some(x => x.id === n.id) ? prev : [n, ...prev]);
+    insertNotification(n).catch(e => console.error('[Cloud] insertNotification failed', e));
+  }, []);
+
   return (
     <AppContext.Provider value={{
       currentUser, setCurrentUser, users, deals, messages, auditLog, notifications, distributionLists,
       chatChannels, chatMessages,
-      createDeal, updateDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addAuditEntry, sendChatMessage,
+      createDeal, updateDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addNotification, addAuditEntry, sendChatMessage,
       publishBulletinFromDeal,
       ensureDraftChannel, renameChatChannel, updateChatChannelParticipants, attachDraftChannelToDeal, createDealChannel,
       deleteMessage, deleteMessageThread,
