@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -18,7 +18,8 @@ import {
 } from 'lucide-react';
 import { AI_TRIGGER_MODE_KEY, getAITriggerMode, type AITriggerMode } from '@/pages/AIDraftPage';
 import PublicMarketFeeds from '@/components/PublicMarketFeeds';
-import { VENDOR_APIS, isCommercialFeed, type VendorAPI } from '@/lib/vendors';
+import { VENDOR_APIS, VENDOR_CATEGORIES, isCommercialFeed, loadCatalogue, resolveCatalogue, saveCatalogueEntry, deleteCatalogueEntry, catalogueStorageKey, type VendorAPI, type CatalogueOverrides } from '@/lib/vendors';
+import { ConsoleEntryEditor, ConsoleEntryDelete } from '@/components/ConsoleEntryEditor';
 
 
 /** A Bond Console section: click its heading to open or close everything inside. */
@@ -48,6 +49,25 @@ export default function BondConsolePage() {
   const [vendors, setVendors] = useState<Record<string, boolean>>(
     () => Object.fromEntries(VENDOR_APIS.map(v => [v.id, v.status === 'connected']))
   );
+  const [catalogue, setCatalogue] = useState(() => loadCatalogue(window.localStorage, currentUser.id));
+  const [editingEntry, setEditingEntry] = useState<VendorAPI | null>(null);
+  const [deletingEntry, setDeletingEntry] = useState<VendorAPI | null>(null);
+  useEffect(() => {
+    setCatalogue(loadCatalogue(window.localStorage, currentUser.id));
+    setEditingEntry(null);
+    setDeletingEntry(null);
+  }, [currentUser.id]);
+
+  const persistCatalogue = (next: CatalogueOverrides) => {
+    try {
+      window.localStorage.setItem(catalogueStorageKey(currentUser.id), JSON.stringify(next));
+      setCatalogue(next);
+      return true;
+    } catch {
+      toast({ title: 'Entry not saved', description: 'Browser storage is unavailable. No changes were made.', variant: 'destructive' });
+      return false;
+    }
+  };
 
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [smsAlerts, setSmsAlerts] = useState(false);
@@ -63,10 +83,10 @@ export default function BondConsolePage() {
     try { window.localStorage.setItem(AI_TRIGGER_MODE_KEY, aiTrigger); } catch { /* ignore quota */ }
   }, [aiTrigger]);
 
-  const groupedVendors = VENDOR_APIS.reduce<Record<string, VendorAPI[]>>((acc, v) => {
+  const groupedVendors = resolveCatalogue(catalogue).reduce<Record<string, VendorAPI[]>>((acc, v) => {
     (acc[v.category] = acc[v.category] || []).push(v);
     return acc;
-  }, {});
+  }, Object.fromEntries(VENDOR_CATEGORIES.map(category => [category, []])));
 
   const toggleVendor = (id: string) => {
     setVendors(p => ({ ...p, [id]: !p[id] }));
@@ -77,6 +97,8 @@ export default function BondConsolePage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
+      {editingEntry && <ConsoleEntryEditor key={editingEntry.id} entry={editingEntry} onClose={() => setEditingEntry(null)} onSave={entry => persistCatalogue(saveCatalogueEntry(catalogue, entry))} />}
+      {deletingEntry && <ConsoleEntryDelete key={deletingEntry.id} entry={deletingEntry} onClose={() => setDeletingEntry(null)} onDelete={confirmation => persistCatalogue(deleteCatalogueEntry(catalogue, deletingEntry.id, confirmation))} />}
       <div className="flex items-center gap-3">
         <Settings className="h-6 w-6 text-primary" />
         <div>
@@ -191,18 +213,21 @@ export default function BondConsolePage() {
           <Separator />
           {Object.entries(groupedVendors).map(([category, items]) => (
             <div key={category} className="space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{category}</div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{category}</div>
+                <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" aria-label={`Add entry to ${category}`} title={`Add entry to ${category}`} onClick={() => setEditingEntry({ id: `custom-${crypto.randomUUID()}`, category, name: '', description: '', status: 'available' })}><Plus className="h-4 w-4" /></Button>
+              </div>
               <div className="grid sm:grid-cols-2 gap-2">
                 {items.map(v => {
                   const isLink = Boolean(v.url);
                   const commercialFeed = isCommercialFeed(v);
                   const on = !commercialFeed && vendors[v.id];
                   return (
-                    <div key={v.id} className="flex items-start gap-3 border rounded-md p-3 bg-card/40">
+                    <div key={v.id} className="flex flex-wrap items-start gap-3 border rounded-md p-3 bg-card/40">
                       <div className="mt-0.5">
                         {isLink ? <ExternalLink className="h-4 w-4 text-primary" /> : on ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-[120px]">
                         <div className="flex items-center gap-2 flex-wrap">
                           {isLink ? (
                             <a
@@ -219,7 +244,7 @@ export default function BondConsolePage() {
                           {on && <Badge className="text-[9px] h-4 px-1.5 bg-green-500/15 text-green-600 border-0">Connected</Badge>}
                           {isLink && <Badge variant="outline" className="text-[9px] h-4 px-1.5">Live link</Badge>}
                         </div>
-                        <div className="text-xs text-muted-foreground truncate">{v.description}</div>
+                        <div className="text-xs text-muted-foreground break-words">{v.description}</div>
                       </div>
                       {isLink ? (
                         <a
@@ -230,7 +255,11 @@ export default function BondConsolePage() {
                         >
                           Open <ExternalLink className="h-3 w-3" />
                         </a>
-                      ) : commercialFeed ? <Badge variant="outline" className="text-[10px] shrink-0">Not connected</Badge> : <Switch checked={on} onCheckedChange={() => toggleVendor(v.id)} />}
+                      ) : commercialFeed || v.id.startsWith('custom-') ? <Badge variant="outline" className="text-[10px] shrink-0">Not connected</Badge> : <Switch checked={Boolean(on)} onCheckedChange={() => toggleVendor(v.id)} />}
+                      <div className="flex shrink-0 items-center gap-1 ml-auto">
+                        <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={`Edit ${v.name}`} title={`Edit ${v.name}`} onClick={() => setEditingEntry(v)}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label={`Delete ${v.name}`} title={`Delete ${v.name}`} onClick={() => setDeletingEntry(v)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </div>
                     </div>
                   );
                 })}
