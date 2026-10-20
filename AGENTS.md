@@ -1,5 +1,5 @@
 # AGENTS
-- Bond Console connectors live in the single catalogue src/lib/vendors.ts: public feeds use the authenticated public-market-feeds function with source dates and partial failures preserved, and rows carrying a url render as live external links in a new tab — commercial toggles never imply a real feed and placeholder rows stay honest (no fabricated data, no browser CORS calls).
+- Bond Console uses src/lib/vendors.ts defaults plus per-user browser overrides for add/edit/remove; built-ins remain immutable so custom management never changes real feed wiring. Public feeds use authenticated public-market-feeds with source dates/partial failures; URL rows open externally, commercial placeholders never imply real feeds.
 - Board headings use shortBorrowerName for dash-separated descriptions; stored records stay unchanged.
 - Digital Term Sheet View reads the live Fill state through src/lib/termSheetView.ts, not saved flat deal columns; empty authoritative fields remain empty — accepted proposals, edits and deletions must agree across tabs without auto-saving.
 - New Deal reuses IngestDropzone/readers, fills only an empty issuer with edit guards, and hands files to Fill for other proposals — no duplicate parser or auto-acceptance.
