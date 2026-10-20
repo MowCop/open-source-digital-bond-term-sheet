@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, FileText, Bell, MessageSquare, Users as UsersIcon } from 'lucide-react';
+import { Search, FileText, Bell, MessageSquare, Users as UsersIcon, X } from 'lucide-react';
 import { useScopedApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { stripHtml } from '@/lib/htmlText';
@@ -52,19 +52,28 @@ export default function GlobalSearch() {
     return () => clearTimeout(t);
   }, [raw]);
 
-  // Cmd/Ctrl+K shortcut
+  // Cmd/Ctrl+K shortcut opens the panel and focuses it; Escape closes
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        inputRef.current?.focus();
-        inputRef.current?.select();
+        setOpen(o => !o);
       }
       if (e.key === 'Escape') setOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  // Focus the input whenever the panel opens
+  useEffect(() => {
+    if (open) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    } else {
+      setActiveIdx(0);
+    }
+  }, [open]);
 
   // Close on outside click
   useEffect(() => {
@@ -202,7 +211,6 @@ export default function GlobalSearch() {
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (!open) return;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setActiveIdx(i => Math.min(i + 1, flat.length - 1));
@@ -216,54 +224,72 @@ export default function GlobalSearch() {
   };
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-xl">
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input
-          ref={inputRef}
-          value={raw}
-          onChange={(e) => { setRaw(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={onKeyDown}
-          placeholder="Search deals, alerts, chats, people…"
-          className="w-full h-8 pl-8 pr-14 text-sm rounded-md border bg-background placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Global search"
-        />
-        <kbd className="hidden md:inline-flex absolute right-2 top-1/2 -translate-y-1/2 items-center gap-0.5 rounded border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-          ⌘K
-        </kbd>
-      </div>
-      {open && query.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-1 z-50 max-h-[60vh] overflow-auto rounded-md border bg-popover text-popover-foreground shadow-lg">
-          {grouped.length === 0 ? (
-            <div className="px-3 py-6 text-center text-sm text-muted-foreground">No matches for “{query}”.</div>
-          ) : (
-            grouped.map(({ group, items }) => (
-              <div key={group} className="py-1">
-                <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{group}</div>
-                {items.map(r => {
-                  const Icon = ICONS[r.group];
-                  const idx = flat.indexOf(r);
-                  const isActive = idx === activeIdx;
-                  return (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onMouseEnter={() => setActiveIdx(idx)}
-                      onClick={() => choose(r)}
-                      className={`w-full flex items-start gap-2 px-3 py-2 text-left text-sm transition-colors ${isActive ? 'bg-accent' : 'hover:bg-accent/50'}`}
-                    >
-                      <Icon className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate font-medium">{highlight(r.label, query)}</div>
-                        <div className="truncate text-xs text-muted-foreground">{highlight(r.sub, query)}</div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            ))
-          )}
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="p-2 -m-0.5 rounded-md hover:bg-accent/50 transition-colors"
+        aria-label="Search deals, alerts, chats, people"
+        aria-expanded={open}
+        title="Search (⌘K)"
+      >
+        <Search className="h-5 w-5 text-muted-foreground" />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-2 z-50 w-[min(92vw,30rem)] rounded-md border bg-popover text-popover-foreground shadow-lg overflow-hidden">
+          <div className="relative flex items-center border-b">
+            <Search className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              ref={inputRef}
+              value={raw}
+              onChange={(e) => setRaw(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder="Search deals, alerts, chats, people…"
+              className="w-full h-10 pl-9 pr-9 text-sm bg-transparent placeholder:text-muted-foreground/70 focus:outline-none"
+              aria-label="Global search"
+            />
+            <button
+              type="button"
+              onClick={() => { setOpen(false); setRaw(''); }}
+              className="absolute right-2 p-1 rounded hover:bg-accent/50"
+              aria-label="Close search"
+            >
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+          <div className="max-h-[60vh] overflow-auto">
+            {raw.length > 0 && grouped.length === 0 ? (
+              <div className="px-3 py-6 text-center text-sm text-muted-foreground">No matches for “{query}”.</div>
+            ) : raw.length === 0 ? (
+              <div className="px-3 py-6 text-center text-sm text-muted-foreground">Start typing to search deals, alerts, chats and people.</div>
+            ) : (
+              grouped.map(({ group, items }) => (
+                <div key={group} className="py-1">
+                  <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{group}</div>
+                  {items.map(r => {
+                    const Icon = ICONS[r.group];
+                    const idx = flat.indexOf(r);
+                    const isActive = idx === activeIdx;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onMouseEnter={() => setActiveIdx(idx)}
+                        onClick={() => choose(r)}
+                        className={`w-full flex items-start gap-2 px-3 py-2 text-left text-sm transition-colors ${isActive ? 'bg-accent' : 'hover:bg-accent/50'}`}
+                      >
+                        <Icon className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-medium">{highlight(r.label, query)}</div>
+                          <div className="truncate text-xs text-muted-foreground">{highlight(r.sub, query)}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>
