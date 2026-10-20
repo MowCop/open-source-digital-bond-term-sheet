@@ -1,3 +1,4 @@
+import { setCopilotFocus } from '@/lib/copilot/focus';
 import { useState, useRef, useEffect, type MouseEvent } from 'react';
 import AiModelPicker from '@/components/AiModelPicker';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -308,7 +309,17 @@ export default function MessagesPage() {
   const openTargetId = (g: { messages: Message[]; latestMessage: Message }) =>
     (g.messages.find(m => m.status === 'sent') ?? g.latestMessage).id;
 
+  /** Point the top-bar Co-Pilot at the clicked update. */
+  const focusUpdate = (group: AlertGroup, messageId?: string) => {
+    const m = group.messages.find(x => x.id === (messageId ?? openTargetId(group))) ?? group.latestMessage;
+    const dealId = m.dealIds[0] ?? group.dealIds[0];
+    if (!dealId) return;
+    setCopilotFocus({ kind: 'update', dealId, label: m.subject || group.headline, context: `Subject: ${m.subject}\n\n${stripHtml(m.body)}` });
+  };
+
   const toggleExpand = (id: string) => {
+    const g = alertGroups.find(x => x.dealIds.join(',') === id);
+    if (g && expandedAlertId !== id) focusUpdate(g);
     setExpandedAlertId(prev => {
       const next = prev === id ? null : id;
       if (next) setActivePanel('history');
@@ -324,6 +335,7 @@ export default function MessagesPage() {
       const el = document.activeElement as HTMLElement | null;
       returnFocusRef.current = el && el !== document.body ? el : null;
     }
+    focusUpdate(group, messageId);
     setOverlayGroup(group);
     setOverlayReadOnly(readOnly);
     setOverlayMessageId(messageId ?? openTargetId(group));
