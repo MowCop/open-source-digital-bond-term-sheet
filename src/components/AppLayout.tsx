@@ -170,8 +170,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
             </SheetContent>
           </Sheet>
-          <div className="min-w-0 flex-1 flex items-center">
+          <div className="min-w-0 flex-1 flex items-center gap-2">
             <GlobalSearch />
+            <div id="copilot-slot" className="peer min-w-0 flex-1 max-w-3xl empty:hidden" />
+            <div className="hidden peer-empty:flex items-center gap-2 text-sm text-muted-foreground/60" title="Open a deal to use Co-Pilot">
+              <Bot className="h-4 w-4" />
+              <span className="font-semibold">Deal Co-Pilot</span>
+              <span className="hidden sm:inline text-xs">· Open a deal to use Co-Pilot</span>
+            </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
