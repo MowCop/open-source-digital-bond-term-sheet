@@ -67,3 +67,58 @@ export const COMMERCIAL_FEED_IDS = [
 export function isCommercialFeed(v: VendorAPI): boolean {
   return !v.url && (v.category === 'Market Data' || COMMERCIAL_FEED_IDS.includes(v.id));
 }
+
+export const VENDOR_CATEGORIES = [...new Set(VENDOR_APIS.map(v => v.category))];
+export interface CatalogueOverrides {
+  entries: VendorAPI[];
+  deletedIds: string[];
+}
+export const emptyCatalogue = (): CatalogueOverrides => ({ entries: [], deletedIds: [] });
+export const catalogueStorageKey = (userId: string) => `bond-console-catalogue:${userId}`;
+
+export function validateVendor(v: VendorAPI): string | null {
+  if (!v.name.trim()) return 'Enter a name.';
+  if (!VENDOR_CATEGORIES.includes(v.category)) return 'Select a console section.';
+  if (v.url) {
+    try {
+      const url = new URL(v.url);
+      if (url.protocol !== 'https:' || url.username || url.password) return 'Use a public HTTPS URL without credentials.';
+    } catch { return 'Enter a valid HTTPS URL.'; }
+  }
+  return null;
+}
+
+export function resolveCatalogue(overrides: CatalogueOverrides): VendorAPI[] {
+  const entries = new Map(VENDOR_APIS.map(v => [v.id, v]));
+  overrides.entries.forEach(v => { if (!validateVendor(v)) entries.set(v.id, v); });
+  const deleted = new Set(overrides.deletedIds);
+  return [...entries.values()].filter(v => !deleted.has(v.id));
+}
+
+export function saveCatalogueEntry(state: CatalogueOverrides, entry: VendorAPI): CatalogueOverrides {
+  const error = validateVendor(entry);
+  if (error) throw new Error(error);
+  return { ...state, entries: [...state.entries.filter(v => v.id !== entry.id), entry] };
+}
+
+export function deleteCatalogueEntry(state: CatalogueOverrides, id: string, confirmation: string): CatalogueOverrides {
+  if (confirmation !== 'delete') throw new Error('Type delete to confirm.');
+  return { entries: state.entries.filter(v => v.id !== id), deletedIds: [...new Set([...state.deletedIds, id])] };
+}
+
+export function loadCatalogue(storage: Pick<Storage, 'getItem'>, userId: string): CatalogueOverrides {
+  try {
+    const raw = JSON.parse(storage.getItem(catalogueStorageKey(userId)) || 'null');
+    if (!raw || !Array.isArray(raw.entries) || !Array.isArray(raw.deletedIds)) return emptyCatalogue();
+    return {
+      entries: raw.entries.filter((v: unknown): v is VendorAPI => {
+        if (!v || typeof v !== 'object') return false;
+        const entry = v as Partial<VendorAPI>;
+        return typeof entry.id === 'string' && typeof entry.name === 'string' && typeof entry.category === 'string'
+          && typeof entry.description === 'string' && (entry.status === 'available' || entry.status === 'connected')
+          && (entry.url === undefined || typeof entry.url === 'string') && !validateVendor(entry as VendorAPI);
+      }),
+      deletedIds: raw.deletedIds.filter((id: unknown) => typeof id === 'string'),
+    };
+  } catch { return emptyCatalogue(); }
+}
