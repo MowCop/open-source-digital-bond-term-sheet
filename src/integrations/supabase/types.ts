@@ -236,6 +236,30 @@ export type Database = {
         }
         Relationships: []
       }
+      copilot_general_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       copilot_messages: {
         Row: {
           body: string
@@ -270,6 +294,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      copilot_reminders: {
+        Row: {
+          created_at: string
+          deal_id: string | null
+          due_at: string | null
+          fired_at: string | null
+          id: string
+          label: string
+          status: string
+          trigger_kind: string
+          trigger_stage: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deal_id?: string | null
+          due_at?: string | null
+          fired_at?: string | null
+          id?: string
+          label: string
+          status?: string
+          trigger_kind: string
+          trigger_stage?: string | null
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string | null
+          due_at?: string | null
+          fired_at?: string | null
+          id?: string
+          label?: string
+          status?: string
+          trigger_kind?: string
+          trigger_stage?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       copilot_runs: {
         Row: {
