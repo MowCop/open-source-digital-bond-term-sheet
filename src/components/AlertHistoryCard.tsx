@@ -1,3 +1,4 @@
+import CopilotFocusHost from '@/components/CopilotFocusHost';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Message, Attachment } from '@/types/bond';
@@ -734,6 +735,7 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
         className={`${fullscreen ? 'max-w-[100vw] w-[100vw] h-[100vh] rounded-none [&>button:last-of-type]:hidden' : 'max-w-[96vw] w-[96vw] h-[94vh] sm:rounded-lg'} p-0 gap-0 flex flex-col`}
       >
 
+        {fullscreen && <CopilotFocusHost inDialog />}
         {/* Functional icon toolbar */}
         <div className="relative flex items-end justify-between gap-2 pl-5 pr-5 pt-2 pb-0 border-b border-border shrink-0 bg-card/30 overflow-hidden">
           <div className="flex items-end gap-2 overflow-hidden">
