@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Deal, DealStage, BookrunnerRole, UserRole } from '@/types/bond';
 import { format } from 'date-fns';
-import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2, Undo2 } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2, Undo2, Maximize2, Minimize2 } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
