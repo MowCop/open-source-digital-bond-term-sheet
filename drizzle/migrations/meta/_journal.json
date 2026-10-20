@@ -29,6 +29,13 @@
       "when": 1792250241272,
       "tag": "0003_copilot_review_event_entrypoints",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792489224649,
+      "tag": "0004_copilot_general",
+      "breakpoints": true
     }
   ]
 }
