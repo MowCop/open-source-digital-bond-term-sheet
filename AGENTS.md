@@ -23,5 +23,5 @@
 
 - Board audits use boardUpdateAudit (board_update scope), separate from saved checks.
 - Co-Pilot uses src/lib/copilot and the deal-copilot Cloud function; human term editors alone approve, with atomic stale-value checks — AI never approves.
-- Co-Pilot General mode (CopilotGeneral + copilot-general) shows when nothing is focused; AI only drafts reminders, users confirm, and ReminderWatcher fires them client-side onto the bell.
+- Co-Pilot General mode (CopilotGeneral, copilot-general) shows when unfocused; AI drafts reminders, users confirm, ReminderWatcher fires them client-side.
 - Subdirectories may have their own AGENTS.md (e.g. supabase/functions/deal-copilot/); read it before changing files there.
