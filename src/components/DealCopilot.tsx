@@ -394,11 +394,6 @@ export default function DealCopilot({
             </span>
           </Button>
         </CollapsibleTrigger>
-        {focus && (
-          <Badge variant="outline" className="hidden max-w-[14rem] shrink truncate text-[10px] md:inline-block" title={`Co-Pilot focus: ${focus.label}`}>
-            {focus.kind === "update" ? "Update" : "Chat"}: {focus.label}
-          </Badge>
-        )}
         <form
           id={`copilot-chat-${deal.id}`}
           className="flex min-w-0 flex-1 items-center gap-2"
