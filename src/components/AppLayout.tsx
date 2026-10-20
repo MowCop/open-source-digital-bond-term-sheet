@@ -3,6 +3,8 @@ import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, U
 import { useState } from 'react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import CopilotFocusHost from '@/components/CopilotFocusHost';
+import CopilotGeneral from '@/components/CopilotGeneral';
+import ReminderWatcher from '@/components/ReminderWatcher';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { RoleBadge } from '@/components/RoleBadge';
@@ -174,11 +176,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="min-w-0 flex-1 flex items-center gap-2">
             <GlobalSearch />
             <div id="copilot-slot" className="peer min-w-0 flex-1 max-w-3xl empty:hidden"><CopilotFocusHost /></div>
-            <div className="hidden peer-empty:flex items-center gap-2 text-sm text-muted-foreground/60" title="Open a deal to use Co-Pilot">
-              <Bot className="h-4 w-4" />
-              <span className="font-semibold">Deal Co-Pilot</span>
-              <span className="hidden sm:inline text-xs">· Open a term sheet, update or chat to use Co-Pilot</span>
-            </div>
+            {/* General mode whenever nothing is focused (slot empty). */}
+            <div className="hidden peer-empty:block min-w-0 flex-1 max-w-3xl"><CopilotGeneral /></div>
+            <ReminderWatcher />
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
