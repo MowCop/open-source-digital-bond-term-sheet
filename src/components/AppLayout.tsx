@@ -3,6 +3,8 @@ import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, U
 import { useState } from 'react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import CopilotFocusHost from '@/components/CopilotFocusHost';
+import CopilotGeneral from '@/components/CopilotGeneral';
+import ReminderWatcher from '@/components/ReminderWatcher';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { RoleBadge } from '@/components/RoleBadge';
