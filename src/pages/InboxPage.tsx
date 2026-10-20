@@ -1,5 +1,4 @@
 import { setCopilotFocus } from '@/lib/copilot/focus';
-import { stripHtml } from '@/lib/htmlText';
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useApp, useScopedApp } from '@/context/AppContext';
@@ -452,7 +451,7 @@ export default function InboxPage() {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [activeKey, setActiveKey] = useState<string | null>(null);
-  const { chatMessages: allChat } = useScopedApp();
+  const allChat = chatMessages;
   /** Point the top-bar Co-Pilot at the clicked deal chat (latest 60 messages). */
   const focusChat = (deal: Deal, channels: ChatChannel[]) => {
     const ids = new Set(channels.map(c => c.id));
