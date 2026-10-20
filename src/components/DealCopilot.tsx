@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { focusPrompt, type CopilotFocus } from "@/lib/copilot/focus";
 import { COPILOT_ASK, getLiveChecks, onLiveChecks, tally, type CopilotAsk } from "@/lib/copilot/liveChecks";
 import {
   Bot,
@@ -163,8 +164,11 @@ export default function DealCopilot({
   deal,
   hasUnsavedTerms,
   checker,
+  focus,
 }: {
   deal: Deal;
+  /** A board update or deal chat the user clicked; sent with each question. */
+  focus?: CopilotFocus | null;
   hasUnsavedTerms: boolean;
   /** The Deal Checker, rendered inside the Co-Pilot panel and always visible. */
   checker?: ReactNode;
@@ -276,7 +280,7 @@ export default function DealCopilot({
     setText(value);
     setTimeout(() => document.getElementById(`copilot-chat-${deal.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
     void perform(async () => {
-      await callCopilot(thread, "chat", value, getLiveChecks(deal.id));
+      await callCopilot(thread, "chat", value, getLiveChecks(deal.id), focus ? focusPrompt(focus) : undefined);
       setText("");
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -292,7 +296,7 @@ export default function DealCopilot({
       return;
     }
     void perform(async () => {
-      await callCopilot(thread, "chat", message, getLiveChecks(deal.id));
+      await callCopilot(thread, "chat", message, getLiveChecks(deal.id), focus ? focusPrompt(focus) : undefined);
     });
   };
   const decide = (id: string, approve: boolean) =>
@@ -390,6 +394,11 @@ export default function DealCopilot({
             </span>
           </Button>
         </CollapsibleTrigger>
+        {focus && (
+          <Badge variant="outline" className="hidden max-w-[14rem] shrink truncate text-[10px] md:inline-block" title={`Co-Pilot focus: ${focus.label}`}>
+            {focus.kind === "update" ? "Update" : "Chat"}: {focus.label}
+          </Badge>
+        )}
         <form
           id={`copilot-chat-${deal.id}`}
           className="flex min-w-0 flex-1 items-center gap-2"
@@ -404,7 +413,7 @@ export default function DealCopilot({
             onChange={(e) => setText(e.target.value)}
             maxLength={12000}
             rows={1}
-            placeholder="Ask about this deal…"
+            placeholder={focus ? (focus.kind === "update" ? "Ask about this update…" : "Ask about this chat…") : "Ask about this deal…"}
             className="h-9 max-h-28 min-h-0 flex-1 resize-none py-2 text-sm"
           />
           <Button

@@ -7,8 +7,8 @@ export const COPILOT_CHANGED='vdr:copilot-changed';
 export const changed=(id:string)=>window.dispatchEvent(new CustomEvent(COPILOT_CHANGED,{detail:id}));
 const flights=new Map<string,Promise<void>>();
 const rerun=new Set<string>();
-export async function callCopilot(threadId:string,action:'chat'|'process'|'resume',message?:string,liveChecks?:LiveCheck[]){
- const {data,error}=await supabase.functions.invoke('deal-copilot',{body:{threadId,action,message,model:getAiModel(),...(liveChecks?{liveChecks}:{})}});
+export async function callCopilot(threadId:string,action:'chat'|'process'|'resume',message?:string,liveChecks?:LiveCheck[],focus?:string){
+ const {data,error}=await supabase.functions.invoke('deal-copilot',{body:{threadId,action,message,model:getAiModel(),...(liveChecks?{liveChecks}:{}),...(focus?{focus}:{})}});
  if(error){let msg=error.message;try{const b=await(error as {context?:Response}).context?.json();msg=b?.message??msg;}catch{}throw new Error(msg);}changed(threadId);return data;
 }
 export function processCopilot(id:string,liveChecks?:LiveCheck[]):Promise<void>{const f=flights.get(id);if(f){rerun.add(id);return f;}const p=(async()=>{for(let i=0;i<12;i++){rerun.delete(id);const r=await callCopilot(id,'process',undefined,liveChecks);if(!r?.completed?.length&&!rerun.has(id))break;}})().finally(()=>{flights.delete(id);rerun.delete(id);});flights.set(id,p);return p;}
