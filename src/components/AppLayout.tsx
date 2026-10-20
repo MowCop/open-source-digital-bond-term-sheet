@@ -170,7 +170,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
             </SheetContent>
           </Sheet>
-          <div className="min-w-0 flex-1 max-w-xl">
+          <div className="min-w-0 flex-1 flex items-center">
             <GlobalSearch />
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
