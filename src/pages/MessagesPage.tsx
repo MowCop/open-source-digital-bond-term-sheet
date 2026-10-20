@@ -1130,7 +1130,7 @@ export default function MessagesPage() {
             aria-modal="true"
             aria-label={`Deal edit view: ${liveGroup.borrower}`}
             tabIndex={-1}
-            className="fixed inset-0 z-40 bg-background outline-none"
+            className="fixed inset-x-0 bottom-0 top-12 z-40 bg-background outline-none"
           >
             <AlertHistoryCard
               message={msg}
