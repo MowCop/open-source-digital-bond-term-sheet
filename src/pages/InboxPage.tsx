@@ -710,7 +710,7 @@ export default function InboxPage() {
         );
         if (!active) return null;
         return (
-          <div className="fixed inset-y-0 right-0 left-60 z-40 bg-background flex flex-col animate-in fade-in-0">
+          <div className="fixed top-12 bottom-0 right-0 left-60 z-40 bg-background flex flex-col animate-in fade-in-0">
             <div className="h-12 border-b px-4 flex items-center gap-3 shrink-0 bg-card">
               <Button variant="ghost" size="sm" onClick={() => setActiveKey(null)} className="-ml-2">
                 <ChevronLeft className="h-4 w-4 mr-1" /> Back to My Deal Chats
