@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut, Settings, Menu, Sparkles, Bot } from 'lucide-react';
 import { useState } from 'react';
 import { useApp, resetDemoData } from '@/context/AppContext';
+import CopilotFocusHost from '@/components/CopilotFocusHost';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { RoleBadge } from '@/components/RoleBadge';
@@ -172,11 +173,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </Sheet>
           <div className="min-w-0 flex-1 flex items-center gap-2">
             <GlobalSearch />
-            <div id="copilot-slot" className="peer min-w-0 flex-1 max-w-3xl empty:hidden" />
+            <div id="copilot-slot" className="peer min-w-0 flex-1 max-w-3xl empty:hidden"><CopilotFocusHost /></div>
             <div className="hidden peer-empty:flex items-center gap-2 text-sm text-muted-foreground/60" title="Open a deal to use Co-Pilot">
               <Bot className="h-4 w-4" />
               <span className="font-semibold">Deal Co-Pilot</span>
-              <span className="hidden sm:inline text-xs">· Open a deal to use Co-Pilot</span>
+              <span className="hidden sm:inline text-xs">· Open a term sheet, update or chat to use Co-Pilot</span>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
