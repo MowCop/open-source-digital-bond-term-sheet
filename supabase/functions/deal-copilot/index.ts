@@ -12,7 +12,7 @@ import { readLiveChecks } from './knowledge/tools.ts';
 import { checkerFindings } from './domain/remediation.ts';
 import type { DealHost } from './domain/host.ts';
 
-const schema=z.object({ action:z.enum(['chat','process','resume']), threadId:z.string().uuid(), message:z.string().trim().min(1).max(12000).optional(), model:z.string().optional(), liveChecks:z.array(z.object({l:z.enum(['pass','warn','fail']),t:z.string().max(300),d:z.string().max(600).optional(),src:z.string().max(20).optional(),ignored:z.boolean().optional()})).max(120).optional() });
+const schema=z.object({ action:z.enum(['chat','process','resume']), threadId:z.string().uuid(), message:z.string().trim().min(1).max(12000).optional(), model:z.string().optional(), focus:z.string().max(21000).optional(), liveChecks:z.array(z.object({l:z.enum(['pass','warn','fail']),t:z.string().max(300),d:z.string().max(600).optional(),src:z.string().max(20).optional(),ignored:z.boolean().optional()})).max(120).optional() });
 const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...corsHeaders,'Content-Type':'application/json'}});
 
 Deno.serve(async(req)=>{
@@ -49,7 +49,9 @@ Deno.serve(async(req)=>{
       const rows=await must(userClient.from('copilot_messages').select('role,body').eq('thread_id',threadId).order('created_at',{ascending:false}).limit(30));
       rows.reverse(); const turn={role:'user',body:input.data.message};
       await must(admin.from('copilot_messages').insert({...turn,thread_id:threadId,created_by:auth.user.id}));
-      const answer=await chatAgent(host,[...rows,turn],model,input.data.liveChecks);
+      // Focus (a clicked board update or chat) is shown to the agent only, never stored.
+      const asked=input.data.focus?{role:'user',body:`${input.data.focus}\n\nQuestion: ${turn.body}`}:turn;
+      const answer=await chatAgent(host,[...rows,asked],model,input.data.liveChecks);
       await must(admin.from('copilot_messages').insert({thread_id:threadId,role:'assistant',body:answer}));
       return json({answer});
     }
