@@ -8,6 +8,8 @@ export const syndicateSchema = extractionSchema
     risks: z.array(
       z.object({ field: z.string(), message: z.string(), quote: z.string() }).strict(),
     ),
+    // Raw checker remediation rows; validated separately by domain/remediation.ts.
+    checkerFindings: z.array(z.unknown()).optional(),
   })
   .strict();
 export type SyndicateOutput = z.infer<typeof syndicateSchema>;
