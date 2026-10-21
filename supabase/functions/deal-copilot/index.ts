@@ -80,7 +80,7 @@ Deno.serve(async(req)=>{
       const response=await runModel({model,system:prompt,user:JSON.stringify({savedTerms:ctx,documentName:name,evidence:text,...(job.kind!=='document'&&live?{dealCheckerResults:live}:{})}),maxTokens:8000});
       if(!response.ok) throw new AiFailure(response.status,response.message);
       const rawOut=JSON.parse(response.text);
-      const output=trancheEvidence((job.kind==='document'?extractionSchema:syndicateSchema).parse(rawOut));
+      const output=trancheEvidence((job.kind==='document'?extractionSchema:syndicateSchema).parse(job.kind==='document'?(({checkerFindings:_c,...r})=>r)(rawOut??{}):rawOut));
       if(!output.summary.trim()) throw new Error('AI returned no usable review');
       // Saved-term and document-completion reviews: one leased coordinator pass, then the four specialists sequentially.
       const report=job.kind==='document'
