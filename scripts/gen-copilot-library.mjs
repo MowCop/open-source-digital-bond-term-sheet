@@ -1,6 +1,7 @@
 import fs from 'fs';
 const src=[
  ['icma-a8','ICMA Primary Market Handbook — Appendix A8 (final terms & pricing supplement pro formas, Sept 2018)','reference/ICMA-Primary-Market-Handbook-Appendix-A8-260918.txt'],
+ ['icma-c1','ICMA Primary Market Handbook — Appendix C1 (Bond Data Taxonomy: purpose, legal nature, use in digital term sheets, May 2026)','reference/ICMA-Primary-Market-Handbook-AppendixC1-BDT-2026.txt'],
  ['checker-capabilities','VDR Deal Checker capabilities (living reference: rules, conventions, ESG, registries)','reference/deal-checker-capabilities.md'],
  ['bdt-xsd','ICMA Bond Data Taxonomy v2.0 XSD (data dictionary)','schema/icma-bond-data-taxonomy.xsd'],
  ['bdt-enums','ICMA Bond Data Taxonomy v2.0 enumerations','schema/icma-bond-data-taxonomy-enums.xsd'],

@@ -1,0 +1,165 @@
+C1   Appendix C1
+     Bond Data Taxonomy
+Appendix C1 - Bond Data Taxonomy
+
+Introduction
+1.1     With increased regulatory and market focus on the modernisation and        May 2026
+        digitalisation of primary markets, this appendix to the ICMA Primary
+        Market Handbook is intended to serve as an introduction to issuers,
+        agents, service providers and investors that are looking to incorporate
+        the ICMA Bond Data Taxonomy (BDT) into their offering workflow. A
+        central principle of the BDT is to enable the cross-collaboration of
+        different parties across the bond issuance process to support the
+        broader goals of market modernisation and data harmonisation.
+Purpose and Scope of the BDT
+1.2     The BDT is a computer-readable representation of key bond data
+        information created by market participants for use by market
+        participants. The BDT uses terminology and concepts from the
+        ICMA Primary Market Handbook, as well as ISO standards where
+        applicable, as a foundation for its data components and definitions.
+        The BDT is technology agnostic and is designed to be used both for
+        traditional debt securities as well as distributed ledger technology
+        (DLT) based debt securities.
+Core Function and Benefits
+1.3     The core function of the BDT is to enable automated and efficient
+        data sharing between different bond market participants. It intends to
+        reduce the need for manual intervention and aggregation of different
+        sources of bond data.
+Development and Market Adoption
+1.4     First published in March 2023, the BDT was developed to standardise
+        how bond data is digitally represented to enhance connectivity
+        between different solutions and to avoid market fragmentation. Since
+        then, it has been adopted by a range of participants for traditional
+        and DLT-based bond issuances to improve workflow efficiency. Public
+        examples of BDT adoption can be seen under “BDT News” on the
+        ICMA BDT website page.1
+Legal Nature and Use
+1.5     The BDT is not a substitute for the issuance documents that form the
+        legal basis of an offering, nor do the issuance documents need to be
+        amended to reflect the BDT. The terms of any securities are governed
+        solely by the relevant legal documentation. In the event of any
+        discrepancy between the legal documentation as agreed between the
+        parties to the transaction and the digital representation using the BDT,
+        the legal documentation will prevail. To clarify any potential liability
+        concerns, ICMA recommends respective transaction parties involved
+        in the use of the BDT include their own disclaimers (for example,
+        stating that the legal documentation will prevail, amongst others), for
+        which there is a section within the BDT messages.
+
+
+
+
+ICMA Primary Market Handbook                                                            C1‑2
+Governance and Oversight
+1.6     ICMA’s Bond Data Taxonomy Working Group governs and maintains
+        the content of the BDT, which results in periodic new releases as and
+        when required. The group is represented by core market constituents,
+        including issuers, sell-side banks, investors, law firms and service
+        providers. For BDT Working Group related updates, please refer to
+        the ICMA BDT website page.1
+Technical Framework
+1.7     From a technological standpoint, the BDT utilises the market
+        accepted “XML” data standard to describe the key information
+        typically found in bond issuance documentation in a structured
+        data model. This includes programmes, securities, issuance details,
+        parties, service providers and other terms of the offering. Also
+        included in the BDT are a series of definition files referred to as “XML
+        Schema Definition (XSD)” that define the structure, attribute names
+        and acceptable inputs that are used to describe a new issuance.
+Implementation Support and Resources
+1.8     To support technical implementation, the ICMA website page
+        provides access to a comprehensive BDT user guide as part of the
+        BDT download pack.1 Contained within this are:
+        (a) Sample files to support testing and onboarding, with usage
+            examples and mapping logic.
+        (b) XML schema and enumerations, as well as the best practices
+            followed in the XML development.
+        (c) An overview of the overall structure in the BDT, detailing the
+            primary data types the XML is based on.
+        These materials enable operational teams to embed the taxonomy
+        into digital workflows, systems, and data pipelines. Other formats,
+        such as JSON, are available. Stakeholders are encouraged to consult
+        the ICMA BDT website page for the latest resources and guidance.1
+
+
+
+
+ICMA Primary Market Handbook                                                       C1‑3
+Example message from the BDT
+1.9     The BDT consists of four primary sections:
+            (i)     Document Details: Information about the creator of the
+                    XML document, creation date, version number, document
+                    identifier, and disclaimer.
+            (ii)    PartyGroup: Participants in the deal, LEI, rating, and other
+                    details.
+            (iii)   Issuance: Details of the issuance such as issuance type,
+                    issue date, pricing date, listing, governing law, selling
+                    restrictions, target market and redemption.
+            (iv) Product: The economic and material information of the
+                 note(s) being issued.
+        Throughout the ICMA Primary Market Handbook there are references
+        to parties involved in the issuance: issuer, guarantor, book runner,
+        advisors, registrar, and agents. All these parties and the role
+        they perform in the transaction are defined in the BDT under the
+        PartyGroup category.
+        For example, in the ICMA Primary Market Handbook Appendix A5a –
+        Deal Announcements for a “Vanilla DCM deal initial announcement”,
+        it is recommended to include the issuer LEI, and if applicable,
+        guarantor’s LEI. Below is an example of the usage of the BDT to
+        communicate LEI information to identify different parties such as the
+        issuer.
+
+
+
+
+ICMA Primary Market Handbook                                                       C1‑4
+        The following is a partial XML example of the BDT PartyGroup that
+        defines the participants of the deal including their LEI, roles, rating,
+        and other details:
+        <PartyGroup>
+            <Party>
+                <PartyName>ICMA – Issuer Bank GmbH</PartyName>
+                <LEIIdentifier>529900Q1M1F4M8KMQM61</LEIIdentifier>
+                <PartyRole>
+                     <PartyRoleType>ISSUER</PartyRoleType>
+                </PartyRole>
+                <PartyRating>
+                     <Rating>
+                         <RatingAgency>SNPG</RatingAgency>
+                         <RatingValue>AA+</RatingValue>
+                         <RatingOutlook>STABLE</RatingOutlook>
+                     </Rating>
+                </PartyRating>
+            </Party>
+            <Party>
+                <PartyName>Global Bank 3</PartyName>
+                <LEIIdentifier>529900IH9V4I3VHQWO91</LEIIdentifier>
+                <PartyRole>
+                     <PartyRoleType>LEAD_MANAGER</PartyRoleType>
+                </PartyRole>
+            </Party>
+            <Party>
+                <PartyName>Stabilisation Securities Bank</PartyName>
+                <LEIIdentifier>PT3QB789TSUIDF3Q1264</LEIIdentifier>
+                <PartyRole>
+                     <PartyRoleType>STABILISATION_MANAGER</PartyRoleType>
+                </PartyRole>
+            </Party>
+        </PartyGroup>
+1.10    For more information, please contact the ICMA FinTech and
+        Digitalisation team at fintech@icmagroup.org or visit the BDT website.1
+
+
+
+
+ICMA Primary Market Handbook                                                       C1‑5
+Notes
+1       The Bond Data Taxonomy website page can be found at https://
+        www.icmagroup.org/fintech-and-digitalisation/fintech-advisory-
+        committee-and-related-groups/bond-data-taxonomy/
+
+
+
+
+ICMA Primary Market Handbook                                             C1‑6
+

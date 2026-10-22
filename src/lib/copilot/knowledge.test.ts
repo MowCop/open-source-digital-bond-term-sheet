@@ -19,6 +19,10 @@ describe('Co-Pilot Deal Checker resources', () => {
     expect(r.results.length).toBeGreaterThan(0);
     expect(r.results[0].source).toContain('Appendix-A8');
   });
+  it('finds ICMA Appendix C1 BDT passages', () => {
+    const r = searchReferenceLibrary({ query: 'legal documentation will prevail', sourceId: 'icma-c1' });
+    expect(r.results[0].source).toContain('AppendixC1');
+  });
   it('excludes user-ignored warnings from the live tally', () => {
     const r = readLiveChecks([{ l: 'warn', t: 'a', ignored: true }, { l: 'fail', t: 'b' }]) as any;
     expect(r.tally).toEqual({ pass: 0, warn: 0, fail: 1, ignored: 1 });
