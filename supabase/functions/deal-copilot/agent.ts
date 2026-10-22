@@ -117,7 +117,11 @@ export async function chatAgent(
   }));
   const initial = await host.readDeal();
   // Bounded coordinating loop; tool results come from the authorized host, not caller-supplied history.
+  const started = Date.now();
   for (let step = 0; step < 8; step++) {
+    // Stay well inside the 150s request limit: stop delegating and answer with what we have.
+    if (step > 0 && Date.now() - started > 100_000)
+      return "This question needed more research than fits in one reply. Ask a narrower question (for example one specialist or one check) and I'll continue.";
     const res = await fetch("https://ai.gateway.lovable.dev/v1/messages", {
       method: "POST",
       headers: {
