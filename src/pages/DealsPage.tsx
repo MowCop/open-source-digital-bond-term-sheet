@@ -35,7 +35,7 @@ import { useApp } from '@/context/AppContext';
 import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
 import { termSheetView } from '@/lib/termSheetView';
 import { parseDtsStage, boardLink } from '@/lib/dtsNavigation';
-import { emptyNewDeal, canCreateNewDeal, extractNewDealIssuer, fillEmptyIssuer } from '@/lib/newDeal';
+import { emptyNewDeal, canCreateNewDeal, extractNewDealTerms, mergeNewDealDraft, mergeNewDealBookrunners } from '@/lib/newDeal';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
   const xml = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return buildXML(s) as string; }, [deal]);
@@ -291,6 +291,8 @@ export default function DealsPage() {
     setExtractingIssuer(false);
   }, [showCreate]);
   const [newBookrunners, setNewBookrunners] = useState<{ name: string; role: BookrunnerRole; isGlobalCoordinator: boolean }[]>([]);
+  const newDealRef = useRef(newDeal); newDealRef.current = newDeal;
+  const newBookrunnersRef = useRef(newBookrunners); newBookrunnersRef.current = newBookrunners;
   const [brName, setBrName] = useState('');
   const [brRole, setBrRole] = useState<BookrunnerRole>('active');
   const [brGC, setBrGC] = useState(false);
@@ -347,23 +349,28 @@ export default function DealsPage() {
   const handleNewDealFiles = async (files: FileList) => {
     const selected = Array.from(files);
     setNewDealFiles(prev => [...prev, ...selected]);
-    if (newDeal.issuerName.trim() || extractingIssuer) return;
+    if (extractingIssuer) return;
     const revision = issuerRevision.current;
     const session = extractionSession.current;
     setExtractingIssuer(true);
     try {
       for (const file of selected) {
-        const issuer = await extractNewDealIssuer(file);
-        if (session !== extractionSession.current || revision !== issuerRevision.current) return;
-        if (issuer) {
-          setNewDeal(prev => ({ ...prev, issuerName: fillEmptyIssuer(prev.issuerName, issuer) }));
-          toast.success(`Issuer found in ${file.name}; please check the name`);
+        const { draft, bookrunners } = await extractNewDealTerms(file);
+        if (session !== extractionSession.current) return;
+        const locked = new Set(revision !== issuerRevision.current ? ['issuerName'] : []);
+        const { draft: merged, filled } = mergeNewDealDraft(newDealRef.current, draft, locked);
+        const banks = mergeNewDealBookrunners(newBookrunnersRef.current, bookrunners);
+        newDealRef.current = merged; newBookrunnersRef.current = banks;
+        setNewDeal(merged); setNewBookrunners(banks);
+        const count = filled.length + (banks.length && banks !== newBookrunners ? 1 : 0);
+        if (count) {
+          toast.success(`Filled ${count} field${count > 1 ? 's' : ''} from ${file.name}; please check them before creating`);
           return;
         }
       }
-      toast.info('No issuer name found; please enter it manually');
+      toast.info('No new terms found; please enter them manually');
     } catch {
-      if (session === extractionSession.current) toast.info('Document added, but the issuer could not be identified; please enter it manually');
+      if (session === extractionSession.current) toast.info('Document added, but terms could not be read; please enter them manually');
     } finally {
       if (session === extractionSession.current) setExtractingIssuer(false);
     }
@@ -479,7 +486,7 @@ export default function DealsPage() {
 
                 <Button onClick={handleCreateDeal} className="w-full" disabled={!canCreateNewDeal(newDeal.issuerName, newBookrunners)}>Create Deal</Button>
                 <IngestDropzone onFiles={handleNewDealFiles} className="w-full min-w-0 overflow-hidden" />
-                {extractingIssuer && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Looking for issuer name…</p>}
+                {extractingIssuer && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Reading deal terms…</p>}
                 {newDealFiles.length > 0 && (
                   <div className="space-y-1">
                     {newDealFiles.map((file, i) => (
