@@ -291,6 +291,8 @@ export default function DealsPage() {
     setExtractingIssuer(false);
   }, [showCreate]);
   const [newBookrunners, setNewBookrunners] = useState<{ name: string; role: BookrunnerRole; isGlobalCoordinator: boolean }[]>([]);
+  const newDealRef = useRef(newDeal); newDealRef.current = newDeal;
+  const newBookrunnersRef = useRef(newBookrunners); newBookrunnersRef.current = newBookrunners;
   const [brName, setBrName] = useState('');
   const [brRole, setBrRole] = useState<BookrunnerRole>('active');
   const [brGC, setBrGC] = useState(false);
@@ -356,12 +358,11 @@ export default function DealsPage() {
         const { draft, bookrunners } = await extractNewDealTerms(file);
         if (session !== extractionSession.current) return;
         const locked = new Set(revision !== issuerRevision.current ? ['issuerName'] : []);
-        let filled: string[] = [];
-        setNewDeal(prev => { const r = mergeNewDealDraft(prev, draft, locked); filled = r.filled; return r.draft; });
-        let addedBanks = 0;
-        setNewBookrunners(prev => { const next = mergeNewDealBookrunners(prev, bookrunners); addedBanks = next === prev ? 0 : next.length; return next; });
-        await Promise.resolve();
-        const count = filled.length + (addedBanks ? 1 : 0);
+        const { draft: merged, filled } = mergeNewDealDraft(newDealRef.current, draft, locked);
+        const banks = mergeNewDealBookrunners(newBookrunnersRef.current, bookrunners);
+        newDealRef.current = merged; newBookrunnersRef.current = banks;
+        setNewDeal(merged); setNewBookrunners(banks);
+        const count = filled.length + (banks.length && banks !== newBookrunners ? 1 : 0);
         if (count) {
           toast.success(`Filled ${count} field${count > 1 ? 's' : ''} from ${file.name}; please check them before creating`);
           return;
@@ -485,7 +486,7 @@ export default function DealsPage() {
 
                 <Button onClick={handleCreateDeal} className="w-full" disabled={!canCreateNewDeal(newDeal.issuerName, newBookrunners)}>Create Deal</Button>
                 <IngestDropzone onFiles={handleNewDealFiles} className="w-full min-w-0 overflow-hidden" />
-                {extractingIssuer && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Looking for issuer name…</p>}
+                {extractingIssuer && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Reading deal terms…</p>}
                 {newDealFiles.length > 0 && (
                   <div className="space-y-1">
                     {newDealFiles.map((file, i) => (
