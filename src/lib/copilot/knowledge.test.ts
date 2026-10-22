@@ -27,6 +27,10 @@ describe('Co-Pilot Deal Checker resources', () => {
     const r = searchReferenceLibrary({ query: 'blockchain', sourceId: 'icma-dlt-faq' });
     expect(r.results[0].source).toContain('DLT-and-blockchain');
   });
+  it('finds the HKMA digital green bond precedent', () => {
+    const r = searchReferenceLibrary({ query: 'HSBC Orion', sourceId: 'hkma-digital-green-2026' });
+    expect(r.results[0].source).toContain('HKMA');
+  });
   it('excludes user-ignored warnings from the live tally', () => {
     const r = readLiveChecks([{ l: 'warn', t: 'a', ignored: true }, { l: 'fail', t: 'b' }]) as any;
     expect(r.tally).toEqual({ pass: 0, warn: 0, fail: 1, ignored: 1 });
