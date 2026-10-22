@@ -31,3 +31,23 @@ describe('New Deal requirements', () => {
     expect(fillEmptyIssuer('', undefined)).toBe('');
   });
 });
+import { mapExtractedTerms, mergeNewDealDraft, mergeNewDealBookrunners } from '@/lib/newDeal';
+describe('New Deal document pre-fill', () => {
+  it('maps extracted terms onto form values', () => {
+    const r = mapExtractedTerms({ 'Issuer Name': 'Sasol Financing USA LLC', Currency: 'usd', 'Governing Law': 'New York Law', Coupon: 'TBD', Tenor: '7Y' }, [{ name: 'Citi', role: 'active' }]);
+    expect(r.draft.currency).toBe('USD');
+    expect(r.draft.governingLaw).toBe('NEW_YORK_LAW');
+    expect(r.draft.coupon).toBe('');
+    expect(r.bookrunners).toEqual([{ name: 'Citi', role: 'active', isGlobalCoordinator: false }]);
+  });
+  it('fills only empty fields and never overwrites typed values', () => {
+    const cur = { ...emptyNewDeal(), currency: 'EUR' };
+    const { draft, filled } = mergeNewDealDraft(cur, { currency: 'USD', tenor: '7Y' });
+    expect(draft.currency).toBe('EUR');
+    expect(draft.tenor).toBe('7Y');
+    expect(filled).toEqual(['tenor']);
+  });
+  it('keeps user-added bookrunners', () => {
+    expect(mergeNewDealBookrunners([{ name: 'Mine' }], [{ name: 'Citi' }])).toEqual([{ name: 'Mine' }]);
+  });
+});
