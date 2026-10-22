@@ -23,6 +23,10 @@ describe('Co-Pilot Deal Checker resources', () => {
     const r = searchReferenceLibrary({ query: 'legal documentation will prevail', sourceId: 'icma-c1' });
     expect(r.results[0].source).toContain('AppendixC1');
   });
+  it('finds ICMA DLT FAQ passages', () => {
+    const r = searchReferenceLibrary({ query: 'blockchain', sourceId: 'icma-dlt-faq' });
+    expect(r.results[0].source).toContain('DLT-and-blockchain');
+  });
   it('excludes user-ignored warnings from the live tally', () => {
     const r = readLiveChecks([{ l: 'warn', t: 'a', ignored: true }, { l: 'fail', t: 'b' }]) as any;
     expect(r.tally).toEqual({ pass: 0, warn: 0, fail: 1, ignored: 1 });

@@ -1,0 +1,540 @@
+                  Frequently Asked Questions on DLT and blockchain in bond markets
+
+First published by the International Capital Market Association (ICMA) in September 2022.
+
+This document is provided for information purposes only and should not be relied upon as legal,
+financial, or other professional advice. While the information contained herein is taken from sources
+believed to be reliable, ICMA does not represent or warrant that it is accurate or complete and neither
+ICMA nor its employees shall have any liability arising from or relating to the use of this publication or
+its contents, including any information on any third party website which may be referred to in this
+document.
+
+
+
+Contents
+Acknowledgements................................................................................................................................. 2
+Introduction ............................................................................................................................................ 2
+1.     What is distributed ledger technology? What is blockchain? ........................................................ 2
+2.     What are virtual assets, crypto assets and (native) digital assets? ................................................ 3
+3.     What is a Central Bank Digital Currency (CBDC)? ........................................................................... 4
+4.     What are so-called stablecoins? ..................................................................................................... 4
+5.     What are DLT bonds? ...................................................................................................................... 5
+6. What is the difference between between DLT bonds and traditional bonds, and how they are
+held?........................................................................................................................................................ 6
+7. How does DLT bond documentation generally differ from traditional legal bond
+documentation?...................................................................................................................................... 7
+8.     What is a (digital) token? ................................................................................................................ 8
+9.     Are DLT bonds always on a DLT network or blockchain? Are there access restrictions? ............... 8
+10.        Can DLT bonds reduce settlement risk? ..................................................................................... 8
+11.        How might DLT bonds change the issuance and lifecycle process? ........................................... 8
+12.        How are payments made in relation to DLT bonds? .................................................................. 9
+13.   What is the Common Domain Model (CDM) for repo and bonds, and how does this fit in with
+DLT bonds?............................................................................................................................................ 10
+14.   What is ICMA’s Common Data Dictionary initiative for primary bond markets, and how does it
+support DLT bonds? .............................................................................................................................. 11
+
+
+
+
+DLT & blockchain in bond markets FAQ
+
+Page 1 of 13                                                   © International Capital Market Association (ICMA), Zurich, 2022
+Acknowledgements
+
+    ICMA is grateful to Dr. Scott Farrell and Philip Harvey at King & Wood Mallesons, and Rehan Ahmed
+    and Sriram Chakravarthi at SGX Group/Marketnode Pte. Ltd. for their technical guidance. ICMA
+    would furthermore like to thank the members of its DLT Bonds Working Group for their feedback,
+    drafting suggestions and commentary on the FAQs.
+
+Introduction
+
+    Distributed ledger technology (DLT) and blockchain represent an exciting new frontier in the
+    evolution of fixed income securities issuance and trading. Several institutions including the World
+    Bank, European Investment Bank, as well as financial and corporate issuers around the world have
+    issued DLT-based debt instruments.1
+
+    These instruments, involving the use of DLT or blockchain in one form or another, promise to bring
+    about significant efficiencies in the automation of post-trade and asset-servicing processes, with
+    operational efficiencies such as streamlining issuance flows, identifier creation, settlement cycle
+    compression, and payments automation.
+
+    However, there appears to be limited knowledge and understanding amongst market
+    stakeholders of the nature of DLT-based bonds, the implications for issuance and settlement
+    processes, market infrastructures and intermediaries, and underlying technologies.
+
+    This set of Frequently Asked Questions (“FAQs”) developed by ICMA, seeks to raise market
+    awareness by clarifying some of the fundamental questions related to DLT and blockchain in bond
+    markets, in a manner that is easy to understand. Where feasible, the FAQs rely on existing
+    definitions and terminology used by central banks, multilateral financial institutions or regulatory
+    bodies to ensure consistency and avoid any ambiguity that may arise from the introduction of new
+    concepts or terms.
+
+    Given the variety of DLT bonds and the various issuance structures, this set of FAQs does not
+    attempt to be a comprehensive reference or prescribe specific approaches. Instead, it seeks to
+    serve as an entry point for non-experts to gain a basic understanding of DLT bonds and their
+    impact on capital markets.
+
+    The FAQs are intended to be a living document and will be updated and revised regularly to ensure
+    they remain relevant to developments in the fast-evolving DLT bonds space.
+
+
+    1. What is distributed ledger technology? What is blockchain?
+
+        Distributed ledger: a collection of data that is spread across multiple nodes [ie computers]
+        and whose consistency is enforced by means of a distributed ledger technology (see next).
+
+
+
+1
+ See ICMA’s FinTech tracker of DLT-based bond issuance, trading, settlement, distribution as well as repo and
+securities lending transactions.
+
+DLT & blockchain in bond markets FAQ
+
+Page 2 of 13                               © International Capital Market Association (ICMA), Zurich, 2022
+        (FSB: Decentralised financial technologies: Report on financial stability, regulatory and
+        governance implications, 2019)
+
+        Distributed ledger technology (DLT): a means of recording information through a distributed
+        ledger. These technologies enable nodes [ie computers] in a network to propose, validate, and
+        record state changes (or updates) consistently across the network’s nodes – without the need
+        to rely on a central trusted party to obtain reliable data. (FSB: Decentralised financial
+        technologies: Report on financial stability, regulatory and governance implications, 2019)
+
+        Blockchain: a form of distributed ledger in which details of transactions are held in the ledger
+        in the form of blocks of information. A block of new information is attached into the chain of
+        pre-existing blocks via a computerised process by which transactions are validated. (FSB:
+        Crypto-asset markets: Potential channels for future financial stability implications, 2018)
+
+    2. What are virtual assets, crypto assets and (native) digital assets?
+
+        The following definitions are based on official sector publications or recommendations,
+        notably by the Financial Action Task Force (FATF), the Financial Stability Board (FSB) and the
+        European Central Bank (ECB). Some of the below terms are sometimes used interchangeably
+        and definitions may vary depending on the jurisdiction and perspective, for a example,
+        whether from a regulated, financial markets angle, a crypto-market perspective or through a
+        broader anti money laundering (AML) lens.
+
+        Virtual asset: a digital representation of value that can be digitally traded, or transferred, and
+        can be used for payment or investment purposes. Virtual assets do not include digital
+        representations of fiat currencies, securities and other financial assets that are already
+        covered elsewhere in the FATF Recommendations. (FATF recommendations, Updated March
+        2022)
+
+        Crypto-asset: a type of private asset that depends primarily on cryptography and distributed
+        ledger or similar technology as part of their perceived or inherent value. These are also
+        referred to as cryptocurrencies. (FSB: Crypto-asset markets: Potential channels for future
+        financial stability implications, 2018). The EU’s proposed Markets in Crypto-Assets (MiCa)
+        regulation defines a crytpo-asset more broadly as “a digital representation of value or rights
+        which may be transferred and stored electronically, using distributed ledger technology or
+        similar technology” (Art. 3-1 (2)). Examples include Bitcoin, Ether, Tether, Algorand and
+        Stellar, amongst others.
+
+        Digital asset: a digital instrument that is issued or represented through the use of distributed
+        ledger or similar technology. This does not include digital representations of fiat currencies.
+        (FSB: Assessment of Risks to Financial Stability from Crypto-assets, 2022)
+
+        Native digital asset: a security that is originally issued, recorded and kept in a DLT-based
+        system. (ECB: The use of DTL in post-trade processes, 2021)
+
+
+
+
+DLT & blockchain in bond markets FAQ
+
+Page 3 of 13                             © International Capital Market Association (ICMA), Zurich, 2022
+     3. What is a Central Bank Digital Currency (CBDC)?
+
+          A Central Bank Digital Currency (CBDC) is a digital form of central bank money eg a digital
+          banknote which would be a direct liability of a central bank. CBDC designed for use by
+          individuals and businesses is also referred to as “retail CBDC” (rCBDC) or “general purpose
+          CBDC”. A CBDC for financial institutions is referred to as “wholesale CBDC” (wCBDC) and could
+          be used to settle financial transactions.
+
+          Source:
+          Federal Reserve, FAQs, Currency and Coin
+          BIS Innovation Hub work on central bank digital currency
+
+
+          ICMA members note that regulators and central banks globally have adopted different
+          definitions of central bank digital currency. For example, the use of DLT being a criterion for
+          some but not for others.
+
+          Further reading:
+          Wholesale central bank digital currency experiments with the Banque de France, November
+          2021.
+          BIS Innovation Hub, the Swiss National Bank (SNB), SIX: Project Helvetia: A multi-phase
+          investigation on the settlement of tokenised assets in central bank money.
+
+
+     4. What are so-called stablecoins?
+
+          A stablecoin can be described as “a crypto-asset that aims to maintain a stable value relative
+          to a specified asset, or a pool or basket of assets”. The underlying mechanics of so-called
+          stablecoins may vary and include:
+              • “Asset-linked stablecoins” which “purport to maintain a stable value by referencing
+                  physical or financial assets or other crypto-assets”. Examples include Tether, USD
+                  Coin, or Euro Coin.
+              • “Algorithm-based stablecoins” which “purport to maintain a stable value via protocols
+                  that provide for the increase or decrease of the supply of the stablecoins in response
+                  to changes in demand. Examples include DAI, and TerraUSD (which collapsed in May
+                  20222).
+
+          However, the FSB notes that “stablecoin issuers are not subject to a consistent set of
+          standards regarding the composition of reserve assets backing the stablecoin, and there is a
+          lack of consistency in disclosure practices among stablecoin issuers”3, amongst other risks and
+          vulnerabilities. (FSB: Regulation, Supervision and Oversight of “Global Stablecoin”
+          Arrangements, Final report and High-Level Recommendations, 2020)
+
+
+
+
+2 Terra crisis fans regulatory concerns over $180bn stablecoin market, Financial Times, 11 May 2022, available at:
+
+https://www.ft.com/content/48d82c7a-495f-4d5e-a87a-a56bea58e760
+3 FSB: Assessment of Risks to Financial Stability from Crypto-assets, 16 February 2022, p. 11
+
+
+
+DLT & blockchain in bond markets FAQ
+
+Page 4 of 13                                     © International Capital Market Association (ICMA), Zurich, 2022
+         Further reading:
+         ECB: The expanding functions and uses of stablecoins, published as part of the Financial
+         Stability Review, 2021
+         G7 Working Group on Stablecoins, IMF, BIS-CPMI: Investigating the impact of global
+         stablecoins, 2019
+
+
+    5. What are DLT bonds?
+
+         Whilst there is no single, widely accepted definition, the term “DLT bonds” is understood to
+         be an instrument whose register of ownership is stored using DLT (see Q&A 1).4
+
+         While the nature of DLT bonds continues to evolve, two different models can be
+         distinguished:
+
+               a) Bonds issued natively onto a distributed ledger or blockchain. Such securities are held
+                  and traded through the DLT or blockchain environment, ie outside the traditional
+                  market infrastructure. The creation and existence of such bonds will be specific to
+                  each transaction and will likely differ across transactions. This type of instrument
+                  could also be referred to as a “native digital asset”, “security token” or “bond token”
+                  depending on the deal structure.
+
+                   Examples include:
+                       • SIX Group (CH1142754337, 0.125%, 27/11/2026). See press release.
+                       • EIB (FR0014003521, 0%, 28/04/2023). See press release.
+                       • World Bank “BOND-I” (AU0000020612, 2.20%, 28/08/2020). See press
+                           release.
+                   See further examples on ICMA’s tracker of new FinTech applications.
+
+               b) Traditional bonds which are immobilised from an operational perspective ie held by
+                  an (I)CSD or custodian and represented through a token on a blockchain or DLT
+                  network (see also Q&A 6). Whether a token holds legal value or not depends on the
+                  specific jurisdiction and the underlying operational configuration. This type of
+                  instrument could be referred to as a “tokenised bond”, or “non-native security token”.
+
+                   Examples include:
+                      • Deutsche Börse/HQLAx platform for collateral swaps in the securities lending
+                          market, where securities are not physically moved between the collateral
+                          agents but change in ownership is recorded on a DLT-based register. See
+                          further information here.
+
+         In both cases, bonds can be referred to as tokenised assets. Critical bond information
+         including, but not limited to, DLT bond identifiers, issuance amount and maturity, coupon,
+
+
+4 From an IT perspective, a DLT or blockchain system will need to satisfy a number of technical requirements, such as
+
+consensus mechanisms to validate transactions, level of distribution, and data structure, amongst others, to be classed as
+such. ICMA’s DLT Bonds Working Group may consider elaborating on such criteria at a later stage.
+
+DLT & blockchain in bond markets FAQ
+
+Page 5 of 13                                     © International Capital Market Association (ICMA), Zurich, 2022
+         features and corporate actions, identification of approved operators, transfer conditions and
+         other reference data can be embedded into its code-based representation.
+
+         DLT bonds are sometimes also referred to as blockchain or digital bonds. While DLT and
+         blockchain are used interchangeably, there is no market consensus on the use of the term
+         “digital bond”, which can be used loosely to refer to any debt security issued in
+         dematerialised, ie electronic form (see also Q&A 6) irrespective of the use of DLT or
+         blockchain.
+
+         Further reading:
+         ECB: The use of DLT in post-trade processes, 2021
+         OECD: The Tokenisation of Assets and Potential Implications for Financial Markets, 2020
+
+    6. What is the difference between between DLT bonds and traditional bonds, and how
+       they are held?
+
+         Traditional bonds are typically held in either physical or dematerialised (account-entry only)
+         form, through a series of intermediaries linking the issuer and the ultimate noteholder. They
+         may also be held by noteholders directly in physical form, although this is now rare5. By way
+         of summary:
+
+               •   Physical: The entitlement to bonds issued in paper-based form, also referred to as
+                   “definitive”, “materialised” or “certificated”, is represented by possession of a
+                   physical instrument, such as a bearer bond. Historically, Eurobonds issued under
+                   English law and held for the two ICSDs (Euroclear Bank and Clearstream) were in
+                   “definitive form”.
+               •   Dematerialised: The entitlement to dematerialised bonds such as registered bonds is
+                   represented in account-entry records and transfers made by book entries but there is
+                   generally no physical instrument, also referred to as “uncertificated bonds” in some
+                   jurisdictions. Dematerialised instruments are prevalent in most European
+                   jurisdictions. The examples referred to in Q&A 5 (a) fall in this category. Physical
+                   certificates can be issued to evidence title in dematerialised bonds, but it does not
+                   represent legal title itself.
+               •   Immobilised: Physical bonds are now generally immobilised and issued in the form of
+                   a single physical instrument, referred to as a “global” instrument. They are held by a
+                   depository or nominee, and the ultimate entitlement to which is represented by the
+                   account-entry records and transferred by book entries in those records. This is
+                   typically now the case for most Eurobonds which are issued in physical form.
+
+         DLT instruments use DLT or blockchain to perform the role of the keeping of records and book
+         entries. As noted above in Q&A 5, DLT or blockchain could be used to perform a similar role
+         to the records in bearer or dematerialised bonds (and regardless of immobilisation),
+         depending on the legal structure adopted. Note the term “immobilised” in Q&A 5 relates to
+
+5 It is commonplace however for bond documentation to be drafted in a manner that assumes the bonds are held in definitive
+
+form, even if this isn’t the case in practice. A mechanism for exchanging interests in a global instrument for definitive
+instruments is often also included, designed to operate as a fallback in the event the clearing systems fail.
+
+DLT & blockchain in bond markets FAQ
+
+Page 6 of 13                                    © International Capital Market Association (ICMA), Zurich, 2022
+         an operational, rather than a legal feature, and refers to a traditional instrument in its
+         different forms described above, which is held or immobilised and represented through a
+         token on a DLT network, where for example, change of ownership can be recorded.
+
+         Critically, a DLT bond is still a “bond”, being ordinarily understood as a bundle of legal rights
+         as between an issuer and holder, having enforceable existence and with the capacity to be
+         traded. Whether DLT or blockchain can be used to perform some or all of the roles described
+         above (including if the DLT or blockchain can ever be the “source” of the legal rights and
+         obligations between issuers and holders) will be dependent on a mix of law and contract and
+         each jurisdiction is likely to be different. This will have an impact on the future utility and
+         functionality of DLT bonds. See further information on how law and regulation are adapted in
+         key jurisdictions in ICMA’s DLT Regulatory Directory
+
+         See annex 1 and 2 for a visual representation of how a traditional bond in immobilised form
+         may be held compared to a DLT bond.
+
+         Some of the implications and benefits of a new blockchain- or DLT-based systems are outlined
+         in Q&As 10 and 11.
+
+    7. How does DLT bond documentation generally differ from traditional legal bond
+       documentation?6
+
+         In principle, the note itself as well as regulatory documentation such as a prospectus, are
+         expected to be similar to that used in traditional bonds. However, provisions in the
+         documentation for a DLT bond are expected to differ from traditional bonds in a few key
+         respects, stemming from the differences in the legal structure of the bond and any related
+         obligations of the issuer and its potential agent(s). Generally, the documentation of a DLT
+         bond is expected to:
+
+               •   Accurately reflect how the DLT bond is held from a legal perspective, as described in
+                   Q&A 6. This may necesstitate adapting or removing many of the provisions typically
+                   seen in traditional bond documentation as regards the legal form of the bonds – for
+                   example, the provisions regarding the bearer or registered form of the bonds.
+               •   Accurately reflect the different issuance and lifecycle processes applicable to DLT
+                   bonds, as described in Q&A 11. This may necessitate adapting, removing or
+                   supplementing the provisions concerning how the DLT bond is safekept, as well as the
+                   way record keeping, payments and corporate actions functions are delivered. The
+                   roster of transaction parties (eg agents, registrars etc) acting in relation to a DLT bond
+                   may differ from a traditional bond, too. The documentation appointing those
+                   transaction parties may therefore need revision.
+               •   Ensure that the terms and conditions of the DLT bond are compatible with the
+                   relevant DLT or blockchain-based system on which the bonds are recorded, ie ensure
+                   the terms and conditions can be converted into computational logic where needed.
+                   This is particularly true of DLT bonds that are digital native assets, where the terms
+
+6 The term “documentation” refers to all documents needed in relation to a bond issuance, including prospectus or offering
+
+circular, contractual agreements between parties involved and others subject to local law and regulatory requirements.
+
+DLT & blockchain in bond markets FAQ
+
+Page 7 of 13                                    © International Capital Market Association (ICMA), Zurich, 2022
+                and conditions may be coded onto a DLT or blockchain-based system in the form of a
+                smart contract.
+
+        However, it should be expected that core functions of legal documentation, such as disclosure
+        of the terms of the bonds, apply irrespective of the format of a security (whether DLT-based,
+        physical, dematerialised or immobilised) and be performed subject to legal and regulatory
+        requirements of the respective jurisdiction, as also noted above in Q&A 6.
+
+    8. What is a (digital) token?
+
+        There is no single definition of “token”. The FSB defines a digital token as “any digital
+        representation of an interest, which may be of value, a right to receive a benefit or perform
+        specified functions, or may not have a specified purpose or use” (FSB: Crypto-assets: Work
+        underway, regulatory approaches and potential gaps, 2019).
+
+        Figuratively speaking, a token can be considered a “digital envelope” that contains a set of
+        information in codified form. In the case of a security, this may include the economic terms
+        (eg issuance amount, coupon rate, redemption date, pre-approval and transfer conditions). In
+        the context of crypto markets and financial markets, tokens or “digital envelopes” always exist
+        in a blockchain or DLT network.
+
+        Further reading:
+        ISO 24165-1:2021(en): Digital token identifier (DTI) — Registration, assignment and structure
+        — Part 1: Method for registration and assignment
+
+    9. Are DLT bonds always on a DLT network or blockchain? Are there access restrictions?
+
+        Yes, DLT bonds described above (Q&A 5) utilise DLT or blockchain. A DLT or blockchain
+        network can either be permissioned (ie restricted access through a centralised operator) or
+        permissionless (ie no restrictions on accessing the network).
+
+    10. Can DLT bonds reduce settlement risk?
+
+        DLT bonds in and of themselves do not reduce settlement risk but can be paired with digital
+        or rather, programmed cash solutions. This allows for a DLT bond and digital cash such as a
+        CBDC or tokenised cash to be exchanged simultaneously on the same DLT network, also
+        known as “atomic settlement”, or at least intraday. This DLT-based process is designed to
+        minimise settlement risk through programming the transfers of digital cash and digital bonds
+        only to occur together. In practice, there may be multiple DLT networks involved in this
+        process. See also Q&A 11.
+
+    11. How might DLT bonds change the issuance and lifecycle process?
+
+        The issuance and lifecycle processes for DLT bonds are expected to be different to traditional
+        bonds. This is because:
+
+
+
+
+DLT & blockchain in bond markets FAQ
+
+Page 8 of 13                            © International Capital Market Association (ICMA), Zurich, 2022
+        •      For DLT bonds that are native digital assets (also referred to as “bond tokens” or “security
+               tokens”) the use of DLT or blockchain is expected to fundamentally change how the
+               execution, clearing, safekeeping, record keeping, payments and corporate actions
+               functions in respect of the bonds are delivered. This could have wide-ranging implications
+               for the market participants that manage those functions in conventional systems, such as
+               trading venues, clearing systems, depositories, custodians, agents, brokers and other
+               intermediaries in the bond issuance and lifecycle processes.
+        •      For tokenised bonds (also referred to as “non-native security tokens”), the use of DLT or
+               blockchain to record the transfer of bonds can make existing processes more efficient by
+               eliminating paperwork depending on the local law requirements, and facilitating more
+               direct communication between issuers and investors.
+
+        In general terms, DLT or blockchain-based systems are expected to replace incumbent
+        systems with ‘on-chain’ solutions, delivering efficiency improvements and cost savings, and
+        potentially enhancing compliance with financial crime and data protection regulations.
+        Atomic settlement or shortened settlement cycles (as outlined in Q&A 10) could eliminate
+        trade fails associated to incorrect settlement instructions, increase transparency to ensure
+        available inventory, enable real-time netting for positions held on the DLT or blockchain
+        network, and reduce or eliminate counterparty risk.
+
+    12. How are payments made in relation to DLT bonds?
+
+        Payments for settlement, coupon payments or redemption payments of DLT bonds which are
+        tokenised bonds can take place in the same way as traditional bonds. Payments related to DLT
+        bonds that are native digital assets can, from a technical standpoint, take place in the same
+        way as traditional bonds, or use any payment mechanism which is also in code-based or
+        distributed ledger form, commercial bank money in tokenised form, so-called stablecoins
+        representing value denominated in fiat currencies (see also Q&A 4), or central bank digital
+        currency (CBDC, see also Q&A 3). However, in practice, access to central bank money is
+        generally restricted to wholesale commercial banks and to enable DvP with a CBDC, investors
+        would also require direct access to a CBDC, which is a policy choice rather than a technological
+        question.
+
+        The below diagram illustrates the forms of payment that have been used in a Delivery-versus-
+        payment (DvP) scenario in bond markets, based on ICMA’s tracker of new FinTech
+        applications:
+
+
+
+
+DLT & blockchain in bond markets FAQ
+
+Page 9 of 13                               © International Capital Market Association (ICMA), Zurich, 2022
+         Examples include:
+
+              •    JPM Coin, “a permissioned system that serves as a payment rail and deposit account
+                   ledger, that allows participating J.P.Morgan clients to transfer US Dollars held on
+                   deposit with J.P.Morgan within the system, facilitating the movement of liquidity
+                   funding and payments in right time”7.
+              •    Tokenisation of CHF held within an account with SIX Interbank Clearing (SIC) for
+                   settlement of DLT instruments on SIX Digital Exchange.8
+              •    Fnality Payment Systems, formely known as “Utility Settlement Coin” (USC), which is
+                   backed by a consortium of banks and market infrastructures and seeks to provide a
+                   “a peer-to-peer digital cash asset to settle tokenised transactions with finality”9.
+
+    13. What is the Common Domain Model (CDM) for repo and bonds, and how does this fit
+        in with DLT bonds?
+
+         The CDM essentially enables IT systems to ‘speak the same language’. It is a standardised,
+         machine-readable and machine-executable blueprint for how financial products are traded
+         and managed across the transaction lifecycle, initially developed by ISDA for derivatives.
+
+         As such, the CDM lends itself to DLT or blockchain applications where market particpants and
+         their computer nodes in a DLT network can use the CDM to exchange and validate transaction
+
+
+7 https://www.jpmorgan.com/onyx/coin-system.htm
+8 General Terms and Conditions, SIX Digital Exchange AG (GTC SDX) - Version 1 July 2022
+9 https://www.fnality.org/about-fnality
+
+
+
+DLT & blockchain in bond markets FAQ
+
+Page 10 of 13                                   © International Capital Market Association (ICMA), Zurich, 2022
+        data when processing a repo transaction and related lifecycle events such as clearing or
+        settlement processes, or changes of a repo rate.
+
+        See also CDM video explainer. Further information is available on ICMA’s CDM webpage.
+
+    14. What is ICMA’s Common Data Dictionary initiative for primary bond markets, and
+        how does it support DLT bonds?
+
+        ICMA’s Common Data Dictionary initiative is bringing together market stakeholders across the
+        spectrum of debt capital markets (DCM) to build consensus on bond data exchanged during
+        the issuance process and deliver a data dictionary in machine-readable format. The aim is to
+        support automation from issuance to settlement and trading.
+
+        The initial focus is notably on economic terms of a bond (eg nominal amount, currency,
+        interest type, maturity date), and other information typically included within a vanilla bond
+        term sheet (eg whether bearer or registered form, selling restrictions). The Common Data
+        Dictionary aims to provide not only a foundation for the automation of existing processes in
+        bond issuance, but also for DLT bonds based on industry consensus on the fundamental
+        characteristics and terminology to serve as a key reference for the digital representation of
+        bonds.
+
+
+                                                                     Co-author & Editor:
+                                                                     Gabriel Callsen, ICMA
+                                                                     gabriel.callsen@icmagroup.org
+
+
+
+
+DLT & blockchain in bond markets FAQ
+
+Page 11 of 13                           © International Capital Market Association (ICMA), Zurich, 2022
+        Appendix 1:
+
+
+
+
+        Source: Simmons & Simmons LLP
+
+
+DLT & blockchain in bond markets FAQ
+
+Page 12 of 13                          © International Capital Market Association (ICMA), Zurich, 2022
+        Appendix 2:
+
+
+
+
+        Source: Simmons & Simmons LLP
+
+
+DLT & blockchain in bond markets FAQ
+
+Page 13 of 13                          © International Capital Market Association (ICMA), Zurich, 2022
+
