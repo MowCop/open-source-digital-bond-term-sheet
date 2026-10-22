@@ -9,9 +9,8 @@ export default function CopilotFocusHost({ inDialog = false }: { inDialog?: bool
   const { pathname } = useLocation();
   const focus = useCopilotFocus();
   const { deals } = useApp();
-  if (!focus || (pathname !== "/messages" && pathname !== "/inbox")) return null;
-  if ((focus.kind === "update") !== (pathname === "/messages")) return null;
-  if (inDialog && focus.kind !== "update") return null;
+  // Co-Pilot never reads deal chats; only board updates set a focus.
+  if (!focus || pathname !== "/messages" || focus.kind !== "update") return null;
   const deal = deals.find((d) => d.id === focus.dealId);
   if (!deal) return null;
   const copilot = <DealCopilot key={deal.id} deal={deal} hasUnsavedTerms={false} focus={focus} />;
