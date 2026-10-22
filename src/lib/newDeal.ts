@@ -19,7 +19,7 @@ export type NewDealBookrunner = { name: string; role: 'active' | 'passive'; isGl
 export type NewDealExtraction = { draft: Partial<NewDealDraft>; bookrunners: NewDealBookrunner[] };
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'];
-const LAWS: Record<string, string> = { english: 'ENGLISH_LAW', 'new york': 'NEW_YORK_LAW', german: 'GERMAN_LAW', french: 'FRENCH_LAW', swiss: 'SWISS_LAW' };
+const LAWS: Record<string, string> = { english: 'ENGLISH_LAW', 'new york': 'NEW_YORK_LAW', german: 'GERMAN_LAW', french: 'FRENCH_LAW' };
 
 /** Map extracted key terms onto the New Deal form vocabulary; unknown values stay empty. */
 export function mapExtractedTerms(keyTerms: Record<string, unknown> = {}, bookrunners: unknown = []): NewDealExtraction {
