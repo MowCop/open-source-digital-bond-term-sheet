@@ -58,7 +58,7 @@ Deno.serve(async(req)=>{
     if(action==='resume') await must(admin.from('copilot_runs').update({status:'queued',error:null,lease_token:null,lease_until:null}).eq('thread_id',threadId).in('status',['failed','paused']));
     // Reclaim only expired processing work; no unattended watcher or automatic failed-job retry.
     await must(admin.from('copilot_runs').update({status:'queued',lease_token:null,lease_until:null}).eq('thread_id',threadId).eq('status','processing').lt('lease_until',new Date().toISOString()));
-    const jobs=await must(admin.from('copilot_runs').select('*').eq('thread_id',threadId).eq('status','queued').order('created_at').limit(4));
+    const jobs=await must(admin.from('copilot_runs').select('*').eq('thread_id',threadId).eq('status','queued').order('created_at').limit(1)); // one review per request keeps it under the 150s limit; the browser loops for the rest
     const completed=[]; const live=input.data.liveChecks?.length?input.data.liveChecks:undefined;
     for(const job of jobs) {
       const token=crypto.randomUUID(); const claimed=await must(admin.rpc('copilot_claim',{_run:job.id,_token:token})); if(!claimed)continue;
@@ -82,7 +82,7 @@ Deno.serve(async(req)=>{
       const rawOut=JSON.parse(response.text);
       const output=trancheEvidence((job.kind==='document'?extractionSchema:syndicateSchema).parse(job.kind==='document'?(({checkerFindings:_c,...r})=>r)(rawOut??{}):rawOut));
       if(!output.summary.trim()) throw new Error('AI returned no usable review');
-      // Saved-term and document-completion reviews: one leased coordinator pass, then the four specialists sequentially.
+      // Saved-term and document-completion reviews: one leased coordinator pass, then the four specialists in parallel.
       const report=job.kind==='document'
         ?buildDocumentReport(output,text,await context(),previous)
         :buildSyndicateReport(syndicateSchema.parse(output),text,ctx,await runSpecialistPanel({model,deal:ctx,evidence:text,live}));
