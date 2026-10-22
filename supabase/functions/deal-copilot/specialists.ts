@@ -209,8 +209,6 @@ export async function runSpecialist(input: {
 export async function runSpecialistPanel(
   input: Omit<Parameters<typeof runSpecialist>[0], "id">,
 ): Promise<SpecialistReport[]> {
-  const reports: SpecialistReport[] = [];
-  // Sequential calls share a gateway budget and stop immediately on a terminal failure.
-  for (const id of specialistIds) reports.push(await runSpecialist({ ...input, id }));
-  return reports;
+  // Parallel so a full panel fits the 150s request limit; any terminal failure rejects the whole panel.
+  return Promise.all(specialistIds.map((id) => runSpecialist({ ...input, id })));
 }
