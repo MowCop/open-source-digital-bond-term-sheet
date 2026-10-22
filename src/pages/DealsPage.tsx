@@ -35,7 +35,7 @@ import { useApp } from '@/context/AppContext';
 import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
 import { termSheetView } from '@/lib/termSheetView';
 import { parseDtsStage, boardLink } from '@/lib/dtsNavigation';
-import { emptyNewDeal, canCreateNewDeal, extractNewDealIssuer, fillEmptyIssuer } from '@/lib/newDeal';
+import { emptyNewDeal, canCreateNewDeal, extractNewDealTerms, mergeNewDealDraft, mergeNewDealBookrunners } from '@/lib/newDeal';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
   const xml = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return buildXML(s) as string; }, [deal]);
@@ -347,23 +347,29 @@ export default function DealsPage() {
   const handleNewDealFiles = async (files: FileList) => {
     const selected = Array.from(files);
     setNewDealFiles(prev => [...prev, ...selected]);
-    if (newDeal.issuerName.trim() || extractingIssuer) return;
+    if (extractingIssuer) return;
     const revision = issuerRevision.current;
     const session = extractionSession.current;
     setExtractingIssuer(true);
     try {
       for (const file of selected) {
-        const issuer = await extractNewDealIssuer(file);
-        if (session !== extractionSession.current || revision !== issuerRevision.current) return;
-        if (issuer) {
-          setNewDeal(prev => ({ ...prev, issuerName: fillEmptyIssuer(prev.issuerName, issuer) }));
-          toast.success(`Issuer found in ${file.name}; please check the name`);
+        const { draft, bookrunners } = await extractNewDealTerms(file);
+        if (session !== extractionSession.current) return;
+        const locked = new Set(revision !== issuerRevision.current ? ['issuerName'] : []);
+        let filled: string[] = [];
+        setNewDeal(prev => { const r = mergeNewDealDraft(prev, draft, locked); filled = r.filled; return r.draft; });
+        let addedBanks = 0;
+        setNewBookrunners(prev => { const next = mergeNewDealBookrunners(prev, bookrunners); addedBanks = next === prev ? 0 : next.length; return next; });
+        await Promise.resolve();
+        const count = filled.length + (addedBanks ? 1 : 0);
+        if (count) {
+          toast.success(`Filled ${count} field${count > 1 ? 's' : ''} from ${file.name}; please check them before creating`);
           return;
         }
       }
-      toast.info('No issuer name found; please enter it manually');
+      toast.info('No new terms found; please enter them manually');
     } catch {
-      if (session === extractionSession.current) toast.info('Document added, but the issuer could not be identified; please enter it manually');
+      if (session === extractionSession.current) toast.info('Document added, but terms could not be read; please enter them manually');
     } finally {
       if (session === extractionSession.current) setExtractingIssuer(false);
     }
