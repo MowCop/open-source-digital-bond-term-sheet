@@ -1,4 +1,3 @@
-import { setCopilotFocus } from '@/lib/copilot/focus';
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useApp, useScopedApp } from '@/context/AppContext';
@@ -452,13 +451,6 @@ export default function InboxPage() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const allChat = chatMessages;
-  /** Point the top-bar Co-Pilot at the clicked deal chat (latest 60 messages). */
-  const focusChat = (deal: Deal, channels: ChatChannel[]) => {
-    const ids = new Set(channels.map(c => c.id));
-    const recent = allChat.filter(m => ids.has(m.channelId)).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()).slice(-60);
-    const context = recent.map(m => `[${m.timestamp.toISOString().slice(0, 16).replace('T', ' ')}] ${m.senderName}: ${stripHtml(m.body)}`).join('\n') || '(no messages yet)';
-    setCopilotFocus({ kind: 'chat', dealId: deal.id, label: `${deal.issuerName} chat`, context });
-  };
   const [searchParams] = useSearchParams();
   useEffect(() => {
     const dealId = searchParams.get('dealId');
@@ -673,7 +665,6 @@ export default function InboxPage() {
                 search={search}
                 expanded={false}
                 onToggle={() => {
-                  focusChat(deal, channels);
                   setExpanded(prev => ({ ...prev, [deal.id]: true }));
                   setActiveKey(deal.id);
                 }}

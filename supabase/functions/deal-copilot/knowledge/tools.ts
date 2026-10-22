@@ -140,6 +140,43 @@ export function readLiveChecks(live: LiveCheck[] | undefined) {
     tally: { pass: n('pass'), warn: n('warn'), fail: n('fail'), ignored: live.filter((c) => c.ignored).length }, checks: live };
 }
 
+const UA = { 'User-Agent': 'VirtualDealRoom research contact@eurobondmarkets.com', Accept: 'application/json' };
+/** Free public sources: SEC EDGAR full-text search + Wikipedia summary. Live, labelled by source and time. */
+export async function searchPublicSources(input: { query: string }) {
+  const q = String(input.query ?? '').trim().slice(0, 200);
+  if (!q) throw new Error('query required');
+  const retrievedAt = new Date().toISOString();
+  const out: Record<string, unknown> = { query: q, retrievedAt, note: 'Public sources, not independently verified; cite source and date.' };
+  try {
+    const r = await fetch(`https://efts.sec.gov/LATEST/search-index?q=${encodeURIComponent('"' + q + '"')}`, { headers: UA, signal: AbortSignal.timeout(8000) });
+    if (r.ok) {
+      const hits = ((await r.json())?.hits?.hits ?? []).slice(0, 5);
+      out.edgar = hits.map((h: any) => ({ form: h._source?.form, filed: h._source?.file_date, entity: h._source?.display_names?.[0],
+        url: h._source?.ciks?.[0] && h._id ? `https://www.sec.gov/Archives/edgar/data/${Number(h._source.ciks[0])}/${String(h._id.split(':')[0]).replace(/-/g, '')}/${h._id.split(':')[1]}` : undefined }));
+    } else out.edgar = { error: `EDGAR returned ${r.status}` };
+  } catch { out.edgar = { error: 'EDGAR unavailable' }; }
+  try {
+    const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q.replace(/ /g, '_'))}`, { headers: UA, signal: AbortSignal.timeout(8000) });
+    if (r.ok) { const j = await r.json(); out.wikipedia = { title: j.title, extract: j.extract, url: j.content_urls?.desktop?.page }; }
+  } catch { /* optional */ }
+  return out;
+}
+
+export const SUBSCRIPTION_PROVIDERS = ['moodys', 'sp', 'fitch', 'bloomberg'] as const;
+/** Paid subscription sources. Demo project: the user's subscription is assumed connected, but no real
+ *  API is called — output is always stamped demo so it can never pass as real ratings or research.
+ *  To go live, add a per-provider API key secret and replace the demo branch. */
+export function querySubscriptionSource(input: { provider: string; borrower: string; topic?: string }) {
+  const provider = String(input.provider ?? '').toLowerCase();
+  if (!(SUBSCRIPTION_PROVIDERS as readonly string[]).includes(provider)) throw new Error(`provider must be one of ${SUBSCRIPTION_PROVIDERS.join(', ')}`);
+  const borrower = String(input.borrower ?? '').trim().slice(0, 200);
+  if (!borrower) throw new Error('borrower required');
+  return { demo: true, provider, borrower, topic: input.topic ?? 'credit overview', retrievedAt: new Date().toISOString(),
+    label: 'Demo subscription data, illustrative only',
+    connection: 'Assumed connected for this demo project; no live data was retrieved.',
+    instruction: 'You may give an illustrative, clearly hypothetical answer in the style of this provider, prefixed with the label. Never present it as a real rating, outlook or research view.' };
+}
+
 const obj = (properties: Record<string, unknown>, required: string[]) => ({ type: 'object', properties, required, additionalProperties: false });
 export const knowledgeSpecs = {
   readLiveChecks: { name: 'readLiveChecks', description: 'Read the current Deal Checker results (pass/warn/fail, source, user-ignored flag) exactly as the user sees them, including GLEIF/OpenFIGI, conventions, ESG and AI Deep Audit items.', input_schema: obj({}, []) },
@@ -147,6 +184,8 @@ export const knowledgeSpecs = {
   searchLei: { name: 'searchLei', description: 'Live GLEIF name search returning up to 5 LEI candidates. Suggestions only.', input_schema: obj({ name: { type: 'string' } }, ['name']) },
   lookupFigi: { name: 'lookupFigi', description: 'Live OpenFIGI mapping of an ISIN to FIGI, composite and share-class FIGI, name, ticker and security type.', input_schema: obj({ isin: { type: 'string' } }, ['isin']) },
   checkCalendar: { name: 'checkCalendar', description: 'Business-day check against the Deal Checker TARGET2, London and US holiday tables (2024–2027), with Following/Modified Following roll and optional T+n settlement date. Supply calendars or currency.', input_schema: obj({ date: { type: 'string' }, calendars: { type: 'array', items: { type: 'string' } }, currency: { type: 'string' }, settlementLag: { type: 'number' } }, ['date']) },
+  searchPublicSources: { name: 'searchPublicSources', description: 'Search free public sources (SEC EDGAR filings full-text search, Wikipedia) about the borrower or deal. Live, returns URLs and retrieval time.', input_schema: obj({ query: { type: 'string' } }, ['query']) },
+  querySubscriptionSource: { name: 'querySubscriptionSource', description: "Query the user's paid subscription (moodys, sp, fitch, bloomberg) about the borrower. DEMO: returns illustrative-only data that must be labelled 'Demo subscription data, illustrative only'.", input_schema: obj({ provider: { type: 'string' }, borrower: { type: 'string' }, topic: { type: 'string' } }, ['provider', 'borrower']) },
   searchReferenceLibrary: { name: 'searchReferenceLibrary', description: 'Search the reference library: ICMA Primary Market Handbook Appendix A8 pro formas, Appendix C1 (Bond Data Taxonomy: purpose, legal nature, Digital Term Sheet use), ICMA DLT and blockchain in bond markets FAQ (2022), HKMA Sept 2026 HKSAR Digital Green Bonds press release (real DLT bond example), ICMA BDT v2.0 XSD/enums/type restrictions/example, and the Deal Checker capabilities reference. Optional sourceId: icma-a8, icma-c1, icma-dlt-faq, hkma-digital-green-2026, checker-capabilities, bdt-xsd, bdt-enums, bdt-types, bdt-example.', input_schema: obj({ query: { type: 'string' }, sourceId: { type: 'string' }, limit: { type: 'number' } }, ['query']) },
 };
 export type KnowledgeTool = keyof typeof knowledgeSpecs;
@@ -159,6 +198,8 @@ export async function runKnowledgeTool(name: string, input: any, live?: LiveChec
     case 'lookupFigi': return lookupFigi(input);
     case 'checkCalendar': return checkCalendar(input);
     case 'searchReferenceLibrary': return searchReferenceLibrary(input);
+    case 'searchPublicSources': return searchPublicSources(input);
+    case 'querySubscriptionSource': return querySubscriptionSource(input);
     default: return undefined;
   }
 }
