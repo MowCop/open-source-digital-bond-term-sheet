@@ -408,7 +408,7 @@ export default function DealCopilot({
             onChange={(e) => setText(e.target.value)}
             maxLength={12000}
             rows={1}
-            placeholder={focus ? (focus.kind === "update" ? "Ask about this update…" : "Ask about this chat…") : "Ask about this deal…"}
+            placeholder={focus ? "Ask about this update…" : "Ask about this deal…"}
             className="h-9 max-h-28 min-h-0 flex-1 resize-none py-2 text-sm"
           />
           <Button
