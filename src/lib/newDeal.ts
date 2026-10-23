@@ -1,5 +1,6 @@
-import { getAiModel } from '@/lib/aiModel';
-import { supabase } from '@/integrations/supabase/client';
+import { readDocumentTerms, documentProposals, INITIAL_DOCUMENT_PATHS } from '@/lib/documentIntake';
+import { emptyState } from '@/lib/termsheet/index.js';
+import type { BdtState } from '@/lib/bdt-bridge';
 
 export const emptyNewDeal = () => ({
   issuerName: '', currency: '', size: '', tenor: '', coupon: '',
@@ -16,7 +17,7 @@ export function fillEmptyIssuer(current: string, extracted: unknown): string {
 
 export type NewDealDraft = ReturnType<typeof emptyNewDeal>;
 export type NewDealBookrunner = { name: string; role: 'active' | 'passive'; isGlobalCoordinator: boolean };
-export type NewDealExtraction = { draft: Partial<NewDealDraft>; bookrunners: NewDealBookrunner[] };
+export type NewDealExtraction = { draft: Partial<NewDealDraft>; bookrunners: NewDealBookrunner[]; fields?: Record<string, string> };
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'];
 const LAWS: Record<string, string> = { english: 'ENGLISH_LAW', 'new york': 'NEW_YORK_LAW', german: 'GERMAN_LAW', french: 'FRENCH_LAW' };
@@ -61,33 +62,20 @@ export function mergeNewDealBookrunners<T extends { name: string }>(current: T[]
 
 /** Reuse existing document readers and extraction service to pre-fill the New Deal form. */
 export async function extractNewDealTerms(file: File): Promise<NewDealExtraction> {
-  const name = file.name.toLowerCase();
-  let text: string;
-  if (name.endsWith('.pdf')) {
-    const { pdfFileToHtml } = await import('@/lib/pdfToHtml');
-    text = (await pdfFileToHtml(file)).text;
-  } else if (name.endsWith('.docx')) {
-    const { docxFileToHtml } = await import('@/lib/docxToHtml');
-    text = (await docxFileToHtml(file)).text;
-  } else if (name.endsWith('.xml')) {
-    const doc = new DOMParser().parseFromString(await file.text(), 'application/xml');
-    if (doc.querySelector('parsererror')) throw new Error('The XML file could not be read');
-    const nodes = Array.from(doc.getElementsByTagName('*'));
-    const issuer = nodes.filter(n => n.localName === 'Party').find(p =>
-      Array.from(p.getElementsByTagName('*')).some(n => n.localName === 'PartyRoleType' && n.textContent?.trim() === 'ISSUER'));
-    const issuerName = issuer && Array.from(issuer.getElementsByTagName('*')).find(n => n.localName === 'PartyName')?.textContent?.trim();
-    if (issuerName) return { draft: { issuerName }, bookrunners: [] };
-    text = doc.documentElement.textContent ?? '';
-  } else if (/\.html?$/.test(name)) {
-    const { stripHtml } = await import('@/lib/htmlText');
-    text = stripHtml(await file.text());
-  } else {
-    text = await file.text();
+  const { text, keyTerms, bookrunners } = await readDocumentTerms(file);
+  const proposals = documentProposals(emptyState() as BdtState, text, keyTerms, file.name, file.name.toLowerCase().endsWith('.xml'));
+  const fields = Object.fromEntries(proposals.filter(p => p.p && INITIAL_DOCUMENT_PATHS.includes(p.p)).map(p => [p.p, p.val]));
+  const mapped = mapExtractedTerms(keyTerms, bookrunners);
+  if (file.name.toLowerCase().endsWith('.xml')) {
+    const parties = proposals.find(p => p.g === 'parties')?.payload;
+    if (Array.isArray(parties)) mapped.draft.issuerName = parties.find(p => p.Roles?.includes('ISSUER'))?.PartyName ?? '';
   }
-  if (!text.trim()) return { draft: {}, bookrunners: [] };
-  const { data, error } = await supabase.functions.invoke('extract-deal-fields-ai', {
-    body: { text: text.slice(0, 150000), model: getAiModel() },
-  });
-  if (error || data?.error) throw new Error('Term lookup was unsuccessful');
-  return mapExtractedTerms(data?.keyTerms, data?.bookrunners);
+  return { ...mapped, fields };
+}
+
+/** Empty fields only, including explicitly cleared/locked fields. */
+export function mergeDocumentFields(current: Record<string, string>, extracted: Record<string, string>, locked: Set<string> = new Set()) {
+  const next = { ...current };
+  for (const [path, value] of Object.entries(extracted)) if (value && !current[path]?.trim() && !locked.has(path)) next[path] = value;
+  return next;
 }
