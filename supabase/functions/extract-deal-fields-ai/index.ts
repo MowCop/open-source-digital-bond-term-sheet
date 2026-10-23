@@ -40,7 +40,9 @@ Return STRICT JSON matching this TypeScript type — no markdown, no commentary:
     "Governing Law": string,       // "English Law" | "New York Law" | "German Law" | "French Law" | "Swiss Law"
     "Listing": string,             // venue name only
     "Day Count": string,           // "ACT/ACT" | "ACT/360" | "ACT/365" | "30/360" | "30E/360"
-    "Interest Type": string        // "Fixed" | "Floating" | "Zero Coupon"
+    "Interest Type": string,       // "Fixed" | "Floating" | "Zero Coupon"
+    "Payment Frequency": string,  // "ANNUALLY" | "SEMIANNUALLY" | "QUARTERLY" | "MONTHLY", only if stated
+    "Seniority": string            // "SENIOR" | "SUPER_SENIOR" | "MEZZANINE" | "JUNIOR", only if stated
   },
   "bookrunners": [
     { "name": string, "role": "active" | "passive", "isGlobalCoordinator": boolean }
@@ -52,7 +54,10 @@ Rules:
 - Never put a bank name in "Issuer Name". The issuer is the borrower raising money.
 - Bookrunners: include only banks acting in a syndicate role (Active/Passive Bookrunner, Joint Lead Manager, Global Coordinator). Mark Global Coordinators with isGlobalCoordinator=true. If the doc only says "Joint Bookrunner" without active/passive, default role to "active".
 - Preserve the document's own date format — do not reformat dates.
-- Do not invent ISINs, LEIs or ratings.`;
+- Do not invent ISINs, LEIs or ratings.
+- Preliminary offering memoranda often leave pricing, size and maturity unresolved: return empty for blanks, placeholders, alternatives or multiple tranche values that cannot describe a single issue.
+- Extract denomination, listing, day count, payment frequency and seniority from the notes' terms, not from precedent issues, risk-factor examples or other securities.
+- Do not infer payment frequency from a list of dates or infer seniority from the borrower's rating.`;
 
 interface ExtractResult {
   keyTerms: Record<string, string>;
@@ -66,7 +71,7 @@ const EMPTY: ExtractResult = {
     Coupon: '', 'Issue Price': '', 'Reoffer Price': '', 'Reoffer Yield': '',
     'Mid-Swap Rate': '', 'Pricing Date': '', 'Settlement Date': '',
     'Maturity Date': '', Denomination: '', 'Governing Law': '',
-    Listing: '', 'Day Count': '', 'Interest Type': '',
+    Listing: '', 'Day Count': '', 'Interest Type': '', 'Payment Frequency': '', Seniority: '',
   },
   bookrunners: [],
 };

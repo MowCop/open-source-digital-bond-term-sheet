@@ -32,10 +32,12 @@ import { buildXML, refreshAuto } from '@/lib/termsheet/index.js';
 import { setupAlRajhiDemo } from '@/components/AlRajhiDemoPanel';
 import { isDemoDeal } from '@/data/alRajhiDemo';
 import { useApp } from '@/context/AppContext';
-import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
+import { dealToBdtState, fieldByPath, type BdtState } from '@/lib/bdt-bridge';
+import TermSheetField from '@/components/termsheet/TermSheetField';
+import { INITIAL_DOCUMENT_PATHS } from '@/lib/documentIntake';
 import { termSheetView } from '@/lib/termSheetView';
 import { parseDtsStage, boardLink } from '@/lib/dtsNavigation';
-import { emptyNewDeal, canCreateNewDeal, extractNewDealTerms, mergeNewDealDraft, mergeNewDealBookrunners } from '@/lib/newDeal';
+import { emptyNewDeal, canCreateNewDeal, extractNewDealTerms, mergeNewDealDraft, mergeNewDealBookrunners, mergeDocumentFields } from '@/lib/newDeal';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
   const xml = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return buildXML(s) as string; }, [deal]);
@@ -283,6 +285,9 @@ export default function DealsPage() {
   const [newDealFiles, setNewDealFiles] = useState<File[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState<{ dealId: string; files: File[] } | null>(null);
   const [newDeal, setNewDeal] = useState(emptyNewDeal);
+  const [documentFields, setDocumentFields] = useState<Record<string, string>>({});
+  const documentFieldsRef = useRef(documentFields); documentFieldsRef.current = documentFields;
+  const documentFieldLocks = useRef(new Set<string>());
   const [extractingIssuer, setExtractingIssuer] = useState(false);
   const issuerRevision = useRef(0);
   const extractionSession = useRef(0);
@@ -324,18 +329,22 @@ export default function DealsPage() {
 
   const handleCreateDeal = () => {
     if (!canCreateNewDeal(newDeal.issuerName, newBookrunners)) return;
-    const created = createDeal({
+    const draftDeal = {
       issuerName: newDeal.issuerName.trim(),
       currency: newDeal.currency,
       size: newDeal.size,
       tenor: newDeal.tenor,
       coupon: newDeal.coupon,
-      stage: 'Mandate',
+      stage: 'Mandate' as const,
       bookrunners: newBookrunners,
       issuerRating: newDeal.issuerRating || undefined,
       issuanceType: (newDeal.issuanceType as any) || undefined,
       governingLaw: (newDeal.governingLaw as any) || undefined,
-    });
+    };
+    const bdtState = dealToBdtState({ ...draftDeal, id: '', createdAt: new Date(), updatedAt: new Date(), stageHistory: [] });
+    bdtState.f = { ...bdtState.f, ...documentFields };
+    refreshAuto(bdtState);
+    const created = createDeal({ ...draftDeal, bdtState });
     if (newDealFiles.length) {
       setPendingDocuments({ dealId: created.id, files: newDealFiles });
       setExpandedDealId(created.id);
@@ -343,6 +352,7 @@ export default function DealsPage() {
     setNewDealFiles([]);
     setShowCreate(false);
     setNewDeal(emptyNewDeal());
+    setDocumentFields({}); documentFieldLocks.current.clear();
     setNewBookrunners([]);
   };
 
@@ -353,22 +363,23 @@ export default function DealsPage() {
     const revision = issuerRevision.current;
     const session = extractionSession.current;
     setExtractingIssuer(true);
+    let count = 0;
     try {
       for (const file of selected) {
-        const { draft, bookrunners } = await extractNewDealTerms(file);
+        const { draft, bookrunners, fields = {} } = await extractNewDealTerms(file);
         if (session !== extractionSession.current) return;
         const locked = new Set(revision !== issuerRevision.current ? ['issuerName'] : []);
         const { draft: merged, filled } = mergeNewDealDraft(newDealRef.current, draft, locked);
         const banks = mergeNewDealBookrunners(newBookrunnersRef.current, bookrunners);
+        const extra = mergeDocumentFields(documentFieldsRef.current, fields, documentFieldLocks.current);
+        count += Object.keys(extra).filter(p => extra[p] !== documentFieldsRef.current[p]).length;
+        count += filled.length + (banks !== newBookrunnersRef.current && banks.length ? 1 : 0);
+        documentFieldsRef.current = extra; setDocumentFields(extra);
         newDealRef.current = merged; newBookrunnersRef.current = banks;
         setNewDeal(merged); setNewBookrunners(banks);
-        const count = filled.length + (banks.length && banks !== newBookrunners ? 1 : 0);
-        if (count) {
-          toast.success(`Filled ${count} field${count > 1 ? 's' : ''} from ${file.name}; please check them before creating`);
-          return;
-        }
       }
-      toast.info('No new terms found; please enter them manually');
+      if (count) toast.success(`Filled ${count} field${count > 1 ? 's' : ''}; please check them before creating`);
+      else toast.info('No new terms found; please enter them manually');
     } catch {
       if (session === extractionSession.current) toast.info('Document added, but terms could not be read; please enter them manually');
     } finally {
@@ -484,7 +495,21 @@ export default function DealsPage() {
                   </div>
                 </div>
 
-                <Button onClick={handleCreateDeal} className="w-full" disabled={!canCreateNewDeal(newDeal.issuerName, newBookrunners)}>Create Deal</Button>
+                {newDealFiles.length > 0 && (
+                  <div className="space-y-3 border-t border-border pt-3">
+                    <h3 className="text-sm font-medium">Document terms</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {INITIAL_DOCUMENT_PATHS.map(path => {
+                        const fd = fieldByPath(path);
+                        return fd ? <TermSheetField key={path} fd={fd} value={documentFields[path] ?? ''} onChange={value => {
+                          documentFieldLocks.current.add(path);
+                          setDocumentFields(current => ({ ...current, [path]: value }));
+                        }} /> : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+                <Button onClick={handleCreateDeal} className="w-full" disabled={extractingIssuer || !canCreateNewDeal(newDeal.issuerName, newBookrunners)}>Create Deal</Button>
                 <IngestDropzone onFiles={handleNewDealFiles} className="w-full min-w-0 overflow-hidden" />
                 {extractingIssuer && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Reading deal terms…</p>}
                 {newDealFiles.length > 0 && (
