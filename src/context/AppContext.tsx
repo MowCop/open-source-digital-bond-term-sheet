@@ -350,6 +350,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       stageHistory: [],
       createdByOrg: deal.createdByOrg ?? ownerOrg,
     };
+    // New Deal intake seeds terms before the definitive deal ID exists.
+    if (newDeal.bdtState?.f && !newDeal.bdtState.f['IssuanceDataGroup/Issuance/DealIdentifier']) {
+      newDeal.bdtState = { ...newDeal.bdtState, f: { ...newDeal.bdtState.f, 'IssuanceDataGroup/Issuance/DealIdentifier': newDeal.id } };
+    }
     setDeals(prev => [newDeal, ...prev]);
     insertDeal(newDeal).catch(e => console.error('[Cloud] insertDeal failed', e));
     // Chat channel participants = creator + any selected Syndicate Chat Participants (SCPs).

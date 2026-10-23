@@ -13,6 +13,7 @@ import { FRN_FIELDS } from '@/lib/conventionChecks';
  *  • Fixed-rate single tranche only in this iteration.
  */
 import { uploadDealDocument } from '@/lib/dealDocuments';
+import { readDocumentTerms, documentProposals } from '@/lib/documentIntake';
 import { useEffect, useImperativeHandle, useMemo, useRef, useState, type RefObject } from 'react';
 import {
   Check, ChevronDown, ChevronRight,
@@ -226,11 +227,22 @@ export default function TermSheetFill({
           continue;
         }
         let text = '';
-        if (name.endsWith('.pdf')) text = (await pdfFileToHtml(file)).text;
-        else if (name.endsWith('.docx')) text = (await docxFileToHtml(file)).text;
-        else if (name.endsWith('.html') || name.endsWith('.htm')) text = stripHtml(await file.text());
-        else text = await file.text();
-        const out = ingestText(state, text.slice(0, 150000), file.name);
+        let terms: Record<string, unknown> = {};
+        if ((file as File & { skipStore?: boolean }).skipStore) text = await file.text();
+        else {
+          try {
+            const extracted = await readDocumentTerms(file);
+            text = extracted.text; terms = extracted.keyTerms;
+          } catch {
+            // AI failure must not stop the existing offline document parser.
+            if (name.endsWith('.pdf')) text = (await pdfFileToHtml(file)).text;
+            else if (name.endsWith('.docx')) text = (await docxFileToHtml(file)).text;
+            else if (/\.html?$/.test(name)) text = stripHtml(await file.text());
+            else text = await file.text();
+            toast.info(`AI terms unavailable for ${file.name}; using the document reader`);
+          }
+        }
+        const out = documentProposals(state, text.slice(0, 150000), terms, file.name);
         if (Array.isArray(out)) found.push(...(out as Proposal[]));
       } catch (err) {
         toast.error(`Could not read ${file.name}: ${(err as Error).message}`);
@@ -254,6 +266,7 @@ export default function TermSheetFill({
       setDirty(true);
     }
     setProposals(found);
+    if (found.length) setOpen(o => ({ ...o, priority: true }));
     if (found.length) toast.success(`${found.length} proposals to review`);
     else toast.info('Nothing recognisable found in that document');
     return found.length;
