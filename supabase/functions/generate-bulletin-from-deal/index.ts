@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       authoritativeTermSheet: bulletinTerms(deal.bdt_state),
       legacyDeal: deal.bdt_state ? null : deal,
       sourceAnnouncement: source.announcement,
-      documents: payload.docs,
+      documents: payload.docs.map(d => ({ name: d.name, text: d.text.length <= 18000 ? d.text : d.text.slice(0, 12000) + '\n[… excerpt …]\n' + d.text.slice(-6000) })),
     }), maxTokens: 16000 });
     if (!ai.ok) return jsonResponse({ error: ai.error, message: ai.message }, ai.status);
     let raw: string = ai.text;
