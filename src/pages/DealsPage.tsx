@@ -38,6 +38,7 @@ import { INITIAL_DOCUMENT_PATHS } from '@/lib/documentIntake';
 import { termSheetView } from '@/lib/termSheetView';
 import { parseDtsStage, boardLink } from '@/lib/dtsNavigation';
 import { emptyNewDeal, canCreateNewDeal, extractNewDealTerms, mergeNewDealDraft, mergeNewDealBookrunners, mergeDocumentFields } from '@/lib/newDeal';
+import RichTextEditor from '@/components/RichTextEditor';
 import { bulletinDocuments } from '@/lib/bulletin';
 import { Textarea } from '@/components/ui/textarea';
 import { findBulletinDraft } from '@/lib/bulletinDraft';
@@ -749,10 +750,9 @@ function GenerateBulletinDialog({
   const [body, setBody] = useState(draft?.body ?? '');
   const [error, setError] = useState<string | null>(null);
   const [aiModel] = useAiModel();
-  const [sourceAnnouncement, setSourceAnnouncement] = useState('');
   const [generation, setGeneration] = useState(0);
   const [sourceWarning, setSourceWarning] = useState('');
-  const announcementRef = useRef('');
+  const editedRef = useRef('');
 
   useEffect(() => {
     if (draft && generation === 0) return;
@@ -763,7 +763,7 @@ function GenerateBulletinDialog({
     bulletinDocuments(deal.id).then(async ({ docs, failed }) => {
       if (cancelled) return { data: null, error: null };
       if (failed.length) setSourceWarning(`Could not read: ${failed.join(', ')}. These documents were not used.`);
-      return supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id, model: aiModel, docs, sourceAnnouncement: announcementRef.current } });
+      return supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id, model: aiModel, docs, editedBulletin: editedRef.current.split('<h3>Legal Notices</h3>')[0] || undefined } });
     })
       .then(({ data, error }) => {
         if (cancelled) return;
@@ -778,7 +778,9 @@ function GenerateBulletinDialog({
           return;
         }
         setSubject((data as any)?.subject || `${deal.issuerName} ${deal.currency} ${deal.size} ${deal.tenor}`);
-        setBody((data as any)?.body || '');
+        const fresh: string = (data as any)?.body || '';
+        const keptLegal = editedRef.current.includes('<h3>Legal Notices</h3>') ? '<h3>Legal Notices</h3>' + editedRef.current.split('<h3>Legal Notices</h3>')[1] : '';
+        setBody(keptLegal && !(data as any)?.hasLegalNotices ? fresh.split('<h3>Legal Notices</h3>')[0] + keptLegal : fresh);
         if (!data?.hasLegalNotices) setSourceWarning(w => [w, 'No sourced legal notices found. Add the official announcement before publishing if required.'].filter(Boolean).join(' '));
         setLoading(false);
       }).catch(e => { if (!cancelled) { setError(e instanceof Error ? e.message : 'Could not read deal documents.'); setLoading(false); } });
@@ -818,10 +820,9 @@ function GenerateBulletinDialog({
             <span className="ml-auto mr-6"><AiModelPicker compact /></span>
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-2">
-          <Label htmlFor="bulletin-source">Official announcement (optional)</Label>
-          <Textarea id="bulletin-source" value={sourceAnnouncement} onChange={e => setSourceAnnouncement(e.target.value)} maxLength={30000} className="min-h-24" />
-          <Button variant="outline" disabled={loading || saving} onClick={() => { announcementRef.current = sourceAnnouncement; setGeneration(g => g + 1); }}><Undo2 className="h-4 w-4 mr-2" />Regenerate bulletin</Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" disabled={loading || saving} onClick={() => { editedRef.current = body; setGeneration(g => g + 1); }}><Undo2 className="h-4 w-4 mr-2" />Regenerate bulletin</Button>
+          <span className="text-xs text-muted-foreground">Keeps your edits and adds the latest saved Fill and Execution Essentials terms.</span>
         </div>
         {sourceWarning && <p role="status" className="text-sm text-warning">{sourceWarning}</p>}
         {loading ? (
@@ -840,9 +841,9 @@ function GenerateBulletinDialog({
             <div className="rounded-lg border-2 border-success/70 bg-card/60 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_32px_-12px_rgba(34,197,94,0.25)]">
               <div className="flex items-center justify-between px-3 py-2 border-b border-success/20">
                 <span className="text-xs font-semibold uppercase tracking-wide text-success">Preview</span>
-                <span className="text-[10px] text-muted-foreground">Announcement preview</span>
+                <span className="text-[10px] text-muted-foreground">Click to edit</span>
               </div>
-              <div className="max-h-[55vh] overflow-y-auto rounded-md bg-background/70 p-5 text-sm prose prose-sm max-w-none text-white [&_p]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_li]:text-white [&_strong]:text-white [&_em]:text-white [&_a]:text-white [&_a]:underline" dangerouslySetInnerHTML={{ __html: body }} />
+              <RichTextEditor value={body} onChange={setBody} className="max-h-[55vh] border-0" contentClassName="p-5 text-sm text-white [&_p]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_li]:text-white [&_strong]:text-white [&_th]:text-white [&_td]:text-white" />
             </div>
 
             <div className="flex flex-wrap justify-end gap-2 pt-2 border-t border-border/50">
