@@ -38,6 +38,8 @@ import { INITIAL_DOCUMENT_PATHS } from '@/lib/documentIntake';
 import { termSheetView } from '@/lib/termSheetView';
 import { parseDtsStage, boardLink } from '@/lib/dtsNavigation';
 import { emptyNewDeal, canCreateNewDeal, extractNewDealTerms, mergeNewDealDraft, mergeNewDealBookrunners, mergeDocumentFields } from '@/lib/newDeal';
+import { bulletinDocuments } from '@/lib/bulletin';
+import { Textarea } from '@/components/ui/textarea';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
   const xml = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return buildXML(s) as string; }, [deal]);
@@ -730,25 +732,40 @@ function GenerateBulletinDialog({
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [aiModel] = useAiModel();
+  const [sourceAnnouncement, setSourceAnnouncement] = useState('');
+  const [generation, setGeneration] = useState(0);
+  const [sourceWarning, setSourceWarning] = useState('');
+  const announcementRef = useRef('');
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id, model: aiModel } })
+    setSourceWarning('');
+    bulletinDocuments(deal.id).then(async ({ docs, failed }) => {
+      if (cancelled) return { data: null, error: null };
+      if (failed.length) setSourceWarning(`Could not read: ${failed.join(', ')}. These documents were not used.`);
+      return supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id, model: aiModel, docs, sourceAnnouncement: announcementRef.current } });
+    })
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) {
-          setError(error.message || 'Failed to generate bulletin');
+          let detail = error.message || 'Failed to generate bulletin';
+          void (async () => {
+            try { const response = await (error as { context?: Response }).context?.json(); detail = response?.message || detail; } catch { /* keep error */ }
+            if (!cancelled) setError(detail);
+          })();
+          setError(detail);
           setLoading(false);
           return;
         }
         setSubject((data as any)?.subject || `${deal.issuerName} ${deal.currency} ${deal.size} ${deal.tenor}`);
         setBody((data as any)?.body || '');
+        if (!data?.hasLegalNotices) setSourceWarning(w => [w, 'No sourced legal notices found. Add the official announcement before publishing if required.'].filter(Boolean).join(' '));
         setLoading(false);
-      });
+      }).catch(e => { if (!cancelled) { setError(e instanceof Error ? e.message : 'Could not read deal documents.'); setLoading(false); } });
     return () => { cancelled = true; };
-  }, [deal.id, aiModel]);
+  }, [deal.id, aiModel, generation]);
 
   const handlePublish = () => {
     if (!subject.trim() || !body.trim()) {
@@ -772,9 +789,15 @@ function GenerateBulletinDialog({
             <span className="ml-auto mr-6"><AiModelPicker compact /></span>
           </DialogTitle>
         </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="bulletin-source">Official announcement (optional)</Label>
+          <Textarea id="bulletin-source" value={sourceAnnouncement} onChange={e => setSourceAnnouncement(e.target.value)} maxLength={30000} className="min-h-24" />
+          <Button variant="outline" disabled={loading} onClick={() => { announcementRef.current = sourceAnnouncement; setGeneration(g => g + 1); }}><Undo2 className="h-4 w-4 mr-2" />Regenerate bulletin</Button>
+        </div>
+        {sourceWarning && <p role="status" className="text-sm text-warning">{sourceWarning}</p>}
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
-            <Loader2 className="h-4 w-4 animate-spin" /> Drafting bulletin from Digital Term Sheet…
+            <Loader2 className="h-4 w-4 animate-spin" /> Reading documents and drafting bulletin…
           </div>
         ) : error ? (
           <div className="text-sm text-destructive py-6">{error}</div>
