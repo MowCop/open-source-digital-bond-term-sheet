@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [ ] Improve generated bulletins using the uploaded Sasol investor announcement as a style reference; retain the table and place sourced legal notices last; verify generation from saved document-backed terms.
 - [x] Extend document intake with denomination, maturity, listing, day count, payment frequency and seniority; signed-in text document extraction, New Deal creation, Fill acceptance, View synchronization and save/reload verified; temporary test deal removed.
 - [x] Add section-specific Bond Console entry creation/editing and typed-delete confirmation; signed-in add/edit/reload/cancel/delete verified. Entries persist per account in this browser; real feed wiring unchanged.
 - [x] Walk separate “Co-Pilot Walkthrough — 17 Oct 2026” deal through PDF upload, review, coupon approval 4 → 4.25 and reload in View/Fill; live rollback permission test confirms member reads, reader approval denial and outsider denial without permanent membership changes.
