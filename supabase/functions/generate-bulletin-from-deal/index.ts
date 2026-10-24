@@ -2,7 +2,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { runModel, pickModel } from '../_shared/ai-model.ts';
 import { z } from 'npm:zod@3';
-import { BULLETIN_PROMPT, splitAnnouncement, sourcedLegalNotices, legalFooter } from './format.ts';
+import { BULLETIN_PROMPT, splitAnnouncement, sourcedLegalNotices, legalFooter, bulletinTerms } from './format.ts';
 
 /**
  * generate-bulletin-from-deal
@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const source = splitAnnouncement(payload.sourceAnnouncement ?? '');
     const ai = await runModel({ model: pickModel(payload.model), system: BULLETIN_PROMPT, user: JSON.stringify({
       stage: deal.stage,
-      authoritativeTermSheet: deal.bdt_state,
+      authoritativeTermSheet: bulletinTerms(deal.bdt_state),
       legacyDeal: deal.bdt_state ? null : deal,
       sourceAnnouncement: source.announcement,
       documents: payload.docs,
