@@ -7,7 +7,7 @@ export function termSheetView(state: BdtState) {
   return {
     issuerName: cache.issuerName ?? '',
     issuerLEI: cache.issuerLEI ?? '',
-    issuerRating: cache.issuerRating ?? '',
+    issuerRating: cache.issuerRating || (state.ratings ?? []).map(r => [r.RatingAgency === 'SNPG' ? 'S&P' : r.RatingAgency === 'MOODYS' ? "Moody's" : r.RatingAgency, r.RatingValue].filter(Boolean).join(' ')).join(' / '),
     ratingOutlook: cache.ratingOutlook ?? '',
     bookrunners: cache.bookrunners ?? [],
     issuanceType: value(P.issuanceType),
