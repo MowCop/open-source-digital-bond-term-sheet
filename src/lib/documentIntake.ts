@@ -53,7 +53,7 @@ const enumValue = (path: string, raw: string) => {
     return venues.find(([re]) => re.test(raw))?.[1] ?? '';
   }
   if (fd?.e && ['TefraCode', 'RegSCode', 'LegalTitleForm', 'Optionality', 'BusinessDayAdj'].includes(fd.e)) {
-    const n = normalized.replace(/^REG_?S_?(?:CATEGORY_?|CAT_?)?([123])$/, 'REGS_CAT$1').replace(/^TEFRA_?([CD])$/, 'TEFRA_$1');
+    const n = normalized.replace(/^(?:REG_?S_?)?(?:CATEGORY_?|CAT_?)?([123])$/, 'REGS_CAT$1').replace(/^TEFRA_?([CD])$/, 'TEFRA_$1');
     return options.includes(n) ? n : '';
   }
   if (path === P.seniority && /^senior(?: unsecured| secured| unsubordinated)?$/i.test(raw)) return 'SENIOR';
