@@ -11,9 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Deal, DealStage, BookrunnerRole, UserRole } from '@/types/bond';
+import { Deal, DealStage, BookrunnerRole, UserRole, Message } from '@/types/bond';
 import { format } from 'date-fns';
-import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2, Undo2, Maximize2, Minimize2 } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2, Undo2, Maximize2, Minimize2, Save } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -40,6 +40,7 @@ import { parseDtsStage, boardLink } from '@/lib/dtsNavigation';
 import { emptyNewDeal, canCreateNewDeal, extractNewDealTerms, mergeNewDealDraft, mergeNewDealBookrunners, mergeDocumentFields } from '@/lib/newDeal';
 import { bulletinDocuments } from '@/lib/bulletin';
 import { Textarea } from '@/components/ui/textarea';
+import { findBulletinDraft } from '@/lib/bulletinDraft';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
   const xml = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return buildXML(s) as string; }, [deal]);
@@ -264,7 +265,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
 }
 
 export default function DealsPage() {
-  const { deals, messages, createDeal, updateDeal, deleteDeal, undoExtraction, publishBulletinFromDeal, currentUser, addAuditEntry } = useScopedApp();
+  const { deals, messages, createDeal, updateDeal, deleteDeal, undoExtraction, publishBulletinFromDeal, saveBulletinDraft, currentUser, addAuditEntry } = useScopedApp();
   const fullApp = useApp();
   const [demoBusy, setDemoBusy] = useState(false);
   const demoDeal = deals.find(isDemoDeal);
@@ -307,6 +308,7 @@ export default function DealsPage() {
   const navigate = useNavigate();
 
   const canManageDeals = currentUser.role === 'syndicate_admin' || currentUser.role === 'master_admin';
+  const bulletinDeal = deals.find(d => d.id === bulletinDealId);
 
   const bulletinByDeal = useMemo(() => {
     const m = new Map<string, string>(); // dealId -> messageId
@@ -583,7 +585,14 @@ export default function DealsPage() {
                 </button>
                 {canManageDeals && (
                   <>
-                    {bulletinByDeal.has(deal.id) ? (
+                    {findBulletinDraft(messages, deal.id) ? (
+                      <Button type="button" variant="outline" size="icon"
+                        aria-label="View bulletin draft" title="Bulletin draft — view saved draft"
+                        className="m-2 h-9 w-9 border-[3px] border-warning text-warning hover:border-warning hover:text-warning"
+                        onClick={e => { e.stopPropagation(); setBulletinDealId(deal.id); }}>
+                        <Megaphone className="h-4 w-4" />
+                      </Button>
+                    ) : bulletinByDeal.has(deal.id) ? (
                       <Button
                         type="button"
                         variant="outline"
@@ -701,9 +710,12 @@ export default function DealsPage() {
         })}
       </div>
 
-      {bulletinDealId && (
+      {bulletinDeal && (
         <GenerateBulletinDialog
-          deal={deals.find(d => d.id === bulletinDealId)!}
+          key={bulletinDeal.id}
+          deal={bulletinDeal}
+          draft={findBulletinDraft(messages, bulletinDeal.id)}
+          saveDraft={saveBulletinDraft}
           onClose={() => setBulletinDealId(null)}
           onPublished={(msgId) => {
             setBulletinDealId(null);
@@ -721,15 +733,20 @@ function GenerateBulletinDialog({
   onClose,
   onPublished,
   publish,
+  draft,
+  saveDraft,
 }: {
   deal: Deal;
   onClose: () => void;
   onPublished: (msgId: string) => void;
-  publish: (dealId: string, args: { subject: string; body: string }) => { id: string };
+  publish: (dealId: string, args: { subject: string; body: string }, draftId?: string) => Promise<Message>;
+  draft?: Message;
+  saveDraft: (dealId: string, args: { subject: string; body: string }) => Promise<Message>;
 }) {
-  const [loading, setLoading] = useState(true);
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
+  const [loading, setLoading] = useState(!draft);
+  const [saving, setSaving] = useState(false);
+  const [subject, setSubject] = useState(draft?.subject ?? '');
+  const [body, setBody] = useState(draft?.body ?? '');
   const [error, setError] = useState<string | null>(null);
   const [aiModel] = useAiModel();
   const [sourceAnnouncement, setSourceAnnouncement] = useState('');
@@ -738,6 +755,7 @@ function GenerateBulletinDialog({
   const announcementRef = useRef('');
 
   useEffect(() => {
+    if (draft && generation === 0) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -767,32 +785,43 @@ function GenerateBulletinDialog({
     return () => { cancelled = true; };
   }, [deal.id, aiModel, generation]);
 
-  const handlePublish = () => {
+  const handleSave = async (asDraft: boolean) => {
     if (!subject.trim() || !body.trim()) {
       toast.error('Bulletin needs a headline and body.');
       return;
     }
-    const msg = publish(deal.id, { subject: subject.trim(), body });
-    toast.success('Bulletin published to New Issue Board');
-    onPublished(msg.id);
+    setSaving(true);
+    try {
+      if (asDraft) {
+        await saveDraft(deal.id, { subject: subject.trim(), body });
+        toast.success('Bulletin draft saved in Digital Term Sheet');
+        onClose();
+      } else {
+        const msg = await publish(deal.id, { subject: subject.trim(), body }, draft?.id);
+        toast.success('Bulletin published to New Issue Board');
+        onPublished(msg.id);
+      }
+    } catch (e) {
+      toast.error(asDraft ? 'Could not save bulletin draft' : 'Could not publish bulletin', { description: e instanceof Error ? e.message : 'Please retry.' });
+    } finally { setSaving(false); }
   };
 
   return (
-    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog open onOpenChange={(o) => { if (!o && !saving) onClose(); }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-card via-card to-navy-deep/80 border border-border/60 shadow-[0_24px_80px_-16px_rgba(0,0,0,0.6)] backdrop-blur-sm">
         <DialogHeader className="border-b border-border/50 pb-3">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-success/15 text-success">
               <Megaphone className="h-4 w-4" />
             </span>
-            Generate New Issue Bulletin
+            {draft ? 'New Issue Bulletin — Draft' : 'Generate New Issue Bulletin'}
             <span className="ml-auto mr-6"><AiModelPicker compact /></span>
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-2">
           <Label htmlFor="bulletin-source">Official announcement (optional)</Label>
           <Textarea id="bulletin-source" value={sourceAnnouncement} onChange={e => setSourceAnnouncement(e.target.value)} maxLength={30000} className="min-h-24" />
-          <Button variant="outline" disabled={loading} onClick={() => { announcementRef.current = sourceAnnouncement; setGeneration(g => g + 1); }}><Undo2 className="h-4 w-4 mr-2" />Regenerate bulletin</Button>
+          <Button variant="outline" disabled={loading || saving} onClick={() => { announcementRef.current = sourceAnnouncement; setGeneration(g => g + 1); }}><Undo2 className="h-4 w-4 mr-2" />Regenerate bulletin</Button>
         </div>
         {sourceWarning && <p role="status" className="text-sm text-warning">{sourceWarning}</p>}
         {loading ? (
@@ -804,8 +833,8 @@ function GenerateBulletinDialog({
         ) : (
           <div className="space-y-5">
             <div>
-              <Label className="text-xs font-medium text-muted-foreground">Headline</Label>
-              <Input value={subject} onChange={e => setSubject(e.target.value)} className="mt-1" />
+              <Label htmlFor="bulletin-headline" className="text-xs font-medium text-muted-foreground">Headline</Label>
+              <Input id="bulletin-headline" disabled={saving} value={subject} onChange={e => setSubject(e.target.value)} className="mt-1" />
             </div>
 
             <div className="rounded-lg border-2 border-success/70 bg-card/60 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_12px_32px_-12px_rgba(34,197,94,0.25)]">
@@ -816,9 +845,12 @@ function GenerateBulletinDialog({
               <div className="max-h-[55vh] overflow-y-auto rounded-md bg-background/70 p-5 text-sm prose prose-sm max-w-none text-white [&_p]:text-white [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_li]:text-white [&_strong]:text-white [&_em]:text-white [&_a]:text-white [&_a]:underline" dangerouslySetInnerHTML={{ __html: body }} />
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-border/50">
-              <Button variant="outline" onClick={onClose}>Cancel</Button>
-              <Button onClick={handlePublish} className="bg-success text-success-foreground hover:bg-success/90">
+            <div className="flex flex-wrap justify-end gap-2 pt-2 border-t border-border/50">
+              <Button variant="outline" disabled={saving} onClick={onClose}>Cancel</Button>
+              <Button variant="outline" disabled={saving} onClick={() => void handleSave(true)}>
+                <Save className="h-4 w-4 mr-1" /> Save as Draft
+              </Button>
+              <Button disabled={saving} onClick={() => void handleSave(false)} className="bg-success text-success-foreground hover:bg-success/90">
                 <Megaphone className="h-4 w-4 mr-1" /> Publish to New Issue Board
               </Button>
             </div>
