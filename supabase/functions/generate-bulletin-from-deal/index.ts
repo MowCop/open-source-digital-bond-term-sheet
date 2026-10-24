@@ -22,6 +22,7 @@ function jsonResponse(body: unknown, status = 200) {
 const InputSchema = z.object({
   dealId: z.string().trim().min(1).max(128).regex(/^[a-zA-Z0-9_-]+$/), model: z.string().max(100).optional(),
   sourceAnnouncement: z.string().max(30000).optional(),
+  editedBulletin: z.string().max(80000).optional(),
   docs: z.array(z.object({ name: z.string().max(255), text: z.string().max(120000) })).max(6).default([]),
 }).refine(p => p.docs.reduce((n, d) => n + d.text.length, 0) <= 120000, 'Document excerpts are too long');
 
@@ -67,6 +68,7 @@ Deno.serve(async (req) => {
       authoritativeTermSheet: bulletinTerms(deal.bdt_state),
       legacyDeal: deal.bdt_state ? null : deal,
       sourceAnnouncement: source.announcement,
+      editedBulletin: payload.editedBulletin ?? null,
       documents: payload.docs.map(d => ({ name: d.name, text: d.text.length <= 18000 ? d.text : d.text.slice(0, 12000) + '\n[… excerpt …]\n' + d.text.slice(-6000) })),
     }), maxTokens: 16000 });
     if (!ai.ok) return jsonResponse({ error: ai.error, message: ai.message }, ai.status);
