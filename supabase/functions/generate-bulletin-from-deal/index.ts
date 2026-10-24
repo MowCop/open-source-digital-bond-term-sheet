@@ -1,6 +1,8 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { runModel, pickModel } from '../_shared/ai-model.ts';
+import { z } from 'npm:zod@3';
+import { BULLETIN_PROMPT, splitAnnouncement, sourcedLegalNotices, legalFooter } from './format.ts';
 
 /**
  * generate-bulletin-from-deal
@@ -17,19 +19,11 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-const SYSTEM_PROMPT = `You are a senior fixed-income syndicate desk writer.
-
-You will receive a JSON deal record (ICMA Bond Data Taxonomy fields). Produce a clean New Issue Bulletin in the tone of a real syndicate announcement.
-
-Return STRICT JSON of shape:
-{ "subject": string, "body": string }
-
-Rules:
-- "subject" = a short headline like "Kingdom of Nania USD 1.5bn 10Y Priced at MS+72" (use only fields present; never invent numbers).
-- "body" = HTML string with TWO sections in this order:
-    1. <h3>Announcement</h3> followed by 2-4 short <p> paragraphs of bulletin prose covering: issuer + rating, size/tenor/coupon, pricing summary (reoffer spread/yield/price, mid-swap), listing, governing law, bookrunners (mark the GC).
-    2. <h3>Digital Term Sheet</h3> followed by <table> grouped logically (Party/Issuer, Issuance, Product). One <tr> per populated field with <th> label and <td> value. SKIP rows where the value is empty, missing, or "TBA".
-- Use <strong> for the GC bookrunner. Do not invent or guess values. No markdown, no commentary, no code fences.`;
+const InputSchema = z.object({
+  dealId: z.string().uuid(), model: z.string().max(100).optional(),
+  sourceAnnouncement: z.string().max(30000).optional(),
+  docs: z.array(z.object({ name: z.string().max(255), text: z.string().max(120000) })).max(6).default([]),
+}).refine(p => p.docs.reduce((n, d) => n + d.text.length, 0) <= 120000, 'Document excerpts are too long');
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -39,8 +33,8 @@ Deno.serve(async (req) => {
     if (!authHeader?.startsWith('Bearer ')) return jsonResponse({ error: 'unauthorized' }, 401);
 
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       { global: { headers: { Authorization: authHeader } } },
     );
     const token = authHeader.replace('Bearer ', '');
@@ -54,33 +48,43 @@ Deno.serve(async (req) => {
     const isAdmin = (roles ?? []).some(r => r.role === 'master_admin' || r.role === 'syndicate_admin');
     if (!isAdmin) return jsonResponse({ error: 'forbidden' }, 403);
 
-    let payload: { dealId?: string };
-    try { payload = await req.json(); }
+    let input: unknown;
+    try { input = await req.json(); }
     catch { return jsonResponse({ error: 'invalid_json' }, 400); }
-    const dealId = typeof payload?.dealId === 'string' ? payload.dealId.trim() : '';
-    if (!dealId) return jsonResponse({ error: 'missing_dealId' }, 400);
+    const parsed = InputSchema.safeParse(input);
+    if (!parsed.success) return jsonResponse({ error: 'invalid_input', message: parsed.error.message }, 400);
+    const payload = parsed.data;
+    const { dealId } = payload;
 
     const { data: deal, error: dealErr } = await supabase.from('deals').select('*').eq('id', dealId).maybeSingle();
     if (dealErr) return jsonResponse({ error: 'db_error', message: dealErr.message }, 500);
     if (!deal) return jsonResponse({ error: 'deal_not_found' }, 404);
 
 
-    const ai = await runModel({ model: pickModel((payload as { model?: unknown })?.model), system: SYSTEM_PROMPT, user: `Deal record JSON:\n${JSON.stringify(deal, null, 2)}`, maxTokens: 4000 });
+    const source = splitAnnouncement(payload.sourceAnnouncement ?? '');
+    const ai = await runModel({ model: pickModel(payload.model), system: BULLETIN_PROMPT, user: JSON.stringify({
+      stage: deal.stage,
+      authoritativeTermSheet: deal.bdt_state,
+      legacyDeal: deal.bdt_state ? null : deal,
+      sourceAnnouncement: source.announcement,
+      documents: payload.docs,
+    }), maxTokens: 8000 });
     if (!ai.ok) return jsonResponse({ error: ai.error, message: ai.message }, ai.status);
     let raw: string = ai.text;
     raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
 
-    let obj: { subject?: unknown; body?: unknown };
+    let obj: { subject?: unknown; body?: unknown; legalNotices?: unknown };
     try { obj = JSON.parse(raw); }
     catch {
-      console.error('Failed to parse AI JSON:', raw.slice(0, 400));
       return jsonResponse({ error: 'ai_parse_failed', message: 'AI returned invalid JSON.' }, 502);
     }
 
     const subject = typeof obj.subject === 'string' && obj.subject.trim() ? obj.subject.trim() : `${deal.issuer_name} ${deal.currency} ${deal.size} ${deal.tenor}`.trim();
-    const body = typeof obj.body === 'string' && obj.body.trim() ? obj.body : '<p>No content generated.</p>';
+    if (typeof obj.body !== 'string' || !obj.body.trim()) return jsonResponse({ error: 'ai_parse_failed', message: 'No bulletin content returned.' }, 502);
+    const notices = source.legal ? source.legal.split(/\n\s*\n/).filter(p => p.trim()) : sourcedLegalNotices(obj.legalNotices, payload.docs);
+    const body = obj.body + legalFooter(notices);
 
-    return jsonResponse({ subject, body });
+    return jsonResponse({ subject, body, hasLegalNotices: notices.length > 0 });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('generate-bulletin-from-deal error:', message);

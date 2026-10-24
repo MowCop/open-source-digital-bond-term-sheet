@@ -22,6 +22,7 @@
 - App MCP (src/lib/mcp/) is read-only, querying as the OAuth caller so RLS decides visibility.
 
 - Board audits use boardUpdateAudit (board_update scope), separate from saved checks.
+- Bulletins use saved BDT terms and original stored document excerpts; optional official announcements supply contextual facts. Legal footers are appended outside AI rewriting, accepting only source-quoted notices — never reuse precedent issuer facts.
 - Co-Pilot uses src/lib/copilot and the deal-copilot Cloud function; human term editors alone approve, with atomic stale-value checks — AI never approves.
 - Co-Pilot General mode (CopilotGeneral, copilot-general) shows when unfocused; AI drafts reminders, users confirm, ReminderWatcher fires them client-side.
 - Subdirectories may have their own AGENTS.md (e.g. supabase/functions/deal-copilot/); read it before changing files there.
