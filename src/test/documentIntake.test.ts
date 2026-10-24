@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { emptyState } from '@/lib/termsheet/index.js';
 import { P, type BdtState } from '@/lib/bdt-bridge';
-import { documentProposals, extractedFieldValues } from '@/lib/documentIntake';
+import { documentProposals, extractedFieldValues, extractedIdentifiers, extractedRatings } from '@/lib/documentIntake';
 import { mergeDocumentFields } from '@/lib/newDeal';
 import { termSheetView } from '@/lib/termSheetView';
 
@@ -44,5 +44,27 @@ describe('Additional offering memorandum intake', () => {
     state.f = extractedFieldValues(terms);
     expect(termSheetView(state)).toMatchObject({ specifiedDenomination: '200000', maturityDate: '2033-10-23', listingVenue: 'LUXEMBOURG_STOCK_EXCHANGE', dayCountFraction: '30E/360', interestPaymentFrequency: 'SEMI_ANNUAL', statusOfNote: 'SENIOR' });
     expect(documentProposals(state, '', terms, 'OM')).toEqual([]);
+  });
+  it('maps a Frankfurt listing and preserves 30/360', () => {
+    const v = extractedFieldValues({ Listing: 'Open Market of the Frankfurt Stock Exchange', 'Day Count': '30/360' });
+    expect(v[P.listingVenue]).toBe('FRANKFURT_STOCK_EXCHANGE');
+    expect(v[P.dayCount]).toBe('30/360');
+  });
+  it('rejects an ISIN with a bad check digit and generic identifier wording', () => {
+    expect(extractedIdentifiers({ ISIN: 'US0378331006', CUSIP: 'CUSIP, ISIN, Common Code', 'Common Code': 'TBD' })).toEqual([]);
+    expect(extractedIdentifiers({ ISIN: 'US0378331005' })).toEqual([{ Type: 'ISIN', Value: 'US0378331005' }]);
+  });
+  it('ignores rating thresholds and keeps assigned ratings', () => {
+    expect(extractedRatings({ Ratings: [{ agency: 'Moody\'s', value: 'Baa3 or better', outlook: '' }] })).toEqual([]);
+    expect(extractedRatings({ Ratings: [{ agency: 'S&P', value: 'BB+', outlook: 'Stable' }] })).toEqual([{ RatingAgency: 'SNPG', RatingValue: 'BB+', RatingOutlook: 'STABLE' }]);
+  });
+  it('proposes guarantor, form, Reg S and call without changing state', () => {
+    const state = emptyState() as BdtState;
+    const props = documentProposals(state, '', { Guarantor: 'Sasol Limited', 'Form of Note': 'Registered', 'Reg S Category': 'Category 2', Optionality: 'CALL' }, 'OM');
+    expect(props.find(p => p.g === 'parties')?.val).toContain('Sasol Limited');
+    expect(props.find(p => p.p === P.legalTitleForm)?.val).toBe('REGISTERED');
+    expect(props.find(p => p.p?.endsWith('RegSCode'))?.val).toBe('REGS_CAT2');
+    expect(props.find(p => p.p === P.optionality)?.val).toBe('CALL');
+    expect(state.parties).toEqual([]);
   });
 });
