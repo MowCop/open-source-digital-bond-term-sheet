@@ -5,6 +5,7 @@ import { extractBorrowerName } from '@/lib/alertParsing';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { buildDealBulletin, findBulletinDraft } from '@/lib/bulletinDraft';
 import { scopeDeals, scopeUsers, scopeDistributionLists, scopeMessages, scopeAuditLog } from '@/lib/scoping';
 import {
   fetchUsers, fetchDeals, insertUser, updateUserRow, deleteUserRow,
@@ -104,7 +105,8 @@ interface AppContextType {
   createMessage: (msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => Message;
   updateMessage: (id: string, updates: Partial<Message>) => void;
   sendMessage: (id: string) => void;
-  publishBulletinFromDeal: (dealId: string, args: { subject: string; body: string }) => Message;
+  publishBulletinFromDeal: (dealId: string, args: { subject: string; body: string }, draftId?: string) => Promise<Message>;
+  saveBulletinDraft: (dealId: string, args: { subject: string; body: string }) => Promise<Message>;
   retractMessage: (id: string) => void;
   deleteMessage: (id: string) => void;
   deleteMessageThread: (dealIds: string[]) => void;
@@ -533,28 +535,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser.id, addAuditEntry, messages, deals, chatChannels]);
 
-  const publishBulletinFromDeal = useCallback((dealId: string, args: { subject: string; body: string }) => {
-    const now = new Date();
-    const newMsg: Message = {
-      id: `m${Date.now()}`,
-      dealIds: [dealId],
-      subject: args.subject,
-      body: args.body,
-      status: 'sent',
-      senderId: effectiveSenderId,
-      recipients: [],
-      attachments: [],
-      createdAt: now,
-      updatedAt: now,
-      sentAt: now,
-      bulletinSource: 'deal_data',
-    };
-    setMessages(prev => [newMsg, ...prev]);
-    insertMessage(newMsg).catch(e => {
-      console.error('[Cloud] publishBulletinFromDeal: insertMessage failed', e);
-      setMessages(prev => prev.filter(m => m.id !== newMsg.id));
-      toast.error('Could not publish bulletin', { description: e?.message ?? 'Please retry.' });
-    });
+  const saveBulletinDraft = useCallback(async (dealId: string, args: { subject: string; body: string }) => {
+    const existing = findBulletinDraft(messages, dealId);
+    const draft = buildDealBulletin(dealId, args, effectiveSenderId, 'draft', existing);
+    if (existing) await updateMessageRow(existing.id, draft);
+    else await insertMessage(draft);
+    setMessages(prev => [draft, ...prev.filter(m => m.id !== draft.id)]);
+    addAuditEntry({ action: 'DEAL_BULLETIN_DRAFT_SAVED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Bulletin draft saved: ${draft.subject}` });
+    return draft;
+  }, [messages, effectiveSenderId, currentUser.id, addAuditEntry]);
+
+  const publishBulletinFromDeal = useCallback(async (dealId: string, args: { subject: string; body: string }, draftId?: string) => {
+    const existing = draftId ? messages.find(m => m.id === draftId) : undefined;
+    if (draftId && !existing) throw new Error('Draft not found. Reopen the deal and try again.');
+    const newMsg = buildDealBulletin(dealId, args, effectiveSenderId, 'sent', existing);
+    if (existing) await updateMessageRow(existing.id, newMsg);
+    else await insertMessage(newMsg);
+    setMessages(prev => [newMsg, ...prev.filter(m => m.id !== newMsg.id)]);
     // Re-link the existing chat channel for this deal so it appears under the bulletin headline.
     const channel = chatChannels.find(ch => ch.dealId === dealId);
     if (channel && channel.label !== args.subject) {
@@ -570,7 +567,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       details: `Generated New Issue Bulletin: ${args.subject}`,
     });
     return newMsg;
-  }, [currentUser.id, effectiveSenderId, addAuditEntry, chatChannels]);
+  }, [currentUser.id, effectiveSenderId, addAuditEntry, chatChannels, messages]);
 
   const retractMessage = useCallback((id: string) => {
     const now = new Date();
@@ -909,7 +906,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       currentUser, setCurrentUser, users, deals, messages, auditLog, notifications, distributionLists,
       chatChannels, chatMessages,
       createDeal, updateDeal, updateDealStage, createMessage, updateMessage, sendMessage: sendMessageAction, retractMessage, markNotificationRead, addNotification, addAuditEntry, sendChatMessage,
-      publishBulletinFromDeal,
+      publishBulletinFromDeal, saveBulletinDraft,
       ensureDraftChannel, renameChatChannel, updateChatChannelParticipants, attachDraftChannelToDeal, createDealChannel,
       deleteMessage, deleteMessageThread,
       deleteDeal,

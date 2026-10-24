@@ -185,6 +185,8 @@ export default function MessagesPage() {
   // between sessions/environments.
   const visibleDealIds = new Set(deals.map(d => d.id));
   const visibleMessages = messages.filter(m => {
+    // Generated bulletin drafts remain in DTS until explicitly published.
+    if (m.bulletinSource === 'deal_data' && m.status === 'draft') return false;
     if (isReadOnly) {
       // Vendors / read-only roles only ever see PUBLISHED (sent) alerts —
       // pre-published drafts must never leak out of the syndicate.
