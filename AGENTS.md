@@ -16,12 +16,13 @@
 
 - reference/deal-checker-capabilities.md is the living summary of Deal Checker checks and sources; any change to checker rules, fixes or sources must update it in the same change.
 - The Al Rajhi demo deal (seed, chat replay script, term sheet stage snapshots) is defined only in src/data/alRajhiDemo.ts and driven by src/components/AlRajhiDemoPanel.tsx — one source for the demo flow; replayed messages go through the normal Fill parser, never auto-accepted.
-- Al Rajhi board bodies use Word-derived reference HTML while replay parsing uses plain text; legacy generated bodies are projected at display time without database writes or overwriting user edits — preserve original document structure and stage timing.
+- Al Rajhi board bodies project Word-derived HTML without writes; replay parsing uses plain text — preserve structure, user edits and stage timing.
 - Board-to-term-sheet links use src/lib/dtsNavigation.ts to resolve the selected update's deal, stage and publication time; Fill reads saved stage snapshots without modifying lifecycle or terms, and reports missing snapshots rather than inventing history — both board toolbars must share this navigation contract.
 - AI Deep Audit (src/lib/deepAudit.ts + audit-deal-fields-ai) is on-demand only, compares Fill fields to stored deal document text, and emits warnings only (src 'ai') appended to unifiedChecks — deterministic checks stay AI-free.
 - App MCP (src/lib/mcp/) is read-only, querying as the OAuth caller so RLS decides visibility.
 
-- Board audits use boardUpdateAudit (board_update scope), separate from saved checks.
+- Board audits use boardUpdateAudit (board_update), separate from saved checks.
+- Bulletins use saved BDT terms only; documents inform prose. Append source-quoted legal notices outside AI rewriting.
 - Co-Pilot uses src/lib/copilot and the deal-copilot Cloud function; human term editors alone approve, with atomic stale-value checks — AI never approves.
 - Co-Pilot General mode (CopilotGeneral, copilot-general) shows when unfocused; AI drafts reminders, users confirm, ReminderWatcher fires them client-side.
 - Subdirectories may have their own AGENTS.md (e.g. supabase/functions/deal-copilot/); read it before changing files there.
