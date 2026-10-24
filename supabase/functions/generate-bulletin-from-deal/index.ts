@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
       legacyDeal: deal.bdt_state ? null : deal,
       sourceAnnouncement: source.announcement,
       documents: payload.docs,
-    }), maxTokens: 8000 });
+    }), maxTokens: 16000 });
     if (!ai.ok) return jsonResponse({ error: ai.error, message: ai.message }, ai.status);
     let raw: string = ai.text;
     raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
