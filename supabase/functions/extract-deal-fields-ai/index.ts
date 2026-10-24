@@ -42,8 +42,18 @@ Return STRICT JSON matching this TypeScript type — no markdown, no commentary:
     "Day Count": string,           // "ACT/ACT" | "ACT/360" | "ACT/365" | "30/360" | "30E/360"
     "Interest Type": string,       // "Fixed" | "Floating" | "Zero Coupon"
     "Payment Frequency": string,  // "ANNUALLY" | "SEMIANNUALLY" | "QUARTERLY" | "MONTHLY", only if stated
-    "Seniority": string            // "SENIOR" | "SUPER_SENIOR" | "MEZZANINE" | "JUNIOR", only if stated
+    "Seniority": string,           // "SENIOR" | "SUPER_SENIOR" | "MEZZANINE" | "JUNIOR", only if stated
+    "CUSIP": string,               // 9-char code actually printed for these notes
+    "Common Code": string,         // 9-digit code actually printed for these notes
+    "Temporary ISIN": string,      // only if labelled temporary
+    "Guarantor": string,           // legal name of the guarantor of these notes
+    "Form of Note": string,        // "REGISTERED" | "BEARER" | "BOOK_ENTRY" | "DEMATERIALISED"
+    "TEFRA": string,               // "TEFRA_C" | "TEFRA_D" | "TEFRA_NA", only if stated
+    "Reg S Category": string,      // "REGS_CAT1" | "REGS_CAT2" | "REGS_CAT3", only if stated
+    "Optionality": string,         // "CALL" | "PUT" | "CHANGE_OF_CONTROL_PUT_EVENT" | "NOT_APPLICABLE" — CALL if issuer may redeem early (make-whole / par / optional redemption)
+    "Business Day Convention": string // "FOLLOWING" | "MODIFIED_FOLLOWING" | "PRECEDING", only if stated
   },
+  "ratings": [ { "agency": "MOODYS" | "SNPG" | "FITCH" | "DBRS" | "SCOPE", "value": string, "outlook": string } ],
   "bookrunners": [
     { "name": string, "role": "active" | "passive", "isGlobalCoordinator": boolean }
   ]
@@ -57,11 +67,14 @@ Rules:
 - Do not invent ISINs, LEIs or ratings.
 - Preliminary offering memoranda often leave pricing, size and maturity unresolved: return empty for blanks, placeholders, alternatives or multiple tranche values that cannot describe a single issue.
 - Extract denomination, listing, day count, payment frequency and seniority from the notes' terms, not from precedent issues, risk-factor examples or other securities.
+- Identifiers (ISIN, CUSIP, Common Code) only when an actual code is printed for these notes; generic wording such as "the same CUSIP, ISIN, Common Code" is NOT a value.
+- ratings: only ratings actually assigned (expected or current) to the notes or issuer/guarantor. Rating definitions, thresholds (e.g. "Baa3 or better"), sovereign ratings and risk-factor examples are NOT ratings — return [].
 - Do not infer payment frequency from a list of dates or infer seniority from the borrower's rating.`;
 
 interface ExtractResult {
   keyTerms: Record<string, string>;
   bookrunners: Array<{ name: string; role: 'active' | 'passive'; isGlobalCoordinator: boolean }>;
+  ratings?: Array<{ agency: string; value: string; outlook: string }>;
 }
 
 const EMPTY: ExtractResult = {
@@ -72,8 +85,10 @@ const EMPTY: ExtractResult = {
     'Mid-Swap Rate': '', 'Pricing Date': '', 'Settlement Date': '',
     'Maturity Date': '', Denomination: '', 'Governing Law': '',
     Listing: '', 'Day Count': '', 'Interest Type': '', 'Payment Frequency': '', Seniority: '',
+    CUSIP: '', 'Common Code': '', 'Temporary ISIN': '', Guarantor: '', 'Form of Note': '', TEFRA: '', 'Reg S Category': '', Optionality: '', 'Business Day Convention': '',
   },
   bookrunners: [],
+  ratings: [],
 };
 
 Deno.serve(async (req) => {
@@ -155,6 +170,10 @@ Deno.serve(async (req) => {
                 role: b.role === 'passive' ? 'passive' : 'active',
                 isGlobalCoordinator: Boolean(b.isGlobalCoordinator),
               }))
+          : [],
+        ratings: Array.isArray(obj.ratings)
+          ? obj.ratings.filter((r: any) => r && typeof r.value === 'string' && r.value.trim())
+              .map((r: any) => ({ agency: String(r.agency ?? '').toUpperCase().trim(), value: String(r.value).trim(), outlook: String(r.outlook ?? '').trim() }))
           : [],
       };
     } catch (_e) {
