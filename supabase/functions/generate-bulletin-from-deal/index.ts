@@ -20,7 +20,7 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 const InputSchema = z.object({
-  dealId: z.string().uuid(), model: z.string().max(100).optional(),
+  dealId: z.string().trim().min(1).max(128).regex(/^[a-zA-Z0-9_-]+$/), model: z.string().max(100).optional(),
   sourceAnnouncement: z.string().max(30000).optional(),
   docs: z.array(z.object({ name: z.string().max(255), text: z.string().max(120000) })).max(6).default([]),
 }).refine(p => p.docs.reduce((n, d) => n + d.text.length, 0) <= 120000, 'Document excerpts are too long');
