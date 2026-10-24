@@ -750,7 +750,12 @@ function GenerateBulletinDialog({
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error) {
-          setError(error.message || 'Failed to generate bulletin');
+          let detail = error.message || 'Failed to generate bulletin';
+          void (async () => {
+            try { const response = await (error as { context?: Response }).context?.json(); detail = response?.message || detail; } catch { /* keep error */ }
+            if (!cancelled) setError(detail);
+          })();
+          setError(detail);
           setLoading(false);
           return;
         }
