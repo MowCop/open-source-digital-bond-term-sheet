@@ -349,7 +349,7 @@ export default function DealCopilot({
       ts: c.created_at ?? "",
       change: c,
     })),
-  ].sort((a, b) => a.ts.localeCompare(b.ts));
+  ].sort((a, b) => b.ts.localeCompare(a.ts)); // newest first: latest replies at the top
   return (
     <Collapsible
       open={open}
