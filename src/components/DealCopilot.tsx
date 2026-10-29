@@ -125,7 +125,7 @@ function SpecialistReports({ reports }: { reports: SpecialistReport[] }) {
     </div>
   );
 }
-type Msg = { id: string; role: string; body: string };
+type Msg = { id: string; role: string; body: string; created_at: string };
 type Change = {
   id: string;
   field: string;
@@ -133,7 +133,11 @@ type Change = {
   after_value: string;
   reason: string;
   status: string;
+  created_at: string;
 };
+type TimelineItem =
+  | { kind: "msg"; id: string; ts: string; role: string; body: string }
+  | { kind: "change"; id: string; ts: string; change: Change };
 type Report = {
   summary?: string;
   warnings?: string[];
@@ -330,6 +334,22 @@ export default function DealCopilot({
         new File([data], d.name, { type: d.mime ?? data.type }),
       );
     });
+  // Proposed corrections render inside the conversation, in time order.
+  const timeline: TimelineItem[] = [
+    ...messages.map((m) => ({
+      kind: "msg" as const,
+      id: m.id,
+      ts: m.created_at ?? "",
+      role: m.role,
+      body: m.body,
+    })),
+    ...changes.map((c) => ({
+      kind: "change" as const,
+      id: `change-${c.id}`,
+      ts: c.created_at ?? "",
+      change: c,
+    })),
+  ].sort((a, b) => a.ts.localeCompare(b.ts));
   return (
     <Collapsible
       open={open}
