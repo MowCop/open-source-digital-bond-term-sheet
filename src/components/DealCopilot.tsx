@@ -426,6 +426,13 @@ export default function DealCopilot({
             aria-label="Message Deal Co-Pilot"
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              // Return sends the question; Shift+Return adds a new line.
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                send(text);
+              }
+            }}
             maxLength={12000}
             rows={1}
             placeholder={focus ? "Ask about this update…" : "Ask about this deal…"}
