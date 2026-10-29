@@ -68,3 +68,13 @@ describe('Additional offering memorandum intake', () => {
     expect(state.parties).toEqual([]);
   });
 });
+
+describe('document dates are timezone-safe', () => {
+  it('keeps "15 March 2030" as 2030-03-15', async () => {
+    const { extractedFieldValues } = await import('@/lib/documentIntake');
+    const v = Object.values(extractedFieldValues({ 'Maturity Date': '15 March 2030', 'Pricing Date': 'March 1, 2026', 'Settlement Date': '31 February 2026' }));
+    expect(v).toContain('2030-03-15');
+    expect(v).toContain('2026-03-01');
+    expect(v).not.toContain('2026-03-03');
+  });
+});

@@ -63,10 +63,23 @@ const enumValue = (path: string, raw: string) => {
 function dateValue(raw: string) {
   // No year-only maturities, placeholders or ambiguous numeric dates.
   if (!/^\d{4}-\d{2}-\d{2}$/.test(raw) && !/^\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}$/.test(raw) && !/^[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4}$/.test(raw)) return '';
-  const date = new Date(raw);
-  if (Number.isNaN(date.getTime())) return '';
-  const iso = date.toISOString().slice(0, 10);
-  return /^\d{4}-/.test(raw) && iso !== raw ? '' : iso;
+  // Parse calendar parts directly — never via local-time Date, which shifts the day east of UTC.
+  const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  const month = (name: string) => {
+    const lower = name.toLowerCase();
+    const i = months.indexOf(lower.slice(0, 3));
+    const full = new Date(Date.UTC(2000, i, 1)).toLocaleString('en', { month: 'long', timeZone: 'UTC' }).toLowerCase();
+    return i >= 0 && (lower.length === 3 || full.startsWith(lower) || (lower === 'sept' && i === 8)) ? i + 1 : 0;
+  };
+  let y: number, m: number, d: number;
+  let match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (match) [y, m, d] = [+match[1], +match[2], +match[3]];
+  else if ((match = raw.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/))) [y, m, d] = [+match[3], month(match[2]), +match[1]];
+  else if ((match = raw.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/))) [y, m, d] = [+match[3], month(match[1]), +match[2]];
+  else return '';
+  const date = new Date(Date.UTC(y, m - 1, d));
+  if (!m || date.getUTCFullYear() !== y || date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return '';
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
 export function extractedFieldValues(terms: Record<string, unknown>): Record<string, string> {
