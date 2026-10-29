@@ -125,7 +125,7 @@ function SpecialistReports({ reports }: { reports: SpecialistReport[] }) {
     </div>
   );
 }
-type Msg = { id: string; role: string; body: string };
+type Msg = { id: string; role: string; body: string; created_at: string };
 type Change = {
   id: string;
   field: string;
@@ -133,7 +133,11 @@ type Change = {
   after_value: string;
   reason: string;
   status: string;
+  created_at: string;
 };
+type TimelineItem =
+  | { kind: "msg"; id: string; ts: string; role: string; body: string }
+  | { kind: "change"; id: string; ts: string; change: Change };
 type Report = {
   summary?: string;
   warnings?: string[];
@@ -330,6 +334,22 @@ export default function DealCopilot({
         new File([data], d.name, { type: d.mime ?? data.type }),
       );
     });
+  // Proposed corrections render inside the conversation, in time order.
+  const timeline: TimelineItem[] = [
+    ...messages.map((m) => ({
+      kind: "msg" as const,
+      id: m.id,
+      ts: m.created_at ?? "",
+      role: m.role,
+      body: m.body,
+    })),
+    ...changes.map((c) => ({
+      kind: "change" as const,
+      id: `change-${c.id}`,
+      ts: c.created_at ?? "",
+      change: c,
+    })),
+  ].sort((a, b) => a.ts.localeCompare(b.ts));
   return (
     <Collapsible
       open={open}
@@ -481,79 +501,77 @@ export default function DealCopilot({
             {error}
           </p>
         )}
-        <div className="grid min-w-0 gap-6 xl:grid-cols-2">
-          <section className="min-w-0 space-y-3">
-            <h4 className="text-sm font-semibold">Conversation</h4>
-            <div
-              className="max-h-[480px] min-h-24 overflow-y-auto space-y-4"
-              aria-label="Co-Pilot conversation"
-            >
-              {!messages.length && (
-                <p className="text-sm text-muted-foreground">
-                  No messages yet.
-                </p>
-              )}
-              {messages.map((m) => (
-                <div key={m.id} className="border-l-2 border-border pl-3">
+        <section className="min-w-0 space-y-3">
+          <h4 className="text-sm font-semibold">Conversation</h4>
+          <div
+            className="max-h-[480px] min-h-24 overflow-y-auto space-y-4"
+            aria-label="Co-Pilot conversation"
+          >
+            {!timeline.length && (
+              <p className="text-sm text-muted-foreground">No messages yet.</p>
+            )}
+            {timeline.map((item) =>
+              item.kind === "msg" ? (
+                <div key={item.id} className="border-l-2 border-border pl-3">
                   <span className="text-xs font-semibold text-primary">
-                    {m.role === "user" ? "Deal member" : "Deal Co-Pilot"}
+                    {item.role === "user" ? "Deal member" : "Deal Co-Pilot"}
                   </span>
                   <p className="mt-1 whitespace-pre-wrap break-words text-sm">
-                    {m.body}
+                    {item.body}
                   </p>
                 </div>
-              ))}
-            </div>
-          </section>
-          <section className="min-w-0 space-y-3">
-            <h4 className="text-sm font-semibold">Proposed corrections</h4>
-            {!changes.length && (
-              <p className="text-sm text-muted-foreground">
-                No corrections proposed.
-              </p>
-            )}
-            {changes.map((c) => (
-              <div key={c.id} className="border-b border-border pb-3 space-y-2">
-                <div className="flex gap-2 flex-wrap">
-                  <strong className="text-sm">{c.field}</strong>
-                  <Badge variant="outline">{c.status}</Badge>
-                </div>
-                <p className="text-sm break-words">
-                  {c.before_value || "Empty"} → <strong>{c.after_value}</strong>
-                </p>
-                <p className="whitespace-pre-wrap break-words text-xs text-muted-foreground">
-                  {c.reason}
-                </p>
-                {c.status === "pending" && editor && (
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      disabled={busy || hasUnsavedTerms}
-                      title={
-                        hasUnsavedTerms
-                          ? "Save or discard unsaved edits first"
-                          : "Approve correction"
-                      }
-                      onClick={() => decide(c.id, true)}
-                    >
-                      <Check className="mr-1 h-3 w-3" />
-                      Approve
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => decide(c.id, false)}
-                    >
-                      <X className="mr-1 h-3 w-3" />
-                      Reject
-                    </Button>
+              ) : (
+                <div
+                  key={item.id}
+                  className="space-y-2 border-l-2 border-primary/50 bg-muted/40 pl-3"
+                >
+                  <div className="flex gap-2 flex-wrap items-center">
+                    <span className="text-xs font-semibold text-primary">
+                      Deal Co-Pilot
+                    </span>
+                    <strong className="text-sm">{item.change.field}</strong>
+                    <Badge variant="outline">
+                      Proposed correction · {item.change.status}
+                    </Badge>
                   </div>
-                )}
-              </div>
-            ))}
-          </section>
-        </div>
+                  <p className="text-sm break-words">
+                    {item.change.before_value || "Empty"} →{" "}
+                    <strong>{item.change.after_value}</strong>
+                  </p>
+                  <p className="whitespace-pre-wrap break-words text-xs text-muted-foreground">
+                    {item.change.reason}
+                  </p>
+                  {item.change.status === "pending" && editor && (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        disabled={busy || hasUnsavedTerms}
+                        title={
+                          hasUnsavedTerms
+                            ? "Save or discard unsaved edits first"
+                            : "Approve correction"
+                        }
+                        onClick={() => decide(item.change.id, true)}
+                      >
+                        <Check className="mr-1 h-3 w-3" />
+                        Approve
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => decide(item.change.id, false)}
+                      >
+                        <X className="mr-1 h-3 w-3" />
+                        Reject
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ),
+            )}
+          </div>
+        </section>
         <section className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <h4 className="text-sm font-semibold">
