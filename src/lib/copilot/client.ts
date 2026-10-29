@@ -11,7 +11,9 @@ const rerun=new Set<string>();
 let aiBlocked='';
 export const copilotAiBlocked=()=>aiBlocked;
 export async function callCopilot(threadId:string,action:'chat'|'process'|'resume',message?:string,liveChecks?:LiveCheck[],focus?:string){
- if(aiBlocked&&action!=='chat')throw new Error(aiBlocked);
+ // 'chat' and 'resume' always try the backend: a successful call clears the pause,
+ // so Resume reviews works again after the workspace limit is raised.
+ if(aiBlocked&&action==='process')throw new Error(aiBlocked);
  const {data,error}=await supabase.functions.invoke('deal-copilot',{body:{threadId,action,message,model:getAiModel(),...(liveChecks?{liveChecks}:{}),...(focus?{focus}:{})}});
  if(error){let msg=error.message;try{const b=await(error as {context?:Response}).context?.json();msg=b?.message??msg;}catch{}const st=(error as {context?:Response}).context?.status;if(st===402||st===403&&/credit|limit/i.test(msg)){aiBlocked='Co-Pilot AI is paused: the workspace AI credit limit has been reached. A workspace admin can raise the limit or add credits, then try again.';throw new Error(aiBlocked);}throw new Error(msg);}aiBlocked='';changed(threadId);return data;
 }
