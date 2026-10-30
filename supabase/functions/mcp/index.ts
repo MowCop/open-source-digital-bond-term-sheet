@@ -111,7 +111,7 @@ var get_deal_default = defineTool2({
 });
 
 // src/lib/mcp/index.ts
-var projectRef = "onvctqwhxrapychscqzg";
+var projectRef = "okuupnluyhbekhydoran";
 var mcp_default = defineMcp({
   name: "virtual-deal-room",
   title: "Virtual Deal Room",
