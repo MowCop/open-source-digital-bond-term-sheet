@@ -17,7 +17,7 @@ import AgentBrowserTools from '@/components/AgentBrowserTools';
 const navItems = [
   { path: '/messages', label: 'New Issue Board', icon: BellIcon },
   { path: '/deals', label: 'Digital Term Sheet', icon: FileText },
-  { path: '/inbox', label: 'My Deal Chats', icon: Inbox },
+  // My Deal Chats hidden from the menu (page still reachable at /inbox).
   { path: '/ai-draft', label: 'Create New Issue', icon: PenSquare },
   { path: '/admin', label: 'Address Book & User Admin', icon: Users, adminOnly: true },
   { path: '/bond-console', label: 'Bond Console', icon: Settings },
