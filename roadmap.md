@@ -42,3 +42,7 @@
 - [x] Co-Pilot reads all Deal Checker resources (live checks, GLEIF, OpenFIGI, calendars, ICMA/BDT library)
 - [x] Merge Deal Checker into Co-Pilot (checker inside the panel, Ask Co-Pilot per check, checker snapshot on automatic reviews)
 - [x] Co-Pilot works the checker list after every save (fresh results, per-finding proposed / needs input, header counts)
+
+## Remix setup (30 Oct 2026)
+- [x] Remix: copied Drizzle migrations cleared, empty migration set rescaffolded (schema was pre-provisioned; 28 public tables live, migration journal empty).
+- [ ] Remix: attach email domain (eurobondmarkets.com verified in workspace) via email setup dialog, then re-check auth/transactional templates and sending.
