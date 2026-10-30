@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Settings, ClipboardList, ChevronRight } from 'lucide-react';
+import { Settings, ClipboardList, Shield, ChevronRight } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import AiModelPicker from '@/components/AiModelPicker';
 
 export default function SettingsPage() {
+  const { isMaster } = useAuth();
   return (
     <div className="p-6 max-w-2xl space-y-6">
       <h1 className="text-2xl font-semibold">Settings</h1>
@@ -10,6 +12,7 @@ export default function SettingsPage() {
         {[
           { to: '/bond-console', label: 'Bond Console', desc: 'Market data, connectors, vendors and syndicate tools.', icon: Settings },
           { to: '/audit-log', label: 'Audit Log', desc: 'Record of all platform actions.', icon: ClipboardList },
+          ...(isMaster ? [{ to: '/master-admin', label: 'Master Admin', desc: 'Approve users and manage roles.', icon: Shield }] : []),
         ].map(({ to, label, desc, icon: Icon }) => (
           <Link key={to} to={to} className="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors">
             <Icon className="h-5 w-5 text-muted-foreground" />
