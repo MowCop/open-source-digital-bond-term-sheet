@@ -1,11 +1,11 @@
 {
-  "version": 1,
   "asset_id": "35628934-7606-4f7b-9957-c448b5a81f85",
-  "project_id": "15a55c38-d908-458f-b4b6-1a35e223ab92",
-  "url": "/__l5e/assets-v1/35628934-7606-4f7b-9957-c448b5a81f85/1.3_Al_Rajhi_Bank_-_Supplement.pdf",
-  "r2_key": "a/v1/15a55c38-d908-458f-b4b6-1a35e223ab92/35628934-7606-4f7b-9957-c448b5a81f85/1.3_Al_Rajhi_Bank_-_Supplement.pdf",
-  "original_filename": "1.3_Al_Rajhi_Bank_-_Supplement.pdf",
-  "size": 149721,
   "content_type": "application/pdf",
-  "created_at": "2026-10-12T19:52:11Z"
+  "created_at": "2026-10-12T19:52:11Z",
+  "original_filename": "1.3_Al_Rajhi_Bank_-_Supplement.pdf",
+  "project_id": "4cd0eeab-45e3-48a2-b8c7-e24aec64f8ba",
+  "r2_key": "a/v1/4cd0eeab-45e3-48a2-b8c7-e24aec64f8ba/35628934-7606-4f7b-9957-c448b5a81f85/1.3_Al_Rajhi_Bank_-_Supplement.pdf",
+  "size": 149721,
+  "url": "/__l5e/assets-v1/35628934-7606-4f7b-9957-c448b5a81f85/1.3_Al_Rajhi_Bank_-_Supplement.pdf",
+  "version": 1
 }

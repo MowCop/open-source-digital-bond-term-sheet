@@ -1,1 +1,0 @@
-ALTER TABLE public.messages ADD COLUMN IF NOT EXISTS bulletin_source text;

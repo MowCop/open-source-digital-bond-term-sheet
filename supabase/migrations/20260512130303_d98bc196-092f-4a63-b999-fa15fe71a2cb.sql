@@ -1,1 +1,0 @@
-ALTER TYPE public.profile_status ADD VALUE IF NOT EXISTS 'disabled';
