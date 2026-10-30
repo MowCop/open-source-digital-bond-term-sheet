@@ -14,7 +14,7 @@ import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger 
 import GlobalSearch from '@/components/GlobalSearch';
 import AgentBrowserTools from '@/components/AgentBrowserTools';
 
-const navItems = [
+const navItems: { path: string; label: string; icon: typeof Settings; adminOnly?: boolean; masterOnly?: boolean }[] = [
   { path: '/messages', label: 'New Issue Board', icon: BellIcon },
   { path: '/deals', label: 'Digital Term Sheet', icon: FileText },
   // My Deal Chats hidden from the menu (page still reachable at /inbox).
