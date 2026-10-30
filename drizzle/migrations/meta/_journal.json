@@ -1,41 +1,5 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1791640152210,
-      "tag": "0000_deal_documents",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1792247934393,
-      "tag": "0001_vdr_deal_copilot",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1792248337438,
-      "tag": "0002_copilot_atomic_approval_cache",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1792250241272,
-      "tag": "0003_copilot_review_event_entrypoints",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1792489224649,
-      "tag": "0004_copilot_general",
-      "breakpoints": true
-    }
-  ]
+  "entries": []
 }

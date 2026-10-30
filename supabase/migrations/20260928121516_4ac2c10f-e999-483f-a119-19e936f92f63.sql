@@ -1,1 +1,0 @@
-ALTER TABLE public.deals ADD COLUMN IF NOT EXISTS ipt text, ADD COLUMN IF NOT EXISTS guidance text, ADD COLUMN IF NOT EXISTS benchmark text, ADD COLUMN IF NOT EXISTS reference_rate text;
