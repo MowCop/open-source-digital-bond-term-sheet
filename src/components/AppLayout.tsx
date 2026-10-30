@@ -14,12 +14,11 @@ import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger 
 import GlobalSearch from '@/components/GlobalSearch';
 import AgentBrowserTools from '@/components/AgentBrowserTools';
 
-const navItems = [
+const navItems: { path: string; label: string; icon: typeof Settings; adminOnly?: boolean; masterOnly?: boolean }[] = [
   { path: '/messages', label: 'New Issue Board', icon: BellIcon },
   { path: '/deals', label: 'Digital Term Sheet', icon: FileText },
   // My Deal Chats hidden from the menu (page still reachable at /inbox).
   { path: '/admin', label: 'Address Book & User Admin', icon: Users, adminOnly: true },
-  { path: '/master-admin', label: 'Master Admin', icon: Shield, masterOnly: true },
   { path: '/settings', label: 'Settings', icon: Sparkles },
   
 ];
@@ -64,7 +63,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <nav className={`flex-1 p-2 space-y-1 ${location.pathname === '/messages' ? 'pt-6' : ''}`}>
 
           {visibleNav.map(item => {
-            const isActive = location.pathname === item.path || (item.path === '/settings' && ['/bond-console','/audit-log'].includes(location.pathname));
+            const isActive = location.pathname === item.path || (item.path === '/settings' && ['/bond-console','/audit-log','/master-admin'].includes(location.pathname));
             const Icon = item.icon;
             const visible = item.masterOnly ? isMaster : item.adminOnly ? isAdmin : true;
             if (!visible) return null;
@@ -142,7 +141,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </SheetHeader>
               <nav className="flex-1 overflow-y-auto p-2 pt-4 space-y-1">
                 {visibleNav.map(item => {
-                  const isActive = location.pathname === item.path || (item.path === '/settings' && ['/bond-console','/audit-log'].includes(location.pathname));
+                  const isActive = location.pathname === item.path || (item.path === '/settings' && ['/bond-console','/audit-log','/master-admin'].includes(location.pathname));
                   const Icon = item.icon;
                   const visible = item.masterOnly ? isMaster : item.adminOnly ? isAdmin : true;
                   if (!visible) return null;
