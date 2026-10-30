@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Settings, ClipboardList, Shield, ChevronRight } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import AiModelPicker from '@/components/AiModelPicker';
 
 export default function SettingsPage() {
