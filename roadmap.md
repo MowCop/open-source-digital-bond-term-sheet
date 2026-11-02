@@ -9,7 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
-- [ ] Add the complete May 2026 ICMA Handbook to the knowledge library, prioritize it over older handbook editions, and verify retrieval.
+- [x] Add complete May 2026 ICMA Handbook (493 pages, original PDF plus page-labelled searchable text), prioritize it over older handbook editions; 17 knowledge/specialist tests and both XML verification suites pass; updated Co-Pilot deployed.
 - [x] Save generated bulletins as persistent DTS drafts, reopen through an orange-bordered megaphone, and publish in-place; signed-in generation/save/reload/reopen/publish verified on an isolated deal (removed), 7 bulletin tests and both term-sheet verification suites pass.
 - [x] Improve generated bulletins with investor-announcement order, stored document evidence and optional official source text; signed-in Sasol generation/regeneration verified, sourced ratings and exact legal footer below table checked; no test bulletin published.
 - [x] Extend document intake with denomination, maturity, listing, day count, payment frequency and seniority; signed-in text document extraction, New Deal creation, Fill acceptance, View synchronization and save/reload verified; temporary test deal removed.
