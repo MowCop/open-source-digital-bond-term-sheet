@@ -117,19 +117,22 @@ export function searchReferenceLibrary(input: { query: string; sourceId?: string
   if (query.length < 2) throw new Error('query must be at least 2 characters');
   const terms = [...new Set(query.split(/[^a-z0-9€$£%.-]+/).filter((t) => t.length > 1))];
   const docs = input.sourceId ? LIBRARY.filter((d) => d.id === input.sourceId) : LIBRARY;
-  const hits: { score: number; source: string; title: string; passage: string }[] = [];
+  const hits: { score: number; source: string; title: string; passage: string; sourceId: string }[] = [];
   for (const d of docs) {
     const size = 1400;
     for (let i = 0; i < d.text.length; i += 1000) {
       const p = d.text.slice(i, i + size); const low = p.toLowerCase();
       let score = low.includes(query) ? 10 : 0;
       for (const t of terms) if (low.includes(t)) score += 1 + Math.min(3, low.split(t).length - 2);
-      if (score > 0) hits.push({ score, source: d.source, title: d.title, passage: p });
+      if (score > 0) hits.push({ score, source: d.source, title: d.title, passage: p, sourceId: d.id });
     }
   }
-  hits.sort((a, b) => b.score - a.score);
+  // Older handbook extracts must not displace the preferred edition. Explicit
+  // sourceId searches still permit historical research without changing priority.
+  const priority = (id: string) => id === 'icma-handbook-2026' ? 1 : id === 'icma-a8' ? -1 : 0;
+  hits.sort((a, b) => priority(b.sourceId) - priority(a.sourceId) || b.score - a.score);
   return { query, sources: LIBRARY.map((d) => ({ id: d.id, title: d.title })), results: hits.slice(0, Math.min(6, input.limit ?? 4)),
-    note: 'Library text is reference material; ICMA Appendix A8 dates from Sept 2018 and may differ from current rules.' };
+    note: 'The complete ICMA Primary Market Handbook, last updated May 2026 (icma-handbook-2026), is the preferred handbook reference and prevails over older handbook editions where they overlap or conflict. Appendix A8 (icma-a8, Sept 2018) is historical context only. Applicable law and transaction legal documentation still prevail; library text is not legal advice.' };
 }
 
 export type LiveCheck = { l: 'pass' | 'warn' | 'fail'; t: string; d?: string; src?: string; ignored?: boolean };
@@ -186,7 +189,7 @@ export const knowledgeSpecs = {
   checkCalendar: { name: 'checkCalendar', description: 'Business-day check against the Deal Checker TARGET2, London and US holiday tables (2024–2027), with Following/Modified Following roll and optional T+n settlement date. Supply calendars or currency.', input_schema: obj({ date: { type: 'string' }, calendars: { type: 'array', items: { type: 'string' } }, currency: { type: 'string' }, settlementLag: { type: 'number' } }, ['date']) },
   searchPublicSources: { name: 'searchPublicSources', description: 'Search free public sources (SEC EDGAR filings full-text search, Wikipedia) about the borrower or deal. Live, returns URLs and retrieval time.', input_schema: obj({ query: { type: 'string' } }, ['query']) },
   querySubscriptionSource: { name: 'querySubscriptionSource', description: "Query the user's paid subscription (moodys, sp, fitch, bloomberg) about the borrower. DEMO: returns illustrative-only data that must be labelled 'Demo subscription data, illustrative only'.", input_schema: obj({ provider: { type: 'string' }, borrower: { type: 'string' }, topic: { type: 'string' } }, ['provider', 'borrower']) },
-  searchReferenceLibrary: { name: 'searchReferenceLibrary', description: 'Search the reference library: ICMA Primary Market Handbook Appendix A8 pro formas, Appendix C1 (Bond Data Taxonomy: purpose, legal nature, Digital Term Sheet use), ICMA DLT and blockchain in bond markets FAQ (2022), HKMA Sept 2026 HKSAR Digital Green Bonds press release (real DLT bond example), ICMA BDT v2.0 XSD/enums/type restrictions/example, and the Deal Checker capabilities reference. Optional sourceId: icma-a8, icma-c1, icma-dlt-faq, hkma-digital-green-2026, checker-capabilities, bdt-xsd, bdt-enums, bdt-types, bdt-example.', input_schema: obj({ query: { type: 'string' }, sourceId: { type: 'string' }, limit: { type: 'number' } }, ['query']) },
+  searchReferenceLibrary: { name: 'searchReferenceLibrary', description: 'Search the reference library: complete ICMA Primary Market Handbook, last updated May 2026 (preferred over older editions; sourceId icma-handbook-2026), historical September 2018 Appendix A8 pro formas, Appendix C1 (Bond Data Taxonomy: purpose, legal nature, Digital Term Sheet use), ICMA DLT and blockchain in bond markets FAQ (2022), HKMA Sept 2026 HKSAR Digital Green Bonds press release (real DLT bond example), ICMA BDT v2.0 XSD/enums/type restrictions/example, and the Deal Checker capabilities reference. Optional sourceId: icma-handbook-2026, icma-a8, icma-c1, icma-dlt-faq, hkma-digital-green-2026, checker-capabilities, bdt-xsd, bdt-enums, bdt-types, bdt-example.', input_schema: obj({ query: { type: 'string' }, sourceId: { type: 'string' }, limit: { type: 'number' } }, ['query']) },
 };
 export type KnowledgeTool = keyof typeof knowledgeSpecs;
 

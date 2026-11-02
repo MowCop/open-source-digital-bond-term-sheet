@@ -2,6 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { checkCalendar, readLiveChecks, searchReferenceLibrary } from '../../../supabase/functions/deal-copilot/knowledge/tools.ts';
 
 describe('Co-Pilot Deal Checker resources', () => {
+  it('prioritizes the May 2026 handbook over older handbook material', () => {
+    const r = searchReferenceLibrary({ query: 'final terms', limit: 6 });
+    expect(r.results[0].sourceId).toBe('icma-handbook-2026');
+    expect(r.results.every((hit) => hit.sourceId !== 'icma-a8')).toBe(true);
+  });
+  it('retrieves the final appendix beyond the first 50 PDF pages', () => {
+    const r = searchReferenceLibrary({ query: 'legal documentation will prevail', sourceId: 'icma-handbook-2026' });
+    expect(r.results[0].sourceId).toBe('icma-handbook-2026');
+    expect(r.results[0].passage.toLowerCase()).toContain('legal documentation will prevail');
+  });
   it('flags Easter Monday 2026 as a TARGET2 holiday and rolls Modified Following', () => {
     const r = checkCalendar({ date: '2026-04-06', currency: 'EUR' });
     expect(r.businessDay).toBe(false);
