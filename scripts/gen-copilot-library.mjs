@@ -1,5 +1,6 @@
 import fs from 'fs';
 const src=[
+ ['icma-handbook-2026','ICMA Primary Market Handbook — complete edition, last updated May 2026 (preferred handbook reference)','reference/ICMA-Primary-Market-Handbook-May-2026.txt'],
  ['icma-a8','ICMA Primary Market Handbook — Appendix A8 (final terms & pricing supplement pro formas, Sept 2018)','reference/ICMA-Primary-Market-Handbook-Appendix-A8-260918.txt'],
  ['icma-c1','ICMA Primary Market Handbook — Appendix C1 (Bond Data Taxonomy: purpose, legal nature, use in digital term sheets, May 2026)','reference/ICMA-Primary-Market-Handbook-AppendixC1-BDT-2026.txt'],
  ['icma-dlt-faq','ICMA FAQ — DLT and blockchain in bond markets (Sept 2022)','reference/ICMA-DLT-and-blockchain-in-bond-markets-FAQ-220922.txt'],
