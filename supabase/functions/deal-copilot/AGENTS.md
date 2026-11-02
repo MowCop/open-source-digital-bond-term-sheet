@@ -6,3 +6,4 @@
 - After every save, Co-Pilot reviews each open checker finding (domain/remediation.ts) and marks it proposed only when an evidenced correction survived the guard — proposals stay human-approved.
 - Only board updates set a client-only focus (src/lib/copilot/focus.ts) sent with each chat question, never stored; Co-Pilot never reads deal chats.
 - Term-sheet answers are documentation-first; external sources go through knowledge/tools.ts (searchPublicSources live, querySubscriptionSource demo-only and always labelled) — no paid calls without a secret.
+- Handbook editions are registered by the library generator; knowledge/tools.ts enforces edition precedence before relevance ranking and prompts share it, while explicit sourceId searches preserve historical access — older extracts must not displace the preferred handbook.
