@@ -6,70 +6,78 @@ Digital Deal Room is for professionals involved in the execution of new bond iss
 
 The Digital Term Sheet (DTS) is what evolves during bond syndication. It is the ultimate source of truth and where a bond's formal life begins.
 
-- A bond's schema, data fields and legal framework are collectively called the "terms", and these are reproduced on a digital term sheet (DTS).
+- A bond's schema, data fields and legal framework are collectively called the "terms", and these are reproduced onto a digital term sheet (DTS).
   
 -  The DTS can be viewed several ways:
-   i) Standard text (default Bloomberg alett friendly)
-   ii) Digitally - XML (API/MCP friendly)
+   i)   Standard text (default Bloomberg alett friendly)
+   ii)  Digitally - XML (API/MCP friendly)
    iii) DLT (blockchain friendly)
-   iv) Physicsl file (eg PDF)
+   iv) Physical file (eg PDF)
 -   Lawyers, Issuer Council and Bank Syndicates / DCM are the main players in providing information to build the TS.
 
-## Whatthe VDR does
-- Adds information (terms) to the TS in real time during syndication.
+## What the DTS does
+- Adds information to the deal in real time during syndication.
 - Builds and sends deal update blasts to external email recipients — including Bloomberg recipients.
 - Connects with external APIs / MCPs to feed real-time data as deals progress.
+- Additional '* AI Deal Checker' layer that checks and verifies updates to the terms.
 
-## Digital Term Sheet options
+## Digital Term Sheet workflow
 
-- The TS can be dropped into the VDR at the start of the process — the VDR self-populates the terms.
-- If no TS is available, one can be built from scratch in the VDR (create deal).
-- During syndication the TS document can be updated manually or parsed, partially or fully, using AI.
+- Select * Create New Deal > *Related documents can be dropped into the DTS at the start (and at any time) during the life of the DTS  > Save  data self-populates into the DTS essential fields >  the DTS is live and ready for execution / publication > Bloomberg/Email message blast created from the existing DTS data > integrated incoming messages ingest field updates from external sources (Bloomberg/Outlook)
+  
+ * RELATED DOCUMENTS = Prelimiary Offering Circulars, Memorandums, Addemdums, Other Term Sheet documentation, Emails+Attachements, forwarded Bloomberg chats.messages.
+  
+  Create New Deal button can build a draft DTS manually if no ducumentation is available. 
+
+- During syndication the DTS interface can be updated manually or parsed through feedback loop messaging integrated with Bloomberg/Outlook incoming alerts, partially or fully, using AI 
 
 ## Deal blasts and chat
 
-- The AI parser option can be applied from the deal chat.
-- The AI parser can be applied from the deal message blast.
-- If there is no deal blast message, the AI can create or suggest one.
+- If there is no initial deal blast message, the AI can create or suggest one.
 
-## AI Deal Checker
+* AI Deal Checker
 
 The AI Deal Checker runs in the background, applying compliance rules and bond semantics to ensure accuracy across all parts of the VDR.
 
-## USPs
+ USPs
 
-- Standards of ICMA BDT (2.0) universally applied, standardising schema.
-- Maximum compliance and security.
-- The VDR can be used to help legal and syndicate / DCM teams build the TS.
-- Internal digital deal data syncs automatically with the TS.
+- Standards of ICMA BDT (2.0) universally applied, standardising schema 
+- Maximum compliance and security
+- The DDR can be used to help legal and syndicate / DCM teams build the TS in one place
+- Internal digital deal data syncs seemlessly with APIs/MCPs maximising interoperbility
 
 ## Workflow at a glance
 
-```text
-  Digital Term Sheet dropped in            No digital term sheet
-  (VDR self-populates)             (create deal in VDR)
+ RELATED DOCUMENTS                No DOCUMENTS
+  Dropped...                        Typed ...
+ AI self-populates                ...'Issuer Name' 
+       (creates DTS)              (creates DTS)
              \                         /
               \                       /
                v                     v
             ┌──────────────────────────────┐
-            │   Digital Term Sheet in the VDR      │
-            │   (source of truth)          │
+            │   Digital Term Sheet         │
+            │   (source of truth)          |
+            |   Staged Execution           │
             └──────────────┬───────────────┘
-                           │  updated manually or by AI parse
+                           │  
+        ((( updated manually or by AI parse )))
                            v
             ┌──────────────────────────────┐
-            │  Syndication: deal chat +    │
-            │  deal update blasts          │
-            │  (AI parse from either;      │
-            │   AI can draft a blast)      │
+            │  Syndication:                │
+            │  message + doc updates       │          
+            │  parse back to generate      |
+            |  next evolutionary stage of  |
+            |  DTS, then AI regenerates    │
+            │  new later stage blasts      │
             └──────────────┬───────────────┘
                            │
                            v
-            ┌──────────────────────────────┐
-            │  AI Deal Checker             │
-            │  compliance + bond semantics │
-            └──────────────┬───────────────┘
-                           │
-                           v
-      Email blasts (incl. Bloomberg)  ·  External API / MCP feeds
+            ((  External API / MCP feeds   ))
+              (( updated at every stage ))            
+         
+                           
+           
+
+             
 ```
