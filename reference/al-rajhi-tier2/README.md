@@ -1,6 +1,6 @@
 # Al Rajhi Bank – Tier 2 US$ Reg S 10.5NC5.5 Social Sukuk (demo deal flow)
 
-The standard demonstration deal for NewIssueVault. The real syndicate message blasts (Bloomberg / Outlook) are numbered in the order they were sent.
+The standard demonstration deal for Digital Deal Room. The real syndicate message blasts (Bloomberg / Outlook) are numbered in the order they were sent.
 
 | # | File | Stage | Key terms |
 |---|------|-------|-----------|
