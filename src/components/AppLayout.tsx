@@ -54,7 +54,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <div className="w-3.5 h-3.5 bg-sidebar rotate-45" />
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-lg font-bold tracking-tight text-slate-100">Virtual</span>
+              <span className="text-lg font-bold tracking-tight text-slate-100">Digital</span>
               <span className="text-lg font-normal tracking-tight text-slate-400">Deal Room</span>
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <span className="flex items-center justify-center w-8 h-8 bg-emerald-500 rounded-sm shrink-0" aria-hidden="true">
                     <span className="w-3.5 h-3.5 bg-sidebar rotate-45" />
                   </span>
-                  <span><strong>Virtual</strong> <span className="text-sidebar-foreground/70 font-normal">Deal Room</span></span>
+                  <span><strong>Digital</strong> <span className="text-sidebar-foreground/70 font-normal">Deal Room</span></span>
                 </SheetTitle>
               </SheetHeader>
               <nav className="flex-1 overflow-y-auto p-2 pt-4 space-y-1">
