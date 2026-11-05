@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Settings, ClipboardList, Shield, Users, ChevronRight } from 'lucide-react';
+import { Settings, ClipboardList, Shield, Users, ChevronRight, Github, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import AiModelPicker from '@/components/AiModelPicker';
 import { useState } from 'react';
@@ -12,6 +12,14 @@ export default function SettingsPage() {
   return (
     <div className="p-6 max-w-2xl space-y-6">
       <h1 className="text-2xl font-semibold">Settings</h1>
+      <a href="https://github.com/MowCop/open-source-digital-bond-term-sheet" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted">
+        <Github className="h-5 w-5" />
+        <div className="flex-1">
+          <div className="font-medium">Open-source repository on GitHub</div>
+          <div className="text-sm text-muted-foreground break-all">github.com/MowCop/open-source-digital-bond-term-sheet</div>
+        </div>
+        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+      </a>
       <section className="rounded-lg border divide-y">
         {[
           { to: '/bond-console', label: 'Bond Console', desc: 'Market data, connectors, vendors and syndicate tools.', icon: Settings },
