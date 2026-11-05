@@ -15,7 +15,7 @@ const corsHeaders = {
 }
 
 // Configuration
-const SITE_NAME = "Virtual Deal Room"
+const SITE_NAME = "Digital Deal Room"
 const SENDER_DOMAIN = "notify.eurobondmarkets.com"
 const ROOT_DOMAIN = "eurobondmarkets.com"
 const FROM_DOMAIN = "notify.eurobondmarkets.com"

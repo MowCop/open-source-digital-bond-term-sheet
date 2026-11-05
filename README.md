@@ -1,6 +1,6 @@
-# NewIssueVault — Virtual Deal Room (VDR)
+# NewIssueVault — Digital Deal Room (VDR)
 
-NewIssueVault is an open-source Virtual Deal Room for new bond issues. Its mission is to give bond syndication and execution teams a single, standards-based system of record — so a new issue reaches pricing with term-sheet data that every participant can trust: syndicate, DCM, legal, investors and recipients alike.
+NewIssueVault is an open-source Digital Deal Room for new bond issues. Its mission is to give bond syndication and execution teams a single, standards-based system of record — so a new issue reaches pricing with term-sheet data that every participant can trust: syndicate, DCM, legal, investors and recipients alike.
 
 It provides digital synchronisation of the Digital Term Sheet with internal and external stakeholders, augmented with the option to use AI.
 
