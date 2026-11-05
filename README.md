@@ -1,17 +1,21 @@
-# NewIssueVault — Virtual Deal Room (VDR)
+# Digital Deal Room (DDR)
 
-NewIssueVault is a Virtual Deal Room for new bond issues. It provides digital synchronisation of the Digital Term Sheet with internal and external stakeholders, augmented with the option to use AI.
+Digital Deal Room is for professionals involved in the execution of new bond issues. It provides digital synchronisation of deal terms via  Digital Term Sheets with internal and external stakeholders, augmented with the option to use AI.
 
 ## Definitions — The Digital Term Sheet
 
-The Digital Term Sheet (TS) is what evolves during bond syndication. It is the ultimate source of truth and where a bond's formal life begins.
+The Digital Term Sheet (DTS) is what evolves during bond syndication. It is the ultimate source of truth and where a bond's formal life begins.
 
-- A bond's schema, data fields and legal framework are collectively called the "terms", and these are produced on a digital term sheet (TS).
-- The TS can be a physical document (e.g. PDF) or a digital file (e.g. XML).
-- Lawyers and Bank Syndicates / DCM are the main players in providing information to build the TS.
+- A bond's schema, data fields and legal framework are collectively called the "terms", and these are reproduced on a digital term sheet (DTS).
+  
+-  The DTS can be viewed several ways:
+   i) Standard text (default Bloomberg alett friendly)
+   ii) Digitally - XML (API/MCP friendly)
+   iii) DLT (blockchain friendly)
+   iv) Physicsl file (eg PDF)
+-   Lawyers, Issuer Council and Bank Syndicates / DCM are the main players in providing information to build the TS.
 
-## What the VDR does
-
+## Whatthe VDR does
 - Adds information (terms) to the TS in real time during syndication.
 - Builds and sends deal update blasts to external email recipients — including Bloomberg recipients.
 - Connects with external APIs / MCPs to feed real-time data as deals progress.
