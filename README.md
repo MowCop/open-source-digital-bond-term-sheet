@@ -1,6 +1,6 @@
 # Digital Deal Room (DDR)
 
-Digital Deal Room is for professionals involved in the execution of new bond issues. It provides digital synchronisation of deal terms via  Digital Term Sheets with internal and external stakeholders, augmented with the option to use AI.
+Digital Deal Room is for professionals involved in the execution of new bond issues. It provides digital synchronisation of deal terms via Digital Term Sheets with internal and external stakeholders, augmented with the option to use AI.
 
 ## Definitions — The Digital Term Sheet
 
@@ -8,12 +8,12 @@ The Digital Term Sheet (DTS) is what evolves during bond syndication. It is the 
 
 - A bond's schema, data fields and legal framework are collectively called the "terms", and these are reproduced onto a digital term sheet (DTS).
   
--  The DTS can be viewed several ways:
-   i)   Standard text (default Bloomberg alett friendly)
-   ii)  Digitally - XML (API/MCP friendly)
-   iii) DLT (blockchain friendly)
-   iv) Physical file (eg PDF)
--   Lawyers, Issuer Council and Bank Syndicates / DCM are the main players in providing information to build the TS.
+- The DTS can be viewed several ways:
+  i) Standard text (default Bloomberg alert friendly)
+  ii) Digitally - XML (API/MCP friendly)
+  iii) DLT (blockchain friendly)
+  iv) Physical file (eg PDF)
+- Lawyers, Issuer Council and Bank Syndicates / DCM are the main players in providing information to build the TS.
 
 ## What the DTS does
 - Adds information to the deal in real time during syndication.
@@ -23,13 +23,13 @@ The Digital Term Sheet (DTS) is what evolves during bond syndication. It is the 
 
 ## Digital Term Sheet workflow
 
-- Select * Create New Deal > *Related documents can be dropped into the DTS at the start (and at any time) during the life of the DTS  > Save  data self-populates into the DTS essential fields >  the DTS is live and ready for execution / publication > Bloomberg/Email message blast created from the existing DTS data > integrated incoming messages ingest field updates from external sources (Bloomberg/Outlook)
+- Select * Create New Deal > *Related documents can be dropped into the DTS at the start (and at any time) during the life of the DTS > Save data self-populates into the DTS essential fields > the DTS is live and ready for execution / publication > Bloomberg/Email message blast created from the existing DTS data > integrated incoming messages ingest field updates from external sources (Bloomberg/Outlook)
   
- * RELATED DOCUMENTS = Prelimiary Offering Circulars, Memorandums, Addemdums, Other Term Sheet documentation, Emails+Attachements, forwarded Bloomberg chats.messages.
+* RELATED DOCUMENTS = Preliminary Offering Circulars, Memorandums, Addendums, Other Term Sheet documentation, Emails+Attachments, forwarded Bloomberg chats.messages.
   
-  Create New Deal button can build a draft DTS manually if no ducumentation is available. 
+Create New Deal button can build a draft DTS manually if no documentation is available.
 
-- During syndication the DTS interface can be updated manually or parsed through feedback loop messaging integrated with Bloomberg/Outlook incoming alerts, partially or fully, using AI 
+- During syndication the DTS interface can be updated manually or parsed through feedback loop messaging integrated with Bloomberg/Outlook incoming alerts, partially or fully, using AI
 
 ## Deal blasts and chat
 
@@ -37,49 +37,53 @@ The Digital Term Sheet (DTS) is what evolves during bond syndication. It is the 
 
 * AI Deal Checker
 
-The AI Deal Checker runs in the background, applying compliance rules and bond semantics to ensure accuracy across all parts of the VDR.
+The AI Deal Checker runs in the background, applying compliance rules and bond semantics to ensure accuracy across all parts of the DDR.
 
- USPs
+USPs
 
-- Standards of ICMA BDT (2.0) universally applied, standardising schema 
+- Standards of ICMA BDT (2.0) universally applied, standardising schema
 - Maximum compliance and security
 - The DDR can be used to help legal and syndicate / DCM teams build the TS in one place
-- Internal digital deal data syncs seemlessly with APIs/MCPs maximising interoperbility
+- Internal digital deal data syncs seamlessly with APIs/MCPs maximising interoperability
 
 ## Workflow at a glance
 
- RELATED DOCUMENTS                No DOCUMENTS
+```text
+RELATED DOCUMENTS                 No DOCUMENTS
   Dropped...                        Typed ...
- AI self-populates                ...'Issuer Name' 
-       (creates DTS)              (creates DTS)
-             \                         /
-              \                       /
-               v                     v
-            ┌──────────────────────────────┐
-            │   Digital Term Sheet         │
-            │   (source of truth)          |
-            |   Staged Execution           │
-            └──────────────┬───────────────┘
-                           │  
-        ((( updated manually or by AI parse )))
-                           v
-            ┌──────────────────────────────┐
-            │  Syndication:                │
-            │  message + doc updates       │          
-            │  parse back to generate      |
-            |  next evolutionary stage of  |
-            |  DTS, then AI regenerates    │
-            │  new later stage blasts      │
-            └──────────────┬───────────────┘
-                           │
-                           v
-            ((  External API / MCP feeds   ))
-              (( updated at every stage ))            
-         
-                           
-           
+AI self-populates               ...'Issuer Name'
+      (creates DTS)                (creates DTS)
+          \\                             /
+           \\                           /
+            v                             v
 
-             
+       +--------------------------------------+
+       |                                      |
+       |   Digital Term Sheet                |
+       |   (source of truth)                 |
+       |   Staged Execution                  |
+       |                                      |
+       +--------------------------------------+
+                         |
+                         |
+       ((( updated manually or by AI parse )))
+                         v
+
+       +--------------------------------------+
+       |                                      |
+       |  Syndication:                        |
+       |  message + doc updates               |
+       |  parse back to generate              |
+       |  next evolutionary stage of          |
+       |  DTS, then AI regenerates            |
+       |  new later stage blasts              |
+       |                                      |
+       +--------------------------------------+
+                         |
+                         v
+
+          ((  External API / MCP feeds   ))
+             (( updated at every stage ))
 ```
 
 ## Contributing
@@ -88,7 +92,7 @@ Contributions are welcome from participating banks, syndicate/DCM and legal prof
 
 ## Headless Taxonomy Engine / Shared Library (SDK / Microservice)
 
-The **Headless Taxonomy Engine / Shared Library** — the ICMA BDT 2.0 schema engine behind the VDR, available as an SDK or a standalone microservice for use in your own systems — is **available on request**. It is not part of this open-source repository. To request access or discuss licensing, contact the team via [www.eurobondmarkets.com](https://www.eurobondmarkets.com).
+The **Headless Taxonomy Engine / Shared Library** — the ICMA BDT 2.0 schema engine behind the DDR, available as an SDK or a standalone microservice for use in your own systems — is **available on request**. It is not part of this open-source repository. To request access or discuss licensing, contact the team via [www.eurobondmarkets.com](https://www.eurobondmarkets.com).
 
 ## Licence
 
