@@ -1,4 +1,4 @@
-# Update slide 8 of the NewIssueVault workflow deck
+# Update slide 8 of the Digital Deal Room workflow deck
 
 Replace the existing slide-8 diagram with the provided New Issue Board screenshot and rewrite the caption to frame Distribution as centralised syndicate control.
 
@@ -8,7 +8,7 @@ Replace the existing slide-8 diagram with the provided New Issue Board screensho
 2. **Existing diagram shapes removed** — all current flow-diagram shapes, arrows, permission-boundary boxes and their text labels on slide 8 are deleted.
 3. **Caption rewritten** — new subtitle/body text explains that "Distribution" means centralised control for data, message blasts, chats and compliant AI checker administration of execution for syndicate managers.
 4. **Preview first** — a draft slide-8 PNG is produced for approval before the deck is rebuilt.
-5. **Deck rebuilt as v3** — after approval, a new `NewIssueVault-Workflow-Deck-v3.pptx` is generated, validated and rendered for QA.
+5. **Deck rebuilt as v3** — after approval, a new `Digital-Deal-Room-Workflow-Deck-v3.pptx` is generated, validated and rendered for QA.
 
 ## Slide 8 content
 
@@ -20,13 +20,13 @@ Replace the existing slide-8 diagram with the provided New Issue Board screensho
 
 ## Technical approach
 
-- The original `pptxgenjs` build script lived in `/tmp/deck` and is no longer present, so slide 8 will be rebuilt by editing the existing `NewIssueVault-Workflow-Deck-v2.pptx` directly with `python-pptx`.
+- The original `pptxgenjs` build script lived in `/tmp/deck` and is no longer present, so slide 8 will be rebuilt by editing the existing `Digital-Deal-Room-Workflow-Deck-v2.pptx` directly with `python-pptx`.
 - Read the current slide 8 to preserve the slide master, background, step chip and lifecycle spine positioning.
 - Remove all non-spine diagram shapes and the old picture.
 - Embed the provided screenshot as a new picture, scaling it to fit the slide body without distortion.
 - Add the new title and caption text boxes, matching the existing font family (Georgia / Calibri) and colour palette (navy, gold, white).
 - Export a draft PNG of slide 8 for review.
-- On approval, write the updated deck to `/mnt/documents/NewIssueVault-Workflow-Deck-v3.pptx`, run OOXML validation, render all slides to images, and inspect them for overflow or clipping.
+- On approval, write the updated deck to `/mnt/documents/Digital-Deal-Room-Workflow-Deck-v3.pptx`, run OOXML validation, render all slides to images, and inspect them for overflow or clipping.
 
 ## Out of scope
 

@@ -47,3 +47,6 @@
 ## Remix setup (30 Oct 2026)
 - [x] Remix: copied Drizzle migrations cleared, empty migration set rescaffolded (schema was pre-provisioned; 28 public tables live, migration journal empty).
 - [ ] Remix: attach email domain (eurobondmarkets.com verified in workspace) via email setup dialog, then re-check auth/transactional templates and sending.
+
+## Bank intake
+- [ ] Email alert to karl.mallalieu@gmail.com on each bank SDK/API request — blocked: email domain not attached to this project

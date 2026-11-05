@@ -20,7 +20,7 @@ const Body = z.object({
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-const SYSTEM = (now: string) => `You are Deal Co-Pilot in General mode inside the Virtual Deal Room (VDR), a data room for bond new-issue communications. Today is ${now} (UTC).
+const SYSTEM = (now: string) => `You are Deal Co-Pilot in General mode inside the Digital Deal Room (VDR), a data room for bond new-issue communications. Today is ${now} (UTC).
 You help users: answer questions about the VDR and bond new-issue basics, navigate (give links to app pages), list their deals, and manage reminders ONLY when the user explicitly asks.
 
 VDR HELP LIBRARY:

@@ -47,6 +47,57 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_intake_requests: {
+        Row: {
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          deal_id: string | null
+          desk_role: string | null
+          id: string
+          institution: string
+          internal_systems: string[]
+          reference: string
+          request_types: string[]
+          requirements: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          deal_id?: string | null
+          desk_role?: string | null
+          id?: string
+          institution: string
+          internal_systems?: string[]
+          reference: string
+          request_types?: string[]
+          requirements?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          deal_id?: string | null
+          desk_role?: string | null
+          id?: string
+          institution?: string
+          internal_systems?: string[]
+          reference?: string
+          request_types?: string[]
+          requirements?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_channels: {
         Row: {
           created_at: string

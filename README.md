@@ -81,3 +81,15 @@ The AI Deal Checker runs in the background, applying compliance rules and bond s
 
              
 ```
+
+## Contributing
+
+Contributions are welcome from participating banks, syndicate/DCM and legal professionals, and developers. See [CONTRIBUTING.md](CONTRIBUTING.md) for the community rules — including adherence to ICMA BDT 2.0 as the underlying schema standard, how to submit pull requests against `main`, code style, and responsible vulnerability disclosure.
+
+## Headless Taxonomy Engine / Shared Library (SDK / Microservice)
+
+The **Headless Taxonomy Engine / Shared Library** — the ICMA BDT 2.0 schema engine behind the VDR, available as an SDK or a standalone microservice for use in your own systems — is **available on request**. It is not part of this open-source repository. To request access or discuss licensing, contact the team via [www.eurobondmarkets.com](https://www.eurobondmarkets.com).
+
+## Licence
+
+Apache License, Version 2.0 — see [LICENSE](LICENSE).

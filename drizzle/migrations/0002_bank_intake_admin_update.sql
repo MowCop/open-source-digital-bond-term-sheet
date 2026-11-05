@@ -1,0 +1,2 @@
+GRANT UPDATE ON public.bank_intake_requests TO authenticated;
+CREATE POLICY "Master admins update intake" ON public.bank_intake_requests FOR UPDATE TO authenticated USING (public.has_role(auth.uid(), 'master_admin')) WITH CHECK (public.has_role(auth.uid(), 'master_admin') AND status IN ('received','in_review','approved','contacted','archived'));

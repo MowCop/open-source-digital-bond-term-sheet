@@ -80,7 +80,7 @@ export default function OAuthConsent() {
             <div className="flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : (
             <>
-              <h1 className="text-xl font-semibold">Connect {client} to Virtual Deal Room</h1>
+              <h1 className="text-xl font-semibold">Connect {client} to Digital Deal Room</h1>
               {email && <p className="text-sm text-muted-foreground">Signed in as {email}</p>}
               <p className="text-sm">{client} will be able to use this app as you, while you are signed in.</p>
               {details?.redirect_uri && <p className="text-xs text-muted-foreground break-all">Returns to: {details.redirect_uri}</p>}

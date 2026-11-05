@@ -42,10 +42,36 @@ import RichTextEditor from '@/components/RichTextEditor';
 import { bulletinDocuments } from '@/lib/bulletin';
 import { Textarea } from '@/components/ui/textarea';
 import { findBulletinDraft } from '@/lib/bulletinDraft';
+import { downloadBdtFile, validateBdt, type BdtDocument, type ValidationReport } from '@/lib/taxonomy';
+import BankIntakeDialog from '@/components/termsheet/BankIntakeDialog';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
-  const xml = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return buildXML(s) as string; }, [deal]);
-  return <pre className="max-h-[600px] overflow-auto rounded-md border border-border/70 bg-card/60 p-3 text-[11px]">{xml}</pre>;
+  const state = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return s; }, [deal]);
+  const xml = useMemo(() => buildXML(state) as string, [state]);
+  const [report, setReport] = useState<ValidationReport | null>(null);
+  const [intake, setIntake] = useState(false);
+  const doc = state as unknown as BdtDocument;
+  const base = deal.issuerName || deal.id;
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="outline" onClick={() => downloadBdtFile(doc, 'xml', base)}>Download BDT 2.0 XML</Button>
+        <Button size="sm" variant="outline" onClick={() => downloadBdtFile(doc, 'json', base)}>Download BDT 2.0 JSON</Button>
+        <Button size="sm" variant="outline" onClick={() => downloadBdtFile(doc, 'text', base)}>Download term sheet text</Button>
+        <Button size="sm" variant="outline" onClick={() => setReport(validateBdt(doc))}>Run BDT Validation Report</Button>
+        <Button size="sm" onClick={() => setIntake(true)}>Request Bank Enterprise SDK / API Access</Button>
+      </div>
+      {report && (
+        <div className="rounded-md border p-3 text-sm space-y-1">
+          <div className="font-medium">{report.isValid ? '✓' : '✗'} {report.summary}</div>
+          {report.errors.map((e, i) => <div key={`e${i}`} className="text-destructive">Error: {e.message}</div>)}
+          {report.warnings.map((w, i) => <div key={`w${i}`} className="text-muted-foreground">Warning: {w.message}</div>)}
+        </div>
+      )}
+      <pre className="max-h-[600px] overflow-auto rounded-md border border-border/70 bg-card/60 p-3 text-[11px]">{xml}</pre>
+      <BankIntakeDialog open={intake} onOpenChange={setIntake} dealId={deal.id} />
+    </div>
+  );
 }
 
 const STAGES: DealStage[] = ['Mandate', 'Announced', 'Launched', 'Books Open', 'Books Closed', 'Priced', 'Settled'];
