@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Shield, Info } from 'lucide-react';
+import BankIntakeAdmin from '@/components/BankIntakeAdmin';
 
 type Row = {
   user_id: string;
@@ -233,6 +234,7 @@ export default function MasterAdminPage() {
         </CardContent>
       </Card>
       <p className="text-xs text-muted-foreground">Deactivated users lose access on next page load.</p>
+      <BankIntakeAdmin />
     </div>
   );
 }
