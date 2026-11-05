@@ -2,9 +2,13 @@ import { Link } from 'react-router-dom';
 import { Settings, ClipboardList, Shield, Users, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import AiModelPicker from '@/components/AiModelPicker';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import BankIntakeDialog from '@/components/termsheet/BankIntakeDialog';
 
 export default function SettingsPage() {
   const { isMaster, isAdmin } = useAuth();
+  const [intake, setIntake] = useState(false);
   return (
     <div className="p-6 max-w-2xl space-y-6">
       <h1 className="text-2xl font-semibold">Settings</h1>
@@ -24,6 +28,12 @@ export default function SettingsPage() {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
         ))}
+      </section>
+      <section className="rounded-lg border p-4 space-y-3">
+        <h2 className="font-medium">Bank Enterprise SDK / API access</h2>
+        <p className="text-sm text-muted-foreground">Request the Headless Taxonomy Engine, API & MCP credentials, or a private VPC deployment.</p>
+        <Button onClick={() => setIntake(true)}>Request access</Button>
+        <BankIntakeDialog open={intake} onOpenChange={setIntake} />
       </section>
       <section className="rounded-lg border p-4 space-y-3">
         <h2 className="font-medium">AI model</h2>

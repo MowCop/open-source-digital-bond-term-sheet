@@ -8,6 +8,13 @@
       "when": 1793392165103,
       "tag": "0000_restore_new_user_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793881823957,
+      "tag": "0001_bank_intake_requests",
+      "breakpoints": true
     }
   ]
 }
