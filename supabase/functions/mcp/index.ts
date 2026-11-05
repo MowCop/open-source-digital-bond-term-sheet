@@ -114,9 +114,9 @@ var get_deal_default = defineTool2({
 var projectRef = "okuupnluyhbekhydoran";
 var mcp_default = defineMcp({
   name: "virtual-deal-room",
-  title: "Virtual Deal Room",
+  title: "Digital Deal Room",
   version: "0.1.0",
-  instructions: "Read-only access to bond deals in Virtual Deal Room for the signed-in user. List deals, then fetch a deal's term-sheet fields by id.",
+  instructions: "Read-only access to bond deals in Digital Deal Room for the signed-in user. List deals, then fetch a deal's term-sheet fields by id.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"

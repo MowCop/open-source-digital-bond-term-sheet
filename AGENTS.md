@@ -26,3 +26,4 @@
 - Co-Pilot uses src/lib/copilot and the deal-copilot Cloud function; human term editors alone approve, with atomic stale-value checks — AI never approves.
 - Co-Pilot General mode (CopilotGeneral, copilot-general) shows when unfocused; AI drafts reminders, users confirm, ReminderWatcher fires them client-side.
 - Read subdirectory AGENTS.md before editing there (e.g. supabase/functions/deal-copilot/).
+- src/lib/taxonomy/ is the portable BDT 2.0 export/validation library; it must not import UI, React or database code (only vendored src/lib/termsheet). Bank SDK/API intake requests are stored in public.bank_intake_requests with a reference code.
