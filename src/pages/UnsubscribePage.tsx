@@ -45,7 +45,7 @@ export default function UnsubscribePage() {
           {state === 'loading' && <Loader2 className="h-5 w-5 animate-spin mx-auto" />}
           {state === 'valid' && (
             <>
-              <p className="text-sm text-muted-foreground">Click below to stop receiving emails from BondVDR.</p>
+              <p className="text-sm text-muted-foreground">Click below to stop receiving emails from Digital Deal Room.</p>
               <Button onClick={confirm} disabled={busy}>
                 {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Confirm Unsubscribe
               </Button>
