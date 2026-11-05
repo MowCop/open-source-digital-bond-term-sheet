@@ -1,6 +1,6 @@
-# NewIssueVault — Digital Deal Room (VDR)
+# Digital Deal Room (VDR)
 
-NewIssueVault is an open-source Digital Deal Room for new bond issues. Its mission is to give bond syndication and execution teams a single, standards-based system of record — so a new issue reaches pricing with term-sheet data that every participant can trust: syndicate, DCM, legal, investors and recipients alike.
+Digital Deal Room is an open-source platform for new bond issues. Its mission is to give bond syndication and execution teams a single, standards-based system of record — so a new issue reaches pricing with term-sheet data that every participant can trust: syndicate, DCM, legal, investors and recipients alike.
 
 It provides digital synchronisation of the Digital Term Sheet with internal and external stakeholders, augmented with the option to use AI.
 
@@ -38,7 +38,7 @@ The AI Deal Checker runs in the background, applying compliance rules and bond s
 
 ## ICMA BDT-compliant data structures
 
-All deal data in NewIssueVault conforms to the **ICMA Bond Data Taxonomy (BDT 2.0)** — the market's standard schema for bond issuance data. In practice this means:
+All deal data in Digital Deal Room conforms to the **ICMA Bond Data Taxonomy (BDT 2.0)** — the market's standard schema for bond issuance data. In practice this means:
 
 - **One field dictionary.** Every term-sheet field (issuer, guarantor, identifiers, parties and roles, ratings, coupon, tenor, settlement mechanics, documentation and more) is defined once in a single dictionary, selected by path — never duplicated.
 - **Structured parties and ratings.** Counterparties are modelled as BDT Party structures with role assignments (bookrunner, global coordinator, legal advisor, etc.) and per-agency PartyRating entries, mirroring the taxonomy's structured tables.

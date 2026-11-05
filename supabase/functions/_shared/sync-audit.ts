@@ -7,7 +7,7 @@ export type SyncStatus = "success" | "error";
 
 export interface SyncEvent {
   source: string;                 // e.g. "github"
-  repo?: string | null;           // e.g. "NewIssueVault"
+  repo?: string | null;           // e.g. "open-source-digital-bond-term-sheet"
   eventType: SyncEventType;
   status: SyncStatus;
   recordsProcessed?: number | null;

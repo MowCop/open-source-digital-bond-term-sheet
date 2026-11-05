@@ -1,6 +1,6 @@
-# NewIssueVault workflow documentation in the README
+# Digital Deal Room workflow documentation in the README
 
-Replace the placeholder `README.md` at the project root with a structured write-up of the NewIssueVault / Virtual Deal Room (VDR) workflow, based on the definitions you supplied.
+Replace the placeholder `README.md` at the project root with a structured write-up of the Digital Deal Room (VDR) workflow, based on the definitions you supplied.
 
 ## Document structure
 

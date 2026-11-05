@@ -1,4 +1,4 @@
-# Contributing to NewIssueVault — Digital Deal Room
+# Contributing to Digital Deal Room
 
 Thank you for contributing. This project is open source in support of one goal: making new bond issues reach pricing with term-sheet data that every participant can trust. Contributions are welcome from participating banks, syndicate / DCM and legal professionals, and developers.
 
