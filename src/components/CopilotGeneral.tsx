@@ -126,7 +126,7 @@ export default function CopilotGeneral() {
               else if (e.key === "ArrowUp") { e.preventDefault(); setHi((h) => Math.max(-1, h - 1)); }
               else if (e.key === "Escape") setShowSug(false);
             }}
-            placeholder="Ask anything about the VDR, or ‘remind me when…’"
+            placeholder="Ask me anything..."
             className="h-8 text-sm"
             aria-label="Ask Co-Pilot"
           />
