@@ -1,6 +1,6 @@
-# NewIssueVault — Marketing Deck (PowerPoint)
+# Digital Deal Room — Marketing Deck (PowerPoint)
 
-A 10-slide, light-corporate PowerPoint that walks a bank syndicate audience through the NewIssueVault workflow in chronological order of execution. Delivered as a `.pptx` file, with use-case commentary in the speaker notes pane.
+A 10-slide, light-corporate PowerPoint that walks a bank syndicate audience through the Digital Deal Room workflow in chronological order of execution. Delivered as a `.pptx` file, with use-case commentary in the speaker notes pane.
 
 ## Look and feel
 
@@ -12,7 +12,7 @@ A 10-slide, light-corporate PowerPoint that walks a bank syndicate audience thro
 
 ## Slides (chronological)
 
-1. **Title** — NewIssueVault: instant new-issue execution for bookrunners. Dark navy, gold rule, tagline.
+1. **Title** — Digital Deal Room: instant new-issue execution for bookrunners. Dark navy, gold rule, tagline.
 2. **The problem** — Fragmented chats, spreadsheets and manual termsheets; data reaches investors late and inconsistently. Icon rows, no screenshot.
 3. **The lifecycle at a glance** — Full diagram: Mandate → Announced → Launched → Books Open → Books Closed → Priced → Settled, with the data-convergence idea shown underneath (Benchmark → $1bn+ → $1bn–1.5bn → $1.25bn).
 4. **Step 1 — Create New Issue + Chat Room** — Screenshot of the New Issue Board / create flow; caption on the deal + chat pairing.

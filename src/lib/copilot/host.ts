@@ -3,7 +3,7 @@ import { asDeal, validateProposal, type Deal } from "./deal";
 /**
  * DealHost is the only contract the agent core needs from the app it lives in.
  * This workspace implements it on its own tables (host.cloud.server.ts); the
- * Virtual Deal Room implements it on real deals and its own permissions.
+ * Digital Deal Room implements it on real deals and its own permissions.
  * Hosts must enforce authorization themselves and must never apply a
  * proposed change without an explicit human decision.
  */
