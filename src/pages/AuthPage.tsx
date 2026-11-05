@@ -124,8 +124,8 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">BondVDR</h1>
-          <p className="text-sm text-muted-foreground">Digital Deal Room — secure access</p>
+          <h1 className="text-3xl font-bold tracking-tight">Digital Deal Room</h1>
+          <p className="text-sm text-muted-foreground">Secure access</p>
         </div>
 
         <Card className="card-elevated">
@@ -272,7 +272,7 @@ export default function AuthPage() {
             <DialogHeader>
               <DialogTitle>Contact support</DialogTitle>
               <DialogDescription>
-                Send a message to the BondVDR team. We'll reply to the email address you provide.
+                Send a message to the Digital Deal Room team. We'll reply to the email address you provide.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={supportForm.handleSubmit(submitSupport)} className="space-y-4">

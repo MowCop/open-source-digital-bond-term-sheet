@@ -521,7 +521,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             channelId: channel.id,
             dealId,
             senderId: 'system',
-            senderName: 'BondVDR Bot',
+            senderName: 'Digital Deal Room Bot',
             senderType: 'system',
             body: `📢 [${stageTag}] ${deal.issuerName} ${deal.currency} ${deal.tenor} — ${msg.subject}. Discuss Now →`,
             attachments: [],

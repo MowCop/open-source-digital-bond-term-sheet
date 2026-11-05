@@ -414,7 +414,7 @@ export default function BondConsolePage() {
           <Button variant="outline" className="justify-start">Documentation</Button>
           <Button variant="outline" className="justify-start">Release notes</Button>
           <Button variant="outline" className="justify-start">Status page</Button>
-          <div className="col-span-2 text-xs text-muted-foreground pt-2">BondVDR v1.0.0 · © 2026 EuroBondMarkets</div>
+          <div className="col-span-2 text-xs text-muted-foreground pt-2">Digital Deal Room v1.0.0 · © 2026 EuroBondMarkets</div>
         </CardContent>
       </FoldCard>
     </div>
