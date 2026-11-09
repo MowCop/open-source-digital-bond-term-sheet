@@ -17,7 +17,6 @@ import {
   Palette, FileDown, Webhook, ScrollText, HelpCircle, CheckCircle2, Circle, Sparkles, ExternalLink,
 } from 'lucide-react';
 import { AI_TRIGGER_MODE_KEY, getAITriggerMode, type AITriggerMode } from '@/pages/AIDraftPage';
-import PublicMarketFeeds from '@/components/PublicMarketFeeds';
 import { VENDOR_APIS, VENDOR_CATEGORIES, isCommercialFeed, loadCatalogue, resolveCatalogue, saveCatalogueEntry, deleteCatalogueEntry, catalogueStorageKey, type VendorAPI, type CatalogueOverrides } from '@/lib/vendors';
 import { ConsoleEntryEditor, ConsoleEntryDelete } from '@/components/ConsoleEntryEditor';
 
@@ -203,20 +202,18 @@ export default function BondConsolePage() {
       {/* VENDOR CONNECTORS */}
       <FoldCard initialOpen>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base"><Plug className="h-4 w-4" /> Vendor & Market Data Connectors</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base"><Plug className="h-4 w-4" /> External API/MCP Connectors</CardTitle>
           <CardDescription>
-            Public published rates and central bank news. Commercial vendor feeds require licensed access; other connector toggles remain demonstrations.
+            External vendor APIs and MCP connectors. Commercial feeds require licensed access; other connector toggles remain demonstrations.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <PublicMarketFeeds />
-          <Separator />
+        <CardContent className="space-y-3">
           {Object.entries(groupedVendors).map(([category, items]) => (
-            <div key={category} className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{category}</div>
-                <Button size="sm" variant="outline" className="h-7 shrink-0 gap-1 text-xs" aria-label={`Add ${category}`} onClick={() => setEditingEntry({ id: `custom-${crypto.randomUUID()}`, category, name: '', description: '', status: 'available' })}><Plus className="h-3.5 w-3.5" /> Add {category}</Button>
-              </div>
+            <details key={category} className="group border rounded-md p-3 space-y-2">
+              <summary className="flex items-center justify-between gap-2 cursor-pointer list-none">
+                <div className="flex items-center gap-2 text-sm font-semibold"><ChevronDown className="h-4 w-4 -rotate-90 transition-transform group-open:rotate-0" />{category}<span className="text-xs font-normal text-muted-foreground">({items.length})</span></div>
+                <Button size="sm" variant="outline" className="h-7 shrink-0 gap-1 text-xs" aria-label={`Add ${category}`} onClick={e => { e.preventDefault(); setEditingEntry({ id: `custom-${crypto.randomUUID()}`, category, name: '', description: '', status: 'available' }); }}><Plus className="h-3.5 w-3.5" /> Add {category}</Button>
+              </summary>
               <div className="grid sm:grid-cols-2 gap-2">
                 {items.map(v => {
                   const isLink = Boolean(v.url);
@@ -264,7 +261,7 @@ export default function BondConsolePage() {
                   );
                 })}
               </div>
-            </div>
+            </details>
           ))}
         </CardContent>
       </FoldCard>
@@ -328,7 +325,7 @@ export default function BondConsolePage() {
       {/* API & WEBHOOKS */}
       <FoldCard>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base"><Webhook className="h-4 w-4" /> API Keys & Webhooks</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base"><Webhook className="h-4 w-4" /> Internal API Keys & Webhooks</CardTitle>
           <CardDescription>Outbound integrations into your own systems</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
