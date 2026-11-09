@@ -111,13 +111,13 @@ function extractByLabel(text: string): string {
 
   const labels = [
     // Allow colon/dash OR whitespace-only separator (table cells flattened by stripHtml).
-    /\b(?:Name\s+of\s+)?Issuer(?:\s*[:\-–]\s*|\s+)([^\n;]{2,160})/i,
-    /\bBorrower(?:\s*[:\-–]\s*|\s+)([^\n;]{2,160})/i,
-    /\bObligor(?:\s*[:\-–]\s*|\s+)([^\n;]{2,160})/i,
+    /\b(?:Name\s+of\s+)?Issuer(?:\s*[:\-–]\s*|\s+)([A-Z][^\n;]{1,159})/g,
+    /\bBorrower(?:\s*[:\-–]\s*|\s+)([A-Z][^\n;]{1,159})/g,
+    /\bObligor(?:\s*[:\-–]\s*|\s+)([A-Z][^\n;]{1,159})/g,
   ];
   for (const re of labels) {
-    const m = re.exec(text);
-    if (!m || !m[1]) continue;
+    for (const m of text.matchAll(re)) {
+    if (!m[1]) continue;
     let v = m[1].trim();
     // Reject sibling labels like "LEI 9845…", "Rating Baa2".
     if (SIBLING_LABEL.test(v)) continue;
@@ -131,6 +131,7 @@ function extractByLabel(text: string): string {
     // Require at least one capitalised word — avoids lower-case noise.
     if (!/[A-Z]/.test(v)) continue;
     return v;
+    }
   }
   return '';
 }
@@ -178,7 +179,7 @@ export function extractBorrowerName(rawText: string): string {
   if (genericRepublic) push(genericRepublic.index, genericRepublic[0], 70);
 
   // Layer 3: corporate suffix anchor
-  const corpRe = /\b([A-Z][\w&.'-]+(?:\s+[A-Z][\w&.'-]+){0,5})\s+(AG|Inc|PLC|SA|Ltd|NV|SpA|GmbH|Holdings|Group|Corp|Corporation|Bank|Capital)\b/;
+  const corpRe = /\b([A-Z][\w&.'-]+(?:\s+[A-Z][\w&.'-]+){0,5})\s+(AG|Inc|PLC|SA|Ltd|Limited|LLC|NV|SpA|GmbH|Holdings|Group|Corp|Corporation|Bank|Capital)\b/;
   const corpMatch = corpRe.exec(text);
   if (corpMatch) {
     const value = `${corpMatch[1]} ${corpMatch[2]}`;
@@ -348,7 +349,11 @@ export function mergeDealFromText(
     }
   };
 
-  setIfBetter('issuerName', ai.keyTerms['Issuer Name'] || undefined);
+  // Publishing an alert is not approval to rename a recorded legal issuer.
+  // The authoritative Fill state (including explicit deletions) stays untouched.
+  if (!existing.issuerName.trim() && !existing.bdtState?.f) {
+    setIfBetter('issuerName', ai.keyTerms['Issuer Name'] || undefined);
+  }
   setIfBetter('currency', ai.keyTerms['Currency'] || undefined);
   setIfBetter('size', ai.keyTerms['Size'] || undefined);
   setIfBetter('tenor', ai.keyTerms['Tenor'] || undefined);

@@ -18,6 +18,7 @@ import DealCheckFlag from '@/components/DealCheckFlag';
 import { useToast } from '@/hooks/use-toast';
 import { mergeDealFromText, isStageForward, simulateAIExtraction, detectStage } from '@/lib/alertParsing';
 import { stripHtml } from '@/lib/htmlText';
+import { dealBorrowerName } from '@/lib/borrowerName';
 import { dtsLink } from '@/lib/dtsNavigation';
 import { formatUTCDateTime } from '@/lib/utils';
 import {
@@ -211,7 +212,7 @@ export default function MessagesPage() {
     const sorted = [...msgs].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
     const primaryDeal = dealIds.length > 0 ? deals.find(d => d.id === dealIds[0]) : undefined;
 
-    const borrower = primaryDeal?.issuerName || sorted[0].subject.split(/\s+/).slice(0, 3).join(' ') || 'Unlinked';
+    const borrower = primaryDeal ? dealBorrowerName(primaryDeal) : sorted[0].subject.split(/\s+/).slice(0, 3).join(' ') || 'Unlinked';
     const bookrunnerNames = primaryDeal?.bookrunners?.map(b => b.name).join(', ') || '';
 
     alertGroups.push({
@@ -412,7 +413,7 @@ export default function MessagesPage() {
   const buildSuggestions = (msg: Message): string[] => {
     const ai = simulateAIExtraction(`${msg.subject}\n${stripHtml(msg.body)}`);
     const deal = msg.dealIds.length ? deals.find(d => d.id === msg.dealIds[0]) : undefined;
-    const borrower = ai.borrowerDetails || deal?.issuerName || 'Issuer';
+    const borrower = (deal ? dealBorrowerName(deal) : ai.borrowerDetails) || 'Issuer';
     const ccy = ai.keyTerms.Currency || deal?.currency || '';
     const tenor = ai.keyTerms.Tenor || deal?.tenor || '';
     const stage = deal?.stage || 'Mandate';
