@@ -443,16 +443,7 @@ export default function TermSheetFill({
             <Button size="sm" variant="outline" className="ml-auto h-7" onClick={() => setViewStage(null)}>Back to current</Button>
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="min-w-[200px] flex-1">
-            <div className="flex items-baseline justify-between mb-1">
-              <span className="text-xs text-muted-foreground">
-                Required at this stage: {requiredDone} of {requiredNow.length}
-              </span>
-              <span className="text-xs font-medium">{pct}%</span>
-            </div>
-            <Progress value={pct} className="h-1.5" />
-          </div>
+        <div className="flex flex-wrap items-center justify-end gap-4">
           {canEdit && (
             <Button size="sm" onClick={save} disabled={!dirty}>
               <Save className="h-4 w-4 mr-1" /> {dirty ? 'Save term sheet' : 'Saved'}
