@@ -42,6 +42,8 @@ import RichTextEditor from '@/components/RichTextEditor';
 import { bulletinDocuments } from '@/lib/bulletin';
 import { Textarea } from '@/components/ui/textarea';
 import { findBulletinDraft } from '@/lib/bulletinDraft';
+import SendUpdateDialog from '@/components/SendUpdateDialog';
+import { Send } from 'lucide-react';
 import { downloadBdtFile, validateBdt, type BdtDocument, type ValidationReport } from '@/lib/taxonomy';
 import BankIntakeDialog from '@/components/termsheet/BankIntakeDialog';
 
@@ -311,6 +313,7 @@ export default function DealsPage() {
   const [fullscreenDealId, setFullscreenDealId] = useState<string | null>(null);
   useEffect(() => { if (fullscreenDealId && fullscreenDealId !== expandedDealId) setFullscreenDealId(null); }, [expandedDealId, fullscreenDealId]);
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
+  const [alertDealId, setAlertDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newDealFiles, setNewDealFiles] = useState<File[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState<{ dealId: string; files: File[] } | null>(null);
@@ -644,6 +647,10 @@ export default function DealsPage() {
                         <Megaphone className="h-4 w-4" style={{ color: '#f3d98a' }} />
                       </Button>
                     )}
+                  <Button type="button" variant="outline" size="icon" aria-label="Send update" title="Send update — email new-issue alert"
+                    className="m-2 ml-0 h-9 w-9" onClick={e => { e.stopPropagation(); setAlertDealId(deal.id); }}>
+                    <Send className="h-4 w-4" />
+                  </Button>
                   {deal.extractionSnapshot && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -737,6 +744,9 @@ export default function DealsPage() {
         })}
       </div>
 
+      {alertDealId && deals.find(d => d.id === alertDealId) && (
+        <SendUpdateDialog key={alertDealId} deal={deals.find(d => d.id === alertDealId)!} onClose={() => setAlertDealId(null)} />
+      )}
       {bulletinDeal && (
         <GenerateBulletinDialog
           key={bulletinDeal.id}

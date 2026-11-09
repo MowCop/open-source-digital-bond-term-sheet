@@ -27,3 +27,4 @@
 - Co-Pilot General mode (CopilotGeneral, copilot-general) shows when unfocused; AI drafts reminders, users confirm, ReminderWatcher fires them client-side.
 - Read subdirectory AGENTS.md before editing there (e.g. supabase/functions/deal-copilot/).
 - src/lib/taxonomy/ is the portable BDT 2.0 export/validation library; it must not import UI, React or database code (only vendored src/lib/termsheet). Bank SDK/API intake requests are stored in public.bank_intake_requests with a reference code.
+- New-issue email alerts: src/lib/newIssueAlerts.ts renders from saved BDT terms (user intro/notes stored separately, never regenerated) and send-deal-alert (Resend) sends only human-approved, hash-checked snapshots to org-level vendor_distribution addresses loaded server-side, logging per recipient in alert_sends/alert_send_recipients; termsHash must match supabase/functions/_shared/alert-terms.ts; new channels add recipient rows, not new send paths.

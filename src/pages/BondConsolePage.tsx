@@ -1,4 +1,6 @@
-import { ChevronDown, Plus, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, Plus, Pencil, Trash2, Mail } from 'lucide-react';
+import { loadDistribution, saveDistribution, setDistributionEnabled } from '@/lib/distribution';
+import type { DistributionRow } from '@/lib/newIssueAlerts';
 import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
@@ -52,6 +54,9 @@ export default function BondConsolePage() {
   const [catalogue, setCatalogue] = useState(() => loadCatalogue(window.localStorage, currentUser.id));
   const [editingEntry, setEditingEntry] = useState<VendorAPI | null>(null);
   const [deletingEntry, setDeletingEntry] = useState<VendorAPI | null>(null);
+  const [distribution, setDistribution] = useState<DistributionRow[]>([]);
+  const reloadDistribution = () => loadDistribution().then(setDistribution).catch(() => setDistribution([]));
+  useEffect(() => { reloadDistribution(); }, []);
   useEffect(() => {
     setCatalogue(loadCatalogue(window.localStorage, currentUser.id));
     setEditingEntry(null);
@@ -97,7 +102,9 @@ export default function BondConsolePage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      {editingEntry && <ConsoleEntryEditor key={editingEntry.id} entry={editingEntry} onClose={() => setEditingEntry(null)} onSave={entry => persistCatalogue(saveCatalogueEntry(catalogue, entry))} />}
+      {editingEntry && <ConsoleEntryEditor key={editingEntry.id} entry={editingEntry} onClose={() => setEditingEntry(null)} onSave={entry => persistCatalogue(saveCatalogueEntry(catalogue, entry))}
+        addresses={distribution.find(d => d.vendor_id === editingEntry.id)?.addresses ?? []}
+        onSaveAddresses={async (v, list) => { await saveDistribution(v.id, v.name, list); await reloadDistribution(); toast({ title: 'Distribution addresses saved' }); }} />}
       {deletingEntry && <ConsoleEntryDelete key={deletingEntry.id} entry={deletingEntry} onClose={() => setDeletingEntry(null)} onDelete={confirmation => persistCatalogue(deleteCatalogueEntry(catalogue, deletingEntry.id, confirmation))} />}
       <div className="flex items-center gap-3">
         <Settings className="h-6 w-6 text-primary" />
@@ -152,6 +159,7 @@ export default function BondConsolePage() {
                           {(() => { const d = connectorDirection(v); return <Badge variant={d === 'push' ? 'default' : 'secondary'} className="text-[9px] h-4 px-1.5" title={d === 'push' ? 'Accepts inbound deal data' : d === 'email' ? 'Receives deals by email' : 'Pull / enrichment only'}>{d === 'push' ? 'Push' : d === 'email' ? 'Email' : 'Pull'}</Badge>; })()}
                         </div>
                         <div className="text-xs text-muted-foreground break-words">{v.description}</div>
+                        {(() => { const n = distribution.find(d => d.vendor_id === v.id)?.addresses.length ?? 0; return n > 0 ? <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground" title={`${n} new-issues distribution address${n === 1 ? '' : 'es'}`} aria-label={`${n} distribution addresses`}><Mail className="h-3 w-3" />{n}</span> : null; })()}
                         <div className="mt-1 flex flex-wrap gap-1" aria-label={`${v.name} protocols`}>
                           {[...new Set(connectivityFor(v).map(protocolChip))].map(chip => <Badge key={chip} variant="outline" className="text-[9px] h-4 px-1.5 font-normal">{chip}</Badge>)}
                         </div>
@@ -176,6 +184,26 @@ export default function BondConsolePage() {
               </div>
             </details>
           ))}
+          <details className="group border rounded-md p-3 space-y-2" aria-label="New-issues email recipients">
+            <summary className="flex items-center gap-2 cursor-pointer list-none text-sm font-semibold">
+              <ChevronDown className="h-4 w-4 -rotate-90 transition-transform group-open:rotate-0" /><Mail className="h-4 w-4" /> Recipients
+              <span className="text-xs font-normal text-muted-foreground">({distribution.filter(d => d.addresses.length).length})</span>
+            </summary>
+            <p className="text-xs text-muted-foreground">Vendors that receive new-issue email alerts from this organisation. Add addresses in a connector's Edit entry dialog.</p>
+            {distribution.filter(d => d.addresses.length).length === 0 ? <p className="text-xs text-muted-foreground italic">No distribution addresses yet.</p> : (
+              <ul className="divide-y rounded-md border">
+                {distribution.filter(d => d.addresses.length).map(d => (
+                  <li key={d.vendor_id} className="flex items-center gap-3 p-2 text-sm">
+                    <div className="flex-1 min-w-0"><div className="font-medium">{d.vendor_name || d.vendor_id}</div><div className="text-xs text-muted-foreground break-all">{d.addresses.join(', ')}</div></div>
+                    <Switch aria-label={`Send alerts to ${d.vendor_name || d.vendor_id}`} checked={d.enabled} onCheckedChange={async on => {
+                      try { await setDistributionEnabled(d.vendor_id, on); await reloadDistribution(); }
+                      catch (e) { toast({ title: 'Could not update', description: e instanceof Error ? e.message : String(e), variant: 'destructive' }); }
+                    }} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </details>
         </CardContent>
       </FoldCard>
 

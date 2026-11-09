@@ -5,9 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ConnectivityEditor } from '@/components/ConnectivityEditor';
 import { connectivityFor } from '@/lib/connectivity';
+import { DistributionAddressesEditor } from '@/components/DistributionAddressesEditor';
 import { validateVendor, connectorDirection, type VendorAPI, type ConnectorDirection } from '@/lib/vendors';
 
-export function ConsoleEntryEditor({ entry, onSave, onClose }: { entry: VendorAPI; onSave: (v: VendorAPI) => boolean; onClose: () => void }) {
+export function ConsoleEntryEditor({ entry, onSave, onClose, addresses: initialAddresses = [], onSaveAddresses }: { entry: VendorAPI; onSave: (v: VendorAPI) => boolean; onClose: () => void; addresses?: string[]; onSaveAddresses?: (v: VendorAPI, addresses: string[]) => Promise<void> }) {
+  const [addresses, setAddresses] = useState<string[]>(initialAddresses);
   const [name, setName] = useState(entry.name);
   const [description, setDescription] = useState(entry.description);
   const [url, setUrl] = useState(entry.url || '');
@@ -26,7 +28,10 @@ export function ConsoleEntryEditor({ entry, onSave, onClose }: { entry: VendorAP
           const next = { ...entry, name: name.trim(), description: description.trim(), url: url.trim() || undefined, direction, connectivity };
           const issue = validateVendor(next);
           if (issue) { setError(issue); return; }
-          if (onSave(next)) onClose();
+          if (!onSave(next)) return;
+          const changed = addresses.join(',') !== initialAddresses.join(',');
+          if (onSaveAddresses && changed) onSaveAddresses(next, addresses).then(onClose, err => setError(err instanceof Error ? err.message : 'Could not save addresses'));
+          else onClose();
         }} className="space-y-4">
           <div className="space-y-2"><Label htmlFor="entry-name">Name</Label><Input id="entry-name" autoFocus required maxLength={160} value={name} onChange={e => setName(e.target.value)} /></div>
           <div className="space-y-2"><Label htmlFor="entry-description">Description</Label><Input id="entry-description" maxLength={500} value={description} onChange={e => setDescription(e.target.value)} /></div>
@@ -35,6 +40,7 @@ export function ConsoleEntryEditor({ entry, onSave, onClose }: { entry: VendorAP
             <select id="entry-direction" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={direction} onChange={e => setDirection(e.target.value as ConnectorDirection)}>
               <option value="pull">Pull / enrichment</option><option value="push">Push</option><option value="email">Email</option>
             </select></div>
+          {onSaveAddresses && <DistributionAddressesEditor value={addresses} onChange={setAddresses} />}
           <ConnectivityEditor value={connectivity} onChange={setConnectivity} />
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           <DialogFooter><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button type="submit">Save entry</Button></DialogFooter>
