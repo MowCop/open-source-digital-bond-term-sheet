@@ -22,6 +22,8 @@
     - `secretRef?` (the secret's name only)
     - `licenceRef?`
     - `notes?`
+    - `sdkVersion?` (for example "BLPAPI 3.26.9.1")
+    - `docsUrl?` (an https link to the vendor's documentation)
     - `fix?`, used only when the protocol is FIX. It holds:
       - `beginString` (default FIXT.1.1)
       - `applVerId` (default FIX.5.0SP2)
@@ -36,10 +38,18 @@
     - Web UI "CORE"
     - the OMS/EMS partners as a note
   - Bloomberg Terminal:
-    - B-PIPE over BLPAPI, services //blp/mktdata and //blp/refdata, EMRS identity, with the note that the firm's Bloomberg administrator sets up entitlements
+    - B-PIPE (Bloomberg Market Data Feed) over the BLPAPI Server API:
+      - services //blp/mktdata and //blp/refdata
+      - EMRS identity as the auth method
+      - `sdkVersion` "BLPAPI 3.26.9.1"
+      - `docsUrl` https://professional.bloomberg.com/support/api-library/
+      - Notes:
+        - BLPAPI is available for C++, Java, C#/.NET and Python. Python is installed via pip from Bloomberg's private index.
+        - The Linux and macOS libraries work only with the Server API and B-PIPE. Terminal users use the Desktop API.
+        - The firm's Bloomberg administrator manages connectors and entitlements in Bloomberg Enterprise Console (Client Access).
     - Data License / DL+ as two profiles (REST API and SFTP)
     - Bloomberg Enterprise MCP
-    - Desktop API on localhost:8194
+    - Desktop API on localhost:8194, with the same docsUrl and sdkVersion
     - Email/MSG to the Bloomberg new-issues desks (email)
     - the note that order and allocation flow to TSOX goes via DirectBooks
   - The other listed connectors, each with its listed protocol, address, sign-in method and direction:
@@ -63,6 +73,15 @@
     - MarketAxess
     - EDGAR (a declared User-Agent is required)
     - CUSIP
+  - Known `docsUrl` values:
+    - DirectBooks: https://www.directbooks.com/faq
+    - LSEG: https://www.lseg.com/en/solutions/ai-finance-solutions/lseg-mcp
+    - Moody's: https://www.moodys.com/web/en/us/genai/model-context-protocol.html
+    - ICE: https://www.ice.com/fixed-income-data-services/access-and-delivery/mcp-connector
+    - Clearstream and xs-isin: https://clearstream.com/clearstream-en/securities-services/issuance-1-/issuance-services/pmiapi
+    - Origin: https://airbrush.originmarkets.com/v3/
+    - Symphony: https://docs.developers.symphony.com/bots/overview-of-rest-api
+    - EDGAR: https://www.sec.gov/os/accessing-edgar-data
   - The six email-only news recipients get one Email profile each.
   - Every other connector gets a single "To be confirmed" profile.
 - Add a `connectivityFor(v)` helper. It returns the saved `v.connectivity` when there is one, the defaults for that id otherwise, and finally a single "To be confirmed" profile.
@@ -72,6 +91,7 @@
   - Every other protocol shows its version or its protocol name.
 - Add `validateConnectivity(profiles)`, called from `validateVendor`. It enforces:
   - a label is required
+  - `docsUrl`, if given, must be a public https URL without credentials
   - a port, if given, must be a whole number from 1 to 65535
   - the heartbeat must be 1 to 300 seconds
   - SenderCompID and TargetCompID must not be empty when the certification is UAT certified or Production
@@ -94,6 +114,8 @@
   - protocol, sign-in method, direction and environment are chosen from dropdowns
   - the FIX session block is shown only when the protocol is FIX
   - a "secret name only" hint sits beside the secretRef field
+  - sdkVersion and docsUrl fields
+  - when a docsUrl is set, a "Docs" link icon on the profile card opens it in a new tab
 - `src/components/ConsoleEntryEditor.tsx`:
   - shows the Connectivity section below the URL field
   - starts from `connectivityFor(entry)`
@@ -102,12 +124,17 @@
 - `src/pages/BondConsolePage.tsx`: under each row's description, show protocol chips (small outline badges) from `connectivityFor(v)`, without repeats.
 
 ## Reference
-- In `reference/dts-external-distribution-connectors.md`, add one line to section 7: "Implemented step 1: connectivity profiles (record only)."
+- In `reference/dts-external-distribution-connectors.md`:
+  - Add one line to section 7: "Implemented step 1: connectivity profiles (record only)."
+  - In section 5, update the Bloomberg row to list B-PIPE (Bloomberg Market Data Feed via BLPAPI 3.26.9.1, Server API, admin via Bloomberg Enterprise Console) alongside DL+, Enterprise MCP and the Desktop API.
+  - Add the Bloomberg API library page (https://professional.bloomberg.com/support/api-library/) to Sources.
 - Update the AGENTS.md vendors rule: connectivity profiles are a record only and store secret names, never values.
 
 ## Tests (src/test/connectivity.test.ts)
 - DirectBooks defaults include a FIX profile: version 5.0 SP2, push direction, FIX session logon, with the `FIXT.1.1` / `FIX.5.0SP2` defaults.
-- Bloomberg defaults include a B-PIPE profile: BLPAPI, EMRS identity, pull, with the services //blp/mktdata and //blp/refdata. They also include the Desktop API on `localhost:8194`.
+- Bloomberg defaults include a B-PIPE profile: BLPAPI, EMRS identity, pull, with the services //blp/mktdata and //blp/refdata. The B-PIPE profile has `sdkVersion` "BLPAPI 3.26.9.1" and the Bloomberg API library docsUrl. The defaults also include the Desktop API on `localhost:8194`.
+- DirectBooks, LSEG, Moody's, ICE, Clearstream, Origin, Symphony and EDGAR defaults carry the listed docsUrl values.
+- A docsUrl that is not https, or that contains a username and password, is rejected.
 - A connector with no known protocol gets a single "To be confirmed" profile.
 - An old saved entry without connectivity (for example a renamed `dealologic`) still gets the defaults and keeps the user's name.
 - No secret values are kept:
