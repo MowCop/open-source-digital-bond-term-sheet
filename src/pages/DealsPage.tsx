@@ -36,6 +36,7 @@ import { dealToBdtState, fieldByPath, type BdtState } from '@/lib/bdt-bridge';
 import TermSheetField from '@/components/termsheet/TermSheetField';
 import { INITIAL_DOCUMENT_PATHS } from '@/lib/documentIntake';
 import { termSheetView } from '@/lib/termSheetView';
+import { dealBorrowerName } from '@/lib/borrowerName';
 import { parseDtsStage, boardLink } from '@/lib/dtsNavigation';
 import { emptyNewDeal, canCreateNewDeal, extractNewDealTerms, mergeNewDealDraft, mergeNewDealBookrunners, mergeDocumentFields } from '@/lib/newDeal';
 import RichTextEditor from '@/components/RichTextEditor';
@@ -604,7 +605,7 @@ export default function DealsPage() {
                     {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </span>
                   <DealCheckFlag deal={deal} />
-                  <span className="font-semibold text-sm truncate">{deal.issuerName}</span>
+                  <span className="font-semibold text-sm truncate">{dealBorrowerName(deal)}</span>
                   <span className="text-xs text-muted-foreground truncate">
                     {deal.currency} {deal.size} · {deal.tenor}
                   </span>
