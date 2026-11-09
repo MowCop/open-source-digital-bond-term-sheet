@@ -88,7 +88,7 @@ async function callSpecialistModel(
       },
       body: JSON.stringify({
         model,
-        max_tokens: 8000,
+        max_tokens: 16000,
         stream: true,
         system,
         messages,
@@ -197,12 +197,30 @@ export async function runSpecialist(input: {
     [...(input.id === "pricing" ? pricingTools : []), ...specialistKnowledge[input.id].map((k) => knowledgeSpecs[k])],
     input.live,
   );
-  let output;
-  try {
-    output = specialistSchema.parse(JSON.parse(text));
-  } catch {
+  const tryParse = (t: string) => {
+    try {
+      const r = specialistSchema.safeParse(JSON.parse(t));
+      return r.success ? { ok: true as const, data: r.data } : { ok: false as const, why: r.error.message.slice(0, 1500) };
+    } catch (e) {
+      return { ok: false as const, why: `Invalid JSON: ${e instanceof Error ? e.message : e}` };
+    }
+  };
+  let parsed = tryParse(text);
+  if (!parsed.ok) {
+    // One repair pass: truncated or schema-mismatched JSON is common on long drafts.
+    console.warn(`specialist ${input.id} unusable report, repairing:`, parsed.why);
+    const repaired = await callSpecialistModel(
+      input.model,
+      common + "You are repairing your previous report. Return only one valid, complete JSON object matching the required shape; keep it concise.",
+      JSON.stringify({ previousReport: text.slice(0, 20000), validationError: parsed.why, savedTerms: input.deal, evidence: input.evidence }),
+    );
+    parsed = tryParse(repaired);
+  }
+  if (!parsed.ok) {
+    console.error(`specialist ${input.id} failed after repair:`, parsed.why);
     throw new Error("Specialist returned no usable report. No changes were applied.");
   }
+  const output = parsed.data;
   return normalizeSpecialist(input.id, output, input.evidence, input.deal);
 }
 
