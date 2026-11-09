@@ -107,6 +107,73 @@ export default function BondConsolePage() {
         <Badge variant="outline" className="ml-auto text-xs">Some settings are demo</Badge>
       </div>
 
+      {/* VENDOR CONNECTORS */}
+      <FoldCard initialOpen>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base"><Plug className="h-4 w-4" /> External API/MCP Connectors</CardTitle>
+          <CardDescription>
+            External vendor APIs and MCP connectors. Commercial feeds require licensed access; other connector toggles remain demonstrations.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {Object.entries(groupedVendors).map(([category, items]) => (
+            <details key={category} className="group border rounded-md p-3 space-y-2">
+              <summary className="flex items-center justify-between gap-2 cursor-pointer list-none">
+                <div className="flex items-center gap-2 text-sm font-semibold"><ChevronDown className="h-4 w-4 -rotate-90 transition-transform group-open:rotate-0" />{category}<span className="text-xs font-normal text-muted-foreground">({items.length})</span></div>
+                <Button size="sm" variant="outline" className="h-7 shrink-0 gap-1 text-xs" aria-label={`Add ${category}`} onClick={e => { e.preventDefault(); setEditingEntry({ id: `custom-${crypto.randomUUID()}`, category, name: '', description: '', status: 'available' }); }}><Plus className="h-3.5 w-3.5" /> Add {category}</Button>
+              </summary>
+              <div className="grid sm:grid-cols-2 gap-2">
+                {items.map(v => {
+                  const isLink = Boolean(v.url);
+                  const commercialFeed = isCommercialFeed(v);
+                  const on = !commercialFeed && vendors[v.id];
+                  return (
+                    <div key={v.id} className="flex flex-wrap items-start gap-3 border rounded-md p-3 bg-card/40">
+                      <div className="mt-0.5">
+                        {isLink ? <ExternalLink className="h-4 w-4 text-primary" /> : on ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
+                      </div>
+                      <div className="flex-1 min-w-[120px]">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {isLink ? (
+                            <a
+                              href={v.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                            >
+                              {v.name}
+                            </a>
+                          ) : (
+                            <span className="text-sm font-medium">{v.name}</span>
+                          )}
+                          {on && <Badge className="text-[9px] h-4 px-1.5 bg-green-500/15 text-green-600 border-0">Connected</Badge>}
+                          {isLink && <Badge variant="outline" className="text-[9px] h-4 px-1.5">Live link</Badge>}
+                        </div>
+                        <div className="text-xs text-muted-foreground break-words">{v.description}</div>
+                      </div>
+                      {isLink ? (
+                        <a
+                          href={v.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 inline-flex h-7 items-center gap-1 rounded-md border border-primary/40 px-2.5 text-[11px] font-medium text-primary hover:bg-primary/10"
+                        >
+                          Open <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : commercialFeed || v.id.startsWith('custom-') ? <Badge variant="outline" className="text-[10px] shrink-0">Not connected</Badge> : <Switch checked={Boolean(on)} onCheckedChange={() => toggleVendor(v.id)} />}
+                      <div className="flex shrink-0 items-center gap-1 ml-auto">
+                        <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={`Edit ${v.name}`} title={`Edit ${v.name}`} onClick={() => setEditingEntry(v)}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label={`Delete ${v.name}`} title={`Delete ${v.name}`} onClick={() => setDeletingEntry(v)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          ))}
+        </CardContent>
+      </FoldCard>
+
       {/* PROFILE */}
       <FoldCard>
         <CardHeader>
@@ -196,73 +263,6 @@ export default function BondConsolePage() {
               </button>
             );
           })}
-        </CardContent>
-      </FoldCard>
-
-      {/* VENDOR CONNECTORS */}
-      <FoldCard initialOpen>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base"><Plug className="h-4 w-4" /> External API/MCP Connectors</CardTitle>
-          <CardDescription>
-            External vendor APIs and MCP connectors. Commercial feeds require licensed access; other connector toggles remain demonstrations.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {Object.entries(groupedVendors).map(([category, items]) => (
-            <details key={category} className="group border rounded-md p-3 space-y-2">
-              <summary className="flex items-center justify-between gap-2 cursor-pointer list-none">
-                <div className="flex items-center gap-2 text-sm font-semibold"><ChevronDown className="h-4 w-4 -rotate-90 transition-transform group-open:rotate-0" />{category}<span className="text-xs font-normal text-muted-foreground">({items.length})</span></div>
-                <Button size="sm" variant="outline" className="h-7 shrink-0 gap-1 text-xs" aria-label={`Add ${category}`} onClick={e => { e.preventDefault(); setEditingEntry({ id: `custom-${crypto.randomUUID()}`, category, name: '', description: '', status: 'available' }); }}><Plus className="h-3.5 w-3.5" /> Add {category}</Button>
-              </summary>
-              <div className="grid sm:grid-cols-2 gap-2">
-                {items.map(v => {
-                  const isLink = Boolean(v.url);
-                  const commercialFeed = isCommercialFeed(v);
-                  const on = !commercialFeed && vendors[v.id];
-                  return (
-                    <div key={v.id} className="flex flex-wrap items-start gap-3 border rounded-md p-3 bg-card/40">
-                      <div className="mt-0.5">
-                        {isLink ? <ExternalLink className="h-4 w-4 text-primary" /> : on ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Circle className="h-4 w-4 text-muted-foreground" />}
-                      </div>
-                      <div className="flex-1 min-w-[120px]">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {isLink ? (
-                            <a
-                              href={v.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-                            >
-                              {v.name}
-                            </a>
-                          ) : (
-                            <span className="text-sm font-medium">{v.name}</span>
-                          )}
-                          {on && <Badge className="text-[9px] h-4 px-1.5 bg-green-500/15 text-green-600 border-0">Connected</Badge>}
-                          {isLink && <Badge variant="outline" className="text-[9px] h-4 px-1.5">Live link</Badge>}
-                        </div>
-                        <div className="text-xs text-muted-foreground break-words">{v.description}</div>
-                      </div>
-                      {isLink ? (
-                        <a
-                          href={v.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 inline-flex h-7 items-center gap-1 rounded-md border border-primary/40 px-2.5 text-[11px] font-medium text-primary hover:bg-primary/10"
-                        >
-                          Open <ExternalLink className="h-3 w-3" />
-                        </a>
-                      ) : commercialFeed || v.id.startsWith('custom-') ? <Badge variant="outline" className="text-[10px] shrink-0">Not connected</Badge> : <Switch checked={Boolean(on)} onCheckedChange={() => toggleVendor(v.id)} />}
-                      <div className="flex shrink-0 items-center gap-1 ml-auto">
-                        <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={`Edit ${v.name}`} title={`Edit ${v.name}`} onClick={() => setEditingEntry(v)}><Pencil className="h-3.5 w-3.5" /></Button>
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" aria-label={`Delete ${v.name}`} title={`Delete ${v.name}`} onClick={() => setDeletingEntry(v)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </details>
-          ))}
         </CardContent>
       </FoldCard>
 
