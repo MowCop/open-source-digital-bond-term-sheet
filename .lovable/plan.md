@@ -1,0 +1,126 @@
+# Bond Console: Connectivity profiles (section 7, step 1)
+
+## What changes for users
+- Each connector row shows small protocol chips, for example "FIX 5.0 SP2", "B-PIPE", "MCP" or "To be confirmed".
+- The Edit entry dialog gets a "Connectivity" section where you can add, edit and remove connection profiles. FIX session fields appear only when the protocol is FIX.
+- This is a record of how each vendor connects. It never opens a live connection.
+- Passwords, keys and tokens are never stored. A profile only holds the name of a secret.
+
+## Data model (src/lib/vendors.ts)
+- New types:
+  - `ConnectivityProtocol`: FIX, REST API, MCP, BLPAPI, SFTP, WebSocket/streaming, Bot API, Email, Web UI.
+  - `AuthMethod`: OAuth, API key, token + company key, X.509/RSA certificate, FIX session logon, EMRS identity, none.
+  - `ConnectivityProfile`, with these fields:
+    - `id`
+    - `protocol`
+    - `label`
+    - `version?`
+    - `direction`
+    - `environment` (UAT or Production)
+    - `endpoint?`
+    - `auth`
+    - `secretRef?` (the secret's name only)
+    - `licenceRef?`
+    - `notes?`
+    - `fix?`, used only when the protocol is FIX. It holds:
+      - `beginString` (default FIXT.1.1)
+      - `applVerId` (default FIX.5.0SP2)
+      - `senderCompId` and `targetCompId`
+      - `host` and `port`
+      - `heartbeatSec`
+      - `certification`: Not started, UAT certified or Production
+- Add `connectivity?: ConnectivityProfile[]` to `VendorAPI`.
+- Add `DEFAULT_CONNECTIVITY: Record<id, ConnectivityProfile[]>` with the defaults you listed, taken from section 5:
+  - DirectBooks:
+    - FIX CONNECT 5.0 SP2 (push, FIX session logon, onboarding via DirectBooks sales)
+    - Web UI "CORE"
+    - the OMS/EMS partners as a note
+  - Bloomberg Terminal:
+    - B-PIPE over BLPAPI, services //blp/mktdata and //blp/refdata, EMRS identity, with the note that the firm's Bloomberg administrator sets up entitlements
+    - Data License / DL+ as two profiles (REST API and SFTP)
+    - Bloomberg Enterprise MCP
+    - Desktop API on localhost:8194
+    - Email/MSG to the Bloomberg new-issues desks (email)
+    - the note that order and allocation flow to TSOX goes via DirectBooks
+  - The other listed connectors, each with its listed protocol, address, sign-in method and direction:
+    - S&P IssueNet / InvestorAccess (ipreo)
+    - Clearstream and xs-isin
+    - Symphony
+    - LSEG (refinitiv)
+    - ICE
+    - FactSet
+    - S&P Market Intelligence (sp)
+    - Moody's
+    - Fitch
+    - Octus
+    - IGM
+    - Cbonds
+    - Finsight
+    - BondCliQ
+    - Origin
+    - Dealogic
+    - Tradeweb
+    - MarketAxess
+    - EDGAR (a declared User-Agent is required)
+    - CUSIP
+  - The six email-only news recipients get one Email profile each.
+  - Every other connector gets a single "To be confirmed" profile.
+- Add a `connectivityFor(v)` helper. It returns the saved `v.connectivity` when there is one, the defaults for that id otherwise, and finally a single "To be confirmed" profile.
+- Add `protocolChip(profile)`:
+  - FIX shows "FIX 5.0 SP2".
+  - BLPAPI with a B-PIPE label shows "B-PIPE".
+  - Every other protocol shows its version or its protocol name.
+- Add `validateConnectivity(profiles)`, called from `validateVendor`. It enforces:
+  - a label is required
+  - a port, if given, must be a whole number from 1 to 65535
+  - the heartbeat must be 1 to 300 seconds
+  - SenderCompID and TargetCompID must not be empty when the certification is UAT certified or Production
+  - an endpoint, if given, must be an https URL, a `host:port`, or an `sftp://` address
+  - `secretRef` must look like a secret name (`^[A-Z][A-Z0-9_]{1,63}$`). This rejects pasted keys and tokens.
+
+## How defaults merge with saved overrides
+- Built-in ids stay unchanged, and `resolveCatalogue` keeps its current rule: a saved entry replaces the built-in one.
+- When a saved entry has no `connectivity` (all entries saved before this change), `connectivityFor` falls back to the defaults. Old renames and edits are kept, and the protocol defaults still appear.
+- When a user saves the dialog, the complete profile list is stored on that entry. Defaults then no longer apply to that connector. Removing every profile stores an empty list, which shows as "To be confirmed".
+- `loadCatalogue` checks each saved profile:
+  - Unknown protocols, sign-in methods and directions are dropped.
+  - Any extra fields are stripped, so nothing but the known fields is kept. This means stray `password`, `token`, `apiKey` or `secret` fields can never be saved.
+  - A profile that fails validation is dropped rather than discarding the whole entry.
+- `saveCatalogueEntry` strips extra fields in the same way before writing.
+
+## UI
+- New `src/components/ConnectivityEditor.tsx`:
+  - a list of profile cards with Add, Remove and inline fields
+  - protocol, sign-in method, direction and environment are chosen from dropdowns
+  - the FIX session block is shown only when the protocol is FIX
+  - a "secret name only" hint sits beside the secretRef field
+- `src/components/ConsoleEntryEditor.tsx`:
+  - shows the Connectivity section below the URL field
+  - starts from `connectivityFor(entry)`
+  - includes the profiles in `next`, so existing validation covers them
+  - the dialog gets a scrollable body (`max-h-[85vh] overflow-y-auto`)
+- `src/pages/BondConsolePage.tsx`: under each row's description, show protocol chips (small outline badges) from `connectivityFor(v)`, without repeats.
+
+## Reference
+- In `reference/dts-external-distribution-connectors.md`, add one line to section 7: "Implemented step 1: connectivity profiles (record only)."
+- Update the AGENTS.md vendors rule: connectivity profiles are a record only and store secret names, never values.
+
+## Tests (src/test/connectivity.test.ts)
+- DirectBooks defaults include a FIX profile: version 5.0 SP2, push direction, FIX session logon, with the `FIXT.1.1` / `FIX.5.0SP2` defaults.
+- Bloomberg defaults include a B-PIPE profile: BLPAPI, EMRS identity, pull, with the services //blp/mktdata and //blp/refdata. They also include the Desktop API on `localhost:8194`.
+- A connector with no known protocol gets a single "To be confirmed" profile.
+- An old saved entry without connectivity (for example a renamed `dealologic`) still gets the defaults and keeps the user's name.
+- No secret values are kept:
+  - Loading and saving a profile with `password`, `token` or `apiKey` fields drops those fields.
+  - A secretRef that looks like a key (lowercase or with symbols, such as `sk-abc123...`) is rejected.
+- FIX validation:
+  - ports 0 and 70000 are rejected, port 443 is accepted
+  - an empty CompID is rejected when the certification is UAT certified or Production
+  - an empty CompID is allowed when the certification is Not started
+- Protocol chips read "FIX 5.0 SP2", "B-PIPE" and "MCP".
+- The existing tests for vendor management and the connector list keep passing.
+
+## Later (not in this step)
+- Store real secrets in backend secrets, keyed by `secretRef`.
+- Move connector settings to the backend per organisation.
+- Add UAT/production switching, lifecycle message types, schema profile and gap log, fallback rule and recipient type, as listed in section 7.
