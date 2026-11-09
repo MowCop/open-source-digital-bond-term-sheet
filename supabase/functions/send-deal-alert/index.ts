@@ -2,16 +2,16 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { z } from 'npm:zod@3';
 import { termsHash } from '../_shared/alert-terms.ts';
+import { chunkRecipients } from '../_shared/mail/chunk.ts';
+import { sendAlertEmail, resendDomainVerified, graphConnected, type MailProvider } from '../_shared/mail/index.ts';
 
 /**
- * send-deal-alert — emails a human-approved new-issue alert to the caller's
- * organisation's enabled vendor distribution addresses (loaded server-side),
- * attaching the BDT XML of the saved snapshot, and logs per-recipient status.
- * Channels: email only today; Bloomberg MSG / DirectBooks / Symphony would add
- * rows with another `channel` value in alert_send_recipients.
+ * send-deal-alert — one human-approved new-issue email per chunk (≤50 addresses
+ * incl. To). To = deal admin (the caller, a syndicate admin of the lead
+ * bookrunner org); BCC = enabled vendor addresses + the org's syndicate mailbox.
+ * Provider is chosen per organisation (org_alert_settings) and never falls back.
+ * Later channels (Bloomberg MSG, DirectBooks, Symphony) plug in beside sendAlertEmail.
  */
-const GATEWAY_URL = 'https://connector-gateway.lovable.dev/resend';
-const FROM = 'Digital Deal Room New Issues <newissues@eurobondmarkets.com>';
 const EMAIL = /^[A-Za-z0-9._%+'-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
 
 const Send = z.object({
@@ -20,29 +20,16 @@ const Send = z.object({
   event: z.enum(['mandate', 'ipt', 'guidance', 'books', 'launch', 'pricing', 'final']),
   subject: z.string().trim().min(1).max(300), bodyHtml: z.string().min(1).max(200000),
   releaseId: z.string().uuid(), bdtHash: z.string().max(64), xml: z.string().max(500000),
-  bcc: z.string().regex(EMAIL).max(254).optional(),
 });
-const Retry = z.object({ action: z.literal('retry'), approved: z.literal(true), recipientId: z.string().uuid() });
-const Input = z.discriminatedUnion('action', [Send, Retry]);
+const Retry = z.object({ action: z.literal('retry'), approved: z.literal(true), chunkId: z.string().uuid() });
+const Status = z.object({ action: z.literal('status') });
+const Input = z.discriminatedUnion('action', [Send, Retry, Status]);
 
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-const b64 = (s: string) => { const bytes = new TextEncoder().encode(s); let bin = ''; for (const x of bytes) bin += String.fromCharCode(x); return btoa(bin); };
-
-async function deliver(to: string, subject: string, html: string, xml: string, filename: string, key: string) {
-  const res = await fetch(`${GATEWAY_URL}/emails`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`, 'X-Connection-Api-Key': Deno.env.get('RESEND_API_KEY') ?? '', 'Idempotency-Key': key },
-    body: JSON.stringify({ from: FROM, to: [to], subject, html, attachments: [{ filename, content: b64(xml) }] }),
-  });
-  const text = await res.text();
-  if (!res.ok) return { ok: false as const, error: `[${res.status}] ${text.slice(0, 500)}` };
-  try { return { ok: true as const, id: String(JSON.parse(text).id ?? '') }; } catch { return { ok: true as const, id: '' }; }
-}
 
 Deno.serve(async req => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   try {
-    if (!Deno.env.get('LOVABLE_API_KEY') || !Deno.env.get('RESEND_API_KEY')) return json({ error: 'Email sending is not configured' }, 500);
     const auth = req.headers.get('Authorization');
     if (!auth?.startsWith('Bearer ')) return json({ error: 'unauthorized' }, 401);
     const user = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: auth } } });
@@ -58,52 +45,83 @@ Deno.serve(async req => {
     if (!parsed.success) return json({ error: 'invalid_input', details: parsed.error.flatten() }, 400);
     const p = parsed.data;
 
+    const { data: profile } = await admin.from('profiles').select('organization,name,email').eq('user_id', uid).maybeSingle();
+    const org = profile?.organization ?? '';
+    const sender = { name: profile?.name || profile?.email || '', email: (profile?.email ?? '').toLowerCase(), org };
+    const { data: settings } = await admin.from('org_alert_settings').select('provider,syndicate_mailbox').eq('org', org).maybeSingle();
+    const provider = (settings?.provider ?? 'resend') as MailProvider;
+    const mailbox = settings?.syndicate_mailbox?.toLowerCase() ?? '';
+
+    if (p.action === 'status') {
+      return json({ provider, syndicateMailbox: mailbox, resendVerified: await resendDomainVerified(), graphConnected: graphConnected(uid), sender });
+    }
+
     if (p.action === 'retry') {
-      const { data: r } = await admin.from('alert_send_recipients').select('*, alert_sends(*)').eq('id', p.recipientId).maybeSingle();
-      if (!r || r.status !== 'failed') return json({ error: 'Only failed deliveries can be retried' }, 400);
-      const s = r.alert_sends as Record<string, any>;
+      const { data: c } = await admin.from('alert_send_chunks').select('*, alert_sends(*)').eq('id', p.chunkId).maybeSingle();
+      if (!c || c.status !== 'failed') return json({ error: 'Only failed emails can be retried' }, 400);
+      const s = c.alert_sends as Record<string, any>;
       const { data: access } = await user.rpc('can_access_deal', { _deal_id: s.deal_id });
       if (!access) return json({ error: 'forbidden' }, 403);
+      if (s.sender_id !== uid) return json({ error: 'Only the deal admin who sent this alert can retry it' }, 403);
       const { data: rel } = await admin.from('deal_term_sheet_releases').select('bdt_xml').eq('id', s.release_id).maybeSingle();
-      const out = await deliver(r.address, s.subject, s.body_html, rel?.bdt_xml ?? '', `${s.deal_id}-v${s.release_version}.xml`, `${r.id}-${r.attempts + 1}`);
-      await admin.from('alert_send_recipients').update({ status: out.ok ? 'sent' : 'failed', provider_message_id: out.ok ? out.id : null, error: out.ok ? null : out.error, attempts: r.attempts + 1, updated_at: new Date().toISOString() }).eq('id', r.id);
-      await admin.from('audit_log').insert({ id: crypto.randomUUID(), action: 'alert_retry', entity_type: 'deal', entity_id: s.deal_id, user_id: uid, timestamp: new Date().toISOString(), details: JSON.stringify({ sendId: s.id, address: r.address, ok: out.ok }) });
+      const out = await sendAlertEmail(s.provider as MailProvider, {
+        fromName: s.sender_name, fromOrg: s.sender_org ?? '', replyTo: s.reply_to ?? c.to_address, to: c.to_address, bcc: c.bcc_addresses,
+        subject: s.subject, html: s.body_html, attachment: { filename: `${s.deal_id}-v${s.release_version}.xml`, content: rel?.bdt_xml ?? '' },
+        idempotencyKey: `${c.id}-${c.attempts + 1}`,
+      }, { userId: uid });
+      await admin.from('alert_send_chunks').update({ status: out.ok ? 'sent' : 'failed', provider_message_id: out.ok ? out.id : null, error: out.ok ? null : out.error, attempts: c.attempts + 1, updated_at: new Date().toISOString() }).eq('id', c.id);
+      await admin.from('audit_log').insert({ id: crypto.randomUUID(), action: 'alert_retry', entity_type: 'deal', entity_id: s.deal_id, user_id: uid, timestamp: new Date().toISOString(), details: JSON.stringify({ sendId: s.id, chunk: c.chunk_index, ok: out.ok }) });
       return json({ ok: out.ok, error: out.ok ? undefined : out.error });
     }
 
     const { data: access } = await user.rpc('can_access_deal', { _deal_id: p.dealId });
     if (!access) return json({ error: 'forbidden' }, 403);
-    const { data: deal } = await admin.from('deals').select('id,stage,bdt_state').eq('id', p.dealId).maybeSingle();
+    const { data: deal } = await admin.from('deals').select('id,stage,bdt_state,created_by_org').eq('id', p.dealId).maybeSingle();
     if (!deal?.bdt_state) return json({ error: 'Save the term sheet before sending' }, 400);
+    const { data: isMaster } = await user.rpc('has_role', { _user_id: uid, _role: 'master_admin' });
+    if (deal.created_by_org && deal.created_by_org !== org && !isMaster) return json({ error: "Only the lead bookrunner's deal admin can send alerts for this deal" }, 403);
+    if (!EMAIL.test(sender.email)) return json({ error: 'Your profile has no valid email address to send from' }, 400);
+    if (!mailbox || !EMAIL.test(mailbox)) return json({ error: 'Set your organisation’s syndicate mailbox in Bond Console → Recipients before sending.' }, 400);
+
     const current = termsHash(deal.bdt_state);
     if (current !== p.bdtHash) return json({ error: 'Terms changed since preview. Reopen the preview and approve again.' }, 409);
     const { data: rel } = await admin.from('deal_term_sheet_releases').select('id,version,deal_id,bdt_state_snapshot').eq('id', p.releaseId).maybeSingle();
     if (!rel || rel.deal_id !== p.dealId || termsHash(rel.bdt_state_snapshot) !== current) return json({ error: 'Snapshot does not match the saved terms' }, 409);
     await admin.from('deal_term_sheet_releases').update({ bdt_xml: p.xml }).eq('id', rel.id).is('bdt_xml', null);
 
-    const { data: profile } = await admin.from('profiles').select('organization,name,email').eq('user_id', uid).maybeSingle();
-    const org = profile?.organization ?? '';
-    const { data: dist } = await admin.from('vendor_distribution').select('vendor_id,vendor_name,addresses,enabled').eq('org', org).eq('enabled', true);
-    const recipients = (dist ?? []).flatMap(d => [...new Set((d.addresses ?? []).map((a: string) => a.trim().toLowerCase()).filter((a: string) => EMAIL.test(a)))].map(address => ({ vendor_id: d.vendor_id, vendor_name: d.vendor_name, address })));
-    if (p.bcc) recipients.push({ vendor_id: '__bcc', vendor_name: 'Syndicate mailbox (BCC)', address: p.bcc.toLowerCase() });
-    if (!recipients.length) return json({ error: 'No enabled vendor has a distribution address' }, 400);
+    // Refuse before logging if the provider cannot send — no silent fallback.
+    if (provider === 'microsoft_graph' && !graphConnected(uid)) return json({ error: `Microsoft 365 is not connected for ${sender.name}. Connect it in Bond Console → Recipients, or choose another provider.` }, 400);
+    if (provider === 'gmail') return json({ error: 'Gmail sending is not available yet.' }, 400);
+    if (provider === 'resend' && !(await resendDomainVerified())) return json({ error: 'The sending domain alerts.eurobondmarkets.com is not verified in Resend yet.' }, 400);
+
+    const { data: dist } = await admin.from('vendor_distribution').select('vendor_id,addresses').eq('org', org).eq('enabled', true);
+    const vendorOf = new Map<string, string>();
+    for (const d of dist ?? []) for (const a of d.addresses ?? []) { const x = String(a).trim().toLowerCase(); if (EMAIL.test(x) && !vendorOf.has(x)) vendorOf.set(x, d.vendor_id); }
+    const chunks = chunkRecipients(sender.email, [...vendorOf.keys(), mailbox]);
 
     const { data: send, error: sendErr } = await admin.from('alert_sends').insert({
       deal_id: p.dealId, org, event: p.event, stage: deal.stage, subject: p.subject, body_html: p.bodyHtml,
       release_id: rel.id, release_version: rel.version, bdt_hash: current, terms_snapshot: rel.bdt_state_snapshot,
-      sender_id: uid, sender_name: profile?.name || profile?.email || '', bcc: p.bcc ?? null, approved_at: new Date().toISOString(),
+      sender_id: uid, sender_name: sender.name, sender_email: sender.email, sender_org: org, provider, reply_to: sender.email, to_address: sender.email,
+      approved_at: new Date().toISOString(),
     }).select('id').single();
     if (sendErr) throw sendErr;
-    const { data: rows, error: rowErr } = await admin.from('alert_send_recipients').insert(recipients.map(r => ({ ...r, send_id: send.id }))).select('id,address');
+    const { data: rows, error: rowErr } = await admin.from('alert_send_chunks').insert(chunks.map((bcc, i) => ({
+      send_id: send.id, chunk_index: i, to_address: sender.email, bcc_addresses: bcc,
+      vendor_ids: [...new Set(bcc.map(a => vendorOf.get(a) ?? '__syndicate'))],
+    }))).select('id,chunk_index,bcc_addresses').order('chunk_index');
     if (rowErr) throw rowErr;
 
     const results = [];
-    for (const r of rows ?? []) {
-      const out = await deliver(r.address, p.subject, p.bodyHtml, p.xml, `${p.dealId}-v${rel.version}.xml`, `${r.id}-1`);
-      await admin.from('alert_send_recipients').update({ status: out.ok ? 'sent' : 'failed', provider_message_id: out.ok ? out.id : null, error: out.ok ? null : out.error, attempts: 1, updated_at: new Date().toISOString() }).eq('id', r.id);
-      results.push({ address: r.address, ok: out.ok, error: out.ok ? undefined : out.error });
+    for (const c of rows ?? []) {
+      const out = await sendAlertEmail(provider, {
+        fromName: sender.name, fromOrg: org, replyTo: sender.email, to: sender.email, bcc: c.bcc_addresses,
+        subject: p.subject, html: p.bodyHtml, attachment: { filename: `${p.dealId}-v${rel.version}.xml`, content: p.xml }, idempotencyKey: `${c.id}-1`,
+      }, { userId: uid });
+      await admin.from('alert_send_chunks').update({ status: out.ok ? 'sent' : 'failed', provider_message_id: out.ok ? out.id : null, error: out.ok ? null : out.error, attempts: 1, updated_at: new Date().toISOString() }).eq('id', c.id);
+      results.push({ chunk: c.chunk_index, recipients: c.bcc_addresses.length + 1, ok: out.ok, error: out.ok ? undefined : out.error });
     }
-    await admin.from('audit_log').insert({ id: crypto.randomUUID(), action: 'alert_sent', entity_type: 'deal', entity_id: p.dealId, user_id: uid, timestamp: new Date().toISOString(), details: JSON.stringify({ sendId: send.id, event: p.event, releaseVersion: rel.version, bdtHash: current, recipients: results.map(r => ({ address: r.address, ok: r.ok })) }) });
+    await admin.from('audit_log').insert({ id: crypto.randomUUID(), action: 'alert_sent', entity_type: 'deal', entity_id: p.dealId, user_id: uid, timestamp: new Date().toISOString(), details: JSON.stringify({ sendId: send.id, event: p.event, provider, sender, releaseVersion: rel.version, bdtHash: current, chunks: results.map(r => ({ chunk: r.chunk, ok: r.ok })) }) });
     return json({ sendId: send.id, results });
   } catch (e) {
     console.error('send-deal-alert failed', e);

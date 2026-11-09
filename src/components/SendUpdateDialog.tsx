@@ -13,12 +13,11 @@ import { toast } from 'sonner';
 import { buildXML } from '@/lib/termsheet/bdt-xml.js';
 import type { BdtState } from '@/lib/bdt-bridge';
 import type { Deal } from '@/types/bond';
-import { loadDistribution } from '@/lib/distribution';
+import { loadDistribution, loadAlertStatus, type AlertStatus } from '@/lib/distribution';
+import { buildFromHeader, bccList, canSend, chunkRecipients, providerStatus } from '@/lib/alertMail';
 import { ALERT_EVENTS, buildSendRequest, buildSubject, eventForStage, renderBulletin, selectRecipients, termsDiff, termsHash, type AlertEvent, type DistributionRow } from '@/lib/newIssueAlerts';
 
-interface SendRow { id: string; event: string; subject: string; created_at: string; sender_name: string; release_version: number | null; bdt_hash: string; terms_snapshot: BdtState; alert_send_recipients: { id: string; vendor_name: string; address: string; status: string; error: string | null; attempts: number }[] }
-
-const BCC_KEY = 'dts.alerts.bcc';
+interface SendRow { id: string; event: string; subject: string; created_at: string; sender_name: string; sender_email: string | null; sender_org: string | null; provider: string; release_version: number | null; bdt_hash: string; terms_snapshot: BdtState; alert_send_chunks: { id: string; chunk_index: number; to_address: string; bcc_addresses: string[]; status: string; error: string | null; attempts: number }[] }
 async function readError(error: unknown) { return error instanceof FunctionsHttpError ? await error.context.text() : error instanceof Error ? error.message : String(error); }
 
 export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClose: () => void }) {
@@ -29,7 +28,8 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
   const [subjectEdited, setSubjectEdited] = useState(false);
   const [intro, setIntro] = useState(''); const [notes, setNotes] = useState(''); const [legal, setLegal] = useState('');
   const [notesLoaded, setNotesLoaded] = useState(false);
-  const [bcc, setBcc] = useState(() => window.localStorage.getItem(BCC_KEY) ?? '');
+  const [status, setStatus] = useState<AlertStatus | null>(null);
+  const [showBcc, setShowBcc] = useState(false);
   const [dist, setDist] = useState<DistributionRow[]>([]);
   const [sends, setSends] = useState<SendRow[]>([]);
   const [release, setRelease] = useState<{ id: string; version: number } | null>(null);
@@ -37,11 +37,12 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
   const [busy, setBusy] = useState(false);
 
   const loadLog = async () => {
-    const { data } = await supabase.from('alert_sends').select('id,event,subject,created_at,sender_name,release_version,bdt_hash,terms_snapshot,alert_send_recipients(id,vendor_name,address,status,error,attempts)').eq('deal_id', deal.id).order('created_at', { ascending: false }).limit(20);
+    const { data } = await supabase.from('alert_sends').select('id,event,subject,created_at,sender_name,sender_email,sender_org,provider,release_version,bdt_hash,terms_snapshot,alert_send_chunks(id,chunk_index,to_address,bcc_addresses,status,error,attempts)').eq('deal_id', deal.id).order('created_at', { ascending: false }).limit(20);
     setSends((data ?? []) as unknown as SendRow[]);
   };
   useEffect(() => {
     loadDistribution().then(setDist).catch(() => setDist([]));
+    loadAlertStatus().then(setStatus);
     loadLog();
     supabase.from('deal_bulletin_notes').select('intro,notes').eq('deal_id', deal.id).maybeSingle().then(({ data }) => {
       if (data) { setIntro(data.intro); const [n, l = ''] = data.notes.split('\n<<LEGAL>>\n'); setNotes(n); setLegal(l); }
@@ -60,12 +61,18 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
   // Live re-render: subject and terms follow saved terms/stage; user text is never touched.
   const auto = saved ? buildSubject(saved, event, detail, deal.tenor) : '';
   useEffect(() => { if (!subjectEdited) setSubject(auto); }, [auto, subjectEdited]);
-  useEffect(() => { setApproved(false); }, [hash, event, subject, intro, notes, legal, bcc]);
+  useEffect(() => { setApproved(false); }, [hash, event, subject, intro, notes, legal]);
   const legalNotices = legal.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
   const body = renderBulletin({ state: saved, intro, notes, legalNotices });
 
   const recipients = selectRecipients(dist);
-  const lastSent = sends.find(s => s.alert_send_recipients.some(r => r.status === 'sent'));
+  const adminEmail = status?.sender.email ?? '';
+  const bcc = bccList(recipients.map(r => r.address), status?.syndicateMailbox ?? '');
+  const chunks = adminEmail ? chunkRecipients(adminEmail, bcc) : [];
+  const pStatus = status ? providerStatus(status.provider, { resendVerified: status.resendVerified, graphConnected: status.graphConnected }) : null;
+  const gate = status && pStatus ? canSend(status.provider, pStatus, status.sender.name) : { ok: false, message: 'Loading sender settings…' };
+  const blocker = !status ? 'Could not load sender settings.' : !status.syndicateMailbox ? 'Set your organisation’s syndicate mailbox in Bond Console → Recipients.' : !gate.ok ? gate.message : '';
+  const lastSent = sends.find(s => s.alert_send_chunks.some(r => r.status === 'sent'));
   const diff = lastSent && saved ? termsDiff(lastSent.terms_snapshot, saved) : [];
 
   const saveNotes = async () => {
@@ -76,21 +83,20 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
   const send = async () => {
     if (!saved) return;
     let payload;
-    try { payload = buildSendRequest({ approved, dealId: deal.id, event, subject, bodyHtml: body, releaseId: release?.id ?? null, state: saved, xml: buildXML(saved), bcc }); }
+    try { payload = buildSendRequest({ approved, dealId: deal.id, event, subject, bodyHtml: body, releaseId: release?.id ?? null, state: saved, xml: buildXML(saved) }); }
     catch (e) { toast.error((e as Error).message); return; }
     setBusy(true);
     await saveNotes();
-    if (bcc.trim()) window.localStorage.setItem(BCC_KEY, bcc.trim()); else window.localStorage.removeItem(BCC_KEY);
     const { data, error } = await supabase.functions.invoke('send-deal-alert', { body: payload });
     setBusy(false); setApproved(false);
     if (error) { toast.error(`Send failed: ${await readError(error)}`); return; }
     const failed = (data.results as { ok: boolean }[]).filter(r => !r.ok).length;
-    if (failed) toast.warning(`${failed} of ${data.results.length} deliveries failed — retry below.`); else toast.success(`Sent to ${data.results.length} recipient${data.results.length === 1 ? '' : 's'}`);
+    if (failed) toast.warning(`${failed} of ${data.results.length} emails failed — retry below.`); else toast.success(`Sent ${data.results.length} email${data.results.length === 1 ? '' : 's'}`);
     loadLog();
   };
 
-  const retry = async (recipientId: string) => {
-    const { data, error } = await supabase.functions.invoke('send-deal-alert', { body: { action: 'retry', approved: true, recipientId } });
+  const retry = async (chunkId: string) => {
+    const { data, error } = await supabase.functions.invoke('send-deal-alert', { body: { action: 'retry', approved: true, chunkId } });
     if (error || !data?.ok) toast.error(`Retry failed: ${error ? await readError(error) : data?.error}`); else toast.success('Delivered');
     loadLog();
   };
@@ -135,23 +141,26 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
               <p className="text-xs text-muted-foreground">Attachment: {deal.id}-v{release?.version ?? '?'}.xml (BDT 2.0, saved snapshot)</p>
             </div>
 
-            <div className="space-y-1.5">
-              <Label>Recipients ({recipients.length})</Label>
-              {recipients.length ? <div className="flex flex-wrap gap-1">{recipients.map(r => <Badge key={r.address} variant="outline" className="font-normal">{r.vendorName}: {r.address}</Badge>)}</div>
-                : <p className="text-xs text-destructive">No enabled vendor has an address. Add one in Bond Console → connector Edit entry.</p>}
-              <Label htmlFor="alert-bcc" className="text-xs">BCC syndicate mailbox (optional)</Label>
-              <Input id="alert-bcc" type="email" placeholder="syndicate@yourbank.com" value={bcc} onChange={e => setBcc(e.target.value)} />
+            <div className="space-y-1.5 rounded-md border p-3 text-xs" aria-label="Email envelope">
+              <div><span className="font-medium">From:</span> {status ? (status.provider === 'resend' ? buildFromHeader(status.sender.name, status.sender.org) : `${status.sender.name} <${adminEmail}>`) : '…'}</div>
+              <div><span className="font-medium">Reply-To:</span> {adminEmail || '…'}</div>
+              <div><span className="font-medium">To:</span> {adminEmail || '…'} (deal admin)</div>
+              <div><button type="button" className="underline" onClick={() => setShowBcc(v => !v)}><span className="font-medium">BCC:</span> {bcc.length} address{bcc.length === 1 ? '' : 'es'}</button></div>
+              {showBcc && <div className="flex flex-wrap gap-1">{bcc.map(a => <Badge key={a} variant="outline" className="font-normal">{a}</Badge>)}</div>}
+              <div><span className="font-medium">Emails:</span> {chunks.length} (max 50 addresses each, including To)</div>
+              {!recipients.length && <p className="text-muted-foreground">No enabled vendor has an address yet. Add one in Bond Console → connector Edit entry.</p>}
+              {blocker && <p className="text-destructive" role="alert">{blocker}</p>}
             </div>
 
             {!release && <p className="text-xs text-destructive">The saved terms have no matching saved version yet. Save the term sheet again.</p>}
             <label className="flex items-start gap-2 text-sm"><Checkbox checked={approved} onCheckedChange={v => setApproved(v === true)} aria-label="I have reviewed this alert and approve sending it" />
-              <span>I have reviewed this alert and approve sending it to {recipients.length + (bcc.trim() ? 1 : 0)} recipient(s).</span></label>
+              <span>I have reviewed this alert and approve sending {chunks.length} email(s) to {bcc.length + 1} address(es).</span></label>
           </div>
         )}
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Close</Button>
-          <Button onClick={send} disabled={!approved || busy || !saved || !release || !recipients.length} className="gap-1"><Send className="h-4 w-4" />{busy ? 'Sending…' : 'Approve and send'}</Button>
+          <Button onClick={send} disabled={!approved || busy || !saved || !release || !!blocker} className="gap-1"><Send className="h-4 w-4" />{busy ? 'Sending…' : 'Approve and send'}</Button>
         </DialogFooter>
 
         <section className="space-y-2 border-t pt-3" aria-label="Send history">
@@ -159,12 +168,16 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
           {sends.length === 0 ? <p className="text-xs text-muted-foreground">No alerts sent for this deal yet.</p> : sends.map(s => (
             <div key={s.id} className="rounded-md border p-2 text-xs space-y-1">
               <div className="flex flex-wrap gap-2"><span className="font-medium">{s.subject}</span><Badge variant="secondary" className="text-[10px]">{ALERT_EVENTS.find(e => e.id === s.event)?.label ?? s.event}</Badge></div>
-              <div className="text-muted-foreground">{new Date(s.created_at).toLocaleString()} · {s.sender_name} · terms v{s.release_version} ({s.bdt_hash.slice(0, 8)})</div>
-              <ul>{s.alert_send_recipients.map(r => (
-                <li key={r.id} className="flex items-center gap-2">
-                  <Badge variant={r.status === 'sent' ? 'default' : r.status === 'failed' ? 'destructive' : 'outline'} className="text-[10px]">{r.status}</Badge>
-                  <span>{r.vendor_name}: {r.address}</span>
-                  {r.status === 'failed' && <><span className="text-destructive truncate max-w-[16rem]" title={r.error ?? ''}>{r.error}</span><Button size="sm" variant="outline" className="h-6 gap-1 text-[11px]" onClick={() => retry(r.id)}><RotateCw className="h-3 w-3" /> Retry</Button></>}
+              <div className="text-muted-foreground">{new Date(s.created_at).toLocaleString()} · {s.sender_name}{s.sender_email ? ` <${s.sender_email}>` : ''}{s.sender_org ? ` (${s.sender_org})` : ''} · {s.provider} · terms v{s.release_version} ({s.bdt_hash.slice(0, 8)})</div>
+              <ul>{[...s.alert_send_chunks].sort((a, b) => a.chunk_index - b.chunk_index).map(c => (
+                <li key={c.id} className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={c.status === 'sent' ? 'default' : c.status === 'failed' ? 'destructive' : 'outline'} className="text-[10px]">{c.status}</Badge>
+                    <span>Email {c.chunk_index + 1}: {c.bcc_addresses.length} BCC · attempts {c.attempts}</span>
+                    {c.status === 'failed' && <Button size="sm" variant="outline" className="h-6 gap-1 text-[11px]" onClick={() => retry(c.id)}><RotateCw className="h-3 w-3" /> Retry</Button>}
+                  </div>
+                  {c.status === 'failed' && c.error && <div className="text-destructive">{c.error}</div>}
+                  <details><summary className="cursor-pointer text-muted-foreground">Recipients</summary><div>{c.bcc_addresses.join(', ')}</div></details>
                 </li>
               ))}</ul>
             </div>
