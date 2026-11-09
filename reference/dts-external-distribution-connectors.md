@@ -193,7 +193,7 @@ Legend: **Push** = DTS can send deal data in. **Pull** = DTS/Co-Pilot reads vend
 | Connector | Dir. | How to connect | Auth |
 |---|---|---|---|
 | **Ipreo / IHS Markit Bookbuilding** | **Push** | Now **S&P Global Market Intelligence** (IHS Markit bought Ipreo in 2018 and merged with S&P in 2022). **IssueNet** syncs deal terms, orders and allocations across 220+ syndicate banks. **InvestorAccess** handles buy-side orders. Connect via **DealServices API** and **FIX** | S&P Global client onboarding. **Rename the catalogue entry** |
-| **PrimaryNexus** | ? | **Unverified:** no company or product by this name found publicly. Confirm the intended vendor | — |
+| **PrimaryNexus** | — | Placeholder; removed from the catalogue. | — |
 | **Dealologic** | Pull | Correct spelling: **Dealogic** (now ION Group). **DealManager** for syndicate workflow. **Primary Market Deals & Entities Feed**: XML over SFTP into MS SQL via Data Loader, hourly increments, history back to 1995 | Username/password; licence. **Fix spelling** |
 | **Origin Markets** | Pull | **Trades API** (Airbrush v3, read-only) at `https://airbrush.originmarkets.com/v3`. Origin supports BDT 2.0 since May 2026 | `API-Key` header issued by Origin |
 | **DirectBooks** | **Push** | See §4. FIX 5.0 SP2 (CONNECT), web (CORE) or OMS/EMS partners | Onboarding via sales@directbooks.com |
@@ -269,7 +269,7 @@ To send data instantly to each recipient, the end user's settings for each conne
 2. `ipreo` "Ipreo / IHS Markit Bookbuilding" → **S&P Global IssueNet / InvestorAccess** (DealServices API, FIX).
 3. `anna` ANNA DSB → relabel "OTC derivatives only", or replace with the **numbering agency / ICSD ISIN** route (Euroclear/Clearstream for XS ISINs).
 4. `dtcc` → note "US municipal new issues (NIIDS)"; low relevance for Eurobonds.
-5. `primarynexus` → confirm the vendor (not found publicly).
+5. `primarynexus` → Placeholder; removed from the catalogue.
 6. Add missing distribution recipients from §6 (Debtwire/ION, KangaNews, MNI, Prospect News, EDI, FT), most as **email/feed** channel type.
 7. Mark the true **push** connectors (DirectBooks, S&P IssueNet, Clearstream PMI/D7, Symphony, CUSIP) separately from **pull/enrichment** connectors in the UI.
 
@@ -280,7 +280,7 @@ To send data instantly to each recipient, the end user's settings for each conne
 - [OriginMarkets/Airbrush (GitHub)](https://github.com/OriginMarkets/Airbrush) · [Airbrush v3 API docs](https://airbrush.originmarkets.com/v3/)
 - [Clearstream: Origin instant-ISIN and Airbrush V2 (Jun 2021)](https://www.clearstream.com/clearstream-en/newsroom/210621-2690252) · [Clearstream PMI API launch (Jan 2022)](https://www.clearstream.com/clearstream-en/newsroom/220125-2918504) · [Clearstream PMI API services](https://clearstream.com/clearstream-en/securities-services/issuance-1-/issuance-services/pmiapi) · [Clearstream D7 Pre-Issuance API](https://clearstream.com/clearstream-en/securities-services/issuance-solutions/digital-issuance/d7-pre-issuance-api)
 - [ICMA Bond Data Taxonomy page](https://www.icmagroup.org/fintech-and-digitalisation/fintech-advisory-committee-and-related-groups/bond-data-taxonomy) · [ICMA BDT 2.0 announcement](https://www.icmagroup.org/News/news-in-brief/icma-publishes-version-2-0-of-the-bond-data-taxonomy-reflecting-growing-market-adoption/)
-- [DirectBooks FAQ](https://www.directbooks.com/faq) · [MarketAxess–DirectBooks (Business Wire)](https://www.businesswire.com/news/home/20260224240951/en) · [Bloomberg–DirectBooks (TMCnet/PRN)](https://www.tmcnet.com/usubmit/2026-06-08/10395764.htm)
+- [DirectBooks FAQ](https://www.directbooks.com/faq) · [MarketAxess–DirectBooks (Business Wire)](https://www.businesswire.com/news/home/20260224240951/en) · [Bloomberg–DirectBooks (TMCnet/PRN)](https://www.tmcnet.com/usubmit/2026/06/08/10395764.htm)
 - [Bloomberg Enterprise MCP (HPCwire)](https://www.hpcwire.com/bigdatawire/this-just-in/bloomberg-launches-enterprise-mcp-to-seamlessly-connect-bloomberg-data-with-clients-enterprise-ai-applications/) · [Bloomberg DL+](https://professional.bloomberg.com/products/data/data-license/dl-plus/)
 - [LSEG MCP](https://www.lseg.com/en/solutions/ai-finance-solutions/lseg-mcp) · [LSEG–Anthropic RNS](https://www.investegate.co.uk/announcement/rns/london-stock-exchange-group--lseg/lseg-announces-collaboration-with-anthropic/9197121) · [LSEG MCP endpoint (mcpservers.org)](https://mcpservers.org/remote-mcp-servers/lseg)
 - [ICE MCP connector](https://www.ice.com/fixed-income-data-services/access-and-delivery/mcp-connector) · [ICE MCP endpoint (mcpservers.org)](https://mcpservers.org/remote-mcp-servers/ice-data-services)

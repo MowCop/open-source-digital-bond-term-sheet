@@ -35,3 +35,20 @@ describe('Bond Console catalogue management', () => {
     expect(saveCatalogueEntry(emptyCatalogue(), vendor).entries[0].status).toBe('available');
   });
 });
+describe('Saved catalogue migration', () => {
+  const load = (state: unknown) => loadCatalogue({ getItem: () => JSON.stringify(state) }, 'u');
+  const oldDeal = { id: 'dealologic', name: 'Dealologic', category: 'Syndicate Tools', description: 'Syndicate workflow & bookbuilding automation', status: 'available' };
+  it('drops PrimaryNexus overrides and deletions', () => {
+    const s = load({ entries: [{ ...oldDeal, id: 'primarynexus', name: 'PrimaryNexus' }], deletedIds: ['primarynexus', 'edgar'] });
+    expect(s.entries).toHaveLength(0);
+    expect(s.deletedIds).toEqual(['edgar']);
+  });
+  it('drops unchanged old defaults but keeps user edits', () => {
+    expect(resolveCatalogue(load({ entries: [oldDeal], deletedIds: [] })).find(v => v.id === 'dealologic')?.name).toBe('Dealogic (ION Group)');
+    expect(resolveCatalogue(load({ entries: [{ ...oldDeal, name: 'My Dealogic' }], deletedIds: [] })).find(v => v.id === 'dealologic')?.name).toBe('My Dealogic');
+  });
+  it('validates saved direction values', () => {
+    for (const d of ['push', 'pull', 'email']) expect(load({ entries: [{ ...vendor, direction: d }], deletedIds: [] }).entries).toHaveLength(1);
+    expect(load({ entries: [{ ...vendor, direction: 'fax' }], deletedIds: [] }).entries).toHaveLength(0);
+  });
+});
