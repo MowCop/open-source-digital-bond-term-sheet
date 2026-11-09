@@ -3,12 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { validateVendor, type VendorAPI } from '@/lib/vendors';
+import { validateVendor, connectorDirection, type VendorAPI, type ConnectorDirection } from '@/lib/vendors';
 
 export function ConsoleEntryEditor({ entry, onSave, onClose }: { entry: VendorAPI; onSave: (v: VendorAPI) => boolean; onClose: () => void }) {
   const [name, setName] = useState(entry.name);
   const [description, setDescription] = useState(entry.description);
   const [url, setUrl] = useState(entry.url || '');
+  const [direction, setDirection] = useState<ConnectorDirection>(connectorDirection(entry));
   const [error, setError] = useState('');
   return (
     <Dialog open onOpenChange={open => { if (!open) onClose(); }}>
@@ -19,7 +20,7 @@ export function ConsoleEntryEditor({ entry, onSave, onClose }: { entry: VendorAP
         </DialogHeader>
         <form onSubmit={e => {
           e.preventDefault();
-          const next = { ...entry, name: name.trim(), description: description.trim(), url: url.trim() || undefined };
+          const next = { ...entry, name: name.trim(), description: description.trim(), url: url.trim() || undefined, direction };
           const issue = validateVendor(next);
           if (issue) { setError(issue); return; }
           if (onSave(next)) onClose();
@@ -27,6 +28,10 @@ export function ConsoleEntryEditor({ entry, onSave, onClose }: { entry: VendorAP
           <div className="space-y-2"><Label htmlFor="entry-name">Name</Label><Input id="entry-name" autoFocus required maxLength={160} value={name} onChange={e => setName(e.target.value)} /></div>
           <div className="space-y-2"><Label htmlFor="entry-description">Description</Label><Input id="entry-description" maxLength={500} value={description} onChange={e => setDescription(e.target.value)} /></div>
           <div className="space-y-2"><Label htmlFor="entry-url">Website / source URL (optional)</Label><Input id="entry-url" type="url" placeholder="https://" maxLength={2048} value={url} onChange={e => setUrl(e.target.value)} /></div>
+          <div className="space-y-2"><Label htmlFor="entry-direction">Direction</Label>
+            <select id="entry-direction" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={direction} onChange={e => setDirection(e.target.value as ConnectorDirection)}>
+              <option value="pull">Pull / enrichment</option><option value="push">Push</option><option value="email">Email</option>
+            </select></div>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           <DialogFooter><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button type="submit">Save entry</Button></DialogFooter>
         </form>

@@ -17,7 +17,7 @@ import {
   Palette, FileDown, Webhook, ScrollText, HelpCircle, CheckCircle2, Circle, Sparkles, ExternalLink,
 } from 'lucide-react';
 import { AI_TRIGGER_MODE_KEY, getAITriggerMode, type AITriggerMode } from '@/pages/AIDraftPage';
-import { VENDOR_APIS, VENDOR_CATEGORIES, isCommercialFeed, loadCatalogue, resolveCatalogue, saveCatalogueEntry, deleteCatalogueEntry, catalogueStorageKey, type VendorAPI, type CatalogueOverrides } from '@/lib/vendors';
+import { VENDOR_APIS, VENDOR_CATEGORIES, isCommercialFeed, connectorDirection, loadCatalogue, resolveCatalogue, saveCatalogueEntry, deleteCatalogueEntry, catalogueStorageKey, type VendorAPI, type CatalogueOverrides } from '@/lib/vendors';
 import { ConsoleEntryEditor, ConsoleEntryDelete } from '@/components/ConsoleEntryEditor';
 
 
@@ -148,6 +148,7 @@ export default function BondConsolePage() {
                           )}
                           {on && <Badge className="text-[9px] h-4 px-1.5 bg-green-500/15 text-green-600 border-0">Connected</Badge>}
                           {isLink && <Badge variant="outline" className="text-[9px] h-4 px-1.5">Live link</Badge>}
+                          {(() => { const d = connectorDirection(v); return <Badge variant={d === 'push' ? 'default' : 'secondary'} className="text-[9px] h-4 px-1.5" title={d === 'push' ? 'Accepts inbound deal data' : d === 'email' ? 'Receives deals by email' : 'Pull / enrichment only'}>{d === 'push' ? 'Push' : d === 'email' ? 'Email' : 'Pull'}</Badge>; })()}
                         </div>
                         <div className="text-xs text-muted-foreground break-words">{v.description}</div>
                       </div>

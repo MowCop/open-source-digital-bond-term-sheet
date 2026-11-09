@@ -35,3 +35,29 @@ describe('Bond Console connector catalogue', () => {
     expect(EDGAR_424B_URL).toContain('action=getcurrent');
   });
 });
+
+import { COMMERCIAL_FEED_IDS, connectorDirection } from '../lib/vendors';
+const find = (id: string) => VENDOR_APIS.find(v => v.id === id);
+describe('Connector catalogue corrections', () => {
+  it('uses corrected names and descriptions', () => {
+    expect(find('dealologic')?.name).toBe('Dealogic (ION Group)');
+    expect(find('ipreo')?.name).toBe('S&P Global IssueNet / InvestorAccess');
+    expect(find('anna')?.description).toContain('OTC derivatives ISINs only');
+    expect(find('dtcc')?.description).toBe('US municipal new issues (NIIDS)');
+    expect(find('xs-isin')?.category).toBe('Industry & Standards');
+  });
+  it('removes the PrimaryNexus placeholder', () => {
+    expect(find('primarynexus')).toBeUndefined();
+    expect(COMMERCIAL_FEED_IDS).not.toContain('primarynexus');
+  });
+  const news = ['debtwire', 'kanganews', 'mni', 'prospectnews', 'edi', 'ft'];
+  it('adds email news recipients as commercial News & Wires entries', () => {
+    for (const id of news) { expect(find(id)?.category).toBe('News & Wires'); expect(isCommercialFeed(find(id)!)).toBe(true); }
+  });
+  it('labels push, email and pull connectors', () => {
+    const push = ['directbooks', 'ipreo', 'clearstream', 'symphony', 'cusip', 'xs-isin'];
+    for (const v of VENDOR_APIS) {
+      expect(connectorDirection(v)).toBe(push.includes(v.id) ? 'push' : news.includes(v.id) ? 'email' : 'pull');
+    }
+  });
+});
