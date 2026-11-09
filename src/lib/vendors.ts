@@ -1,3 +1,5 @@
+import { validateConnectivity, sanitizeConnectivity, type ConnectivityProfile } from './connectivity';
+
 /**
  * Bond Console connector catalogue.
  *
@@ -16,6 +18,8 @@ export interface VendorAPI {
   url?: string;
   /** How deal data moves: push to the venue, pull/enrichment, or email distribution. */
   direction?: ConnectorDirection;
+  /** How the vendor is connected (record only; secret names, never values). */
+  connectivity?: ConnectivityProfile[];
 }
 
 export type ConnectorDirection = 'push' | 'pull' | 'email';
@@ -98,7 +102,7 @@ const REMOVED_IDS = ['primarynexus'];
 function isStaleOverride(v: VendorAPI): boolean {
   if (REMOVED_IDS.includes(v.id)) return true;
   const old = LEGACY_DEFAULTS[v.id];
-  return Boolean(old && old.name === v.name && old.description === v.description && !v.url && !v.direction);
+  return Boolean(old && old.name === v.name && old.description === v.description && !v.url && !v.direction && !v.connectivity);
 }
 
 export function isCommercialFeed(v: VendorAPI): boolean {
@@ -122,7 +126,7 @@ export function validateVendor(v: VendorAPI): string | null {
       if (url.protocol !== 'https:' || url.username || url.password) return 'Use a public HTTPS URL without credentials.';
     } catch { return 'Enter a valid HTTPS URL.'; }
   }
-  return null;
+  return validateConnectivity(v.connectivity);
 }
 
 export function resolveCatalogue(overrides: CatalogueOverrides): VendorAPI[] {
@@ -135,7 +139,8 @@ export function resolveCatalogue(overrides: CatalogueOverrides): VendorAPI[] {
 export function saveCatalogueEntry(state: CatalogueOverrides, entry: VendorAPI): CatalogueOverrides {
   const error = validateVendor(entry);
   if (error) throw new Error(error);
-  return { ...state, entries: [...state.entries.filter(v => v.id !== entry.id), entry] };
+  const clean = entry.connectivity ? { ...entry, connectivity: sanitizeConnectivity(entry.connectivity) } : entry;
+  return { ...state, entries: [...state.entries.filter(v => v.id !== entry.id), clean] };
 }
 
 export function deleteCatalogueEntry(state: CatalogueOverrides, id: string, confirmation: string): CatalogueOverrides {
@@ -148,7 +153,8 @@ export function loadCatalogue(storage: Pick<Storage, 'getItem'>, userId: string)
     const raw = JSON.parse(storage.getItem(catalogueStorageKey(userId)) || 'null');
     if (!raw || !Array.isArray(raw.entries) || !Array.isArray(raw.deletedIds)) return emptyCatalogue();
     return {
-      entries: raw.entries.filter((v: unknown): v is VendorAPI => {
+      entries: raw.entries.map((v: unknown) => (v && typeof v === 'object' && 'connectivity' in v)
+        ? { ...(v as object), connectivity: sanitizeConnectivity((v as { connectivity: unknown }).connectivity) } : v).filter((v: unknown): v is VendorAPI => {
         if (!v || typeof v !== 'object') return false;
         const entry = v as Partial<VendorAPI>;
         return typeof entry.id === 'string' && typeof entry.name === 'string' && typeof entry.category === 'string'

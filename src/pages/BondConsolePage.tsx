@@ -17,6 +17,7 @@ import {
   Palette, FileDown, Webhook, ScrollText, HelpCircle, CheckCircle2, Circle, Sparkles, ExternalLink,
 } from 'lucide-react';
 import { AI_TRIGGER_MODE_KEY, getAITriggerMode, type AITriggerMode } from '@/pages/AIDraftPage';
+import { connectivityFor, protocolChip } from '@/lib/connectivity';
 import { VENDOR_APIS, VENDOR_CATEGORIES, isCommercialFeed, connectorDirection, loadCatalogue, resolveCatalogue, saveCatalogueEntry, deleteCatalogueEntry, catalogueStorageKey, type VendorAPI, type CatalogueOverrides } from '@/lib/vendors';
 import { ConsoleEntryEditor, ConsoleEntryDelete } from '@/components/ConsoleEntryEditor';
 
@@ -151,6 +152,9 @@ export default function BondConsolePage() {
                           {(() => { const d = connectorDirection(v); return <Badge variant={d === 'push' ? 'default' : 'secondary'} className="text-[9px] h-4 px-1.5" title={d === 'push' ? 'Accepts inbound deal data' : d === 'email' ? 'Receives deals by email' : 'Pull / enrichment only'}>{d === 'push' ? 'Push' : d === 'email' ? 'Email' : 'Pull'}</Badge>; })()}
                         </div>
                         <div className="text-xs text-muted-foreground break-words">{v.description}</div>
+                        <div className="mt-1 flex flex-wrap gap-1" aria-label={`${v.name} protocols`}>
+                          {[...new Set(connectivityFor(v).map(protocolChip))].map(chip => <Badge key={chip} variant="outline" className="text-[9px] h-4 px-1.5 font-normal">{chip}</Badge>)}
+                        </div>
                       </div>
                       {isLink ? (
                         <a
