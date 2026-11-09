@@ -14,6 +14,121 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_send_recipients: {
+        Row: {
+          address: string
+          attempts: number
+          channel: string
+          error: string | null
+          id: string
+          provider_message_id: string | null
+          send_id: string
+          status: string
+          updated_at: string
+          vendor_id: string
+          vendor_name: string
+        }
+        Insert: {
+          address: string
+          attempts?: number
+          channel?: string
+          error?: string | null
+          id?: string
+          provider_message_id?: string | null
+          send_id: string
+          status?: string
+          updated_at?: string
+          vendor_id: string
+          vendor_name?: string
+        }
+        Update: {
+          address?: string
+          attempts?: number
+          channel?: string
+          error?: string | null
+          id?: string
+          provider_message_id?: string | null
+          send_id?: string
+          status?: string
+          updated_at?: string
+          vendor_id?: string
+          vendor_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_send_recipients_send_id_fkey"
+            columns: ["send_id"]
+            isOneToOne: false
+            referencedRelation: "alert_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alert_sends: {
+        Row: {
+          approved_at: string
+          bcc: string | null
+          bdt_hash: string
+          body_html: string
+          created_at: string
+          deal_id: string
+          event: string
+          id: string
+          org: string
+          release_id: string | null
+          release_version: number | null
+          sender_id: string
+          sender_name: string
+          stage: string
+          subject: string
+          terms_snapshot: Json
+        }
+        Insert: {
+          approved_at: string
+          bcc?: string | null
+          bdt_hash: string
+          body_html: string
+          created_at?: string
+          deal_id: string
+          event: string
+          id?: string
+          org?: string
+          release_id?: string | null
+          release_version?: number | null
+          sender_id: string
+          sender_name?: string
+          stage?: string
+          subject: string
+          terms_snapshot?: Json
+        }
+        Update: {
+          approved_at?: string
+          bcc?: string | null
+          bdt_hash?: string
+          body_html?: string
+          created_at?: string
+          deal_id?: string
+          event?: string
+          id?: string
+          org?: string
+          release_id?: string | null
+          release_version?: number | null
+          sender_id?: string
+          sender_name?: string
+          stage?: string
+          subject?: string
+          terms_snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_sends_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "deal_term_sheet_releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -479,6 +594,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      deal_bulletin_notes: {
+        Row: {
+          deal_id: string
+          intro: string
+          notes: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          deal_id: string
+          intro?: string
+          notes?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          deal_id?: string
+          intro?: string
+          notes?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       deal_documents: {
         Row: {
@@ -1175,6 +1314,39 @@ export type Database = {
           organization_type?: string
           phone?: string | null
           role?: string
+        }
+        Relationships: []
+      }
+      vendor_distribution: {
+        Row: {
+          addresses: string[]
+          enabled: boolean
+          id: string
+          org: string
+          updated_at: string
+          updated_by: string | null
+          vendor_id: string
+          vendor_name: string
+        }
+        Insert: {
+          addresses?: string[]
+          enabled?: boolean
+          id?: string
+          org: string
+          updated_at?: string
+          updated_by?: string | null
+          vendor_id: string
+          vendor_name?: string
+        }
+        Update: {
+          addresses?: string[]
+          enabled?: boolean
+          id?: string
+          org?: string
+          updated_at?: string
+          updated_by?: string | null
+          vendor_id?: string
+          vendor_name?: string
         }
         Relationships: []
       }

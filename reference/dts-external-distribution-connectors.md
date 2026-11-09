@@ -251,6 +251,14 @@ The example syndicate email ("€€€ MANDATE: EUROFIMA – New Green Bond Fra
 
 Implemented step 1: connectivity profiles (record only).
 
+Implemented step 2: new-issues email distribution.
+- Each connector can hold one or more organisation/desk distribution addresses (e.g. newissues@vendor.com), never individuals. Addresses are stored in the backend per organisation (`vendor_distribution`, row-level security by organisation), not in the browser. Empty by default.
+- Bond Console → Recipients lists every vendor with an address and an on/off switch; only enabled vendors receive alerts.
+- "Send update" on a deal (events: Mandate, Announced/IPT, Guidance, Books update, Launch, Pricing, Final terms) renders the alert from the latest saved BDT terms, keeps user intro/notes separately, appends legal notices verbatim outside AI, and attaches the BDT 2.0 XML of the saved snapshot.
+- A person must preview and tick approval for every send; nothing sends automatically. The server re-checks that the saved terms still match the previewed snapshot.
+- Every send is logged (`alert_sends`, `alert_send_recipients`, plus `audit_log`): deal, event, stage, time, sender, subject, snapshot version and hash, and per-recipient delivery status. Failed deliveries can be retried with the same snapshot.
+- Later channels (Bloomberg MSG, DirectBooks, Symphony) plug into the same Send update step as extra recipient rows with their own `channel`, reusing the snapshot, approval and log.
+
 To send data instantly to each recipient, the end user's settings for each connector should capture:
 
 1. **Channel type:** FIX session / REST API / MCP server / SFTP / Symphony bot / email fallback.
