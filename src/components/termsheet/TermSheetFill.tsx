@@ -393,6 +393,8 @@ export default function TermSheetFill({
       {requestedStage && snapsLoaded && viewStage !== null && !viewSnap && (
         <p role="status" className="text-xs text-primary">No saved record for {stageLabel(requestedStage)}. Showing current terms; no historical values have been created.</p>
       )}
+      {/* Sticky: masthead and search stay locked while fields scroll */}
+      <div className="sticky top-0 z-20 -mx-1 space-y-3 bg-background/95 px-1 pb-2 pt-1 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       {/* Masthead: stage rail, readiness, checks */}
       <div className="rounded-lg border border-border/70 bg-card/60 p-4 space-y-4">
         <div className="flex flex-wrap items-center gap-1.5">
@@ -464,6 +466,24 @@ export default function TermSheetFill({
       </div>
 
 
+      {/* Search + optional toggle */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Search all 197 term sheet fields..."
+            className="h-9 pl-8 text-sm"
+          />
+        </div>
+        <Button size="sm" variant={showOptional ? 'secondary' : 'outline'} onClick={() => setShowOptional(v => !v)}>
+          {showOptional ? 'Required at this stage only' : 'Show every field'}
+        </Button>
+      </div>
+
+      </div>
+
       {/* Proposal review — nothing is applied without acceptance */}
       {proposals.length > 0 && (
         <div className="rounded-lg border border-primary/40 bg-primary/5 p-4 space-y-3">
@@ -497,22 +517,6 @@ export default function TermSheetFill({
           </div>
         </div>
       )}
-
-      {/* Search + optional toggle */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search all 197 term sheet fields..."
-            className="h-9 pl-8 text-sm"
-          />
-        </div>
-        <Button size="sm" variant={showOptional ? 'secondary' : 'outline'} onClick={() => setShowOptional(v => !v)}>
-          {showOptional ? 'Required at this stage only' : 'Show every field'}
-        </Button>
-      </div>
 
       {/* Priority Execution Layer — FIELDS entries selected by path. Collapsed by
           default, like every other section; a search opens it automatically. */}
