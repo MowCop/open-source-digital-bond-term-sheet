@@ -8,8 +8,8 @@
 
 ## Data model (src/lib/vendors.ts)
 - New types:
-  - `ConnectivityProtocol`: FIX, REST API, MCP, BLPAPI, SFTP, WebSocket/streaming, Bot API, Email, Web UI.
-  - `AuthMethod`: OAuth, API key, token + company key, X.509/RSA certificate, FIX session logon, EMRS identity, none.
+  - `ConnectivityProtocol`: FIX, REST API, MCP, BLPAPI, SFTP, WebSocket/streaming, Bot API, Email, Web UI, To be confirmed.
+  - `AuthMethod`: OAuth, API key, token + company key, X.509/RSA certificate, FIX session logon, EMRS identity, none, To be confirmed.
   - `ConnectivityProfile`, with these fields:
     - `id`
     - `protocol`
@@ -51,6 +51,12 @@
     - Bloomberg Enterprise MCP
     - Desktop API on localhost:8194, with the same docsUrl and sdkVersion
     - Email/MSG to the Bloomberg new-issues desks (email)
+    - "Bloomberg security setup (DES page)":
+      - direction push
+      - protocol and auth both "To be confirmed"
+      - docsUrl https://www.originmarkets.com/product/documentation
+      - Note: "Creates the security / DES page on Bloomberg from term-sheet data. Origin Markets offers this today (Origin Intelligence, Nov 2024: drop a termsheet to create the security in the Bloomberg terminal). Bloomberg's mechanism isn't publicly documented; confirm the security-creation channel with Bloomberg during onboarding. Syndicate emails to the Bloomberg new-issues desks remain the pre-pricing channel."
+    - `connectorDirection` still returns "pull" for the Bloomberg row, because the row badge shows the main direction.
     - the note that order and allocation flow to TSOX goes via DirectBooks
   - The other listed connectors, each with its listed protocol, address, sign-in method and direction:
     - S&P IssueNet / InvestorAccess (ipreo)
@@ -88,6 +94,7 @@
 - Add `protocolChip(profile)`:
   - FIX shows "FIX 5.0 SP2".
   - BLPAPI with a B-PIPE label shows "B-PIPE".
+  - A profile labelled "security setup" shows "Security setup", so the Bloomberg row shows both "B-PIPE" and "Security setup".
   - Every other protocol shows its version or its protocol name.
 - Add `validateConnectivity(profiles)`, called from `validateVendor`. It enforces:
   - a label is required
@@ -127,12 +134,18 @@
 - In `reference/dts-external-distribution-connectors.md`:
   - Add one line to section 7: "Implemented step 1: connectivity profiles (record only)."
   - In section 5, update the Bloomberg row to list B-PIPE (Bloomberg Market Data Feed via BLPAPI 3.26.9.1, Server API, admin via Bloomberg Enterprise Console) alongside DL+, Enterprise MCP and the Desktop API.
-  - Add the Bloomberg API library page (https://professional.bloomberg.com/support/api-library/) to Sources.
+  - In section 2 and the section 5 Bloomberg row, add that Bloomberg security setup (DES) is a push route, as offered by Origin.
+  - In the section 1 Origin row, replace "that product name was not verified publicly" with "Origin Intelligence (launched Nov 2024): AI term-sheet extraction of up to 79 data points on the Airbrush taxonomy, used for ISIN allocation and Bloomberg security setup".
+  - Add these pages to Sources:
+    - the Bloomberg API library page (https://professional.bloomberg.com/support/api-library/)
+    - https://www.originmarkets.com/product/documentation
+    - https://www.originmarkets.com/press-releases/origin-inteligence
 - Update the AGENTS.md vendors rule: connectivity profiles are a record only and store secret names, never values.
 
 ## Tests (src/test/connectivity.test.ts)
 - DirectBooks defaults include a FIX profile: version 5.0 SP2, push direction, FIX session logon, with the `FIXT.1.1` / `FIX.5.0SP2` defaults.
 - Bloomberg defaults include a B-PIPE profile: BLPAPI, EMRS identity, pull, with the services //blp/mktdata and //blp/refdata. The B-PIPE profile has `sdkVersion` "BLPAPI 3.26.9.1" and the Bloomberg API library docsUrl. The defaults also include the Desktop API on `localhost:8194`.
+- The Bloomberg defaults include a push "security setup" profile alongside B-PIPE, with protocol "To be confirmed". `connectorDirection` for Bloomberg is still "pull", and its chips include both "B-PIPE" and "Security setup".
 - DirectBooks, LSEG, Moody's, ICE, Clearstream, Origin, Symphony and EDGAR defaults carry the listed docsUrl values.
 - A docsUrl that is not https, or that contains a username and password, is rejected.
 - A connector with no known protocol gets a single "To be confirmed" profile.
