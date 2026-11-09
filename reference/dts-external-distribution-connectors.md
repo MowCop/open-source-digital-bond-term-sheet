@@ -24,7 +24,7 @@ The deal then moves through the board stages: Mandate → Announced → Launched
 |---|---|---|
 | Lifecycle focus | Pre-marketing, marketing and execution up to pricing: mandate, IPTs, guidance, books, launch, pricing | Documentation and post-trade: term sheet templates, ISIN, listing, settlement integrations |
 | Data standard | BDT 2.0 native | Airbrush (own spec). Per ICMA, Origin has also supported BDT 2.0 since 29 May 2026 |
-| AI checking | Deal Checker / Deal Co-Pilot | Own AI tooling. The user's account calls it "Origin Intelligence"; that product name was not verified publicly |
+| AI checking | Deal Checker / Deal Co-Pilot | Own AI tooling. Origin Intelligence (launched Nov 2024): AI term-sheet extraction of up to 79 data points on the Airbrush taxonomy, used for ISIN allocation and Bloomberg security setup |
 
 The Airbrush spec confirms the split (§3): its trade stages are only `final_termsheet` and `post_trade_legal`, and it has no IPT, guidance, book-size or order fields.
 
@@ -36,7 +36,7 @@ Most connectors in the catalogue are **read (pull) channels**: vendors exposing 
 
 | Direction | Connectors | Implication for the DTS |
 |---|---|---|
-| **Push: inbound deal data accepted today** | DirectBooks (FIX), S&P Global IssueNet / InvestorAccess (DealServices API, FIX), Clearstream PMI / D7 API (ISIN request + instrument data), CUSIP request, Symphony (bot posts to rooms), DTCC NIIDS (US munis only) | Real API/FIX targets for "send the deal out" |
+| **Push: inbound deal data accepted today** | DirectBooks (FIX), S&P Global IssueNet / InvestorAccess (DealServices API, FIX), Clearstream PMI / D7 API (ISIN request + instrument data), CUSIP request, Symphony (bot posts to rooms), DTCC NIIDS (US munis only), Bloomberg security setup (DES page, a push route as offered by Origin) | Real API/FIX targets for "send the deal out" |
 | **Pull: vendor data in** | Bloomberg Enterprise MCP, LSEG MCP, S&P/Kensho MCP, Moody's MCP, Fitch Nexus MCP, ICE MCP, FactSet MCP, Octus MCP/API, IGM API, Cbonds API, Finsight/CreditFlow API, BondCliQ feed, Origin Trades API, Dealogic feed, EDGAR | Enrich and check a deal (ratings, LEIs, comps, evaluations, prior issues) |
 | **No public inbound channel; email today** | Bloomberg news desks, IFR/LSEG, GlobalCapital, IGM, 9fin/Bond Radar, Dow Jones, Octus, FT/WSJ press | Keep email as the push channel, or publish via the DTS's own API/MCP (below) |
 
@@ -147,7 +147,7 @@ Legend: **Push** = DTS can send deal data in. **Pull** = DTS/Co-Pilot reads vend
 
 | Connector | Dir. | How to connect | Auth / prerequisites |
 |---|---|---|---|
-| **Bloomberg Terminal** | Pull (push via email/MSG and DirectBooks→TSOX) | **Bloomberg Enterprise MCP** (launched 29 Sep 2026): AI access layer over Data License Plus (DL+). Content browsable at data.bloomberg.com. **New Issues Feed** via DL Per Security tracks bonds from announcement to pricing. Terminal BLPAPI for desktop apps | DL / DL+ licence; entitlements checked per request |
+| **Bloomberg Terminal** | Pull (push via email/MSG and DirectBooks→TSOX) | **Bloomberg Enterprise MCP** (launched 29 Sep 2026): AI access layer over Data License Plus (DL+). Content browsable at data.bloomberg.com. **New Issues Feed** via DL Per Security tracks bonds from announcement to pricing. **B-PIPE** (Bloomberg Market Data Feed via BLPAPI 3.26.9.1, Server API; admin via Bloomberg Enterprise Console) alongside DL+, Enterprise MCP and the Desktop API (Terminal BLPAPI). **Bloomberg security setup (DES)** is a push route, as offered by Origin | DL / DL+ licence; entitlements checked per request |
 | **Refinitiv Eikon / LSEG Workspace** | Pull | **LSEG MCP server**: `https://api.analytics.lseg.com/lfa/mcp/server-cl` (Streamable HTTP). In the Claude connector directory since 27 Oct 2025; also available through Copilot, ChatGPT, Gemini, Databricks and Amazon Quick. IFR New Issues Monitor content sits in Workspace | OAuth; Workspace / Financial Analytics licence |
 | **ICE Data Services** | Pull | **ICE MCP connector** (29 Jul 2026): `https://fids-mcp.ice.com/mcp`. Datasets: EOD fixed income evaluations, evaluation transparency, US Treasury benchmark, TRACE/MSRB trades. Keep queries to one day or one week | OAuth via ICE SSO with MFA; ICE Data Services licence |
 | **Finsight** | Pull | **CreditFlow Primary Market Data API** (paid add-on). Covers US ABS, US IG/HY and EMEA IG/HY new issues. Finsight bought Credit Flow Research in Jan 2025. API contact: support@creditflowresearch.com | Subscription + API add-on |
@@ -249,6 +249,8 @@ The example syndicate email ("€€€ MANDATE: EUROFIMA – New Green Bond Fra
 
 ## 7. Bond Console settings: what each connector record should hold
 
+Implemented step 1: connectivity profiles (record only).
+
 To send data instantly to each recipient, the end user's settings for each connector should capture:
 
 1. **Channel type:** FIX session / REST API / MCP server / SFTP / Symphony bot / email fallback.
@@ -281,7 +283,8 @@ To send data instantly to each recipient, the end user's settings for each conne
 - [Clearstream: Origin instant-ISIN and Airbrush V2 (Jun 2021)](https://www.clearstream.com/clearstream-en/newsroom/210621-2690252) · [Clearstream PMI API launch (Jan 2022)](https://www.clearstream.com/clearstream-en/newsroom/220125-2918504) · [Clearstream PMI API services](https://clearstream.com/clearstream-en/securities-services/issuance-1-/issuance-services/pmiapi) · [Clearstream D7 Pre-Issuance API](https://clearstream.com/clearstream-en/securities-services/issuance-solutions/digital-issuance/d7-pre-issuance-api)
 - [ICMA Bond Data Taxonomy page](https://www.icmagroup.org/fintech-and-digitalisation/fintech-advisory-committee-and-related-groups/bond-data-taxonomy) · [ICMA BDT 2.0 announcement](https://www.icmagroup.org/News/news-in-brief/icma-publishes-version-2-0-of-the-bond-data-taxonomy-reflecting-growing-market-adoption/)
 - [DirectBooks FAQ](https://www.directbooks.com/faq) · [MarketAxess–DirectBooks (Business Wire)](https://www.businesswire.com/news/home/20260224240951/en) · [Bloomberg–DirectBooks (TMCnet/PRN)](https://www.tmcnet.com/usubmit/2026/06/08/10395764.htm)
-- [Bloomberg Enterprise MCP (HPCwire)](https://www.hpcwire.com/bigdatawire/this-just-in/bloomberg-launches-enterprise-mcp-to-seamlessly-connect-bloomberg-data-with-clients-enterprise-ai-applications/) · [Bloomberg DL+](https://professional.bloomberg.com/products/data/data-license/dl-plus/)
+- [Bloomberg Enterprise MCP (HPCwire)](https://www.hpcwire.com/bigdatawire/this-just-in/bloomberg-launches-enterprise-mcp-to-seamlessly-connect-bloomberg-data-with-clients-enterprise-ai-applications/) · [Bloomberg DL+](https://professional.bloomberg.com/products/data/data-license/dl-plus/) · [Bloomberg API library](https://professional.bloomberg.com/support/api-library/)
+- [Origin documentation](https://www.originmarkets.com/product/documentation) · [Origin Intelligence press release](https://www.originmarkets.com/press-releases/origin-inteligence)
 - [LSEG MCP](https://www.lseg.com/en/solutions/ai-finance-solutions/lseg-mcp) · [LSEG–Anthropic RNS](https://www.investegate.co.uk/announcement/rns/london-stock-exchange-group--lseg/lseg-announces-collaboration-with-anthropic/9197121) · [LSEG MCP endpoint (mcpservers.org)](https://mcpservers.org/remote-mcp-servers/lseg)
 - [ICE MCP connector](https://www.ice.com/fixed-income-data-services/access-and-delivery/mcp-connector) · [ICE MCP endpoint (mcpservers.org)](https://mcpservers.org/remote-mcp-servers/ice-data-services)
 - [S&P–Anthropic / Kensho MCP](https://press.spglobal.com/2025-07-15-S-P-Global-and-Anthropic-Announce-Integration-of-S-P-Globals-Trusted-Financial-Data-into-Claude) · [Kensho MCP endpoint](https://mcp.so/servers/sp-global)

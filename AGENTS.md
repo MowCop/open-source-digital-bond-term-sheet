@@ -1,5 +1,5 @@
 # AGENTS
-- Bond Console uses src/lib/vendors.ts defaults plus per-user browser overrides for add/edit/remove; built-ins remain immutable so custom management never changes real feed wiring. Public feeds use authenticated public-market-feeds with source dates/partial failures; URL rows open externally, commercial placeholders never imply real feeds.
+- Bond Console uses src/lib/vendors.ts defaults plus per-user browser overrides for add/edit/remove; built-ins remain immutable so custom management never changes real feed wiring. Public feeds use authenticated public-market-feeds with source dates/partial failures; URL rows open externally, commercial placeholders never imply real feeds. Connectivity profiles (src/lib/connectivity.ts) are a record only — they never open connections and store secret names, never values.
 - Board headings use shortBorrowerName for dash-separated descriptions; stored records stay unchanged.
 - Digital Term Sheet View reads the live Fill state through src/lib/termSheetView.ts, not saved flat deal columns; empty authoritative fields remain empty — accepted proposals, edits and deletions must agree across tabs without auto-saving.
 - New Deal and Fill share src/lib/documentIntake.ts for cached extraction and proposals; reviewed extra terms seed bdt_state, remaining terms await acceptance — never overwrite user entries.
