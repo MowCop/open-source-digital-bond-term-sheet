@@ -85,7 +85,10 @@ function isKnownBank(name: string): boolean {
   const low = name.toLowerCase();
   return KNOWN_BANKS.some(b => {
     const bl = b.toLowerCase();
-    return low === bl || low.includes(bl) || bl.includes(low);
+    // Match whole words: ING is a bank, the letters in “Financing” are not.
+    const words = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return low === bl || new RegExp(`\\b${words(bl)}\\b`).test(low)
+      || new RegExp(`\\b${words(low)}\\b`).test(bl);
   });
 }
 
@@ -117,20 +120,18 @@ function extractByLabel(text: string): string {
   ];
   for (const re of labels) {
     for (const m of text.matchAll(re)) {
-    if (!m[1]) continue;
-    let v = m[1].trim();
-    // Reject sibling labels like "LEI 9845…", "Rating Baa2".
-    if (SIBLING_LABEL.test(v)) continue;
-    // Stop at the next field label in the flattened row.
-    v = v.split(NEXT_FIELD)[0];
-    v = v.split(/\s{2,}|\s*\|\s*/)[0];
-    v = trimBorrower(v);
-    if (!v) continue;
-    if (isKnownBank(v)) continue;
-    if (BOILERPLATE.test(v)) continue;
-    // Require at least one capitalised word — avoids lower-case noise.
-    if (!/[A-Z]/.test(v)) continue;
-    return v;
+      if (!m[1]) continue;
+      let v = m[1].trim();
+      // Reject sibling labels like "LEI 9845…", "Rating Baa2".
+      if (SIBLING_LABEL.test(v)) continue;
+      // Stop at the next field label in the flattened row.
+      v = v.split(NEXT_FIELD)[0];
+      v = v.split(/\s{2,}|\s*\|\s*/)[0];
+      v = trimBorrower(v);
+      if (!v) continue;
+      if (isKnownBank(v)) continue;
+      if (BOILERPLATE.test(v)) continue;
+      return v;
     }
   }
   return '';
