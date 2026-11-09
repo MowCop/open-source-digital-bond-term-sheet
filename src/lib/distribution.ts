@@ -25,6 +25,25 @@ export async function saveDistribution(vendorId: string, vendorName: string, raw
   if (error) throw error;
 }
 
+export interface OrgAlertSettings { provider: 'resend' | 'microsoft_graph' | 'gmail'; syndicate_mailbox: string }
+export async function loadOrgAlertSettings(): Promise<OrgAlertSettings> {
+  const org = await myOrg();
+  const { data } = await supabase.from('org_alert_settings').select('provider,syndicate_mailbox').eq('org', org).maybeSingle();
+  return { provider: (data?.provider ?? 'resend') as OrgAlertSettings['provider'], syndicate_mailbox: data?.syndicate_mailbox ?? '' };
+}
+export async function saveOrgAlertSettings(s: OrgAlertSettings) {
+  const mailbox = s.syndicate_mailbox.trim().toLowerCase();
+  if (mailbox && !parseAddresses([mailbox]).addresses.length) throw new Error('Syndicate mailbox is not a valid email.');
+  const { data: u } = await supabase.auth.getUser();
+  const { error } = await supabase.from('org_alert_settings').upsert({ org: await myOrg(), provider: s.provider, syndicate_mailbox: mailbox || null, updated_by: u.user?.id ?? null, updated_at: new Date().toISOString() }, { onConflict: 'org' });
+  if (error) throw error;
+}
+export interface AlertStatus { provider: OrgAlertSettings['provider']; syndicateMailbox: string; resendVerified: boolean; graphConnected: boolean; sender: { name: string; email: string; org: string } }
+export async function loadAlertStatus(): Promise<AlertStatus | null> {
+  const { data, error } = await supabase.functions.invoke('send-deal-alert', { body: { action: 'status' } });
+  return error ? null : (data as AlertStatus);
+}
+
 export async function setDistributionEnabled(vendorId: string, enabled: boolean) {
   const { error } = await supabase.from('vendor_distribution').update({ enabled, updated_at: new Date().toISOString() }).eq('vendor_id', vendorId).eq('org', await myOrg());
   if (error) throw error;

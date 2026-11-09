@@ -29,6 +29,13 @@
       "when": 1794234407911,
       "tag": "0003_new_issue_email_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794235189340,
+      "tag": "0004_alert_chunks_and_org_settings",
+      "breakpoints": true
     }
   ]
 }

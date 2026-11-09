@@ -127,13 +127,17 @@ export function termsHash(state: unknown): string {
 // ── send request (human approval required) ───────────────────────────────────
 export interface SendRequestInput {
   approved: boolean; dealId: string; event: AlertEvent; subject: string; bodyHtml: string;
-  releaseId: string | null; state: BdtState; xml: string; bcc?: string;
+  releaseId: string | null; state: BdtState; xml: string;
 }
 export function buildSendRequest(i: SendRequestInput) {
   if (i.approved !== true) throw new Error('A person must preview and approve this send.');
   if (!i.subject.trim()) throw new Error('Subject is required.');
   if (!i.releaseId) throw new Error('Save the term sheet before sending.');
-  const bcc = i.bcc?.trim() ?? '';
-  if (bcc && !isValidDistributionEmail(bcc)) throw new Error('BCC address is not a valid email.');
-  return { action: 'send' as const, approved: true as const, dealId: i.dealId, event: i.event, subject: i.subject.trim(), bodyHtml: i.bodyHtml, releaseId: i.releaseId, bdtHash: termsHash(i.state), xml: i.xml, bcc: bcc || undefined };
+  return { action: 'send' as const, approved: true as const, dealId: i.dealId, event: i.event, subject: i.subject.trim(), bodyHtml: i.bodyHtml, releaseId: i.releaseId, bdtHash: termsHash(i.state), xml: i.xml };
+}
+
+/** Sender identity recorded on every send log: the deal admin. */
+export function senderRecord(p: { name?: string | null; email?: string | null; organization?: string | null }) {
+  const email = (p.email ?? '').trim().toLowerCase();
+  return { sender_name: (p.name || email).trim(), sender_email: email, sender_org: (p.organization ?? '').trim(), reply_to: email, to_address: email };
 }

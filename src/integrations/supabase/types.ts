@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_send_chunks: {
+        Row: {
+          attempts: number
+          bcc_addresses: string[]
+          chunk_index: number
+          error: string | null
+          id: string
+          provider_message_id: string | null
+          send_id: string
+          status: string
+          to_address: string
+          updated_at: string
+          vendor_ids: string[]
+        }
+        Insert: {
+          attempts?: number
+          bcc_addresses?: string[]
+          chunk_index: number
+          error?: string | null
+          id?: string
+          provider_message_id?: string | null
+          send_id: string
+          status?: string
+          to_address: string
+          updated_at?: string
+          vendor_ids?: string[]
+        }
+        Update: {
+          attempts?: number
+          bcc_addresses?: string[]
+          chunk_index?: number
+          error?: string | null
+          id?: string
+          provider_message_id?: string | null
+          send_id?: string
+          status?: string
+          to_address?: string
+          updated_at?: string
+          vendor_ids?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_send_chunks_send_id_fkey"
+            columns: ["send_id"]
+            isOneToOne: false
+            referencedRelation: "alert_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alert_send_recipients: {
         Row: {
           address: string
@@ -75,13 +125,18 @@ export type Database = {
           event: string
           id: string
           org: string
+          provider: string
           release_id: string | null
           release_version: number | null
+          reply_to: string | null
+          sender_email: string | null
           sender_id: string
           sender_name: string
+          sender_org: string | null
           stage: string
           subject: string
           terms_snapshot: Json
+          to_address: string | null
         }
         Insert: {
           approved_at: string
@@ -93,13 +148,18 @@ export type Database = {
           event: string
           id?: string
           org?: string
+          provider?: string
           release_id?: string | null
           release_version?: number | null
+          reply_to?: string | null
+          sender_email?: string | null
           sender_id: string
           sender_name?: string
+          sender_org?: string | null
           stage?: string
           subject: string
           terms_snapshot?: Json
+          to_address?: string | null
         }
         Update: {
           approved_at?: string
@@ -111,13 +171,18 @@ export type Database = {
           event?: string
           id?: string
           org?: string
+          provider?: string
           release_id?: string | null
           release_version?: number | null
+          reply_to?: string | null
+          sender_email?: string | null
           sender_id?: string
           sender_name?: string
+          sender_org?: string | null
           stage?: string
           subject?: string
           terms_snapshot?: Json
+          to_address?: string | null
         }
         Relationships: [
           {
@@ -1110,6 +1175,30 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      org_alert_settings: {
+        Row: {
+          org: string
+          provider: string
+          syndicate_mailbox: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          org: string
+          provider?: string
+          syndicate_mailbox?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          org?: string
+          provider?: string
+          syndicate_mailbox?: string | null
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }

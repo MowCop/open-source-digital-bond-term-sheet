@@ -256,8 +256,19 @@ Implemented step 2: new-issues email distribution.
 - Bond Console → Recipients lists every vendor with an address and an on/off switch; only enabled vendors receive alerts.
 - "Send update" on a deal (events: Mandate, Announced/IPT, Guidance, Books update, Launch, Pricing, Final terms) renders the alert from the latest saved BDT terms, keeps user intro/notes separately, appends legal notices verbatim outside AI, and attaches the BDT 2.0 XML of the saved snapshot.
 - A person must preview and tick approval for every send; nothing sends automatically. The server re-checks that the saved terms still match the previewed snapshot.
-- Every send is logged (`alert_sends`, `alert_send_recipients`, plus `audit_log`): deal, event, stage, time, sender, subject, snapshot version and hash, and per-recipient delivery status. Failed deliveries can be retried with the same snapshot.
-- Later channels (Bloomberg MSG, DirectBooks, Symphony) plug into the same Send update step as extra recipient rows with their own `channel`, reusing the snapshot, approval and log.
+- **One email per send, like Outlook.** To = the deal admin (the lead bookrunner's DTS admin); BCC = every enabled vendor address plus the organisation's syndicate mailbox. The syndicate mailbox is a required per-organisation setting, always included. Resend allows at most 50 recipients per email (To + CC + BCC), so sends split into chunks of 50 including To.
+- **Sender identity:** the deal admin. Their name, email and organisation are recorded on every send.
+- **Providers (per organisation, one interface `sendAlertEmail(provider, message)`):**
+
+| Provider | From | Reply-To | Status |
+|---|---|---|---|
+| resend | `"<Admin> (<Bank>) via DTS" <newissues@alerts.eurobondmarkets.com>` | deal admin | Active once `alerts.eurobondmarkets.com` is verified in Resend (a subdomain needs its own SPF/DKIM/MX records; only `eurobondmarkets.com` was verified on 9 Nov 2026) |
+| microsoft_graph | the deal admin's own bank mailbox via `POST /me/sendMail` (delegated Mail.Send, tenant admin consent); bccRecipients, XML attachment, saved to Sent Items | deal admin | Production target; "Not connected" until the Microsoft Outlook per-user connection is set up |
+| gmail | — | — | Placeholder only |
+
+- A provider that cannot send refuses with a clear message; it never silently falls back to another provider.
+- Every send is logged (`alert_sends`, `alert_send_chunks`, plus `audit_log`): deal, event, stage, time, sender, provider, subject, snapshot version and hash, and per-email (chunk) status with that chunk's recipient list. Resend delivery events don't identify individual recipients of a multi-recipient email, so status is per chunk. Retry re-sends the failed chunk with the same snapshot, provider and recipients. (`alert_send_recipients` is retired.)
+- Later channels (Bloomberg MSG, DirectBooks, Symphony) plug into the same Send update step beside `sendAlertEmail`, reusing the snapshot, approval and log.
 
 To send data instantly to each recipient, the end user's settings for each connector should capture:
 

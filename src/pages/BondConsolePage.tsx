@@ -1,5 +1,6 @@
 import { ChevronDown, Plus, Pencil, Trash2, Mail } from 'lucide-react';
 import { loadDistribution, saveDistribution, setDistributionEnabled } from '@/lib/distribution';
+import AlertProviderSettings from '@/components/AlertProviderSettings';
 import type { DistributionRow } from '@/lib/newIssueAlerts';
 import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
@@ -189,6 +190,7 @@ export default function BondConsolePage() {
               <ChevronDown className="h-4 w-4 -rotate-90 transition-transform group-open:rotate-0" /><Mail className="h-4 w-4" /> Recipients
               <span className="text-xs font-normal text-muted-foreground">({distribution.filter(d => d.addresses.length).length})</span>
             </summary>
+            <AlertProviderSettings />
             <p className="text-xs text-muted-foreground">Vendors that receive new-issue email alerts from this organisation. Add addresses in a connector's Edit entry dialog.</p>
             {distribution.filter(d => d.addresses.length).length === 0 ? <p className="text-xs text-muted-foreground italic">No distribution addresses yet.</p> : (
               <ul className="divide-y rounded-md border">
