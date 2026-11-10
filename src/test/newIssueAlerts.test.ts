@@ -20,16 +20,15 @@ describe('distribution email validation', () => {
 
 describe('live bulletin', () => {
   it('re-renders terms after a saved change and keeps user text', () => {
-    const before = renderBulletin({ state: state('4.25'), intro: 'My intro', notes: 'My note' });
-    const after = renderBulletin({ state: state('4.5'), intro: 'My intro', notes: 'My note' });
+    const before = renderBulletin({ state: state('4.25'), notes: 'My note' });
+    const after = renderBulletin({ state: state('4.5'), notes: 'My note' });
     expect(before).not.toBe(after);
     expect(after).toContain('4.5');
-    expect(after).toContain('My intro');
     expect(after).toContain('My note');
     expect(termsDiff(state('4.25'), state('4.5')).map(d => d.label)).toEqual(['Coupon']);
   });
   it('appends legal notices verbatim', () => {
-    expect(renderBulletin({ state: state('4'), intro: '', notes: '', legalNotices: ['Not for US persons.'] })).toContain('<h3>Legal Notices</h3><p>Not for US persons.</p>');
+    expect(renderBulletin({ state: state('4'), notes: '', legalNotices: ['Not for US persons.'] })).toContain('<h3>Legal Notices</h3><p>Not for US persons.</p>');
   });
 });
 
@@ -55,5 +54,25 @@ describe('sending', () => {
   });
   it('builds a syndicate-style subject', () => {
     expect(buildSubject(state('4'), 'ipt', 'T+200bp area')).toMatch(/^ACME SA – EUR .* – IPTs T\+200bp area$/);
+  });
+});
+
+import { dealTermsText, packNotes, unpackNotes } from '@/lib/newIssueAlerts';
+import type { DealWorkspace } from '@/lib/dealWorkspace';
+describe('dealTermsText', () => {
+  const st = { stage: 1, deal: '', ver: '', seq: 0, contacts: [], f: {} } as never;
+  it('names every tranche of a 5-tranche deal', () => {
+    const ws = { version: 1, tranches: 'ABCDE'.split('').map((l, i) => ({ id: l, label: l, rateType: i === 3 ? 'fixed' : 'floating', currency: 'USD', amount: 5e8, tenor: `${i + 5}yr`, values: {} })), plannedTotals: {}, fx: {} } as unknown as DealWorkspace;
+    const t = dealTermsText(st, ws, 'Sasol');
+    expect(t).toContain('Sasol – 5-tranche offering');
+    for (const l of 'ABCDE') expect(t).toContain(`Tranche ${l}:`);
+    expect(t).toContain('Tranche D: USD 500m · 8yr · Fixed rate');
+  });
+  it('single-tranche deal has no tranche count', () => {
+    expect(dealTermsText(st, null, 'Sasol')).not.toContain('tranche');
+  });
+  it('notes round-trip keeps terms, hash and legal; old intro is prepended', () => {
+    expect(unpackNotes(packNotes('T', 'h1', 'L'))).toEqual({ terms: 'T', hash: 'h1', legal: 'L' });
+    expect(unpackNotes('old note', 'Old intro').terms).toBe('Old intro\n\nold note');
   });
 });

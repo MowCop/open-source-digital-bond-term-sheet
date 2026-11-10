@@ -1,10 +1,13 @@
 import { termSheetView } from '@/lib/termSheetView';
 import type { BdtState } from '@/lib/bdt-bridge';
+import type { DealWorkspace } from '@/lib/dealWorkspace';
+import { trancheBdtState } from '@/lib/trancheState';
+import { SENIORITY_LABEL } from '@/lib/trancheFields';
 
 /**
  * New-issue email alerts: pure helpers shared by the Bond Console, the live
  * bulletin and the Send update dialog. Terms always come from the SAVED BDT
- * state; user intro/notes are separate inputs and are never regenerated.
+ * state; the user's Terms text is stored separately and only regenerated on request.
  */
 
 // ── distribution addresses ───────────────────────────────────────────────────
@@ -96,12 +99,54 @@ export function termRows(state: BdtState | null | undefined): { key: string; lab
 export const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const paras = (s: string) => s.trim() ? s.trim().split(/\n{2,}/).map(p => `<p>${escapeHtml(p).replace(/\n/g, '<br>')}</p>`).join('') : '';
 
-/** Deterministic bulletin: user intro, terms from saved state, user notes, then legal notices verbatim (outside AI). */
-export function renderBulletin(args: { state: BdtState | null | undefined; intro: string; notes: string; legalNotices?: string[] }): string {
+const fmtAmt = (n: number | null | undefined) => n == null ? '' : n >= 1e9 ? `${+(n / 1e9).toFixed(3)}bn` : `${+(n / 1e6).toFixed(3)}m`;
+
+/** Whole-deal Terms text built from saved terms (every tranche); no AI. */
+export function dealTermsText(state: BdtState | null | undefined, ws: DealWorkspace | null, borrower: string): string {
+  if (!state?.f) return '';
+  const v = termSheetView(state);
+  const tranches = ws?.tranches?.length ? ws.tranches : null;
+  const lines: string[] = [];
+  const name = borrower || v.issuerName;
+  lines.push(`${name}${v.issuerRating ? ` (${v.issuerRating})` : ''}${tranches && tranches.length > 1 ? ` – ${tranches.length}-tranche offering` : ''}`);
+  if (tranches) {
+    tranches.forEach((t, i) => {
+      const tv = termSheetView(trancheBdtState(state, ws, i));
+      const parts = [
+        `${t.currency || tv.currency} ${fmtAmt(t.amount) || tv.size || 'TBD'}`.trim(),
+        t.tenor, t.rateType === 'floating' ? 'Floating rate' : 'Fixed rate',
+        SENIORITY_LABEL[t.seniority ?? 'senior_unsecured'],
+        tv.maturityDate && `Maturity ${tv.maturityDate}`,
+        tv.coupon && `Coupon ${tv.coupon}`,
+      ].filter(Boolean);
+      lines.push(`Tranche ${t.label || String.fromCharCode(65 + i)}: ${parts.join(' · ')}`);
+    });
+  } else {
+    lines.push([`${v.currency} ${v.size}`.trim(), v.maturityDate && `Maturity ${v.maturityDate}`, v.coupon && `Coupon ${v.coupon}`].filter(Boolean).join(' · '));
+  }
+  const shared: string[] = [];
+  if (v.bookrunners.length) shared.push(`Bookrunners: ${v.bookrunners.join(', ')}`);
+  if (v.governingLaw) shared.push(`Governing law: ${v.governingLaw}`);
+  if (v.settlementDate) shared.push(`Settlement: ${v.settlementDate}`);
+  if (v.listingVenue) shared.push(`Listing: ${v.listingVenue}`);
+  return lines.join('\n') + (shared.length ? '\n\n' + shared.join('\n') : '');
+}
+
+/** Deterministic bulletin: user-editable Terms text, terms table from saved state, then legal notices verbatim (outside AI). */
+export function renderBulletin(args: { state: BdtState | null | undefined; notes: string; legalNotices?: string[] }): string {
   const rows = termRows(args.state);
   const table = rows.length ? `<h3>Digital Term Sheet</h3><table>${rows.map(r => `<tr><th>${escapeHtml(r.label)}</th><td>${escapeHtml(r.value)}</td></tr>`).join('')}</table>` : '<p><em>No saved terms yet.</em></p>';
   const legal = (args.legalNotices ?? []).filter(p => p.trim());
-  return paras(args.intro) + table + paras(args.notes) + (legal.length ? '<h3>Legal Notices</h3>' + legal.map(p => `<p>${escapeHtml(p)}</p>`).join('') : '');
+  return paras(args.notes) + table + (legal.length ? '<h3>Legal Notices</h3>' + legal.map(p => `<p>${escapeHtml(p)}</p>`).join('') : '');
+}
+
+/** Stored notes format: terms text, optional hash marker, optional legal block. */
+export function packNotes(terms: string, hash: string, legal: string) { return `${terms}\n<<HASH>>${hash}${legal ? `\n<<LEGAL>>\n${legal}` : ''}`; }
+export function unpackNotes(raw: string, intro = ''): { terms: string; hash: string; legal: string } {
+  const [head, legal = ''] = raw.split('\n<<LEGAL>>\n');
+  const [t, hash = ''] = head.split('\n<<HASH>>');
+  const terms = [intro.trim(), t.trim()].filter(Boolean).join('\n\n');
+  return { terms, hash, legal };
 }
 
 export function termsDiff(before: BdtState | null | undefined, after: BdtState | null | undefined) {
