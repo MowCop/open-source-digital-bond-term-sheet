@@ -39,9 +39,10 @@ function initial(deal: Deal): DealWorkspace {
   return ws;
 }
 
-export default function DealTermSheets({ deal, canEdit, onOpenAllFields }: { deal: Deal; canEdit: boolean; onOpenAllFields: () => void }) {
+export default function DealTermSheets({ deal, canEdit, onOpenAllFields, selected, onSelect, onWorkspace }: { deal: Deal; canEdit: boolean; onOpenAllFields: () => void; selected: number; onSelect: (i: number) => void; onWorkspace?: (ws: DealWorkspace) => void }) {
   const [ws, setWs] = useState<DealWorkspace>(() => initial(deal));
-  const [selected, setSelected] = useState(0);
+  const setSelected = onSelect;
+  useEffect(() => { onWorkspace?.(ws); }, [ws, onWorkspace]);
   const [editing, setEditing] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [popped, setPopped] = useState<string | null>(null);
