@@ -47,6 +47,7 @@ import SendUpdateDialog from '@/components/SendUpdateDialog';
 import { Send } from 'lucide-react';
 import { downloadBdtFile, validateBdt, type BdtDocument, type ValidationReport } from '@/lib/taxonomy';
 import BankIntakeDialog from '@/components/termsheet/BankIntakeDialog';
+import DealTermSheets from '@/components/termsheet/DealTermSheets';
 
 function BdtXmlPanel({ deal }: { deal: Deal }) {
   const state = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return s; }, [deal]);
@@ -108,7 +109,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
   const view = useMemo(() => termSheetView(checkerState), [checkerState]);
   const navigate = useNavigate();
   const fillRef = useRef<TermSheetFillHandle>(null);
-  const [tab, setTab] = useState('fill');
+  const [tab, setTab] = useState(requestedStage ? 'fill' : 'sheets');
   const { messages } = useApp();
   const [shownStage, setShownStage] = useState<number>(requestedStage ?? 1);
   const consumedFiles = useRef<File[] | null>(null);
@@ -177,7 +178,8 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
             All fields below belong to this term sheet.
           </span>
           <TabsList className="ml-auto h-auto shrink-0 flex-wrap">
-            <TabsTrigger value="fill">Fill</TabsTrigger>
+            <TabsTrigger value="sheets">Deal term sheets</TabsTrigger>
+            <TabsTrigger value="fill">All fields</TabsTrigger>
             <TabsTrigger value="view">View</TabsTrigger>
             <TabsTrigger value="xml">BDT XML</TabsTrigger>
             <TabsTrigger value="dlt">DLT view</TabsTrigger>
@@ -186,6 +188,9 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         </div>
         <TabsContent value="fill" forceMount className="mt-4 data-[state=inactive]:hidden">
           <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} onDirtyChange={setHasUnsavedTerms} onDisplayedStage={setShownStage} requestedStage={requestedStage} requestedAt={requestedAt} />
+        </TabsContent>
+        <TabsContent value="sheets" className="mt-4">
+          <DealTermSheets deal={deal} canEdit={canManage} onOpenAllFields={() => setTab('fill')} />
         </TabsContent>
         <TabsContent value="docs" className="mt-4">
           <DealDocuments dealId={deal.id} canManage={canManage} />

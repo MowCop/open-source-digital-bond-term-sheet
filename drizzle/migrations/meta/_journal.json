@@ -36,6 +36,13 @@
       "when": 1794235189340,
       "tag": "0004_alert_chunks_and_org_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794308052393,
+      "tag": "0005_deal_workspace",
+      "breakpoints": true
     }
   ]
 }

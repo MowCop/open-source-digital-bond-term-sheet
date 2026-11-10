@@ -1,0 +1,202 @@
+import { useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { Copy, Trash2, ArrowUp, ArrowDown, Plus, Settings2 } from 'lucide-react';
+import type { Deal } from '@/types/bond';
+import {
+  type DealWorkspace, type Tranche, fromLegacy, duplicateTranche, newTrancheId,
+  reconcile, usdEquivalent, fxWarnings,
+} from '@/lib/dealWorkspace';
+
+const fmt = (n: number | null | undefined) =>
+  n == null ? '—' : n >= 1e9 ? `${+(n / 1e9).toFixed(3)}bn` : n >= 1e6 ? `${+(n / 1e6).toFixed(1)}m` : n.toLocaleString();
+const parseAmt = (s: string): number | null => {
+  const t = s.replace(/[, ]/g, '').toLowerCase();
+  if (!t) return null;
+  const m = t.match(/^([\d.]+)(bn|b|m|mm)?$/);
+  if (!m) return null;
+  const v = parseFloat(m[1]);
+  return m[2]?.startsWith('b') ? v * 1e9 : m[2] ? v * 1e6 : v;
+};
+const letter = (i: number) => String.fromCharCode(65 + i);
+
+function initial(deal: Deal): DealWorkspace {
+  const raw = (deal as unknown as { dealWorkspace?: DealWorkspace }).dealWorkspace;
+  if (raw?.version === 1) return raw;
+  const ws = fromLegacy(null, deal.currency || '', parseAmt(deal.size || ''));
+  ws.tranches[0].tenor = deal.tenor || '';
+  ws.tranches[0].rateType = /float|frn/i.test(deal.interestType || '') ? 'floating' : 'fixed';
+  return ws;
+}
+
+export default function DealTermSheets({ deal, canEdit, onOpenAllFields }: { deal: Deal; canEdit: boolean; onOpenAllFields: () => void }) {
+  const [ws, setWs] = useState<DealWorkspace>(() => initial(deal));
+  const [selected, setSelected] = useState(0);
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    supabase.from('deals').select('deal_workspace').eq('id', deal.id).maybeSingle().then(({ data }) => {
+      const w = data?.deal_workspace as unknown as DealWorkspace | null;
+      if (live && w?.version === 1) setWs(w);
+    });
+    return () => { live = false; };
+  }, [deal.id]);
+
+  const usd = useMemo(() => usdEquivalent(ws), [ws]);
+  const recon = useMemo(() => reconcile(ws), [ws]);
+  const warn = useMemo(() => fxWarnings(ws), [ws]);
+  const sel = ws.tranches[Math.min(selected, ws.tranches.length - 1)];
+
+  const save = async (next: DealWorkspace) => {
+    const { error } = await supabase.from('deals').update({ deal_workspace: next as never }).eq('id', deal.id);
+    if (error) { toast.error(`Could not save deal structure: ${error.message}`); return false; }
+    setWs(next); toast.success('Deal structure saved'); return true;
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-muted-foreground">Totals</span>
+        {Object.entries(ws.plannedTotals).map(([c, v]) => <Badge key={c} variant="outline">{c} {fmt(v)}</Badge>)}
+        {Object.keys(ws.plannedTotals).length === 0 && <span className="text-muted-foreground">Not yet determined</span>}
+        <span className="text-muted-foreground">
+          · {usd.total != null ? `~USD ${fmt(usd.total)} equivalent (indicative)` : usd.missingRates.length ? `USD equivalent needs ${usd.missingRates.join(', ')} rate` : 'USD equivalent unavailable'}
+        </span>
+        {canEdit && <Button size="sm" variant="outline" className="ml-auto" onClick={() => setEditing(true)}><Settings2 className="h-3.5 w-3.5 mr-1" />Deal structure</Button>}
+      </div>
+      {(recon.some(r => r.status === 'mismatch' || r.status === 'incomplete') || warn.length > 0) && (
+        <div className="text-xs space-y-0.5">
+          {recon.filter(r => r.status === 'mismatch').map(r => <div key={r.currency} className="text-destructive">{r.currency}: planned {fmt(r.planned)} but tranches total {fmt(r.tranches)}</div>)}
+          {recon.filter(r => r.status === 'incomplete').map(r => <div key={r.currency} className="text-muted-foreground">{r.currency}: a tranche amount is still unknown</div>)}
+          {warn.map(w => <div key={w} className="text-muted-foreground">{w}</div>)}
+        </div>
+      )}
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-xs text-muted-foreground border-b border-border">
+            <tr><th className="text-left py-1.5">Tranche</th><th className="text-left">Ccy / Amount</th><th className="text-left">USD eq.</th><th className="text-left">Type</th><th className="text-left">Tenor</th></tr>
+          </thead>
+          <tbody>
+            {ws.tranches.map((t, i) => (
+              <tr key={t.id} onClick={() => setSelected(i)} className={`cursor-pointer border-b border-border/50 ${sel?.id === t.id ? 'bg-accent/40' : 'hover:bg-accent/20'}`}>
+                <td className="py-1.5 font-medium">{t.label}</td>
+                <td>{t.currency || '—'} {fmt(t.amount)}</td>
+                <td className="text-muted-foreground">{fmt(usd.perTranche[t.id])}</td>
+                <td className="capitalize">{t.rateType}</td>
+                <td>{t.tenor || '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {sel && (
+        <div className="rounded-md border border-border p-3 text-sm space-y-1">
+          <div className="font-medium">Tranche {sel.label} ({sel.rateType === 'fixed' ? 'Fixed' : 'Floating'})</div>
+          <div className="text-muted-foreground text-xs">
+            {sel.rateType === 'fixed' ? 'Interest terms: coupon · frequency · day count' : 'Interest terms: benchmark · margin · reset/fixing · caps/floors'}
+          </div>
+          <Button size="sm" variant="link" className="px-0" onClick={onOpenAllFields}>Edit full terms in All fields</Button>
+        </div>
+      )}
+
+      {editing && <StructureDialog ws={ws} onClose={() => setEditing(false)} onSave={async n => { if (await save(n)) setEditing(false); }} />}
+    </div>
+  );
+}
+
+function StructureDialog({ ws, onClose, onSave }: { ws: DealWorkspace; onClose: () => void; onSave: (w: DealWorkspace) => void }) {
+  const [d, setD] = useState<DealWorkspace>(() => structuredClone(ws));
+  const set = (tranches: Tranche[]) => setD({ ...d, tranches: tranches.map((t, i) => ({ ...t, label: letter(i) })) });
+  const upd = (i: number, p: Partial<Tranche>) => set(d.tranches.map((t, j) => (j === i ? { ...t, ...p } : t)));
+  const move = (i: number, dir: -1 | 1) => { const a = [...d.tranches]; const j = i + dir; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; set(a); };
+  const remove = (i: number) => {
+    if (Object.keys(d.tranches[i].values).length && !confirm(`Tranche ${d.tranches[i].label} has recorded terms. Remove it?`)) return;
+    set(d.tranches.filter((_, j) => j !== i));
+  };
+  const add = () => set([...d.tranches, { id: newTrancheId(), label: '', rateType: d.tranches.at(-1)?.rateType ?? 'fixed', currency: d.tranches.at(-1)?.currency ?? '', amount: null, values: {} }]);
+  const ccys = [...new Set(d.tranches.map(t => t.currency).filter(Boolean))];
+  const applyAll = (rt: 'fixed' | 'floating') => set(d.tranches.map(t => ({ ...t, rateType: rt })));
+  const usd = usdEquivalent(d);
+  const recon = reconcile(d);
+
+  return (
+    <Dialog open onOpenChange={o => !o && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>Deal structure</DialogTitle></DialogHeader>
+        <div className="space-y-4 text-sm">
+          <div className="flex items-center gap-3">
+            <span>Tranches: {d.tranches.length}</span>
+            <Button size="sm" variant="outline" onClick={() => applyAll('fixed')}>All fixed</Button>
+            <Button size="sm" variant="outline" onClick={() => applyAll('floating')}>All floating</Button>
+          </div>
+
+          <table className="w-full">
+            <thead className="text-xs text-muted-foreground"><tr><th className="text-left">Tranche</th><th className="text-left">Rate type</th><th className="text-left">Currency</th><th className="text-left">Amount (optional)</th><th className="text-left">Tenor</th><th /></tr></thead>
+            <tbody>
+              {d.tranches.map((t, i) => (
+                <tr key={t.id}>
+                  <td className="pr-2 font-medium">{t.label}</td>
+                  <td className="pr-2 py-1">
+                    <Select value={t.rateType} onValueChange={v => upd(i, { rateType: v as Tranche['rateType'] })}>
+                      <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
+                      <SelectContent><SelectItem value="fixed">Fixed</SelectItem><SelectItem value="floating">Floating</SelectItem></SelectContent>
+                    </Select>
+                  </td>
+                  <td className="pr-2"><Input className="h-8 w-20" value={t.currency} maxLength={3} onChange={e => upd(i, { currency: e.target.value.toUpperCase() })} /></td>
+                  <td className="pr-2"><Input className="h-8 w-36" placeholder="e.g. 500m" defaultValue={t.amount ?? ''} onBlur={e => upd(i, { amount: parseAmt(e.target.value) })} /></td>
+                  <td className="pr-2"><Input className="h-8 w-20" value={t.tenor ?? ''} onChange={e => upd(i, { tenor: e.target.value })} /></td>
+                  <td className="whitespace-nowrap">
+                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Move up" onClick={() => move(i, -1)}><ArrowUp className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Move down" onClick={() => move(i, 1)}><ArrowDown className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Duplicate" disabled={d.tranches.length >= 10} onClick={() => set([...d.tranches.slice(0, i + 1), duplicateTranche(t, ''), ...d.tranches.slice(i + 1)])}><Copy className="h-3.5 w-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Remove" disabled={d.tranches.length <= 1} onClick={() => remove(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <Button size="sm" variant="outline" disabled={d.tranches.length >= 10} onClick={add}><Plus className="h-3.5 w-3.5 mr-1" />Add tranche</Button>
+
+          <div className="space-y-2 border-t border-border pt-3">
+            <div className="font-medium">Planned totals (optional)</div>
+            {ccys.map(c => (
+              <div key={c} className="flex items-center gap-2">
+                <span className="w-10">{c}</span>
+                <Input className="h-8 w-40" placeholder="Not yet determined" defaultValue={d.plannedTotals[c] ?? ''} onBlur={e => setD({ ...d, plannedTotals: { ...d.plannedTotals, [c]: parseAmt(e.target.value) } })} />
+                <span className="text-xs text-muted-foreground">{recon.find(r => r.currency === c)?.status.replace('_', ' ')}</span>
+                {c !== 'USD' && (
+                  <>
+                    <span className="text-xs ml-2">USD per {c}</span>
+                    <Input className="h-8 w-24" defaultValue={d.fx[c]?.usdPerUnit ?? ''} onBlur={e => {
+                      const v = parseFloat(e.target.value);
+                      const fx = { ...d.fx };
+                      if (Number.isFinite(v) && v > 0) fx[c] = { usdPerUnit: v, source: 'Entered by banker', asOf: new Date().toISOString(), locked: fx[c]?.locked };
+                      else delete fx[c];
+                      setD({ ...d, fx });
+                    }} />
+                    {d.fx[c] && <Button size="sm" variant="ghost" onClick={() => setD({ ...d, fx: { ...d.fx, [c]: { ...d.fx[c], locked: !d.fx[c].locked } } })}>{d.fx[c].locked ? 'Unlock' : 'Lock'}</Button>}
+                  </>
+                )}
+              </div>
+            ))}
+            <div className="text-xs text-muted-foreground">
+              USD equivalent (indicative): {usd.total != null ? fmt(usd.total) : 'unavailable until every amount and rate is entered'}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={() => onSave(d)}>Save structure</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
