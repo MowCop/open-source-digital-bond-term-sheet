@@ -71,3 +71,9 @@ Scope: **D** = deal-wide (same for every tranche, synced with All fields), **C**
 - Field set chosen from the BDT dictionary by rate type + seniority; Origin labels as display overrides only (one definition per field).
 - Inline expandable panel with pop-up option and Esc to close; replaces the "open full terms in All fields" action.
 - Tests for field selection per tranche type and deal-wide sync.
+
+## Decisions (10 Nov 2026)
+1. Add the missing floating-rate BDT 2.0 fields (reference rate, margin, determination dates/method, reset) and Series number to the master field list, taken from the official schema.
+2. Tranche panels use BDT wording only (no Origin labels).
+3. Execution fields (IPT, guidance, spread, reoffer yield) stay in All fields only for now.
+4. Scopes as listed: currency, issuance type and settlement date are Copied from Tranche A and editable per tranche.

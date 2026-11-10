@@ -60,3 +60,4 @@
 
 ## Bank intake
 - [ ] Email alert to karl.mallalieu@gmail.com on each bank SDK/API request — blocked: email domain not attached to this project
+- [ ] Tranche term sheet panels (fixed/floating + seniority), decisions in reference/origin-templates/origin-bdt-crosswalk.md
