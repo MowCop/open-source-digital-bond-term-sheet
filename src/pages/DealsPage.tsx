@@ -109,11 +109,11 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
   const view = useMemo(() => termSheetView(checkerState), [checkerState]);
   const navigate = useNavigate();
   const fillRef = useRef<TermSheetFillHandle>(null);
-  const [tab, setTab] = useState(requestedStage ? 'fill' : 'sheets');
+  const [tab, setTab] = useState('sheets');
   const { messages } = useApp();
   const [shownStage, setShownStage] = useState<number>(requestedStage ?? 1);
   const consumedFiles = useRef<File[] | null>(null);
-  useEffect(() => { if (requestedStage) setTab('fill'); }, [requestedStage, requestedAt]);
+  // Board links still pass the stage to All fields, but the deal always opens on Deal term sheets.
 
   useEffect(() => {
     if (!initialFiles?.length || consumedFiles.current === initialFiles || !fillRef.current) return;
