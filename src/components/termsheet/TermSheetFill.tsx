@@ -464,7 +464,7 @@ export default function TermSheetFill({
           <Input
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search all 197 term sheet fields..."
+            placeholder="Search all term sheet fields..."
             className="h-9 pl-8 text-sm"
           />
         </div>
