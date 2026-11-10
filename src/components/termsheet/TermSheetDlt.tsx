@@ -19,7 +19,7 @@ import {
 import { dealToBdtState, type BdtState } from '@/lib/bdt-bridge';
 
 type Dlt = ReturnType<typeof dltDefault>;
-interface Props { deal: Deal; canEdit: boolean; onSave: (patch: Partial<Deal>) => void }
+interface Props { deal: Deal; canEdit: boolean; onSave: (patch: Partial<Deal>) => void; override?: BdtState }
 const NONE = '__none__';
 
 function download(name: string, text: string, type: string) {
@@ -28,10 +28,10 @@ function download(name: string, text: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
-export default function TermSheetDlt({ deal, canEdit, onSave }: Props) {
-  const [state, setState] = useState<BdtState>(() => dealToBdtState(deal));
+export default function TermSheetDlt({ deal, canEdit, onSave, override }: Props) {
+  const [state, setState] = useState<BdtState>(() => override ?? dealToBdtState(deal));
   const [dirty, setDirty] = useState(false);
-  useEffect(() => { setState(dealToBdtState(deal)); setDirty(false); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [deal.id]);
+  useEffect(() => { setState(override ?? dealToBdtState(deal)); setDirty(false); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [deal.id]);
 
   const st = state as BdtState & { dlt?: Dlt };
   const d: Dlt = { ...dltDefault(), ...(st.dlt ?? {}) };

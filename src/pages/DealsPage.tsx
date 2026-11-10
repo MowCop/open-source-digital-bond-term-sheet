@@ -48,9 +48,12 @@ import { Send } from 'lucide-react';
 import { downloadBdtFile, validateBdt, type BdtDocument, type ValidationReport } from '@/lib/taxonomy';
 import BankIntakeDialog from '@/components/termsheet/BankIntakeDialog';
 import DealTermSheets from '@/components/termsheet/DealTermSheets';
+import TrancheSwitcher from '@/components/termsheet/TrancheSwitcher';
+import { trancheBdtState } from '@/lib/trancheState';
+import type { DealWorkspace } from '@/lib/dealWorkspace';
 
-function BdtXmlPanel({ deal }: { deal: Deal }) {
-  const state = useMemo(() => { const s = dealToBdtState(deal); refreshAuto(s); return s; }, [deal]);
+function BdtXmlPanel({ deal, override }: { deal: Deal; override?: BdtState }) {
+  const state = useMemo(() => { const s = JSON.parse(JSON.stringify(override ?? dealToBdtState(deal))); refreshAuto(s); return s; }, [deal, override]);
   const xml = useMemo(() => buildXML(state) as string, [state]);
   const [report, setReport] = useState<ValidationReport | null>(null);
   const [intake, setIntake] = useState(false);
@@ -106,7 +109,14 @@ interface DealDetailProps {
 function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, onSaveFields, initialFiles, onInitialFilesConsumed }: DealDetailProps) {
   const [checkerState, setCheckerState] = useState<BdtState>(() => dealToBdtState(deal));
   const [hasUnsavedTerms, setHasUnsavedTerms] = useState(false);
-  const view = useMemo(() => termSheetView(checkerState), [checkerState]);
+  const [ws, setWs] = useState<DealWorkspace | null>(null);
+  const [trancheIdx, setTrancheIdx] = useState(0);
+  useEffect(() => { setTrancheIdx(0); }, [deal.id]);
+  const idx = Math.min(trancheIdx, Math.max(0, (ws?.tranches.length ?? 1) - 1));
+  const trancheState = useMemo(() => trancheBdtState(checkerState, ws, idx), [checkerState, ws, idx]);
+  const savedTrancheState = useMemo(() => trancheBdtState(dealToBdtState(deal), ws, idx), [deal, ws, idx]);
+  const view = useMemo(() => termSheetView(trancheState), [trancheState]);
+  const switcher = (note?: string) => <TrancheSwitcher ws={ws} selected={idx} onSelect={setTrancheIdx} note={note} />;
   const navigate = useNavigate();
   const fillRef = useRef<TermSheetFillHandle>(null);
   const [tab, setTab] = useState('sheets');
@@ -177,18 +187,21 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
           <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} onDirtyChange={setHasUnsavedTerms} onDisplayedStage={setShownStage} requestedStage={requestedStage} requestedAt={requestedAt} />
         </TabsContent>
         <TabsContent value="sheets" className="mt-4">
-          <DealTermSheets deal={deal} canEdit={canManage} onOpenAllFields={() => setTab('fill')} />
+          <DealTermSheets deal={deal} canEdit={canManage} onOpenAllFields={() => setTab('fill')} selected={idx} onSelect={setTrancheIdx} onWorkspace={setWs} />
         </TabsContent>
         <TabsContent value="docs" className="mt-4">
           <DealDocuments dealId={deal.id} canManage={canManage} />
         </TabsContent>
         <TabsContent value="xml" className="mt-4">
-          <BdtXmlPanel deal={deal} />
+          {switcher()}
+          <BdtXmlPanel deal={deal} override={idx > 0 ? savedTrancheState : undefined} />
         </TabsContent>
         <TabsContent value="dlt" className="mt-4">
-          <TermSheetDlt deal={deal} canEdit={canManage} onSave={onSaveFields} />
+          {switcher(idx > 0 ? 'Read-only here — edit in the tranche term sheet' : undefined)}
+          <TermSheetDlt key={`dlt-${idx}`} deal={deal} canEdit={canManage && idx === 0} onSave={onSaveFields} override={idx > 0 ? savedTrancheState : undefined} />
         </TabsContent>
         <TabsContent value="view" className="mt-4">
+          {switcher()}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Party / Issuer */}
         <div className="space-y-2">
