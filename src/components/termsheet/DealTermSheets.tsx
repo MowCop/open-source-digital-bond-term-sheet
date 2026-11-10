@@ -168,7 +168,10 @@ function StructureDialog({ ws, onClose, onSave }: { ws: DealWorkspace; onClose: 
           <Button size="sm" variant="outline" disabled={d.tranches.length >= 10} onClick={add}><Plus className="h-3.5 w-3.5 mr-1" />Add tranche</Button>
 
           <div className="space-y-2 border-t border-border pt-3">
-            <div className="font-medium">Exchange rates (manual)</div>
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <div className="font-medium">Exchange rates (manual)</div>
+              <span className="text-xs italic text-muted-foreground">Lock source: To be confirmed</span>
+            </div>
             {ccys.every(c => c === 'USD') && <div className="text-xs text-muted-foreground">USD / USD: 1</div>}
             {ccys.map(c => (
               c !== 'USD' && <div key={c} className="flex flex-wrap items-center gap-2">

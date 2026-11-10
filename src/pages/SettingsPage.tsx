@@ -5,6 +5,8 @@ import AiModelPicker from '@/components/AiModelPicker';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import BankIntakeDialog from '@/components/termsheet/BankIntakeDialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function SettingsPage() {
   const { isMaster, isAdmin } = useAuth();
@@ -42,6 +44,11 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground">Request the Headless Taxonomy Engine, API & MCP credentials, or a private VPC deployment.</p>
         <Button onClick={() => setIntake(true)}>Request access</Button>
         <BankIntakeDialog open={intake} onOpenChange={setIntake} />
+      </section>
+      <section className="rounded-lg border p-4 space-y-3">
+        <h2 className="font-medium">Exchange rates</h2>
+        <Label htmlFor="exchange-rate-lock-source">Exchange-rate lock source</Label>
+        <Input id="exchange-rate-lock-source" placeholder="To be confirmed" disabled />
       </section>
       <section className="rounded-lg border p-4 space-y-3">
         <h2 className="font-medium">AI model</h2>
