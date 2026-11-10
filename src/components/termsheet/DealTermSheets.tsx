@@ -10,7 +10,7 @@ import { Copy, Trash2, ArrowUp, ArrowDown, Plus, Settings2 } from 'lucide-react'
 import type { Deal } from '@/types/bond';
 import {
   type DealWorkspace, type Tranche, fromLegacy, duplicateTranche, newTrancheId,
-  reconcile, usdEquivalent, fxWarnings,
+  aggregateUsdEquivalent, usdEquivalent,
 } from '@/lib/dealWorkspace';
 
 const fmt = (n: number | null | undefined) =>
@@ -49,8 +49,7 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields }: { dea
   }, [deal.id]);
 
   const usd = useMemo(() => usdEquivalent(ws), [ws]);
-  const recon = useMemo(() => reconcile(ws), [ws]);
-  const warn = useMemo(() => fxWarnings(ws), [ws]);
+  const aggregate = useMemo(() => aggregateUsdEquivalent(ws), [ws]);
   const sel = ws.tranches[Math.min(selected, ws.tranches.length - 1)];
 
   const save = async (next: DealWorkspace) => {
@@ -66,17 +65,10 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields }: { dea
         {Object.entries(ws.plannedTotals).map(([c, v]) => <Badge key={c} variant="outline">{c} {fmt(v)}</Badge>)}
         {Object.keys(ws.plannedTotals).length === 0 && <span className="text-muted-foreground">Not yet determined</span>}
         <span className="text-muted-foreground">
-          · {usd.total != null ? `~USD ${fmt(usd.total)} equivalent (indicative)` : usd.missingRates.length ? `USD equivalent needs ${usd.missingRates.join(', ')} rate` : 'USD equivalent unavailable'}
+          · Aggregate Total (USD Equiv.): {aggregate != null ? `~USD ${fmt(aggregate)} (indicative)` : '—'}
         </span>
         {canEdit && <Button size="sm" variant="outline" className="ml-auto" onClick={() => setEditing(true)}><Settings2 className="h-3.5 w-3.5 mr-1" />Deal structure</Button>}
       </div>
-      {(recon.some(r => r.status === 'mismatch' || r.status === 'incomplete') || warn.length > 0) && (
-        <div className="text-xs space-y-0.5">
-          {recon.filter(r => r.status === 'mismatch').map(r => <div key={r.currency} className="text-destructive">{r.currency}: planned {fmt(r.planned)} but tranches total {fmt(r.tranches)}</div>)}
-          {recon.filter(r => r.status === 'incomplete').map(r => <div key={r.currency} className="text-muted-foreground">{r.currency}: a tranche amount is still unknown</div>)}
-          {warn.map(w => <div key={w} className="text-muted-foreground">{w}</div>)}
-        </div>
-      )}
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -113,7 +105,12 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields }: { dea
 }
 
 function StructureDialog({ ws, onClose, onSave }: { ws: DealWorkspace; onClose: () => void; onSave: (w: DealWorkspace) => void }) {
-  const [d, setD] = useState<DealWorkspace>(() => structuredClone(ws));
+  const [d, setD] = useState<DealWorkspace>(() => {
+    const draft = structuredClone(ws);
+    const currencies = [...new Set(draft.tranches.map(t => t.currency).filter(Boolean))];
+    if (draft.aggregateUsd === undefined && currencies.length === 1 && currencies[0] === 'USD') draft.aggregateUsd = draft.plannedTotals.USD ?? null;
+    return draft;
+  });
   const set = (tranches: Tranche[]) => setD({ ...d, tranches: tranches.map((t, i) => ({ ...t, label: letter(i) })) });
   const upd = (i: number, p: Partial<Tranche>) => set(d.tranches.map((t, j) => (j === i ? { ...t, ...p } : t)));
   const move = (i: number, dir: -1 | 1) => { const a = [...d.tranches]; const j = i + dir; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; set(a); };
@@ -125,12 +122,17 @@ function StructureDialog({ ws, onClose, onSave }: { ws: DealWorkspace; onClose: 
   const ccys = [...new Set(d.tranches.map(t => t.currency).filter(Boolean))];
   const applyAll = (rt: 'fixed' | 'floating') => set(d.tranches.map(t => ({ ...t, rateType: rt })));
   const usd = usdEquivalent(d);
-  const recon = reconcile(d);
 
   return (
     <Dialog open onOpenChange={o => !o && onClose()}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Deal structure</DialogTitle></DialogHeader>
+        <DialogHeader className="sm:flex-row sm:items-center sm:justify-between gap-3 sm:space-y-0 pr-6">
+          <DialogTitle>Deal structure</DialogTitle>
+          <div className="text-left space-y-1">
+            <label htmlFor="aggregate-usd" className="text-sm font-medium">Aggregate Total (USD Equiv.)</label>
+            <Input id="aggregate-usd" className="h-8 sm:w-56" placeholder="Optional" defaultValue={d.aggregateUsd ?? ''} onChange={e => setD(current => ({ ...current, aggregateUsd: parseAmt(e.target.value) }))} />
+          </div>
+        </DialogHeader>
         <div className="space-y-4 text-sm">
           <div className="flex items-center gap-3">
             <span>Tranches: {d.tranches.length}</span>
@@ -138,7 +140,7 @@ function StructureDialog({ ws, onClose, onSave }: { ws: DealWorkspace; onClose: 
             <Button size="sm" variant="outline" onClick={() => applyAll('floating')}>All floating</Button>
           </div>
 
-          <table className="w-full">
+          <div className="overflow-x-auto"><table className="w-full">
             <thead className="text-xs text-muted-foreground"><tr><th className="text-left">Tranche</th><th className="text-left">Rate type</th><th className="text-left">Currency</th><th className="text-left">Amount (optional)</th><th className="text-left">Tenor</th><th /></tr></thead>
             <tbody>
               {d.tranches.map((t, i) => (
@@ -162,20 +164,18 @@ function StructureDialog({ ws, onClose, onSave }: { ws: DealWorkspace; onClose: 
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
           <Button size="sm" variant="outline" disabled={d.tranches.length >= 10} onClick={add}><Plus className="h-3.5 w-3.5 mr-1" />Add tranche</Button>
 
           <div className="space-y-2 border-t border-border pt-3">
-            <div className="font-medium">Planned totals (optional)</div>
+            <div className="font-medium">Exchange rates (manual)</div>
+            {ccys.every(c => c === 'USD') && <div className="text-xs text-muted-foreground">USD / USD: 1</div>}
             {ccys.map(c => (
-              <div key={c} className="flex items-center gap-2">
-                <span className="w-10">{c}</span>
-                <Input className="h-8 w-40" placeholder="Not yet determined" defaultValue={d.plannedTotals[c] ?? ''} onBlur={e => setD({ ...d, plannedTotals: { ...d.plannedTotals, [c]: parseAmt(e.target.value) } })} />
-                <span className="text-xs text-muted-foreground">{recon.find(r => r.currency === c)?.status.replace('_', ' ')}</span>
+              c !== 'USD' && <div key={c} className="flex flex-wrap items-center gap-2">
                 {c !== 'USD' && (
                   <>
                     <span className="text-xs ml-2">USD per {c}</span>
-                    <Input className="h-8 w-24" defaultValue={d.fx[c]?.usdPerUnit ?? ''} onBlur={e => {
+                    <Input aria-label={`USD per ${c}`} className="h-8 w-24" defaultValue={d.fx[c]?.usdPerUnit ?? ''} onBlur={e => {
                       const v = parseFloat(e.target.value);
                       const fx = { ...d.fx };
                       if (Number.isFinite(v) && v > 0) fx[c] = { usdPerUnit: v, source: 'Entered by banker', asOf: new Date().toISOString(), locked: fx[c]?.locked };
@@ -183,12 +183,13 @@ function StructureDialog({ ws, onClose, onSave }: { ws: DealWorkspace; onClose: 
                       setD({ ...d, fx });
                     }} />
                     {d.fx[c] && <Button size="sm" variant="ghost" onClick={() => setD({ ...d, fx: { ...d.fx, [c]: { ...d.fx[c], locked: !d.fx[c].locked } } })}>{d.fx[c].locked ? 'Unlock' : 'Lock'}</Button>}
+                    {d.fx[c] && <span className="text-xs text-muted-foreground">{d.fx[c].source} · {new Date(d.fx[c].asOf).toLocaleDateString()}</span>}
                   </>
                 )}
               </div>
             ))}
             <div className="text-xs text-muted-foreground">
-              USD equivalent (indicative): {usd.total != null ? fmt(usd.total) : 'unavailable until every amount and rate is entered'}
+              Allocated tranches (USD equivalent, indicative): {usd.total != null ? fmt(usd.total) : '—'}
             </div>
           </div>
         </div>
