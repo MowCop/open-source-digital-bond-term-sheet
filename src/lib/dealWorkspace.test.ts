@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { duplicateTranche, fromLegacy, fxWarnings, reconcile, usdEquivalent, type DealWorkspace } from "./dealWorkspace";
+import { aggregateUsdEquivalent, duplicateTranche, fromLegacy, fxWarnings, reconcile, usdEquivalent, type DealWorkspace } from "./dealWorkspace";
 
 const ws = (): DealWorkspace => ({
   version: 1,
@@ -14,6 +14,16 @@ const ws = (): DealWorkspace => ({
 });
 
 describe("dealWorkspace", () => {
+  it("records an aggregate USD total before any tranche amounts are known", () => {
+    const w = ws(); w.aggregateUsd = 2000000000;
+    w.tranches.forEach(t => { t.amount = null; });
+    expect(aggregateUsdEquivalent(w)).toBe(2000000000);
+    expect(usdEquivalent(w).total).toBeNull();
+    expect(w.tranches.map(t => t.amount)).toEqual([null, null, null]);
+  });
+  it("retains calculated USD equivalents when no aggregate is entered", () => {
+    expect(aggregateUsdEquivalent(ws())).toBeCloseTo(1550);
+  });
   it("reconciles totals per currency without mixing currencies", () => {
     expect(reconcile(ws()).map((r) => r.status)).toEqual(["match", "match"]);
   });

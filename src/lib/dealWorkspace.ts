@@ -35,6 +35,8 @@ export interface DealWorkspace {
   tranches: Tranche[];
   /** Planned totals per currency; null = not yet determined. */
   plannedTotals: Record<string, number | null>;
+  /** Banker-entered indicative aggregate, independent of tranche allocation. */
+  aggregateUsd?: number | null;
   fx: Record<string, FxRate>;
 }
 
@@ -95,6 +97,12 @@ export interface UsdEquivalent {
   perTranche: Record<string, number | null>;
   missingRates: string[];
   indicative: true;
+}
+
+/** Planning total can be recorded before any tranche amounts are allocated. */
+export function aggregateUsdEquivalent(ws: DealWorkspace): number | null {
+  if (ws.aggregateUsd != null) return ws.aggregateUsd;
+  return usdEquivalent(ws).total;
 }
 
 /** Indicative USD equivalent. USD needs no conversion; missing rates yield null, never a guess. */

@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Move aggregate USD total beside Deal structure, allow unknown tranche amounts, keep planning outside Deal Checker, and clarify manual exchange rates (9 tests; signed-in dialog verified).
 - [x] Propose a multi-tranche DTS redesign: setup dialog, editable deal templates, shared authoritative BDT fields, compact checks/document intake and whole-deal bulletin drafts; no application changes in this planning step.
 - [x] Multi-tranche foundation: workspace model, per-currency reconciliation, indicative USD equivalent with recorded FX rate (src/lib/dealWorkspace.ts, tested).
 - [x] Deal term sheets tab (default) with tranche table, totals, USD equivalent and Deal structure dialog (add/duplicate/reorder/remove up to 10, rates, FX lock).
