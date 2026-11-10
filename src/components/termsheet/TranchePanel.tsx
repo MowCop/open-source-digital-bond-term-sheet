@@ -54,7 +54,7 @@ export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, 
           {canEdit && <Button size="sm" disabled={!dirty || saving} onClick={save}>{saving ? 'Saving…' : 'Save tranche'}</Button>}
         </div>
       </div>
-      {(['deal', 'copied', 'own'] as Scope[]).map(scope => {
+      {(['own', 'deal', 'copied'] as Scope[]).map(scope => {
         const rows = fields.filter(r => r.scope === scope);
         if (!rows.length) return null;
         return (
