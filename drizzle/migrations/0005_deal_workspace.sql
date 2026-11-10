@@ -1,0 +1,2 @@
+ALTER TABLE public.deals ADD COLUMN IF NOT EXISTS deal_workspace jsonb;
+COMMENT ON COLUMN public.deals.deal_workspace IS 'Versioned multi-tranche structure (tranches, planned totals per currency, indicative FX). Workflow metadata, not BDT legal terms.';
