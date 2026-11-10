@@ -48,12 +48,14 @@ export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, 
   return (
     <div className="space-y-4 p-3 text-sm">
       {issuer && !hideIssuer && <div className="text-2xl font-bold uppercase tracking-wide text-foreground">{issuer}</div>}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-muted-foreground">STATUS</span>
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col items-start gap-1">
+        <span className="text-xs text-muted-foreground">Status</span>
         <Select value={seniority} disabled={!canEdit} onValueChange={v => changeSeniority(v as Seniority)}>
           <SelectTrigger className="h-8 w-52" aria-label="Status of the Notes"><SelectValue /></SelectTrigger>
           <SelectContent>{Object.entries(SENIORITY_LABEL).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent>
         </Select>
+        </div>
         <div className="ml-auto flex gap-2">
           {onPopOut && <Button size="sm" variant="ghost" onClick={onPopOut}><Maximize2 className="h-3.5 w-3.5 mr-1" />Pop out</Button>}
           {canEdit && <Button size="sm" disabled={!dirty || saving} onClick={save}>{saving ? 'Saving…' : 'Save tranche'}</Button>}
