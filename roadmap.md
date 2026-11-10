@@ -10,7 +10,8 @@
 
 ## Tasks
 - [x] Propose a multi-tranche DTS redesign: setup dialog, editable deal templates, shared authoritative BDT fields, compact checks/document intake and whole-deal bulletin drafts; no application changes in this planning step.
-- [ ] Implement multi-tranche DTS — awaiting design approval; supersedes the current single-tranche iteration once approved.
+- [x] Multi-tranche foundation: workspace model, per-currency reconciliation, indicative USD equivalent with recorded FX rate (src/lib/dealWorkspace.ts, tested).
+- [ ] Multi-tranche DTS screens: Deal structure dialog, Deal term sheets tab, synced All fields, compact checker, multi-issuance XML, whole-deal bulletin — next steps of the approved plan.
 - [ ] Review Origin Markets templates/code from Google Drive — awaiting connection to Karl's "VDR project folder"; keep BDT 2.0 authoritative.
 - [ ] Ask Karl about enhanced Send Update/new-issue alert preview features after the multi-tranche design; implementation awaits those requirements. Bloomberg delivery remains a separate integration.
 - [x] Correct Sasol borrower headings across Board and DTS; prevent narrative issuer text overwriting recorded names and repair the stale name cache. Signed-in message editor and DTS checked; 35 regression tests passed; legal issuer preserved.
