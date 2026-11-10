@@ -62,8 +62,8 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields }: { dea
       const changed = Object.keys(s.main).some(k => s.main[k] !== main[k]);
       if (changed) updateDeal(deal.id, { bdtState: { ...bdt, f: s.main }, updatedAt: new Date() });
     }
-    const next = { ...ws, tranches: ws.tranches.map(x => x.id === t.id ? { ...x, seniority: s.seniority, values: isFirst ? x.values : s.own } : x) };
-    await save(next);
+    const next = { ...ws, tranches: ws.tranches.map(x => x.id === t.id ? { ...x, ...s.details, seniority: s.seniority, values: isFirst ? x.values : s.own } : x) };
+    if (!await save(next)) throw new Error('Could not save tranche');
   };
 
   useEffect(() => {
@@ -136,10 +136,6 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields }: { dea
           <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader className="flex-row flex-wrap items-baseline gap-x-6 gap-y-2 space-y-0 pr-8 text-left">
               <DialogTitle>Tranche {t.label} term sheet</DialogTitle>
-              <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 text-sm">
-                <span><span className="text-muted-foreground">Ccy / Amount: </span><span className="font-medium">{t.currency || '—'} {fmt(t.amount)}</span></span>
-                <span><span className="text-muted-foreground">Tenor: </span><span className="font-medium">{t.tenor || '—'}</span></span>
-              </div>
             </DialogHeader>
             <TranchePanel tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} canEdit={canEdit && !!bdt} onSave={s => saveTranche(t, i === 0, s)} />
           </DialogContent>
