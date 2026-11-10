@@ -153,15 +153,13 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         </div>
       )}
 
-      <div className="rounded-md border border-border p-3">
-        <UnifiedDealChecker
+      <UnifiedDealChecker
           state={checkerState}
           dealId={deal.id}
           onNavigate={t => { setTab('fill'); setTimeout(() => fillRef.current?.focusTarget(t), 30); }}
           onFix={fn => { setTab('fill'); return fillRef.current?.applyFix(fn) ?? false; }}
           onDocFix={c => { setTab('fill'); return fillRef.current?.fixFromDocument(c) ?? []; }}
-        />
-      </div>
+      />
 
       {copilotSlot && createPortal(
         <DealCopilot deal={deal} hasUnsavedTerms={hasUnsavedTerms} />,
@@ -179,11 +177,11 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
           </span>
           <TabsList className="ml-auto h-auto shrink-0 flex-wrap">
             <TabsTrigger value="sheets">Deal term sheets</TabsTrigger>
-            <TabsTrigger value="fill">All fields</TabsTrigger>
             <TabsTrigger value="view">View</TabsTrigger>
             <TabsTrigger value="xml">BDT XML</TabsTrigger>
             <TabsTrigger value="dlt">DLT view</TabsTrigger>
             <TabsTrigger value="docs">Documents</TabsTrigger>
+            <TabsTrigger value="fill">All fields</TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="fill" forceMount className="mt-4 data-[state=inactive]:hidden">
