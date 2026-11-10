@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FunctionsHttpError } from '@supabase/supabase-js';
-import { Send, RotateCw, AlertTriangle } from 'lucide-react';
+import { Send, RotateCw, AlertTriangle, Sparkles } from 'lucide-react';
+import { useAiModel } from '@/lib/aiModel';
+import { dealBorrowerName } from '@/lib/borrowerName';
+import type { DealWorkspace } from '@/lib/dealWorkspace';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -15,7 +18,7 @@ import type { BdtState } from '@/lib/bdt-bridge';
 import type { Deal } from '@/types/bond';
 import { loadDistribution, loadAlertStatus, type AlertStatus } from '@/lib/distribution';
 import { buildFromHeader, bccList, canSend, chunkRecipients, providerStatus } from '@/lib/alertMail';
-import { ALERT_EVENTS, buildSendRequest, buildSubject, eventForStage, renderBulletin, selectRecipients, termsDiff, termsHash, type AlertEvent, type DistributionRow } from '@/lib/newIssueAlerts';
+import { ALERT_EVENTS, buildSendRequest, buildSubject, eventForStage, renderBulletin, dealTermsText, packNotes, unpackNotes, selectRecipients, termsDiff, termsHash, type AlertEvent, type DistributionRow } from '@/lib/newIssueAlerts';
 
 interface SendRow { id: string; event: string; subject: string; created_at: string; sender_name: string; sender_email: string | null; sender_org: string | null; provider: string; release_version: number | null; bdt_hash: string; terms_snapshot: BdtState; alert_send_chunks: { id: string; chunk_index: number; to_address: string; bcc_addresses: string[]; status: string; error: string | null; attempts: number }[] }
 async function readError(error: unknown) { return error instanceof FunctionsHttpError ? await error.context.text() : error instanceof Error ? error.message : String(error); }
@@ -26,7 +29,7 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
   const [detail, setDetail] = useState('');
   const [subject, setSubject] = useState('');
   const [subjectEdited, setSubjectEdited] = useState(false);
-  const [intro, setIntro] = useState(''); const [notes, setNotes] = useState(''); const [legal, setLegal] = useState('');
+  const [notes, setNotes] = useState(''); const [notesHash, setNotesHash] = useState(''); const [ws, setWs] = useState<DealWorkspace | null>(null); const [checked, setChecked] = useState(false); const [polishing, setPolishing] = useState(false); const [aiModel] = useAiModel(); const [legal, setLegal] = useState('');
   const [notesLoaded, setNotesLoaded] = useState(false);
   const [status, setStatus] = useState<AlertStatus | null>(null);
   const [showBcc, setShowBcc] = useState(false);
@@ -44,8 +47,15 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
     loadDistribution().then(setDist).catch(() => setDist([]));
     loadAlertStatus().then(setStatus);
     loadLog();
-    supabase.from('deal_bulletin_notes').select('intro,notes').eq('deal_id', deal.id).maybeSingle().then(({ data }) => {
-      if (data) { setIntro(data.intro); const [n, l = ''] = data.notes.split('\n<<LEGAL>>\n'); setNotes(n); setLegal(l); }
+    Promise.all([
+      supabase.from('deal_bulletin_notes').select('intro,notes').eq('deal_id', deal.id).maybeSingle(),
+      supabase.from('deals').select('deal_workspace').eq('id', deal.id).maybeSingle(),
+    ]).then(([{ data }, { data: d }]) => {
+      const w = d?.deal_workspace as unknown as DealWorkspace | null;
+      const wsv = w?.version === 1 ? w : null; setWs(wsv);
+      const u = data ? unpackNotes(data.notes, data.intro) : null;
+      if (u?.terms) { setNotes(u.terms); setNotesHash(u.hash); setLegal(u.legal); }
+      else { setNotes(dealTermsText(saved, wsv, dealBorrowerName(deal))); setNotesHash(saved ? termsHash(saved) : ''); if (u) setLegal(u.legal); }
       setNotesLoaded(true);
     });
   }, [deal.id]);
@@ -61,9 +71,21 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
   // Live re-render: subject and terms follow saved terms/stage; user text is never touched.
   const auto = saved ? buildSubject(saved, event, detail, deal.tenor) : '';
   useEffect(() => { if (!subjectEdited) setSubject(auto); }, [auto, subjectEdited]);
-  useEffect(() => { setApproved(false); }, [hash, event, subject, intro, notes, legal]);
+  useEffect(() => { setApproved(false); }, [hash, event, subject, notes, legal]);
+  const stale = notesLoaded && !!notes.trim() && notesHash !== hash && !checked;
+  const regenerate = () => { setNotes(dealTermsText(saved, ws, dealBorrowerName(deal))); setNotesHash(hash); setChecked(false); };
+  const polish = async () => {
+    setPolishing(true);
+    const { data, error } = await supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id, model: aiModel, docs: [], editedBulletin: notes } });
+    setPolishing(false);
+    if (error) { toast.error(`AI polish failed: ${await readError(error)}`); return; }
+    const html = String((data as { body?: string })?.body ?? '').split('<h3>Legal Notices</h3>')[0];
+    const text = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|h\d|li|tr)>/gi, '\n\n').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/\n{3,}/g, '\n\n').trim();
+    if (!text) { toast.error('AI returned no text.'); return; }
+    if (window.confirm('Replace the Terms text with the AI-polished version?\n\n' + text.slice(0, 1500))) setNotes(text);
+  };
   const legalNotices = legal.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
-  const body = renderBulletin({ state: saved, intro, notes, legalNotices });
+  const body = renderBulletin({ state: saved, notes, legalNotices });
 
   const recipients = selectRecipients(dist);
   const adminEmail = status?.sender.email ?? '';
@@ -76,7 +98,7 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
   const diff = lastSent && saved ? termsDiff(lastSent.terms_snapshot, saved) : [];
 
   const saveNotes = async () => {
-    const { error } = await supabase.from('deal_bulletin_notes').upsert({ deal_id: deal.id, intro, notes: legal ? `${notes}\n<<LEGAL>>\n${legal}` : notes, updated_at: new Date().toISOString() });
+    const { error } = await supabase.from('deal_bulletin_notes').upsert({ deal_id: deal.id, intro: '', notes: packNotes(notes, checked ? hash : notesHash, legal), updated_at: new Date().toISOString() });
     if (error) toast.error(error.message); else toast.success('Bulletin notes saved');
   };
 
@@ -130,8 +152,14 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
               </div>
             ) : <p className="text-xs text-muted-foreground">No term changes since the last send.</p>)}
 
-            <div className="space-y-1.5"><Label htmlFor="alert-intro">Your intro (kept when terms change)</Label><Textarea id="alert-intro" rows={3} value={intro} disabled={!notesLoaded} onChange={e => setIntro(e.target.value)} /></div>
-            <div className="space-y-1.5"><Label htmlFor="alert-notes">Your notes below the terms</Label><Textarea id="alert-notes" rows={2} value={notes} disabled={!notesLoaded} onChange={e => setNotes(e.target.value)} /></div>
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2"><Label htmlFor="alert-notes">Terms</Label>
+                <Button type="button" size="sm" variant="ghost" className="ml-auto h-7 gap-1" onClick={regenerate} disabled={!notesLoaded}><RotateCw className="h-3.5 w-3.5" />Regenerate from terms</Button>
+                <Button type="button" size="sm" variant="ghost" className="h-7 gap-1" onClick={polish} disabled={!notesLoaded || polishing || !notes.trim()}><Sparkles className="h-3.5 w-3.5" />{polishing ? 'Polishing…' : 'Polish with AI'}</Button></div>
+              <Textarea id="alert-notes" rows={8} value={notes} disabled={!notesLoaded} onChange={e => setNotes(e.target.value)} />
+              {stale && <div className="rounded-md border border-warning/50 bg-warning/10 p-2 text-xs space-y-1" role="alert"><div className="flex items-center gap-1.5 font-semibold"><AlertTriangle className="h-3.5 w-3.5" />Terms text may be out of date — the saved term sheet changed.</div>
+                <label className="flex items-center gap-2"><Checkbox checked={checked} onCheckedChange={v => setChecked(v === true)} />Text checked against current terms</label></div>}
+            </div>
             <div className="space-y-1.5"><Label htmlFor="alert-legal">Legal notices (pasted verbatim, never AI-written)</Label><Textarea id="alert-legal" rows={2} value={legal} disabled={!notesLoaded} onChange={e => setLegal(e.target.value)} /></div>
             <Button type="button" size="sm" variant="outline" onClick={saveNotes}>Save notes</Button>
 
@@ -160,7 +188,7 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Close</Button>
-          <Button onClick={send} disabled={!approved || busy || !saved || !release || !!blocker} className="gap-1"><Send className="h-4 w-4" />{busy ? 'Sending…' : 'Approve and send'}</Button>
+          <Button onClick={send} disabled={!approved || busy || !saved || !release || !!blocker || stale} className="gap-1"><Send className="h-4 w-4" />{busy ? 'Sending…' : 'Approve and send'}</Button>
         </DialogFooter>
 
         <section className="space-y-2 border-t pt-3" aria-label="Send history">
