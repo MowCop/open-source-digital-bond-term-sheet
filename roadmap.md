@@ -9,6 +9,10 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Propose a multi-tranche DTS redesign: setup dialog, editable deal templates, shared authoritative BDT fields, compact checks/document intake and whole-deal bulletin drafts; no application changes in this planning step.
+- [ ] Implement multi-tranche DTS — awaiting design approval; supersedes the current single-tranche iteration once approved.
+- [ ] Review Origin Markets templates/code from Google Drive — awaiting connection to Karl's "VDR project folder"; keep BDT 2.0 authoritative.
+- [ ] Ask Karl about enhanced Send Update/new-issue alert preview features after the multi-tranche design; implementation awaits those requirements. Bloomberg delivery remains a separate integration.
 - [x] Correct Sasol borrower headings across Board and DTS; prevent narrative issuer text overwriting recorded names and repair the stale name cache. Signed-in message editor and DTS checked; 35 regression tests passed; legal issuer preserved.
 - [x] Add complete May 2026 ICMA Handbook (493 pages, original PDF plus page-labelled searchable text), prioritize it over older handbook editions; 17 knowledge/specialist tests and both XML verification suites pass; updated Co-Pilot deployed.
 - [x] Save generated bulletins as persistent DTS drafts, reopen through an orange-bordered megaphone, and publish in-place; signed-in generation/save/reload/reopen/publish verified on an isolated deal (removed), 7 bulletin tests and both term-sheet verification suites pass.
