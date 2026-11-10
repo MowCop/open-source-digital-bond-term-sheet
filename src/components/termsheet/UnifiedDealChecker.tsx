@@ -264,11 +264,44 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
       : 'text-emerald-500';
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="overflow-hidden rounded-lg border border-border bg-card">
-      {/* px-3 aligns the shield with the drop-zone and Term Sheet icons. */}
-      <div className="flex flex-wrap items-center gap-2 px-3 py-3">
-        <Shield className={`h-4 w-4 shrink-0 ${accent}`} />
-        <span className="text-sm font-semibold uppercase tracking-wider">Deal Checker</span>
+    <Collapsible open={open} onOpenChange={setOpen} className={`overflow-hidden rounded-lg border border-border bg-card ${open ? 'order-last basis-full' : 'shrink-0'}`}>
+      <div className="flex items-center gap-2 px-2 py-1">
+        <CollapsibleTrigger asChild>
+          <button type="button" className="flex items-center gap-2 text-left" aria-label={open ? 'Hide check details' : 'Show check details'}>
+            <Shield className={`h-4 w-4 shrink-0 ${accent}`} />
+            <span className="whitespace-nowrap text-xs font-semibold uppercase tracking-wider">Deal Checker</span>
+            <span className="flex items-center gap-1">
+          <Badge variant="outline" className={LEVEL_META.pass.badgeClass} title="Green — checks that met every rule. No action needed.">{tally.pass} pass</Badge>
+          <Badge variant="outline" className={LEVEL_META.warn.badgeClass} title="Amber — checks worth reviewing: possible issues, missing optional values or items to confirm against documents. Never blocks the deal.">{tally.warn} warn</Badge>
+          <Badge variant="outline" className={LEVEL_META.fail.badgeClass} title="Red — checks that broke a hard rule, such as invalid identifiers or missing mandatory terms. Must be fixed before the deal is ready.">{tally.fail} fail</Badge>
+            </span>
+          </button>
+        </CollapsibleTrigger>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7"
+            aria-label="Refresh Deal Checker"
+            title="Refresh Deal Checker"
+            onClick={() => {
+              setRefreshTick(value => value + 1);
+              setSpinning(true);
+              setTimeout(() => setSpinning(false), 800);
+              toast.info('Deal Checker re-run');
+            }}
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${spinning ? 'animate-spin' : ''}`} />
+          </Button>
+        <CollapsibleTrigger asChild>
+          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" aria-label={open ? 'Collapse Deal Checker' : 'Expand Deal Checker'}>
+            <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+          </Button>
+        </CollapsibleTrigger>
+      </div>
+
+      <CollapsibleContent className="border-t border-border px-4 py-3">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
         <TooltipProvider delayDuration={150}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -310,10 +343,6 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
 
         {auditStep && <span className="flex animate-pulse items-center gap-1 text-[11px] text-muted-foreground"><Sparkles className="h-3 w-3" /> {auditStep}</span>}
         {!auditStep && dealId && <span className="text-[11px] text-muted-foreground">{audit ? `Deep Audit ${new Date(audit.at).toLocaleString()}` : 'Deep Audit not run'}</span>}
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-          <Badge variant="outline" className={LEVEL_META.pass.badgeClass} title="Green — checks that met every rule. No action needed.">{tally.pass} pass</Badge>
-          <Badge variant="outline" className={LEVEL_META.warn.badgeClass} title="Amber — checks worth reviewing: possible issues, missing optional values or items to confirm against documents. Never blocks the deal.">{tally.warn} warn</Badge>
-          <Badge variant="outline" className={LEVEL_META.fail.badgeClass} title="Red — checks that broke a hard rule, such as invalid identifiers or missing mandatory terms. Must be fixed before the deal is ready.">{tally.fail} fail</Badge>
           <Button
             type="button" size="sm" variant="outline" className="h-7 gap-1 text-xs"
             disabled={!dealId || storedDocs === 0 || !!auditStep}
@@ -324,39 +353,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
             Run Deep Audit
             <span className="text-[10px] text-muted-foreground">{AI_MODELS.find(m => m.id === aiModel)?.label.replace('Claude ', '')}</span>
           </Button>
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7"
-            aria-label="Refresh Deal Checker"
-            title="Refresh Deal Checker"
-            onClick={() => {
-              setRefreshTick(value => value + 1);
-              setOpen(true);
-              setSpinning(true);
-              setTimeout(() => setSpinning(false), 800);
-              toast.info('Deal Checker re-run');
-            }}
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${spinning ? 'animate-spin' : ''}`} />
-          </Button>
-          <CollapsibleTrigger asChild>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-7 gap-1 text-xs"
-              aria-label={open ? 'Hide check details' : 'Show check details'}
-            >
-              {open ? 'Hide details' : 'Show details'}
-              {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-            </Button>
-          </CollapsibleTrigger>
         </div>
-      </div>
-
-      <CollapsibleContent className="border-t border-border px-4 py-3">
         <div className="mb-3 flex flex-wrap gap-1.5">
           {(['all', 'pass', 'warn', 'fail'] as const).map(level => {
             const count = level === 'all' ? checks.length : tally[level];
