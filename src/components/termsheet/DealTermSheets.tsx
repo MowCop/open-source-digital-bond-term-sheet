@@ -135,10 +135,11 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields, selecte
       {popped && (() => { const i = ws.tranches.findIndex(x => x.id === popped); const t = ws.tranches[i]; if (!t) return null; return (
         <Dialog open onOpenChange={o => { if (!o) setPopped(null); }}>
           <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader className="flex-row flex-wrap items-baseline gap-x-6 gap-y-2 space-y-0 pr-8 text-left">
+            <DialogHeader className="relative flex-row flex-wrap items-center gap-x-6 gap-y-2 space-y-0 pr-8 text-left">
               <DialogTitle>Tranche {t.label} term sheet</DialogTitle>
+              <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-2xl font-bold uppercase tracking-wide text-foreground">{dealBorrowerName(deal)}</div>
             </DialogHeader>
-            <TranchePanel tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} canEdit={canEdit && !!bdt} onSave={s => saveTranche(t, i === 0, s)} />
+            <TranchePanel hideIssuer tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} canEdit={canEdit && !!bdt} onSave={s => saveTranche(t, i === 0, s)} />
           </DialogContent>
         </Dialog>
       ); })()}

@@ -18,9 +18,9 @@ const AMOUNT_PATH = 'IssuanceDataGroup/Product/AggregateNominalAmount/Value';
 
 export interface TrancheSave { main: Record<string, string>; own: Record<string, unknown>; seniority: Seniority; details: Pick<Tranche, 'currency' | 'amount' | 'tenor' | 'rateType'> }
 
-export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, onSave, onPopOut }: {
+export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, onSave, onPopOut, hideIssuer }: {
   tranche: Tranche; isFirst: boolean; issuer: string; main: Record<string, string>; canEdit: boolean;
-  onSave: (s: TrancheSave) => Promise<void> | void; onPopOut?: () => void;
+  onSave: (s: TrancheSave) => Promise<void> | void; onPopOut?: () => void; hideIssuer?: boolean;
 }) {
   const [seniority, setSeniority] = useState<Seniority>(tranche.seniority ?? 'senior_unsecured');
   const [edits, setEdits] = useState<Record<string, string>>({});
@@ -47,7 +47,7 @@ export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, 
 
   return (
     <div className="space-y-4 p-3 text-sm">
-      {issuer && <div className="text-2xl font-bold uppercase tracking-wide text-foreground">{issuer}</div>}
+      {issuer && !hideIssuer && <div className="text-2xl font-bold uppercase tracking-wide text-foreground">{issuer}</div>}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-muted-foreground">STATUS</span>
         <Select value={seniority} disabled={!canEdit} onValueChange={v => changeSeniority(v as Seniority)}>
