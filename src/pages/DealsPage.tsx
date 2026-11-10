@@ -133,6 +133,8 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
   }, [deal.id, deal.bdtState]);
   const [copilotSlot, setCopilotSlot] = useState<HTMLElement | null>(null);
   useEffect(() => { setCopilotSlot(document.getElementById('copilot-slot')); }, []);
+  const [ingestSlot, setIngestSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => { setIngestSlot(document.getElementById(`ingest-slot-${deal.id}`)); }, [deal.id]);
 
   return (
     <div className="border-t p-5 bg-card/40 space-y-6">
@@ -147,10 +149,9 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
           Back to New Issue Board
         </Button>
       )}
-      {canManage && (
-        <div className="flex w-full items-center">
-          <IngestDropzone onFiles={ingest} className="flex-1" />
-        </div>
+      {canManage && ingestSlot && createPortal(
+        <IngestDropzone onFiles={ingest} className="w-full min-w-0" compact />,
+        ingestSlot,
       )}
 
       {copilotSlot && createPortal(
@@ -600,7 +601,7 @@ export default function DealsPage() {
                 <button
                   type="button"
                   onClick={() => setExpandedDealId(prev => prev === deal.id ? null : deal.id)}
-                  className="flex-1 min-w-0 text-left px-4 py-3 flex items-center gap-3 hover:bg-accent/40 transition-colors"
+                  className={`${expanded ? 'flex-none' : 'flex-1 min-w-0'} text-left px-4 py-3 flex items-center gap-3 hover:bg-accent/40 transition-colors`}
                 >
                   <span className="text-muted-foreground shrink-0">
                     {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -611,10 +612,20 @@ export default function DealsPage() {
                     {deal.currency} {deal.size} · {deal.tenor}
                   </span>
                   <Badge className={`text-[10px] ${stageColors[deal.stage]}`}>{deal.stage}</Badge>
-                  <span className="text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
-                    Updated {format(deal.updatedAt, 'MMM d, HH:mm')}
-                  </span>
+                  {!expanded && (
+                    <span className="text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
+                      Updated {format(deal.updatedAt, 'MMM d, HH:mm')}
+                    </span>
+                  )}
                 </button>
+                {expanded && (
+                  <>
+                    <div id={`ingest-slot-${deal.id}`} className="flex min-w-0 flex-1 items-center px-2" />
+                    <span className="hidden px-2 text-[10px] text-muted-foreground whitespace-nowrap md:inline">
+                      Updated {format(deal.updatedAt, 'MMM d, HH:mm')}
+                    </span>
+                  </>
+                )}
                 {canManageDeals && (
                   <>
                     {findBulletinDraft(messages, deal.id) ? (

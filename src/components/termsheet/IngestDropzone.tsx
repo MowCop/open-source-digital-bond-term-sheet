@@ -5,7 +5,7 @@
  * acceptance, so this component holds no deal state of its own.
  */
 import { useRef, useState } from 'react';
-import { FileUp, Loader2, Sparkles } from 'lucide-react';
+import { FileUp, Loader2, Paperclip, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -13,12 +13,14 @@ interface Props {
   onFiles: (files: FileList) => void | Promise<unknown>;
   disabled?: boolean;
   className?: string;
+  /** Slim header variant: paperclip icon button instead of "Choose file". */
+  compact?: boolean;
 }
 
 const ACCEPT = '.pdf,.docx,.xml,.html,.htm,.txt';
 const HINT = 'Drop a term sheet, final terms or BDT XML file here to propose values';
 
-export default function IngestDropzone({ onFiles, disabled, className }: Props) {
+export default function IngestDropzone({ onFiles, disabled, className, compact }: Props) {
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,7 +43,7 @@ export default function IngestDropzone({ onFiles, disabled, className }: Props) 
       title={HINT}
       className={[
         // px-3 aligns this icon with the Deal Checker and Term Sheet icons below.
-        'flex items-center gap-2 rounded-lg border px-3 py-1.5 transition-colors',
+        'flex items-center gap-2 rounded-lg border px-3 ' + (compact ? 'py-0.5' : 'py-1.5') + ' transition-colors',
         dragOver ? 'border-primary bg-primary/10' : 'border-input bg-background',
         className ?? '',
       ].join(' ')}
@@ -57,11 +59,17 @@ export default function IngestDropzone({ onFiles, disabled, className }: Props) 
       {busy
         ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground" strokeWidth={2.5} />
         : <FileUp className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.5} />}
-      <span className="hidden min-w-0 flex-1 truncate text-xs text-muted-foreground sm:inline">{HINT}</span>
+      <span className="hidden min-w-0 flex-1 truncate text-xs text-muted-foreground sm:inline">{compact ? 'Drop a term sheet, final terms or BDT XML file' : HINT}</span>
       <span className="text-xs text-muted-foreground sm:hidden">Drop document</span>
-      <Button size="sm" variant="outline" className="shrink-0" onClick={() => inputRef.current?.click()} disabled={busy || disabled}>
-        <Sparkles className="h-3.5 w-3.5 mr-1" /> Choose file
-      </Button>
+      {compact ? (
+        <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" aria-label="Choose file" title="Choose file" onClick={() => inputRef.current?.click()} disabled={busy || disabled}>
+          <Paperclip className="h-4 w-4" />
+        </Button>
+      ) : (
+        <Button size="sm" variant="outline" className="shrink-0" onClick={() => inputRef.current?.click()} disabled={busy || disabled}>
+          <Sparkles className="h-3.5 w-3.5 mr-1" /> Choose file
+        </Button>
+      )}
     </div>
   );
 }
