@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Deal, DealStage, BookrunnerRole, UserRole, Message } from '@/types/bond';
 import { format } from 'date-fns';
-import { Plus, ChevronRight, ChevronDown, X, ArrowLeft, Trash2, Megaphone, FileText, Loader2, Undo2, Maximize2, Minimize2, Save } from 'lucide-react';
+import { Plus, ChevronRight, ChevronDown, X, Trash2, Megaphone, FileText, Loader2, Undo2, Maximize2, Minimize2, Save } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -37,7 +37,7 @@ import TermSheetField from '@/components/termsheet/TermSheetField';
 import { INITIAL_DOCUMENT_PATHS } from '@/lib/documentIntake';
 import { termSheetView } from '@/lib/termSheetView';
 import { dealBorrowerName } from '@/lib/borrowerName';
-import { parseDtsStage, boardLink } from '@/lib/dtsNavigation';
+import { parseDtsStage } from '@/lib/dtsNavigation';
 import { emptyNewDeal, canCreateNewDeal, extractNewDealTerms, mergeNewDealDraft, mergeNewDealBookrunners, mergeDocumentFields } from '@/lib/newDeal';
 import RichTextEditor from '@/components/RichTextEditor';
 import { bulletinDocuments } from '@/lib/bulletin';
@@ -138,17 +138,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
 
   return (
     <div className="border-t p-5 bg-card/40 space-y-6">
-      {fromBoard && (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-xs text-muted-foreground hover:text-foreground -ml-2"
-          onClick={() => navigate(boardLink(messages, deal, shownStage))}
-        >
-          <ArrowLeft className="h-3 w-3 mr-1" />
-          Back to New Issue Board
-        </Button>
-      )}
+      
       {canManage && ingestSlot && createPortal(
         <IngestDropzone onFiles={ingest} className="w-full min-w-0" compact />,
         ingestSlot,
