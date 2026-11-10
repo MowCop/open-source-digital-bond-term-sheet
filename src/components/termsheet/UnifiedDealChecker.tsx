@@ -265,7 +265,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
 
   return (
     <Collapsible open={open} onOpenChange={setOpen} className={`overflow-hidden rounded-lg border border-border bg-card ${open ? 'order-last basis-full' : 'shrink-0'}`}>
-      <div className="flex items-center gap-2 px-2 py-1">
+      <div className="flex h-[38px] items-center gap-2 px-2">
         <CollapsibleTrigger asChild>
           <button type="button" className="flex items-center gap-2 text-left" aria-label={open ? 'Hide check details' : 'Show check details'}>
             <Shield className={`h-4 w-4 shrink-0 ${accent}`} />
