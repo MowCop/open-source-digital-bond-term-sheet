@@ -337,6 +337,20 @@ const FIELDS2 = [
   f("interest","IssuanceDataGroup/Product/InterestPayment/FixedRatePayment/StepUpStepDownMargin","Step-up margin","num",{step:"0.001"}),
   f("interest","IssuanceDataGroup/Product/InterestPayment/MinimumRate","Minimum rate of interest","num",{step:"0.001"}),
   f("interest","IssuanceDataGroup/Product/InterestPayment/MaximumRate","Maximum rate of interest","num",{step:"0.001"}),
+  /* ---- Floating rate (BDT 2.0 FloatingRatePayment) and Series ---- */
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/Benchmark/BenchmarkCode","Reference rate","sel",{e:["BBSW","CDOR","EFFR","ESTR","EURI","HKIO","JIBA","LIBO","NIBO","SOFR","SONA","STBO","TIBO","WIBO","OTHR"]}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/Benchmark/BenchmarkName","Reference rate name","text"),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/Benchmark/Source","Reference rate source","text",{hint:"Screen page, e.g. Reuters EURIBOR01."}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/Benchmark/Term/TermUnit","Reference rate term","num",{step:"1"}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/Benchmark/Term/TermPeriod","Reference rate term period","sel",{e:"TermPeriod"}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/Spread/Value","Spread","num",{step:"0.001"}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/Spread/PriceType","Spread type","sel",{e:"PriceType"}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/InterestPayments/InterestPaymentFrequency","Floating interest frequency","sel",{e:"Frequency"}),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/InterestPayments/FirstPayment/PaymentDate","First floating interest date","date"),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/ResetDate","Reset date","date"),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/InterestCommencementDate","Floating interest commencement date","date"),
+  f("interest","IssuanceDataGroup/Product/InterestPayment/FloatingRatePayment/DeterminationMethod","Determination method","sel",{e:["INDEX","CALCULATED"]}),
+  f("deal","IssuanceDataGroup/SeriesTrancheClass/Series/SeriesIdentifier","Series identifier","text"),
   f("exec","x:ratingsDisclaimer","Ratings disclosure","ta",{ext:1,hint:"Credit rating agency status under the EU and UK CRA Regulations."})
 ];
 FIELDS.push.apply(FIELDS, FIELDS2);

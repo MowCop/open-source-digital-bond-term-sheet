@@ -6,7 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Copy, Trash2, ArrowUp, ArrowDown, Plus, Settings2 } from 'lucide-react';
+import { Copy, Trash2, ArrowUp, ArrowDown, Plus, Settings2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Fragment } from 'react';
+import TranchePanel, { type TrancheSave } from './TranchePanel';
+import { useScopedApp } from '@/context/AppContext';
+import { dealBorrowerName } from '@/lib/borrowerName';
+import { SENIORITY_LABEL } from '@/lib/trancheFields';
 import type { Deal } from '@/types/bond';
 import {
   type DealWorkspace, type Tranche, fromLegacy, duplicateTranche, newTrancheId,
@@ -38,6 +43,28 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields }: { dea
   const [ws, setWs] = useState<DealWorkspace>(() => initial(deal));
   const [selected, setSelected] = useState(0);
   const [editing, setEditing] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [popped, setPopped] = useState<string | null>(null);
+  const { updateDeal } = useScopedApp();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bdt = (deal.bdtState ?? null) as any;
+  const main: Record<string, string> = bdt?.f ?? {};
+
+  useEffect(() => {
+    if (!expanded || popped) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setExpanded(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [expanded, popped]);
+
+  const saveTranche = async (t: Tranche, isFirst: boolean, s: TrancheSave) => {
+    if (bdt) {
+      const changed = Object.keys(s.main).some(k => s.main[k] !== main[k]);
+      if (changed) updateDeal(deal.id, { bdtState: { ...bdt, f: s.main }, updatedAt: new Date() });
+    }
+    const next = { ...ws, tranches: ws.tranches.map(x => x.id === t.id ? { ...x, seniority: s.seniority, values: isFirst ? x.values : s.own } : x) };
+    await save(next);
+  };
 
   useEffect(() => {
     let live = true;
@@ -73,31 +100,45 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields }: { dea
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-xs text-muted-foreground border-b border-border">
-            <tr><th className="text-left py-1.5">Tranche</th><th className="text-left">Ccy / Amount</th><th className="text-left">USD eq.</th><th className="text-left">Type</th><th className="text-left">Tenor</th></tr>
+            <tr><th className="text-left py-1.5">Tranche</th><th className="text-left">Ccy / Amount</th><th className="text-left">USD eq.</th><th className="text-left">Type</th><th className="text-left">Tenor</th><th /></tr>
           </thead>
           <tbody>
             {ws.tranches.map((t, i) => (
-              <tr key={t.id} onClick={() => setSelected(i)} className={`cursor-pointer border-b border-border/50 ${sel?.id === t.id ? 'bg-accent/40' : 'hover:bg-accent/20'}`}>
+              <Fragment key={t.id}>
+              <tr onClick={() => setSelected(i)} onDoubleClick={() => setExpanded(expanded === t.id ? null : t.id)} className={`cursor-pointer select-none border-b border-border/50 ${sel?.id === t.id ? 'bg-accent/40' : 'hover:bg-accent/20'}`}>
                 <td className="py-1.5 font-medium">{t.label}</td>
                 <td>{t.currency || '—'} {fmt(t.amount)}</td>
                 <td className="text-muted-foreground">{fmt(usd.perTranche[t.id])}</td>
-                <td className="capitalize">{t.rateType}</td>
+                <td className="capitalize">{t.rateType} · <span className="text-muted-foreground normal-case">{SENIORITY_LABEL[t.seniority ?? 'senior_unsecured']}</span></td>
                 <td>{t.tenor || '—'}</td>
+                <td className="text-right">
+                  <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={expanded === t.id ? `Collapse tranche ${t.label}` : `Expand tranche ${t.label}`} onClick={e => { e.stopPropagation(); setExpanded(expanded === t.id ? null : t.id); }}>
+                    {expanded === t.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  </Button>
+                </td>
               </tr>
+              {expanded === t.id && (
+                <tr className="border-b border-border"><td colSpan={6} className="bg-muted/20">
+                  <TranchePanel key={t.id + (deal.updatedAt?.toString() ?? '')} tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} canEdit={canEdit && !!bdt}
+                    onSave={s => saveTranche(t, i === 0, s)} onPopOut={() => setPopped(t.id)} />
+                </td></tr>
+              )}
+              </Fragment>
             ))}
           </tbody>
         </table>
       </div>
 
-      {sel && (
-        <div className="rounded-md border border-border p-3 text-sm space-y-1">
-          <div className="font-medium">Tranche {sel.label} ({sel.rateType === 'fixed' ? 'Fixed' : 'Floating'})</div>
-          <div className="text-muted-foreground text-xs">
-            {sel.rateType === 'fixed' ? 'Interest terms: coupon · frequency · day count' : 'Interest terms: benchmark · margin · reset/fixing · caps/floors'}
-          </div>
-          <Button size="sm" variant="link" className="px-0" onClick={onOpenAllFields}>Edit full terms in All fields</Button>
-        </div>
-      )}
+      <p className="text-xs text-muted-foreground">Double-click a tranche, or use the arrow at the end of its row, to open its term sheet. Esc closes it.</p>
+
+      {popped && (() => { const i = ws.tranches.findIndex(x => x.id === popped); const t = ws.tranches[i]; if (!t) return null; return (
+        <Dialog open onOpenChange={o => { if (!o) setPopped(null); }}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>Tranche {t.label} term sheet</DialogTitle></DialogHeader>
+            <TranchePanel tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} canEdit={canEdit && !!bdt} onSave={s => saveTranche(t, i === 0, s)} />
+          </DialogContent>
+        </Dialog>
+      ); })()}
 
       {editing && <StructureDialog ws={ws} onClose={() => setEditing(false)} onSave={async n => { if (await save(n)) setEditing(false); }} />}
     </div>

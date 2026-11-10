@@ -18,6 +18,7 @@ export interface Tranche {
   /** Amount in tranche currency, as a plain number; null = not yet determined. */
   amount: number | null;
   tenor?: string;
+  seniority?: import("./trancheFields").Seniority;
   values: Record<string, unknown>;
 }
 
