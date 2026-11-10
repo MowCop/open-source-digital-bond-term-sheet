@@ -1,0 +1,146 @@
+{
+  "agents": {
+    "calculation_agent": {
+      "name": "IPA Name PLC"
+    },
+    "issuing_agent": {
+      "name": "IPA Name PLC"
+    },
+    "paying_agent": {
+      "name": "IPA Name PLC"
+    }
+  },
+  "clearing": {
+    "clearing_system": "Euroclear/Clearstream"
+  },
+  "currency": {
+    "notional": "USD"
+  },
+  "dealers": [
+    {
+      "name": "Dealer Name",
+      "country": "United Kingdom",
+      "lei": "XXXXXXXXXX1111111111",
+      "role": "Sole Manager",
+      "is_settlement_manager": true,
+      "is_stabilising_manager": false
+    }
+  ],
+  "denominations": [
+    {
+      "min_denom": 200000
+    }
+  ],
+  "form": {
+      "form_of_the_notes": "Bearer"
+  },
+  "identifiers": {
+    "isin_code": "XS1234567890",
+    "cfi_code": null,
+    "fisn_code": null,
+    "cins_code": null,
+    "valoren_code": null,
+    "sedol_code": null,
+    "wkn_code": null,
+    "common_code": "123456789",
+    "cusip_code": null,
+    "cmu_code": null
+  },
+  "interest": {
+    "first_interest_payment_date": "2022-10-08",
+    "initial_stub_type": "None",
+    "last_stub_type": "None",
+    "commencement_date": "2021-10-08",
+    "periods": [
+      {
+        "type": "Zero Coupon",
+        "type_iso": "ZCPN",
+        "business_days_for_payment": [
+          "Singapore"
+        ],
+        "business_days_for_payment_iso": [
+          "SGSI"
+        ],
+        "business_day_adjustment": "Unadjusted",
+        "business_day_convention": "Following",
+        "business_day_convention_iso": "FWNG",
+        "day_count_fraction": "Actual/Actual (ICMA)",
+        "day_count_fraction_iso": "A006",
+        "underlying": [],
+        "annual_interest_payment_dates": []
+      }
+    ]
+  },
+  "issuers": [
+    {
+      "name": "Issuer Name",
+      "country": "SG",
+      "ratings": [
+        {
+          "agency": "Fitch",
+          "outlook": "STABLE",
+          "value": "A"
+        },
+        {
+          "agency": "Moodys",
+          "outlook": "STABLE",
+          "value": "A1"
+        },
+        {
+          "agency": "S&P",
+          "outlook": "STABLE",
+          "value": "NR"
+        }
+      ],
+      "lei": "XXXXXXXXXX3333333333",
+      "type": "FIG"
+    }
+  ],
+  "other_provisions": {},
+  "pricing": {
+    "issue_price": "100.000000",
+    "reoffer_yield": "2.400000",
+    "accrual_quotation_type": "CLEAN"
+  },
+  "product_governance": {
+    "target_market": "Professional investors and ECPs"
+  },
+  "programme": {
+    "type": "CD",
+    "name": "CD (USD 8.00bn updated 01-Jan-2021)",
+    "base_prospectus_date": "2021-01-01",
+    "limit": 8,
+    "currency": "USD",
+    "id": "000012345"
+  },
+  "redemption": {
+    "call_features": "None",
+    "type": "Final Redemption",
+    "type_iso": "FRED",
+    "price": "100.00000",
+    "perpetual": false,
+    "underlying": [],
+    "maturity_date": "2022-11-18"
+  },
+  "is_fungible": false,
+  "is_listed": false,
+  "method_of_distribution": "NSYN",
+  "delivery": "Delivery versus payment",
+  "governing_law": "GB",
+  "net_proceeds": "97527938.00",
+  "private_placement": true,
+  "rating_type": "Unrated",
+  "status_of_the_notes": "Senior Unsecured",
+  "security_name": "Issuer Name USD100,000,000 12M Zero Coupon Senior Unsecured",
+  "security_type": "CD",
+  "selling_restrictions": "Reg S",
+  "series_number": "12345",
+  "settlement_date": "2021-11-18",
+  "size": 100000000,
+  "seniority": "SNBD",
+  "tefra_category": "RULD",
+  "trade_date": "2021-11-10",
+  "issuance_type": "BPRO",
+  "trading_method": "FMT",
+  "871m_status": "Not Applicable"
+}

@@ -1,0 +1,187 @@
+{
+  "agents": {
+    "issuing_agent": {
+      "name": "IPA Example PLC"
+    },
+    "paying_agent": {
+      "name": "IPA Example PLC"
+    }
+  },
+  "clearing": {
+    "clearing_system": "Euroclear/Clearstream"
+  },
+  "currency": {
+    "notional": "GBP"
+  },
+  "dealers": [
+    {
+      "name": "Dealer Name",
+      "country": "United Kingdom",
+      "lei": "XXXXXXXXXX1111111111",
+      "role": "Sole Manager",
+      "is_settlement_manager": true,
+      "is_stabilising_manager": false
+    }
+  ],
+  "denominations": [
+    {
+      "min_denom": 100000
+    }
+  ],
+  "form": {
+    "global_note_type": "CGN",
+    "form_of_the_notes": "Bearer"
+  },
+  "guarantors": [
+    {
+      "name": "Guarantor Name",
+      "country": "Japan",
+      "lei": "XXXXXXXXXX2222222222",
+      "ratings": [
+        {
+          "agency": "Fitch",
+          "outlook": "N/A",
+          "value": "NR"
+        },
+        {
+          "agency": "Moodys",
+          "outlook": "N/A",
+          "value": "NR"
+        },
+        {
+          "agency": "S&P",
+          "outlook": "STABLE",
+          "value": "A-"
+        }
+      ]
+    }
+  ],
+  "identifiers": {
+    "isin_code": "XS1234567890",
+    "cfi_code": null,
+    "fisn_code": null,
+    "cins_code": null,
+    "valoren_code": null,
+    "sedol_code": null,
+    "wkn_code": null,
+    "common_code": "123456789",
+    "cusip_code": null,
+    "cmu_code": null
+  },
+  "interest": {
+    "first_interest_payment_date": "2022-10-08",
+    "initial_stub_type": "None",
+    "last_stub_type": "None",
+    "commencement_date": "2021-10-08",
+    "periods": [
+      {
+        "type": "Fixed Rate",
+        "type_iso": "FIXD",
+        "business_days_for_payment": [
+          "London"
+        ],
+        "business_days_for_payment_iso": [
+          "GBLO"
+        ],
+        "business_day_adjustment": "Unadjusted",
+        "business_day_convention": "Following",
+        "business_day_convention_iso": "FWNG",
+        "day_count_fraction": "Actual/Actual (ICMA)",
+        "day_count_fraction_iso": "A006",
+        "underlying": [],
+        "annual_interest_payment_dates": [
+          "10-08"
+        ],
+        "fixed_rate": "1.0000",
+        "payment_frequency": "Annually",
+        "fixed_amount": "1000.00"
+      }
+    ]
+  },
+  "issuers": [
+    {
+      "name": "Issuer Name",
+      "country": "GB",
+      "ratings": [
+        {
+          "agency": "Fitch",
+          "outlook": "N/A",
+          "value": "NR"
+        },
+        {
+          "agency": "Moodys",
+          "outlook": "N/A",
+          "value": "NR"
+        },
+        {
+          "agency": "S&P",
+          "outlook": "STABLE",
+          "value": "A-"
+        }
+      ],
+      "lei": "XXXXXXXXXX3333333333",
+      "type": "Corporate"
+    }
+  ],
+  "other_provisions": {},
+  "pricing": {
+    "issue_price": "100.000000",
+    "accrual_quotation_type": "CLEAN"
+  },
+  "product_governance": {
+    "target_market": "Professional investors and ECPs"
+  },
+  "programme": {
+    "type": "EMTN",
+    "name": "EMTN (EUR 10bn updated 01-January-2021)",
+    "base_prospectus_date": "2021-01-01",
+    "limit": 10,
+    "currency": "EUR",
+    "id": "000012345"
+  },
+  "redemption": {
+    "call_features": "None",
+    "type": "Final Redemption",
+    "type_iso": "FRED",
+    "price": "100.00000",
+    "perpetual": false,
+    "underlying": [],
+    "maturity_date": "2026-10-08",
+    "change_of_control_put_required": false
+  },
+  "listings": {
+    "date": "2021-10-08",
+    "exchanges": [
+      {
+        "name": "London Stock Exchange",
+        "market_type": "RMKT",
+        "market_mic_code": "XLON"
+      }
+    ]
+  },
+  "is_fungible": false,
+  "is_listed": true,
+  "method_of_distribution": "NSYN",
+  "delivery": "Delivery versus payment",
+  "ecb_eligible": false,
+  "governing_law": "GB",
+  "net_proceeds": "100000000.00",
+  "private_placement": true,
+  "rating_type": "Unrated",
+  "status_of_the_notes": "Senior Unsecured",
+  "security_name": "Issuer Name GBP100,000,000 5Y Fixed Rate Senior Unsecured EMTN",
+  "security_type": "MTN",
+  "selling_restrictions": "Reg S",
+  "series_number": "12345",
+  "series_size": 100000000,
+  "settlement_date": "2021-10-08",
+  "size": 100000000,
+  "seniority": "SNBD",
+  "tefra_category": "RULD",
+  "tranche_number": "1",
+  "trade_date": "2021-10-01",
+  "issuance_type": "BPRO",
+  "trading_method": "FMT",
+  "871m_status": "Not Applicable",
+  "use_of_proceeds": "The net proceeds from the issue of the Notes will be applied by the Issuer for the general corporate purposes of the Issuer which include making a profit."
+}

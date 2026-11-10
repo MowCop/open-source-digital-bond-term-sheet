@@ -1,0 +1,206 @@
+{
+  "agents": {
+    "calculation_agent": {
+      "name": "IPA Name PLC"
+    },
+    "issuing_agent": {
+      "name": "IPA Name PLC"
+    },
+    "paying_agent": {
+      "name": "IPA Name PLC"
+    }
+  },
+  "clearing": {
+    "clearing_system": "Euroclear/Clearstream"
+  },
+  "currency": {
+    "notional": "EUR"
+  },
+  "dealers": [
+    {
+      "name": "Dealer Name",
+      "country": "United Kingdom",
+      "lei": "XXXXXXXXXX1111111111",
+      "role": "Sole Manager",
+      "is_settlement_manager": false,
+      "is_stabilising_manager": false
+    }
+  ],
+  "denominations": [
+    {
+      "min_denom": 100000
+    }
+  ],
+  "form": {
+    "global_note_type": "CGN",
+    "form_of_the_notes": "Bearer"
+  },
+  "guarantors": [
+    {
+      "name": "Guarantor Name",
+      "country": "Japan",
+      "lei": "XXXXXXXXXX2222222222",
+      "ratings": [
+        {
+          "agency": "Fitch",
+          "outlook": "N/A",
+          "value": "NR"
+        },
+        {
+          "agency": "Moodys",
+          "outlook": "N/A",
+          "value": "NR"
+        },
+        {
+          "agency": "S&P",
+          "outlook": "STABLE",
+          "value": "A-"
+        }
+      ]
+    }
+  ],
+  "identifiers": {
+    "isin_code": "XS1235234123",
+    "cfi_code": null,
+    "fisn_code": null,
+    "cins_code": null,
+    "valoren_code": null,
+    "sedol_code": null,
+    "wkn_code": null,
+    "common_code": "123124234",
+    "cusip_code": null,
+    "cmu_code": null
+  },
+  "interest": {
+    "first_interest_payment_date": "2022-05-05",
+    "initial_stub_type": "None",
+    "last_stub_type": "None",
+    "commencement_date": "2021-11-05",
+    "periods": [
+      {
+        "type": "Floating Rate",
+        "type_iso": "FLRN",
+        "business_days_for_payment": [
+          "TARGET2"
+        ],
+        "business_days_for_payment_iso": [
+          "OTHR"
+        ],
+        "business_day_adjustment": "Adjusted",
+        "business_day_convention": "Modified Following",
+        "business_day_convention_iso": "MODF",
+        "day_count_fraction": "Actual/360",
+        "day_count_fraction_iso": "A004",
+        "underlying": [],
+        "annual_interest_payment_dates": [
+          "05-05",
+          "11-05"
+        ],
+        "floating_basis": "6mEURIBOR",
+        "margin": "34.000",
+        "payment_frequency": "Semi-Annually",
+        "screen_rate_page": "EURIBOR01",
+        "screen_rate_source": "Reuters",
+        "relevant_financial_centre_for_fixing": "TARGET2",
+        "relevant_financial_centre_for_fixing_iso": "OTHR",
+        "interest_determination_manner": "Screen Rate Determination",
+        "interest_fixing_reference_date": "Interest Period Starting Date",
+        "floating_basis_type": "Term Rate",
+        "number_of_days": 2,
+        "term": 6,
+        "term_period": "MNTH",
+        "benchmark": "EURIBOR",
+        "benchmark_iso": "EURI"
+      }
+    ]
+  },
+  "issuers": [
+    {
+      "name": "Issuer Name",
+      "country": "US",
+      "ratings": [
+        {
+          "agency": "Fitch",
+          "outlook": "N/A",
+          "value": "NR"
+        },
+        {
+          "agency": "Moodys",
+          "outlook": "N/A",
+          "value": "NR"
+        },
+        {
+          "agency": "S&P",
+          "outlook": "STABLE",
+          "value": "A-"
+        }
+      ],
+      "lei": "XXXXXXXXXX3333333333",
+      "type": "Corporate"
+    }
+  ],
+  "other_provisions": {},
+  "pricing": {
+    "issue_price": "100.000000",
+    "accrual_quotation_type": "CLEAN"
+  },
+  "product_governance": {
+    "mifid_manufacturers": [
+      "Dealer Name"
+    ],
+    "target_market": "Professional investors and ECPs"
+  },
+  "programme": {
+    "type": "EMTN",
+    "name": "EMTN (EUR 10bn updated 01-January-2021)",
+    "base_prospectus_date": "2021-01-01",
+    "limit": 10,
+    "currency": "EUR",
+    "id": "000012345"
+  },
+  "redemption": {
+    "call_features": "None",
+    "type": "Final Redemption",
+    "type_iso": "FRED",
+    "price": "100.00000",
+    "perpetual": false,
+    "underlying": [],
+    "maturity_date": "2024-11-05",
+    "change_of_control_put_required": false
+  },
+  "listings": {
+    "date": "2021-11-05",
+    "exchanges": [
+      {
+        "name": "London Stock Exchange",
+        "market_type": "RMKT",
+        "market_mic_code": "XLON"
+      }
+    ]
+  },
+  "is_fungible": false,
+  "is_listed": true,
+  "method_of_distribution": "NSYN",
+  "delivery": "Delivery versus payment",
+  "ecb_eligible": false,
+  "governing_law": "GB",
+  "net_proceeds": "30000000.00",
+  "private_placement": true,
+  "rating_type": "Unrated",
+  "status_of_the_notes": "Senior Unsecured",
+  "security_name": "Issuer Name EUR30,000,000 3Y Floating Rate Senior Unsecured EMTN",
+  "security_type": "MTN",
+  "selling_restrictions": "Reg S",
+  "series_number": "65",
+  "series_size": 30000000,
+  "settlement_date": "2021-11-05",
+  "size": 30000000,
+  "seniority": "SNBD",
+  "tefra_category": "NOT_APP",
+  "tranche_number": "1",
+  "trade_date": "2021-10-29",
+  "issuance_type": "BPRO",
+  "trading_method": "FMT",
+  "871m_status": "Not Applicable",
+  "use_of_proceeds": "The net proceeds from the issue of the Notes will be applied by the Issuer for the general corporate purposes of the Issuer which include making a profit."
+}

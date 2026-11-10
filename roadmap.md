@@ -13,7 +13,8 @@
 - [x] Multi-tranche foundation: workspace model, per-currency reconciliation, indicative USD equivalent with recorded FX rate (src/lib/dealWorkspace.ts, tested).
 - [x] Deal term sheets tab (default) with tranche table, totals, USD equivalent and Deal structure dialog (add/duplicate/reorder/remove up to 10, rates, FX lock).
 - [ ] Per-tranche terms in All fields, per-tranche checker scope, multi-issuance XML and whole-deal bulletin — next step.
-- [ ] Review Origin Markets templates/code from Google Drive — awaiting connection to Karl's "VDR project folder"; keep BDT 2.0 authoritative.
+- [x] Review Origin templates (uploaded; saved in reference/origin-templates with findings). Full Drive folder still to connect.
+- [ ] Add Zero coupon as a third tranche template and the Origin floating-rate fields to the Floating view.
 - [ ] Ask Karl about enhanced Send Update/new-issue alert preview features after the multi-tranche design; implementation awaits those requirements. Bloomberg delivery remains a separate integration.
 - [x] Correct Sasol borrower headings across Board and DTS; prevent narrative issuer text overwriting recorded names and repair the stale name cache. Signed-in message editor and DTS checked; 35 regression tests passed; legal issuer preserved.
 - [x] Add complete May 2026 ICMA Handbook (493 pages, original PDF plus page-labelled searchable text), prioritize it over older handbook editions; 17 knowledge/specialist tests and both XML verification suites pass; updated Co-Pilot deployed.
