@@ -25,7 +25,8 @@ beforeAll(async () => {
     "0002_copilot_atomic_approval_cache.sql",
     "0003_copilot_review_event_entrypoints.sql",
   ]) {
-    let sql = readFileSync(`drizzle/migrations/${file}`, "utf8").replace(
+    // Historical setup fixtures run only in this isolated PGlite database.
+    const sql = readFileSync(new URL(`./fixtures/${file}`, import.meta.url), "utf8").replace(
       /CREATE POLICY copilot_members_upload_files[^;]+;/g,
       "",
     );
