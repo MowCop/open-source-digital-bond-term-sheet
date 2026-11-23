@@ -91,7 +91,8 @@
   min-height: min(15rem, calc(100dvh - 2rem));
   max-width: calc(100vw - 2rem);
   max-height: calc(100dvh - 2rem);
-  resize: both;
+  resize: none;
+  transition-property: none;
   overflow: auto;
   background: hsl(var(--background));
   color: hsl(var(--foreground));

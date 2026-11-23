@@ -50,6 +50,7 @@ import {
 import type { Deal } from "@/types/bond";
 import CopilotCommandPreview, { type CopilotCommand } from './CopilotCommandPreview';
 import CopilotDraftDialog from './CopilotDraftDialog';
+import { dealBorrowerName } from '@/lib/borrowerName';
 
 function SpecialistReports({ reports }: { reports: SpecialistReport[] }) {
   return (
@@ -499,6 +500,7 @@ export default function DealCopilot({
         </CollapsibleTrigger>
       </div>
       <CopilotDraftDialog
+        borrowerName={dealBorrowerName(deal)}
         open={draftExpanded}
         onOpenChange={setDraftExpanded}
         text={text}
