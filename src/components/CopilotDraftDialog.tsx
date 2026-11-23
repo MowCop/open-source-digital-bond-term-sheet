@@ -20,13 +20,24 @@ export default function CopilotDraftDialog({
 }) {
   const dialog = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; y: number; width: number; height: number }>();
+  const move = useRef<{ x: number; y: number; left: number; top: number }>();
+  const position = (left: number, top: number, width: number, height: number) => {
+    const element = dialog.current;
+    if (!element) return;
+    element.style.left = `${Math.max(16, Math.min(window.innerWidth - width - 16, left)) + width / 2}px`;
+    element.style.top = `${Math.max(16, Math.min(window.innerHeight - height - 16, top)) + height / 2}px`;
+  };
   const resize = (width: number, height: number) => {
     const element = dialog.current;
     if (!element) return;
     const maxWidth = window.innerWidth - 32;
     const maxHeight = window.innerHeight - 32;
-    element.style.width = `${Math.min(maxWidth, Math.max(Math.min(320, maxWidth), width))}px`;
-    element.style.height = `${Math.min(maxHeight, Math.max(Math.min(240, maxHeight), height))}px`;
+    const bounds = element.getBoundingClientRect();
+    const nextWidth = Math.min(maxWidth, Math.max(Math.min(320, maxWidth), width));
+    const nextHeight = Math.min(maxHeight, Math.max(Math.min(240, maxHeight), height));
+    element.style.width = `${nextWidth}px`;
+    element.style.height = `${nextHeight}px`;
+    position(bounds.x + (bounds.width - nextWidth) / 2, bounds.y + (bounds.height - nextHeight) / 2, nextWidth, nextHeight);
   };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -40,7 +51,27 @@ export default function CopilotDraftDialog({
           onContract();
         }}
       >
-        <DialogTitle className="shrink-0 break-words pr-10 text-left leading-snug">
+        <DialogTitle
+          className="shrink-0 touch-none select-none cursor-grab break-words pr-10 text-left leading-snug active:cursor-grabbing"
+          title="Move window"
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            const bounds = dialog.current?.getBoundingClientRect();
+            if (!bounds) return;
+            event.preventDefault();
+            move.current = { x: event.clientX, y: event.clientY, left: bounds.x, top: bounds.y };
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={(event) => {
+            const start = move.current;
+            const bounds = dialog.current?.getBoundingClientRect();
+            if (!start || !bounds) return;
+            position(start.left + event.clientX - start.x, start.top + event.clientY - start.y, bounds.width, bounds.height);
+          }}
+          onPointerUp={() => { move.current = undefined; }}
+          onPointerCancel={() => { move.current = undefined; }}
+          onLostPointerCapture={() => { move.current = undefined; }}
+        >
           Deal Co-Pilot{borrowerName ? ` Focus on ‘${borrowerName}’` : ""}
         </DialogTitle>
         <form
