@@ -43,6 +43,20 @@
       "when": 1794308052393,
       "tag": "0005_deal_workspace",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795427090576,
+      "tag": "0006_copilot_grouped_commands",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795427371741,
+      "tag": "0007_copilot_command_amount_display",
+      "breakpoints": true
     }
   ]
 }

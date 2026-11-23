@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Add Co-Pilot command previews for tranche/deal term changes and Send Update drafts, with affected entries, warnings and atomic human Execute; 38 tests passed, signed-in 500m→600m/Execute/reload/View and AI draft→Send Update verified on a temporary deal. No alerts sent.
 - [x] Add a Settings placeholder for the exchange-rate lock source and italic source label in Deal structure; move All fields last and remove the duplicate Deal Checker border.
 - [x] Move aggregate USD total beside Deal structure, allow unknown tranche amounts, keep planning outside Deal Checker, and clarify manual exchange rates (9 tests; signed-in dialog verified).
 - [x] Propose a multi-tranche DTS redesign: setup dialog, editable deal templates, shared authoritative BDT fields, compact checks/document intake and whole-deal bulletin drafts; no application changes in this planning step.

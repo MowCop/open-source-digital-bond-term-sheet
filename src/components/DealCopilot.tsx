@@ -48,6 +48,7 @@ import {
   type SpecialistReport,
 } from "@/lib/copilot/specialists";
 import type { Deal } from "@/types/bond";
+import CopilotCommandPreview, { type CopilotCommand } from './CopilotCommandPreview';
 
 function SpecialistReports({ reports }: { reports: SpecialistReport[] }) {
   return (
@@ -180,6 +181,7 @@ export default function DealCopilot({
   const [thread, setThread] = useState<string>();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [changes, setChanges] = useState<Change[]>([]);
+  const [commands, setCommands] = useState<CopilotCommand[]>([]);
   const [runs, setRuns] = useState<Run[]>([]);
   const [docs, setDocs] = useState<DealDocument[]>([]);
   const [editor, setEditor] = useState(false);
@@ -192,7 +194,7 @@ export default function DealCopilot({
   const input = useRef<HTMLInputElement>(null);
   const refresh = useCallback(
     async (id: string) => {
-      const [m, c, r, d] = await Promise.all([
+      const [m, c, r, d, commandsResult] = await Promise.all([
         supabase
           .from("copilot_messages")
           .select("*")
@@ -212,8 +214,10 @@ export default function DealCopilot({
           .order("created_at", { ascending: false })
           .limit(50),
         listDealDocuments(deal.id),
+        supabase.from('copilot_commands').select('id,request_text,status,created_at,plan').eq('thread_id', id).order('created_at', { ascending: false }).limit(50),
       ]);
-      for (const result of [m, c, r]) if (result.error) throw result.error;
+      for (const result of [m, c, r, commandsResult]) if (result.error) throw result.error;
+      setCommands((commandsResult.data ?? []) as unknown as CopilotCommand[]);
       setMessages(m.data ?? []);
       setChanges(c.data ?? []);
       setRuns((r.data ?? []) as unknown as Run[]);
@@ -321,6 +325,14 @@ export default function DealCopilot({
         await processCopilot(thread);
       }
     });
+  const decideCommand = (id: string, execute: boolean) => perform(async () => {
+    if (execute && hasUnsavedTerms) throw new Error('Save or discard unsaved term-sheet edits first.');
+    const { error } = await supabase.rpc('copilot_execute_command', { _command: id, _execute: execute });
+    if (error) throw error;
+    if (execute) window.dispatchEvent(new Event('vdr:copilot-approved'));
+    if (thread) changed(thread);
+    toast.success(execute ? 'Command executed and saved · Nothing sent' : 'Command rejected');
+  });
   const review = (d: DealDocument) =>
     perform(async () => {
       if (!thread) return;
@@ -435,7 +447,7 @@ export default function DealCopilot({
             }}
             maxLength={12000}
             rows={1}
-            placeholder={focus ? "Ask about this update…" : "Ask about this deal…"}
+            placeholder={focus ? "Ask about this update…" : "Ask a question or request a change…"}
             className="h-9 max-h-28 min-h-0 flex-1 resize-none py-2 text-sm"
           />
           <Button
@@ -466,7 +478,7 @@ export default function DealCopilot({
           </Button>
         </CollapsibleTrigger>
       </div>
-      <CollapsibleContent className="absolute left-0 top-full z-50 mt-2 max-h-[75vh] w-[min(95vw,52rem)] space-y-5 overflow-y-auto rounded-md border border-border bg-popover p-4 text-popover-foreground shadow-lg">
+      <CollapsibleContent className="absolute left-0 top-full z-50 mt-2 max-h-[75vh] w-full max-w-[52rem] space-y-5 overflow-y-auto rounded-md border border-border bg-popover p-4 text-popover-foreground shadow-lg">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">Saved terms · Human approval</Badge>
           <AiModelPicker />
@@ -508,6 +520,9 @@ export default function DealCopilot({
             {error}
           </p>
         )}
+        {commands.length > 0 && <section className="min-w-0 space-y-5" aria-label="Co-Pilot commands">
+          {commands.map(command => <CopilotCommandPreview key={command.id} command={command} editor={editor} busy={busy} unsaved={hasUnsavedTerms} onDecide={execute => decideCommand(command.id, execute)} />)}
+        </section>}
         <section className="min-w-0 space-y-3">
           <h4 className="text-sm font-semibold">Conversation</h4>
           <div

@@ -401,6 +401,50 @@ export type Database = {
           },
         ]
       }
+      copilot_commands: {
+        Row: {
+          created_at: string
+          created_by: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          plan: Json
+          request_text: string
+          status: string
+          thread_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          plan: Json
+          request_text: string
+          status?: string
+          thread_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          plan?: Json
+          request_text?: string
+          status?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "copilot_commands_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "copilot_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       copilot_documents: {
         Row: {
           content_hash: string
@@ -1469,6 +1513,10 @@ export type Database = {
       copilot_enqueue: {
         Args: { _document?: string; _thread: string }
         Returns: undefined
+      }
+      copilot_execute_command: {
+        Args: { _command: string; _execute: boolean }
+        Returns: string
       }
       copilot_member: { Args: { _deal: string }; Returns: boolean }
       copilot_open: { Args: { _deal: string }; Returns: string }
