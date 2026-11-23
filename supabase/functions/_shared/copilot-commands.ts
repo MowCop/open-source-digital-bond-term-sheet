@@ -56,10 +56,19 @@ function canonical(field: string, s: string) {
 }
 
 /** Exact single-command fast path; everything else stays with the existing agent. */
-export function parseDirectCommand(text: string): CommandRequest | null {
+export function parseDirectCommand(text: string, snapshot?: CommandSnapshot): CommandRequest | null {
   const m = text.trim().match(/^(?:please\s+)?(?:change|update|set)\s+tranche\s+([a-z])\s+(size|amount|currency|tenor|coupon|maturity|price|rate type)\s+from\s+(.+?)\s+to\s+(.+?)(?:\s+everywhere)?[.!]?$/i);
-  if (!m) return null;
-  return { edits: [{ tranche: m[1].toUpperCase(), field: m[2].toLowerCase() === 'amount' ? 'size' : m[2].toLowerCase() === 'rate type' ? 'rateType' : m[2].toLowerCase(), before: m[3], after: m[4] }] };
+  if (m) return { edits: [{ tranche: m[1].toUpperCase(), field: m[2].toLowerCase() === 'amount' ? 'size' : m[2].toLowerCase() === 'rate type' ? 'rateType' : m[2].toLowerCase(), before: m[3], after: m[4] }] };
+  const target = text.trim().match(/^(?:please\s+)?(?:make|change|update|set)\s+tranche\s+([a-z])\s+(?:size|amount)\s+(?:(?:to|at|=)\s*)?(\d+(?:\.\d+)?\s*(?:m|mm|million|bn|b|billion)?)(?:\s+everywhere)?[.!]?$/i);
+  if (!target) return null;
+  if (!snapshot) throw new Error('Read the saved DTS before preparing this command.');
+  const label = target[1].toUpperCase();
+  const index = snapshot.deal_workspace?.tranches.findIndex(t => t.label.toUpperCase() === label) ?? -1;
+  const tranche = snapshot.deal_workspace?.tranches[index];
+  if (!tranche) throw new Error(`Tranche ${label} not found. Save its deal structure first.`);
+  const own = index === 0 ? snapshot.bdt_state.f : tranche.values;
+  const before = String(tranche.amount ?? own[COMMAND_FIELDS.size[0]] ?? '');
+  return { edits: [{ tranche: label, field: 'size', before, after: target[2] }] };
 }
 
 export function prepareCommand(snapshot: CommandSnapshot, request: CommandRequest): CommandPlan {

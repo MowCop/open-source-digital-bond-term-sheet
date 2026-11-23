@@ -10,6 +10,18 @@ const snapshot = (): CommandSnapshot => ({
   notes: { intro: '', notes: 'Manually edited terms\n<<HASH>>old\n<<LEGAL>>\nVerbatim legal notice' },
 });
 describe('Co-Pilot command previews', () => {
+  it('previews make Tranche A size 600m using the saved before value without changing it', () => {
+    const saved = snapshot();
+    const request = parseDirectCommand('make Tranche A size 600m', saved);
+    expect(request?.edits[0]).toEqual({ tranche: 'A', field: 'size', before: '500000000', after: '600m' });
+    if (!request) throw new Error('Missing command');
+    expect(prepareCommand(saved, request).after.deal_workspace?.tranches[0].amount).toBe(600000000);
+    expect(saved.deal_workspace?.tranches[0].amount).toBe(500000000);
+  });
+  it('does not invent membership or a tranche when its saved structure is missing', () => {
+    const saved = snapshot(); saved.deal_workspace = null;
+    expect(() => parseDirectCommand('make Tranche A size 600m', saved)).toThrow('Save its deal structure first');
+  });
   it('previews Tranche A 500m to 600m everywhere without applying it', () => {
     const before = snapshot();
     const request = parseDirectCommand('change Tranche A size from 500m to 600m everywhere');
