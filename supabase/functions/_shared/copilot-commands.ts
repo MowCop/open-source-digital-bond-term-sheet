@@ -8,6 +8,9 @@ export interface CommandEdit { tranche: string; field: string; before: string; a
 export interface CommandRequest { edits: CommandEdit[]; bulletin?: string }
 export interface CommandEffect { location: string; before: string; after: string }
 export interface CommandPlan { before: CommandSnapshot; after: CommandSnapshot; effects: CommandEffect[]; warnings: string[]; request: CommandRequest }
+export class NoCommandChanges extends Error {
+  constructor() { super('The requested values are already set in the saved terms; no changes are needed.'); this.name = 'NoCommandChanges'; }
+}
 const I = 'IssuanceDataGroup/Issuance/';
 const P = 'IssuanceDataGroup/Product/';
 const FIX = P + 'InterestPayment/FixedRatePayment/';
@@ -140,12 +143,12 @@ export function prepareCommand(snapshot: CommandSnapshot, request: CommandReques
     add('Send Update · Terms draft (legal notices preserved)', raw.split('\n<<HASH>>')[0], request.bulletin.trim());
     after.notes = { intro: '', notes };
     warnings.push('Suggested Terms text is a draft. Execute saves it for review; it never sends email or Bloomberg messages.');
-  } else if (request.edits.length && old) {
+  } else if (effects.length && old) {
     // Invalidate even if only non-A workspace terms changed (not included in legacy BDT hash).
     after.notes = { ...old, notes: raw.replace(/\n<<HASH>>[^\n]*/, '\n<<HASH>>') };
     add('Send Update · Existing Terms draft', 'Current or previously checked', 'Requires regeneration or human re-check');
     warnings.push('Existing Send Update text is preserved and flagged for review, not rewritten.');
   }
-  if (!effects.length) throw new Error('No changes to prepare.');
+  if (!effects.length) throw new NoCommandChanges();
   return { before: snapshot, after, effects, warnings: [...new Set(warnings)], request };
 }
