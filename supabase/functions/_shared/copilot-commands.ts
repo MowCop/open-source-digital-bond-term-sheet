@@ -11,6 +11,11 @@ export interface CommandPlan { before: CommandSnapshot; after: CommandSnapshot; 
 export class NoCommandChanges extends Error {
   constructor() { super('The requested values are already set in the saved terms; no changes are needed.'); this.name = 'NoCommandChanges'; }
 }
+export function unchangedCommandResult(error: unknown) {
+  return error instanceof NoCommandChanges
+    ? { status: 'unchanged' as const, message: error.message, humanExecuteRequired: false }
+    : null;
+}
 const I = 'IssuanceDataGroup/Issuance/';
 const P = 'IssuanceDataGroup/Product/';
 const FIX = P + 'InterestPayment/FixedRatePayment/';

@@ -11,7 +11,7 @@ import { AiFailure, chatAgent } from './agent.ts';
 import { readLiveChecks } from './knowledge/tools.ts';
 import { checkerFindings } from './domain/remediation.ts';
 import type { DealHost } from './domain/host.ts';
-import { prepareCommand, parseDirectCommand, NoCommandChanges, type CommandRequest, type CommandSnapshot } from '../_shared/copilot-commands.ts';
+import { prepareCommand, parseDirectCommand, unchangedCommandResult, type CommandRequest, type CommandSnapshot } from '../_shared/copilot-commands.ts';
 
 const schema=z.object({ action:z.enum(['chat','process','resume']), threadId:z.string().uuid(), message:z.string().trim().min(1).max(12000).optional(), model:z.string().optional(), focus:z.string().max(21000).optional(), liveChecks:z.array(z.object({l:z.enum(['pass','warn','fail']),t:z.string().max(300),d:z.string().max(600).optional(),src:z.string().max(20).optional(),ignored:z.boolean().optional()})).max(120).optional() });
 const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -68,8 +68,9 @@ Deno.serve(async(req)=>{
         commandId=preview.id;
         answer='Prepared a command preview. Review the affected entries and warnings below; a human term editor must click Execute. Nothing has changed or been sent.';
       } catch (e) {
-        if (!(e instanceof NoCommandChanges)) throw e;
-        answer=e.message;
+        const unchanged=unchangedCommandResult(e);
+        if (!unchanged) throw e;
+        answer=unchanged.message;
       }
       await must(admin.from('copilot_messages').insert([{thread_id:threadId,role:'user',body:input.data.message,created_by:auth.user.id},{thread_id:threadId,role:'assistant',body:answer}]));
       return json({answer,...(commandId?{commandId}:{})});

@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Sweep grouped-command no-ops across DTS/Board Co-Pilot, AI-planned commands, Send Update drafts, background reviews and saved decisions; shared unchanged result deployed, 35 tests passed, direct and AI-worded signed-in replies verified with no additional command records.
 - [x] Verify repeated “make Tranche A size 600m” returns a normal already-set reply; deployed, 12 command tests passed and signed-in mobile check showed no error.
 - [x] Repair Co-Pilot access-error recovery and support “make Tranche A size 600m”; deployed current handler, 27 tests passed, signed-in saved-deal preview/reload verified and missing-deal explanation checked. Karl’s saved 500m remains unchanged; Execute was not pressed.
 - [x] Add Co-Pilot command previews for tranche/deal term changes and Send Update drafts, with affected entries, warnings and atomic human Execute; 38 tests passed, signed-in 500m→600m/Execute/reload/View and AI draft→Send Update verified on a temporary deal. No alerts sent.

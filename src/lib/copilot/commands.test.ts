@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { prepareCommand, parseDirectCommand, NoCommandChanges, COMMAND_FIELDS, type CommandSnapshot } from '../../../supabase/functions/_shared/copilot-commands';
+import { prepareCommand, parseDirectCommand, NoCommandChanges, unchangedCommandResult, COMMAND_FIELDS, type CommandSnapshot } from '../../../supabase/functions/_shared/copilot-commands';
 const snapshot = (): CommandSnapshot => ({
   bdt_state: { f: { [COMMAND_FIELDS.size[0]]: '500000000', [COMMAND_FIELDS.size[1]]: '500000000', [COMMAND_FIELDS.currency[0]]: 'EUR' }, parties: [{ PartyName: 'Sasol Financing USA LLC', Roles: ['ISSUER'] }] },
   deal_workspace: { version: 1, tranches: [
@@ -10,6 +10,28 @@ const snapshot = (): CommandSnapshot => ({
   notes: { intro: '', notes: 'Manually edited terms\n<<HASH>>old\n<<LEGAL>>\nVerbatim legal notice' },
 });
 describe('Co-Pilot command previews', () => {
+  it('returns a normal no-approval result for an AI-planned unchanged 10yr tenor', () => {
+    const saved = snapshot();
+    try {
+      prepareCommand(saved, { edits: [{ tranche: 'B', field: 'tenor', before: '10yr', after: '10yr' }] });
+      throw new Error('Expected unchanged result');
+    } catch (error) {
+      expect(unchangedCommandResult(error)).toMatchObject({ status: 'unchanged', humanExecuteRequired: false });
+    }
+    expect(saved.notes?.notes).toContain('<<HASH>>old');
+  });
+  it('does not treat stale or invalid commands as successful no-ops', () => {
+    expect(unchangedCommandResult(new Error('Deal changed; request a fresh preview.'))).toBeNull();
+    expect(unchangedCommandResult(new Error('Amount must be positive.'))).toBeNull();
+  });
+  it('previews only the changed entries in a mixed unchanged/changed command', () => {
+    const plan = prepareCommand(snapshot(), { edits: [
+      { tranche: 'B', field: 'tenor', before: '10yr', after: '10yr' },
+      { tranche: 'B', field: 'size', before: '500m', after: '600m' },
+    ] });
+    expect(plan.effects.some(e => e.location.endsWith('· Tenor'))).toBe(false);
+    expect(plan.after.deal_workspace?.tranches[1].amount).toBe(600000000);
+  });
   it('recognizes repeated 600m as no change without invalidating existing Terms', () => {
     const saved = snapshot();
     if (!saved.deal_workspace) throw new Error('Missing workspace');
