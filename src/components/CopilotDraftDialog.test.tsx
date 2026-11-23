@@ -10,7 +10,7 @@ function Harness({ onSend = vi.fn(), busy = false }) {
   const [text, setText] = useState("make Tranche A size 600m");
   return <>
     <textarea aria-label="Inline draft" value={text} onChange={event => setText(event.target.value)} />
-    <CopilotDraftDialog open={open} onOpenChange={setOpen} text={text} onTextChange={setText}
+    <CopilotDraftDialog borrowerName="Sasol" open={open} onOpenChange={setOpen} text={text} onTextChange={setText}
       onSend={onSend} busy={busy} onContract={() => {}} />
   </>;
 }
