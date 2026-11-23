@@ -1,3 +1,5 @@
+import { commandAmount, commandTargetAmount } from '../../../supabase/functions/_shared/copilot-commands';
+
 export const dealFields = [
   "issuer",
   "currency",
@@ -102,12 +104,15 @@ export function validateProposal(
 ) {
   if (!dealFields.includes(field as DealField) || field === "sourceText")
     throw new Error("This field cannot be changed by the agent.");
-  if (deal[field as DealField] !== before)
-    throw new Error("Deal changed; refresh the proposal.");
+  const current = deal[field as DealField];
+  const normalizedBefore = field === 'size' && before.trim() ? commandAmount(before) : before;
+  if (current !== normalizedBefore)
+    throw new Error("Deal changed or the amount units do not match; refresh the proposal with explicit units. No changes were applied.");
   if (!after.trim() || after.length > 2000)
     throw new Error(
       "A proposed value must be nonempty and within 2000 characters.",
     );
-  if (before === after) throw new Error('The requested values are already set in the saved terms; no changes are needed.');
-  return { field, before_value: before, after_value: after };
+  const normalizedAfter = field === 'size' ? commandTargetAmount(current, after) : after;
+  if (normalizedBefore === normalizedAfter) throw new Error('The requested values are already set in the saved terms; no changes are needed.');
+  return { field, before_value: current, after_value: normalizedAfter };
 }

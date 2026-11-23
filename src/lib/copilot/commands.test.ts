@@ -1,6 +1,9 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { prepareCommand, parseDirectCommand, NoCommandChanges, unchangedCommandResult, commandConversationResult, COMMAND_FIELDS, type CommandSnapshot } from '../../../supabase/functions/_shared/copilot-commands';
+import { prepareCommand, parseDirectCommand, NoCommandChanges, unchangedCommandResult, commandConversationResult, evidencedCommandAmount, COMMAND_FIELDS, type CommandSnapshot } from '../../../supabase/functions/_shared/copilot-commands';
+import { buildDocumentReport } from './documents';
+import { validateProposal as serverProposal, blankDeal as serverBlank } from '../../../supabase/functions/deal-copilot/domain/deal';
+import { validateProposal as clientProposal } from './deal';
 const snapshot = (): CommandSnapshot => ({
   bdt_state: { f: { [COMMAND_FIELDS.size[0]]: '500000000', [COMMAND_FIELDS.size[1]]: '500000000', [COMMAND_FIELDS.currency[0]]: 'EUR' }, parties: [{ PartyName: 'Sasol Financing USA LLC', Roles: ['ISSUER'] }] },
   deal_workspace: { version: 1, tranches: [
@@ -10,6 +13,46 @@ const snapshot = (): CommandSnapshot => ({
   notes: { intro: '', notes: 'Manually edited terms\n<<HASH>>old\n<<LEGAL>>\nVerbatim legal notice' },
 });
 describe('Co-Pilot command previews', () => {
+  it('asks for target units rather than reducing a saved 350m tranche to a bare 400', () => {
+    const saved = snapshot();
+    saved.deal_workspace?.tranches.push({ id: 'c', label: 'C', currency: 'USD', amount: 350000000, rateType: 'fixed', values: {} });
+    const request = parseDirectCommand('make Tranche C size 400', saved);
+    if (!request) throw new Error('Missing command');
+    let result;
+    try { prepareCommand(saved, request); } catch (error) { result = commandConversationResult(error); }
+    expect(result?.status).toBe('needs_input');
+    expect(result?.message).toContain('400m, 400bn, or the full numeric amount');
+    expect(saved.deal_workspace?.tranches[2].amount).toBe(350000000);
+  });
+  it('source reviews never propose bare 350 from a quote stating 350 million', () => {
+    const report = buildDocumentReport({ summary: 'Review', warnings: [], terms: [{ field: 'size', value: '350', quote: 'USD 350 million', location: 'Terms' }] }, 'USD 350 million', { ...serverBlank, size: '350000000' });
+    expect(report.terms).toHaveLength(0);
+    expect(report.warnings).toContain('No size correction proposed: extracted amount does not match the explicit source units.');
+  });
+  it('explicit source amounts use canonical units without an unnecessary correction', () => {
+    const report = buildDocumentReport({ summary: 'Review', warnings: [], terms: [{ field: 'size', value: '350m', quote: 'USD 350 million', location: 'Terms' }] }, 'USD 350 million', { ...serverBlank, size: '350000000' });
+    expect(report.terms[0].value).toBe('350000000');
+    expect(report.differences).toHaveLength(0);
+    expect(evidencedCommandAmount('350000000', 'USD 350m')).toBe('350000000');
+  });
+  for (const [name, validate] of [['server', serverProposal], ['client', clientProposal]] as const) {
+    it(`${name} individual corrections normalize explicit 350m/400m while keeping raw saved before values`, () => {
+      expect(validate({ ...serverBlank, size: '350000000' }, 'size', '350m', '400m')).toEqual({ field: 'size', before_value: '350000000', after_value: '400000000' });
+    });
+    it(`${name} individual corrections never treat a bare 350 as saved 350 million`, () => {
+      expect(() => validate({ ...serverBlank, size: '350000000' }, 'size', '350', '400m')).toThrow('explicit units');
+    });
+    it(`${name} individual corrections ask for missing target units`, () => {
+      expect(() => validate({ ...serverBlank, size: '350000000' }, 'size', '350m', '400')).toThrow('400m, 400bn, or the full numeric amount');
+    });
+  }
+  it('invalid size units return a clarification result rather than an unhandled failure', () => {
+    let result;
+    try { prepareCommand(snapshot(), { edits: [{ tranche: 'A', field: 'size', before: '500m', after: '600 elephants' }] }); }
+    catch (error) { result = commandConversationResult(error); }
+    expect(result).toMatchObject({ status: 'needs_input', humanExecuteRequired: false });
+    expect(result?.message).toContain('numeric amount');
+  });
   it('returns a normal clarification for Tranche C 350 versus saved 350000000 without changing terms', () => {
     const saved = snapshot();
     saved.deal_workspace?.tranches.push({ id: 'c', label: 'C', currency: 'USD', amount: 350000000, rateType: 'fixed', values: {} });

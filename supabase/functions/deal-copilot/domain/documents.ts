@@ -1,5 +1,6 @@
 import { z } from "npm:zod@3";
 import { dealFields, type Deal } from "./deal.ts";
+import { evidencedCommandAmount } from '../../_shared/copilot-commands.ts';
 
 export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 export const MAX_DOCUMENT_TEXT = 60000;
@@ -38,14 +39,22 @@ export function buildDocumentReport(
   baseline: Deal,
   previous?: Extraction,
 ) {
+  const unitWarnings: string[] = [];
+  const normalizedTerms = extraction.terms.flatMap(term => {
+    if (term.field !== 'size') return [term];
+    const value = evidencedCommandAmount(term.value, term.quote);
+    if (value !== null) return [{ ...term, value }];
+    unitWarnings.push('No size correction proposed: extracted amount does not match the explicit source units.');
+    return [];
+  });
   const counts = new Map<string, Set<string>>();
-  for (const term of extraction.terms) {
+  for (const term of normalizedTerms) {
     const values = counts.get(term.field) ?? new Set<string>();
     values.add(term.value.trim());
     counts.set(term.field, values);
   }
-  const warnings = [...extraction.warnings.slice(0, 20)];
-  const terms = extraction.terms.filter((term, index, all) => {
+  const warnings = [...extraction.warnings.slice(0, 20), ...unitWarnings];
+  const terms = normalizedTerms.filter((term, index, all) => {
     const valid =
       dealFields.includes(term.field) &&
       term.value.trim().length > 0 &&

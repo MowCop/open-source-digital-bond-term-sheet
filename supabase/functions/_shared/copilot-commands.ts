@@ -47,17 +47,35 @@ export const COMMAND_TOOL = {
   }, required: ['edits'], additionalProperties: false },
 };
 
-function amount(s: string) {
+export function commandAmount(s: string) {
   const m = s.trim().replace(/,/g, '').match(/^(\d+(?:\.\d+)?)\s*(m|mm|million|bn|b|billion)?$/i);
-  if (!m) throw new Error('Use a numeric amount, for example 500m or 600000000.');
+  if (!m) throw new CommandValidationError('Use a numeric amount, for example 500m or 600000000.');
   const n = Number(m[1]) * (/^(bn|b|billion)$/i.test(m[2] ?? '') ? 1e9 : m[2] ? 1e6 : 1);
-  if (!Number.isFinite(n) || n <= 0) throw new Error('Amount must be positive.');
+  if (!Number.isFinite(n) || n <= 0) throw new CommandValidationError('Amount must be positive.');
   return String(n);
+}
+export function commandTargetAmount(current: string, requested: string, label = 'Deal size'): string {
+  if (Number(current) >= 1e6 && /^\d+(?:\.\d+)?$/.test(requested.trim()) && Number(requested) > 0 && Number(requested) < 1e6) {
+    throw new CommandValidationError(`${label}: “${requested}” has no amount unit. Please specify ${requested}m, ${requested}bn, or the full numeric amount. No changes were applied.`);
+  }
+  return commandAmount(requested);
+}
+/** Source units must agree with the extracted value; never repair a missing multiplier by guessing. */
+export function evidencedCommandAmount(value: string, quote: string): string | null {
+  try {
+    const normalized = commandAmount(value);
+    const explicit = [...quote.matchAll(/\b(\d[\d,]*(?:\.\d+)?)\s*(million|billion|bn|mm|m|b)\b/gi)]
+      .map(match => commandAmount(match[1] + match[2]));
+    return explicit.length && !explicit.includes(normalized) ? null : normalized;
+  } catch (error) {
+    if (error instanceof CommandValidationError) return null;
+    throw error;
+  }
 }
 function canonical(field: string, s: string) {
   s = s.trim();
   if (!s) return '';
-  if (field === 'size') return amount(s);
+  if (field === 'size') return commandAmount(s);
   if (field === 'currency' || field === 'governingLaw') {
     s = s.toUpperCase();
     if (!(field === 'currency' ? /^[A-Z]{3}$/ : /^[A-Z]{2}$/).test(s)) throw new Error('Use the canonical currency or governing-law country code.');
@@ -118,7 +136,7 @@ export function prepareCommand(snapshot: CommandSnapshot, request: CommandReques
         ? `${label} has a saved size of ${Number(current) / 1e6}m (${current}). “${edit.before}” has no unit and means ${edit.before}, not ${Number(current) / 1e6} million. Please repeat the command with explicit units, for example “change ${label} size from ${Number(current) / 1e6}m to [new amount]m”. No changes were applied.`
         : `${label} ${field} is ${current || 'empty'}, not ${edit.before || 'empty'}. Request a fresh preview. No changes were applied.`);
     }
-    const value = canonical(field, edit.after);
+    const value = field === 'size' && edit.after.trim() ? commandTargetAmount(String(current), edit.after, label) : canonical(field, edit.after);
     if (!value) throw new Error('Clearing entries is not supported by this command; edit the DTS directly.');
     if (field === 'coupon' && t.rateType !== 'fixed') throw new Error('This is a floating-rate tranche; use spread or change its rate type explicitly.');
     if (['spread', 'benchmark'].includes(field) && t.rateType !== 'floating') throw new Error('This is a fixed-rate tranche; change its rate type explicitly first.');
