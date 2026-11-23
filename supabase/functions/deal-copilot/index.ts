@@ -11,7 +11,7 @@ import { AiFailure, chatAgent } from './agent.ts';
 import { readLiveChecks } from './knowledge/tools.ts';
 import { checkerFindings } from './domain/remediation.ts';
 import type { DealHost } from './domain/host.ts';
-import { prepareCommand, parseDirectCommand, type CommandRequest, type CommandSnapshot } from '../_shared/copilot-commands.ts';
+import { prepareCommand, parseDirectCommand, NoCommandChanges, type CommandRequest, type CommandSnapshot } from '../_shared/copilot-commands.ts';
 
 const schema=z.object({ action:z.enum(['chat','process','resume']), threadId:z.string().uuid(), message:z.string().trim().min(1).max(12000).optional(), model:z.string().optional(), focus:z.string().max(21000).optional(), liveChecks:z.array(z.object({l:z.enum(['pass','warn','fail']),t:z.string().max(300),d:z.string().max(600).optional(),src:z.string().max(20).optional(),ignored:z.boolean().optional()})).max(120).optional() });
 const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -61,10 +61,18 @@ Deno.serve(async(req)=>{
     // Exact typed commands require no AI credits. Preview only; execution is never a chat action.
     const direct=action==='chat'&&input.data.message?parseDirectCommand(input.data.message,await commandContext()):null;
     if(direct){
-      const preview=await prepareUpdates(direct);
-      const answer='Prepared a command preview. Review the affected entries and warnings below; a human term editor must click Execute. Nothing has changed or been sent.';
+      let commandId: string | undefined;
+      let answer: string;
+      try {
+        const preview=await prepareUpdates(direct);
+        commandId=preview.id;
+        answer='Prepared a command preview. Review the affected entries and warnings below; a human term editor must click Execute. Nothing has changed or been sent.';
+      } catch (e) {
+        if (!(e instanceof NoCommandChanges)) throw e;
+        answer=e.message;
+      }
       await must(admin.from('copilot_messages').insert([{thread_id:threadId,role:'user',body:input.data.message,created_by:auth.user.id},{thread_id:threadId,role:'assistant',body:answer}]));
-      return json({answer,commandId:preview.id});
+      return json({answer,...(commandId?{commandId}:{})});
     }
     const state=await must(admin.from('copilot_gateway_state').select('*').eq('id','gateway').maybeSingle());
     // Automatic reviews stay paused; an explicit user action (typed chat or Resume) may probe once.

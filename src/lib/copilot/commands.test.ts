@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { prepareCommand, parseDirectCommand, COMMAND_FIELDS, type CommandSnapshot } from '../../../supabase/functions/_shared/copilot-commands';
+import { prepareCommand, parseDirectCommand, NoCommandChanges, COMMAND_FIELDS, type CommandSnapshot } from '../../../supabase/functions/_shared/copilot-commands';
 const snapshot = (): CommandSnapshot => ({
   bdt_state: { f: { [COMMAND_FIELDS.size[0]]: '500000000', [COMMAND_FIELDS.size[1]]: '500000000', [COMMAND_FIELDS.currency[0]]: 'EUR' }, parties: [{ PartyName: 'Sasol Financing USA LLC', Roles: ['ISSUER'] }] },
   deal_workspace: { version: 1, tranches: [
@@ -10,6 +10,28 @@ const snapshot = (): CommandSnapshot => ({
   notes: { intro: '', notes: 'Manually edited terms\n<<HASH>>old\n<<LEGAL>>\nVerbatim legal notice' },
 });
 describe('Co-Pilot command previews', () => {
+  it('recognizes repeated 600m as no change without invalidating existing Terms', () => {
+    const saved = snapshot();
+    if (!saved.deal_workspace) throw new Error('Missing workspace');
+    saved.deal_workspace.tranches[0].amount = 600000000;
+    for (const path of COMMAND_FIELDS.size) saved.bdt_state.f[path] = '600000000';
+    const before = structuredClone(saved);
+    const request = parseDirectCommand('make Tranche A size 600m', saved);
+    if (!request) throw new Error('Missing command');
+    expect(() => prepareCommand(saved, request)).toThrow(NoCommandChanges);
+    expect(saved).toEqual(before);
+    expect(saved.notes?.notes).toContain('<<HASH>>old');
+  });
+  it('still previews inconsistent BDT amounts even when the tranche already shows 600m', () => {
+    const saved = snapshot();
+    if (!saved.deal_workspace) throw new Error('Missing workspace');
+    saved.deal_workspace.tranches[0].amount = 600000000;
+    const request = parseDirectCommand('make Tranche A size 600m', saved);
+    if (!request) throw new Error('Missing command');
+    const plan = prepareCommand(saved, request);
+    expect(plan.effects.filter(e => e.location.includes('All fields'))).toHaveLength(2);
+    for (const path of COMMAND_FIELDS.size) expect(plan.after.bdt_state.f[path]).toBe('600000000');
+  });
   it('previews make Tranche A size 600m using the saved before value without changing it', () => {
     const saved = snapshot();
     const request = parseDirectCommand('make Tranche A size 600m', saved);
