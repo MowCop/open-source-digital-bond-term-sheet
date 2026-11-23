@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Sweep Co-Pilot amount units through direct/AI commands, individual corrections, source reviews and database approvals; explicit units normalized, missing multipliers withheld, stale checks retained. 65 affected tests pass; deployed missing-target-unit clarification verified signed in.
 - [x] Fix Tranche C 350 vs 350000000 command failure with a normal explicit-unit clarification; 17 tests pass, deployed and signed-in exact command returns HTTP 200 without a preview or term changes.
 - [x] Allow dragging the Co-Pilot heading to move its window; signed-in heading drag, resizing and Esc draft preservation verified.
 - [x] Replace native Co-Pilot resizing with a visible draggable handle and label the active borrower; signed-in desktop/mobile shrink/grow, Sasol focus and Esc preservation verified; three tests pass.

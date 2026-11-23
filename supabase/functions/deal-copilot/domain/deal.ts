@@ -1,4 +1,4 @@
-import { NoCommandChanges } from '../../_shared/copilot-commands.ts';
+import { NoCommandChanges, CommandValidationError, commandAmount, commandTargetAmount } from '../../_shared/copilot-commands.ts';
 
 export const dealFields = [
   "issuer",
@@ -78,9 +78,12 @@ export function checkDeal(deal: Deal) {
 export function validateProposal(deal: Deal, field: string, before: string, after: string) {
   if (!dealFields.includes(field as DealField) || field === "sourceText")
     throw new Error("This field cannot be changed by the agent.");
-  if (deal[field as DealField] !== before) throw new Error("Deal changed; refresh the proposal.");
+  const current = deal[field as DealField];
+  const normalizedBefore = field === 'size' && before.trim() ? commandAmount(before) : before;
+  if (current !== normalizedBefore) throw new CommandValidationError("Deal changed or the amount units do not match; refresh the proposal with explicit units. No changes were applied.");
   if (!after.trim() || after.length > 2000)
     throw new Error("A proposed value must be nonempty and within 2000 characters.");
-  if (before === after) throw new NoCommandChanges();
-  return { field, before_value: before, after_value: after };
+  const normalizedAfter = field === 'size' ? commandTargetAmount(current, after) : after;
+  if (normalizedBefore === normalizedAfter) throw new NoCommandChanges();
+  return { field, before_value: current, after_value: normalizedAfter };
 }
