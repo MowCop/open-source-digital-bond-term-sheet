@@ -11,6 +11,14 @@ export interface CommandPlan { before: CommandSnapshot; after: CommandSnapshot; 
 export class NoCommandChanges extends Error {
   constructor() { super('The requested values are already set in the saved terms; no changes are needed.'); this.name = 'NoCommandChanges'; }
 }
+export class CommandValidationError extends Error {
+  constructor(message: string) { super(message); this.name = 'CommandValidationError'; }
+}
+export function commandConversationResult(error: unknown) {
+  return unchangedCommandResult(error) ?? (error instanceof CommandValidationError
+    ? { status: 'needs_input' as const, message: error.message, humanExecuteRequired: false }
+    : null);
+}
 export function unchangedCommandResult(error: unknown) {
   return error instanceof NoCommandChanges
     ? { status: 'unchanged' as const, message: error.message, humanExecuteRequired: false }
@@ -104,7 +112,12 @@ export function prepareCommand(snapshot: CommandSnapshot, request: CommandReques
     const own = index === 0 || dealWide ? after.bdt_state.f : t.values;
     const issuer = after.bdt_state.parties?.find(p => p.Roles.includes('ISSUER'));
     const current = field === 'borrower' ? issuer?.PartyName ?? '' : field === 'size' ? t.amount ?? own[paths[0]] ?? '' : field === 'currency' ? t.currency : field === 'tenor' ? t.tenor ?? '' : field === 'rateType' ? t.rateType : own[paths[0]] ?? (field === 'settlement' || field === 'pricingDate' ? after.bdt_state.f[paths[0]] : '') ?? '';
-    if (canonical(field, String(current)) !== canonical(field, edit.before)) throw new Error(`${label} ${field} is ${current || 'empty'}, not ${edit.before || 'empty'}. Request a fresh preview.`);
+    if (canonical(field, String(current)) !== canonical(field, edit.before)) {
+      const bareMillions = field === 'size' && /^\d+(?:\.\d+)?$/.test(edit.before.trim()) && Number(edit.before) * 1e6 === Number(current);
+      throw new CommandValidationError(bareMillions
+        ? `${label} has a saved size of ${Number(current) / 1e6}m (${current}). “${edit.before}” has no unit and means ${edit.before}, not ${Number(current) / 1e6} million. Please repeat the command with explicit units, for example “change ${label} size from ${Number(current) / 1e6}m to [new amount]m”. No changes were applied.`
+        : `${label} ${field} is ${current || 'empty'}, not ${edit.before || 'empty'}. Request a fresh preview. No changes were applied.`);
+    }
     const value = canonical(field, edit.after);
     if (!value) throw new Error('Clearing entries is not supported by this command; edit the DTS directly.');
     if (field === 'coupon' && t.rateType !== 'fixed') throw new Error('This is a floating-rate tranche; use spread or change its rate type explicitly.');
