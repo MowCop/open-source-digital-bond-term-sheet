@@ -108,5 +108,6 @@ export function validateProposal(
     throw new Error(
       "A proposed value must be nonempty and within 2000 characters.",
     );
+  if (before === after) throw new Error('The requested values are already set in the saved terms; no changes are needed.');
   return { field, before_value: before, after_value: after };
 }

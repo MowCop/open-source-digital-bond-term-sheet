@@ -1,3 +1,5 @@
+import { NoCommandChanges } from '../../_shared/copilot-commands.ts';
+
 export const dealFields = [
   "issuer",
   "currency",
@@ -79,5 +81,6 @@ export function validateProposal(deal: Deal, field: string, before: string, afte
   if (deal[field as DealField] !== before) throw new Error("Deal changed; refresh the proposal.");
   if (!after.trim() || after.length > 2000)
     throw new Error("A proposed value must be nonempty and within 2000 characters.");
+  if (before === after) throw new NoCommandChanges();
   return { field, before_value: before, after_value: after };
 }
