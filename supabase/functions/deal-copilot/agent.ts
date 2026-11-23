@@ -3,7 +3,7 @@ import type { DealHost } from "./domain/host.ts";
 import { runSpecialist, runSpecialistPanel } from "./specialists.ts";
 import type { SpecialistId } from "./domain/specialists.ts";
 import { knowledgeSpecs, runKnowledgeTool, type LiveCheck } from "./knowledge/tools.ts";
-import { COMMAND_TOOL } from '../_shared/copilot-commands.ts';
+import { COMMAND_TOOL, unchangedCommandResult } from '../_shared/copilot-commands.ts';
 
 const specialistSpecs = [
   {
@@ -264,7 +264,7 @@ export async function chatAgent(
           }
         } else throw new Error("Unknown tool");
       } catch (e) {
-        output = { error: e instanceof Error ? e.message : "Tool failed" };
+        output = unchangedCommandResult(e) ?? { error: e instanceof Error ? e.message : "Tool failed" };
       }
       results.push({
         type: "tool_result",
