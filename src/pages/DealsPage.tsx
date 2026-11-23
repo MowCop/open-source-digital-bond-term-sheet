@@ -155,7 +155,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
       )}
 
       {copilotSlot && createPortal(
-        <DealCopilot deal={deal} hasUnsavedTerms={hasUnsavedTerms} />,
+        <DealCopilot key={deal.id} deal={deal} hasUnsavedTerms={hasUnsavedTerms} />,
         copilotSlot,
       )}
 

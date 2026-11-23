@@ -189,6 +189,7 @@ export default function DealCopilot({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
+  const [openAttempt, setOpenAttempt] = useState(0);
   const [lights, setLights] = useState(() => tally(getLiveChecks(deal.id)));
   useEffect(() => onLiveChecks((id) => { if (id === deal.id) setLights(tally(getLiveChecks(id))); }), [deal.id]);
   const input = useRef<HTMLInputElement>(null);
@@ -228,12 +229,22 @@ export default function DealCopilot({
   useEffect(() => {
     let alive = true;
     if (!open) return;
+    setError("");
     void (async () => {
       const [t, p] = await Promise.all([
         supabase.rpc("copilot_open", { _deal: deal.id }),
         supabase.rpc("copilot_editor", { _deal: deal.id }),
       ]);
-      if (t.error) throw t.error;
+      if (t.error) {
+        if (t.error.message === 'Deal membership required') {
+          const saved = await supabase.from('deals').select('id').eq('id', deal.id).maybeSingle();
+          if (saved.error) throw saved.error;
+          throw new Error(saved.data
+            ? 'Your signed-in account is not a member of this deal. Ask a deal admin to grant access.'
+            : 'This deal is not available in the saved deal list. Refresh the page and reopen a saved deal before using Co-Pilot.');
+        }
+        throw t.error;
+      }
       if (p.error) throw p.error;
       if (!alive) return;
       setThread(t.data);
@@ -242,12 +253,12 @@ export default function DealCopilot({
       await processCopilot(t.data);
       if (alive) await refresh(t.data);
     })().catch((e) => {
-      if (alive) setError(e.message);
+      if (alive) { setError(e.message); setPendingAsk(undefined); }
     });
     return () => {
       alive = false;
     };
-  }, [open, deal.id, refresh]);
+  }, [open, openAttempt, deal.id, refresh]);
   useEffect(() => {
     if (!thread) return;
     const h = (e: Event) => {
@@ -298,13 +309,15 @@ export default function DealCopilot({
     const message = raw.trim();
     if (!message || busy) return;
     setOpen(true);
-    setText("");
+    setText(message);
     if (!thread) {
       setPendingAsk(message);
+      if (open) setOpenAttempt(attempt => attempt + 1);
       return;
     }
     void perform(async () => {
       await callCopilot(thread, "chat", message, getLiveChecks(deal.id), focus ? focusPrompt(focus) : undefined);
+      setText("");
     });
   };
   const decide = (id: string, approve: boolean) =>

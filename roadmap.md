@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Repair Co-Pilot access-error recovery and support “make Tranche A size 600m”; deployed current handler, 27 tests passed, signed-in saved-deal preview/reload verified and missing-deal explanation checked. Karl’s saved 500m remains unchanged; Execute was not pressed.
 - [x] Add Co-Pilot command previews for tranche/deal term changes and Send Update drafts, with affected entries, warnings and atomic human Execute; 38 tests passed, signed-in 500m→600m/Execute/reload/View and AI draft→Send Update verified on a temporary deal. No alerts sent.
 - [x] Add a Settings placeholder for the exchange-rate lock source and italic source label in Deal structure; move All fields last and remove the duplicate Deal Checker border.
 - [x] Move aggregate USD total beside Deal structure, allow unknown tranche amounts, keep planning outside Deal Checker, and clarify manual exchange rates (9 tests; signed-in dialog verified).
