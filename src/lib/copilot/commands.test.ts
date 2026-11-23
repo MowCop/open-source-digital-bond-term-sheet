@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { prepareCommand, parseDirectCommand, NoCommandChanges, unchangedCommandResult, COMMAND_FIELDS, type CommandSnapshot } from '../../../supabase/functions/_shared/copilot-commands';
+import { prepareCommand, parseDirectCommand, NoCommandChanges, unchangedCommandResult, commandConversationResult, COMMAND_FIELDS, type CommandSnapshot } from '../../../supabase/functions/_shared/copilot-commands';
 const snapshot = (): CommandSnapshot => ({
   bdt_state: { f: { [COMMAND_FIELDS.size[0]]: '500000000', [COMMAND_FIELDS.size[1]]: '500000000', [COMMAND_FIELDS.currency[0]]: 'EUR' }, parties: [{ PartyName: 'Sasol Financing USA LLC', Roles: ['ISSUER'] }] },
   deal_workspace: { version: 1, tranches: [
@@ -10,6 +10,26 @@ const snapshot = (): CommandSnapshot => ({
   notes: { intro: '', notes: 'Manually edited terms\n<<HASH>>old\n<<LEGAL>>\nVerbatim legal notice' },
 });
 describe('Co-Pilot command previews', () => {
+  it('returns a normal clarification for Tranche C 350 versus saved 350000000 without changing terms', () => {
+    const saved = snapshot();
+    saved.deal_workspace?.tranches.push({ id: 'c', label: 'C', currency: 'USD', amount: 350000000, rateType: 'fixed', values: {} });
+    const before = structuredClone(saved);
+    const request = parseDirectCommand('change Tranche C size from 350 to 400');
+    if (!request) throw new Error('Missing command');
+    let result;
+    try { prepareCommand(saved, request); } catch (error) { result = commandConversationResult(error); }
+    expect(result).toMatchObject({ status: 'needs_input', humanExecuteRequired: false });
+    expect(result?.message).toContain('350m (350000000)');
+    expect(saved).toEqual(before);
+  });
+  it('previews explicit Tranche C 350m to 400m while preserving other tranches', () => {
+    const saved = snapshot();
+    saved.deal_workspace?.tranches.push({ id: 'c', label: 'C', currency: 'USD', amount: 350000000, rateType: 'fixed', values: {} });
+    const plan = prepareCommand(saved, { edits: [{ tranche: 'C', field: 'size', before: '350m', after: '400m' }] });
+    expect(plan.after.deal_workspace?.tranches[2].amount).toBe(400000000);
+    expect(saved.deal_workspace?.tranches[2].amount).toBe(350000000);
+    expect(plan.after.deal_workspace?.tranches[0].amount).toBe(500000000);
+  });
   it('returns a normal no-approval result for an AI-planned unchanged 10yr tenor', () => {
     const saved = snapshot();
     try {

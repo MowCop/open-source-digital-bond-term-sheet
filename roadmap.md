@@ -9,7 +9,8 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
-- [ ] Allow dragging the Co-Pilot heading to move its window; preserve resizing, draft and Esc.
+- [x] Fix Tranche C 350 vs 350000000 command failure with a normal explicit-unit clarification; 17 tests pass, deployed and signed-in exact command returns HTTP 200 without a preview or term changes.
+- [x] Allow dragging the Co-Pilot heading to move its window; signed-in heading drag, resizing and Esc draft preservation verified.
 - [x] Replace native Co-Pilot resizing with a visible draggable handle and label the active borrower; signed-in desktop/mobile shrink/grow, Sasol focus and Esc preservation verified; three tests pass.
 - [x] Expand Deal Co-Pilot input on double-click into a resizable pale-blue draft dialog; Esc restores the inline draft. Three tests and signed-in desktop/mobile expansion, resize, Esc and draft-retention checks pass.
 - [x] Sweep grouped-command no-ops across DTS/Board Co-Pilot, AI-planned commands, Send Update drafts, background reviews and saved decisions; shared unchanged result deployed, 35 tests passed, direct and AI-worded signed-in replies verified with no additional command records.
