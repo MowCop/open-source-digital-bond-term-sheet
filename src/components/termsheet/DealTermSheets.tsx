@@ -74,7 +74,7 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields, selecte
       if (live && w?.version === 1) setWs(w);
     });
     return () => { live = false; };
-  }, [deal.id]);
+  }, [deal.id, deal.bdtState, deal.updatedAt]);
 
   const usd = useMemo(() => usdEquivalent(ws), [ws]);
   const aggregate = useMemo(() => aggregateUsdEquivalent(ws), [ws]);

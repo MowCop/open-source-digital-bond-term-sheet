@@ -11,6 +11,7 @@ import { AiFailure, chatAgent } from './agent.ts';
 import { readLiveChecks } from './knowledge/tools.ts';
 import { checkerFindings } from './domain/remediation.ts';
 import type { DealHost } from './domain/host.ts';
+import { prepareCommand, parseDirectCommand, type CommandRequest, type CommandSnapshot } from '../_shared/copilot-commands.ts';
 
 const schema=z.object({ action:z.enum(['chat','process','resume']), threadId:z.string().uuid(), message:z.string().trim().min(1).max(12000).optional(), model:z.string().optional(), focus:z.string().max(21000).optional(), liveChecks:z.array(z.object({l:z.enum(['pass','warn','fail']),t:z.string().max(300),d:z.string().max(600).optional(),src:z.string().max(20).optional(),ignored:z.boolean().optional()})).max(120).optional() });
 const json=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...corsHeaders,'Content-Type':'application/json'}});
@@ -34,12 +35,37 @@ Deno.serve(async(req)=>{
     const must=async(q:any)=>{const r=await q;if(r.error)throw new Error(r.error.message);return r.data;};
     const context=async()=>asDeal(await must(admin.rpc('copilot_context',{_deal:thread.deal_id})));
     const documentRows=async()=>must(admin.from('copilot_documents').select('*,deal_documents(name)').eq('thread_id',threadId).order('created_at',{ascending:false}).limit(5));
+    const commandContext=async():Promise<CommandSnapshot>=>{
+      const [d,n]=await Promise.all([
+        must(userClient.from('deals').select('bdt_state,deal_workspace').eq('id',thread.deal_id).single()),
+        must(userClient.from('deal_bulletin_notes').select('intro,notes').eq('deal_id',thread.deal_id).maybeSingle()),
+      ]);
+      return {...d,notes:n};
+    };
+    const prepareUpdates=async(request:CommandRequest)=>{
+      const plan=prepareCommand(await commandContext(),request);
+      const openChecks=(input.data.liveChecks??[]).filter(c=>c.l!=='pass'&&!c.ignored);
+      if(openChecks.length) plan.warnings.push(`Current Deal Checker: ${openChecks.filter(c=>c.l==='fail').length} fail, ${openChecks.filter(c=>c.l==='warn').length} warning. These are current findings, not a validation of the proposed changes.`);
+      for(const c of openChecks.slice(0,5)) plan.warnings.push(`${c.l==='fail'?'Fail':'Warning'}: ${c.t}${c.d?` — ${c.d}`:''}`);
+      const command=await must(admin.from('copilot_commands').insert({thread_id:threadId,request_text:input.data.message??'Command preview',plan,created_by:auth.user.id}).select('id').single());
+      return {id:command.id,status:'pending',effects:plan.effects,warnings:plan.warnings,bulletin:request.bulletin??null,humanExecuteRequired:true};
+    };
     const host:DealHost={
       readDeal:async()=>{const deal=await context();const docs=await documentRows();deal.sourceText=docs[0]?.extracted_text??'';const d=await must(userClient.from('deals').select('updated_at').eq('id',thread.deal_id).single());return {deal,updatedAt:d.updated_at};},
       listDocuments:async(limit=5)=>{const rows=await must(admin.from('copilot_runs').select('id,report,completed_at,copilot_documents(deal_documents(name))').eq('thread_id',threadId).eq('kind','document').eq('status','completed').order('completed_at',{ascending:false}).limit(limit));return rows.map((r:any)=>({id:r.id,name:r.copilot_documents?.deal_documents?.name??'Document',report:r.report,createdAt:r.completed_at}));},
       proposeChange:async(c)=>{await must(userClient.rpc('copilot_propose',{_thread:threadId,_field:c.field,_before:c.before_value,_after:c.after_value,_reason:c.reason}));},
       decideChange:async()=>{throw new Error('Only a human term editor may decide changes');},
+      readCommandContext:commandContext,
+      prepareUpdates,
     };
+    // Exact typed commands require no AI credits. Preview only; execution is never a chat action.
+    const direct=action==='chat'&&input.data.message?parseDirectCommand(input.data.message):null;
+    if(direct){
+      const preview=await prepareUpdates(direct);
+      const answer='Prepared a command preview. Review the affected entries and warnings below; a human term editor must click Execute. Nothing has changed or been sent.';
+      await must(admin.from('copilot_messages').insert([{thread_id:threadId,role:'user',body:input.data.message,created_by:auth.user.id},{thread_id:threadId,role:'assistant',body:answer}]));
+      return json({answer,commandId:preview.id});
+    }
     const state=await must(admin.from('copilot_gateway_state').select('*').eq('id','gateway').maybeSingle());
     // Automatic reviews stay paused; an explicit user action (typed chat or Resume) may probe once.
     if(state?.blocked && action==='process') return json({message:state.reason??'AI access paused. Use Resume reviews after restoring AI access.'},403);

@@ -1,4 +1,5 @@
 import { asDeal, validateProposal, type Deal } from "./deal.ts";
+import type { CommandRequest, CommandSnapshot } from '../../_shared/copilot-commands.ts';
 
 /**
  * DealHost is the only contract the agent core needs from the app it lives in.
@@ -19,6 +20,8 @@ export interface DealHost {
   listDocuments(limit?: number): Promise<HostDocument[]>;
   proposeChange(change: ProposedChange): Promise<void>;
   decideChange(changeId: string, approve: boolean): Promise<"approved" | "rejected">;
+  readCommandContext?(): Promise<CommandSnapshot>;
+  prepareUpdates?(request: CommandRequest): Promise<unknown>;
 }
 
 /** Host-independent tool logic shared by every host. */
