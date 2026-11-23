@@ -49,6 +49,7 @@ import {
 } from "@/lib/copilot/specialists";
 import type { Deal } from "@/types/bond";
 import CopilotCommandPreview, { type CopilotCommand } from './CopilotCommandPreview';
+import CopilotDraftDialog from './CopilotDraftDialog';
 
 function SpecialistReports({ reports }: { reports: SpecialistReport[] }) {
   return (
@@ -186,6 +187,8 @@ export default function DealCopilot({
   const [docs, setDocs] = useState<DealDocument[]>([]);
   const [editor, setEditor] = useState(false);
   const [text, setText] = useState("");
+  const [draftExpanded, setDraftExpanded] = useState(false);
+  const draftInput = useRef<HTMLTextAreaElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
@@ -379,16 +382,17 @@ export default function DealCopilot({
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className="relative w-full min-w-0"
+      className="copilot-draft-host relative w-full min-w-0"
     >
       <div className="flex items-center gap-2">
         <CollapsibleTrigger asChild>
           <Button
             variant="ghost"
+            aria-label="Deal Co-Pilot"
             className="h-8 shrink-0 gap-2 px-2 text-sm hover:bg-transparent"
           >
             <Bot className="h-4 w-4 shrink-0 text-primary" />
-            <span className="font-semibold">Deal Co-Pilot</span>
+            <span className="copilot-heading-detail font-semibold">Deal Co-Pilot</span>
             <TooltipProvider delayDuration={150}>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -396,7 +400,7 @@ export default function DealCopilot({
                     role="img"
                     tabIndex={0}
                     aria-label="About Deal Co-Pilot"
-                    className="inline-flex text-muted-foreground hover:text-foreground"
+                    className="copilot-heading-detail inline-flex text-muted-foreground hover:text-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
@@ -432,7 +436,7 @@ export default function DealCopilot({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <span className="ml-1 flex items-center gap-1 text-[11px] font-normal" aria-label="Deal Checker results" title="Live Deal Checker results (ignored warnings excluded)">
+            <span className="copilot-heading-detail ml-1 flex items-center gap-1 text-[11px] font-normal" aria-label="Deal Checker results" title="Live Deal Checker results (ignored warnings excluded)">
               <span className="rounded bg-success/15 px-1.5 text-success">{lights.pass}</span>
               <span className="rounded bg-warning/15 px-1.5 text-warning">{lights.warn}</span>
               <span className="rounded bg-destructive/15 px-1.5 text-destructive">{lights.fail}</span>
@@ -448,9 +452,11 @@ export default function DealCopilot({
           }}
         >
           <Textarea
+            ref={draftInput}
             aria-label="Message Deal Co-Pilot"
             value={text}
             onChange={(e) => setText(e.target.value)}
+            onDoubleClick={() => setDraftExpanded(true)}
             onKeyDown={(e) => {
               // Return sends the question; Shift+Return adds a new line.
               if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
@@ -466,7 +472,8 @@ export default function DealCopilot({
           <Button
             type="submit"
             size="sm"
-            className="h-9 shrink-0"
+            className="copilot-inline-send h-9 shrink-0"
+            aria-label="Send"
             disabled={busy || !text.trim()}
           >
             {busy ? (
@@ -474,7 +481,7 @@ export default function DealCopilot({
             ) : (
               <Send className="mr-2 h-4 w-4" />
             )}
-            Send
+            <span>Send</span>
           </Button>
         </form>
         <CollapsibleTrigger asChild>
@@ -491,6 +498,15 @@ export default function DealCopilot({
           </Button>
         </CollapsibleTrigger>
       </div>
+      <CopilotDraftDialog
+        open={draftExpanded}
+        onOpenChange={setDraftExpanded}
+        text={text}
+        onTextChange={setText}
+        onSend={send}
+        busy={busy}
+        onContract={() => draftInput.current?.focus()}
+      />
       <CollapsibleContent className="absolute left-0 top-full z-50 mt-2 max-h-[75vh] w-full max-w-[52rem] space-y-5 overflow-y-auto rounded-md border border-border bg-popover p-4 text-popover-foreground shadow-lg">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">Saved terms · Human approval</Badge>

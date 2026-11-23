@@ -55,7 +55,47 @@
     --navy-light: 217 33% 22%;
 
     --toolbar-btn-border: 0 0% 100%;
+    --copilot-draft-background: 205 100% 96%;
+    --copilot-draft-foreground: 0 0% 0%;
+    --copilot-draft-border: 205 35% 75%;
+    --copilot-draft-muted: 210 15% 35%;
   }
+}
+
+/* The expanded writing surface deliberately remains light in the dark app. */
+.copilot-draft-host { container-type: inline-size; }
+@container (max-width: 34rem) {
+  .copilot-heading-detail { display: none; }
+}
+@container (max-width: 26rem) {
+  .copilot-inline-send { width: 2.25rem; padding: 0; }
+  .copilot-inline-send > span { display: none; }
+  .copilot-inline-send > svg { margin: 0; }
+}
+
+.copilot-draft-dialog {
+  --background: var(--copilot-draft-background);
+  --foreground: var(--copilot-draft-foreground);
+  --card: var(--copilot-draft-background);
+  --card-foreground: var(--copilot-draft-foreground);
+  --accent: var(--copilot-draft-border);
+  --accent-foreground: var(--copilot-draft-foreground);
+  --border: var(--copilot-draft-border);
+  --input: var(--copilot-draft-border);
+  --muted-foreground: var(--copilot-draft-muted);
+  display: flex;
+  flex-direction: column;
+  width: min(44rem, calc(100vw - 2rem));
+  height: min(26rem, calc(100dvh - 2rem));
+  min-width: min(20rem, calc(100vw - 2rem));
+  min-height: min(15rem, calc(100dvh - 2rem));
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100dvh - 2rem);
+  resize: both;
+  overflow: auto;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-radius: var(--radius);
 }
 
 @layer base {
