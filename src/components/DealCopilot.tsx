@@ -51,6 +51,7 @@ import type { Deal } from "@/types/bond";
 import CopilotCommandPreview, { type CopilotCommand } from './CopilotCommandPreview';
 import CopilotDraftDialog from './CopilotDraftDialog';
 import { dealBorrowerName } from '@/lib/borrowerName';
+import { quickCommands } from '@/lib/dealPhase';
 
 function SpecialistReports({ reports }: { reports: SpecialistReport[] }) {
   return (
@@ -172,6 +173,8 @@ export default function DealCopilot({
   hasUnsavedTerms,
   checker,
   focus,
+  mode = 'inline',
+  onSendUpdate,
 }: {
   deal: Deal;
   /** A board update or deal chat the user clicked; sent with each question. */
@@ -179,6 +182,8 @@ export default function DealCopilot({
   hasUnsavedTerms: boolean;
   /** The Deal Checker, rendered inside the Co-Pilot panel and always visible. */
   checker?: ReactNode;
+  mode?: 'inline' | 'execution' | 'drawer';
+  onSendUpdate?: () => void;
 }) {
   const [thread, setThread] = useState<string>();
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -192,7 +197,8 @@ export default function DealCopilot({
   const draftInput = useRef<HTMLTextAreaElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(mode !== 'inline');
+  const [offerSend, setOfferSend] = useState(false);
   const [openAttempt, setOpenAttempt] = useState(0);
   const [lights, setLights] = useState(() => tally(getLiveChecks(deal.id)));
   useEffect(() => onLiveChecks((id) => { if (id === deal.id) setLights(tally(getLiveChecks(id))); }), [deal.id]);
@@ -346,7 +352,7 @@ export default function DealCopilot({
     if (execute && hasUnsavedTerms) throw new Error('Save or discard unsaved term-sheet edits first.');
     const { error } = await supabase.rpc('copilot_execute_command', { _command: id, _execute: execute });
     if (error) throw error;
-    if (execute) window.dispatchEvent(new Event('vdr:copilot-approved'));
+    if (execute) { window.dispatchEvent(new Event('vdr:copilot-approved')); setOfferSend(true); }
     if (thread) changed(thread);
     toast.success(execute ? 'Command executed and saved · Nothing sent' : 'Command rejected');
   });
@@ -383,7 +389,7 @@ export default function DealCopilot({
     <Collapsible
       open={open}
       onOpenChange={setOpen}
-      className="copilot-draft-host relative w-full min-w-0"
+      className={`copilot-draft-host relative w-full min-w-0 ${mode !== 'inline' ? 'copilot-command-centre' : ''}`}
     >
       <div className="flex items-center gap-2">
         <CollapsibleTrigger asChild>
@@ -468,7 +474,7 @@ export default function DealCopilot({
             maxLength={12000}
             rows={1}
             placeholder={focus ? "Ask about this update…" : "Ask a question or request a change…"}
-            className="h-9 max-h-28 min-h-0 flex-1 resize-none py-2 text-sm"
+            className={mode === 'execution' ? 'min-h-24 max-h-48 flex-1 resize-y py-3 text-base' : 'h-9 max-h-28 min-h-0 flex-1 resize-none py-2 text-sm'}
           />
           <Button
             type="submit"
@@ -509,10 +515,12 @@ export default function DealCopilot({
         busy={busy}
         onContract={() => draftInput.current?.focus()}
       />
-      <CollapsibleContent className="absolute left-0 top-full z-50 mt-2 max-h-[75vh] w-full max-w-[52rem] space-y-5 overflow-y-auto rounded-md border border-border bg-popover p-4 text-popover-foreground shadow-lg">
+      {mode === 'execution' && <div className="flex flex-wrap gap-2 py-3">{quickCommands(deal).map(command => <Button key={command} size="sm" variant="outline" onClick={() => { setText(command); draftInput.current?.focus(); }}>{command}</Button>)}</div>}
+      {offerSend && onSendUpdate && <div className="flex items-center justify-between border-b border-border py-2 text-sm"><span>DTS saved · Message updated · Nothing sent</span><Button size="sm" onClick={onSendUpdate}>Send update</Button></div>}
+      <CollapsibleContent className={mode === 'inline' ? 'absolute left-0 top-full z-50 mt-2 max-h-[75vh] w-full max-w-[52rem] space-y-5 overflow-y-auto rounded-md border border-border bg-popover p-4 text-popover-foreground shadow-lg' : 'copilot-centre-content space-y-5 overflow-y-auto border-t border-border py-4'}>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline">Saved terms · Human approval</Badge>
-          <AiModelPicker />
+          {mode === 'inline' && <AiModelPicker />}
           <Button
             variant="outline"
             size="sm"
@@ -552,7 +560,7 @@ export default function DealCopilot({
           </p>
         )}
         {commands.length > 0 && <section className="min-w-0 space-y-5" aria-label="Co-Pilot commands">
-          {commands.map(command => <CopilotCommandPreview key={command.id} command={command} editor={editor} busy={busy} unsaved={hasUnsavedTerms} onDecide={execute => decideCommand(command.id, execute)} />)}
+          {commands.map(command => <CopilotCommandPreview key={command.id} command={command} editor={editor} busy={busy} unsaved={hasUnsavedTerms} onDecide={execute => decideCommand(command.id, execute)} onEdit={() => { void decideCommand(command.id, false); setText(command.request_text); draftInput.current?.focus(); }} />)}
         </section>}
         <section className="min-w-0 space-y-3">
           <h4 className="text-sm font-semibold">Conversation</h4>

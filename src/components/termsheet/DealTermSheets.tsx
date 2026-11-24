@@ -12,6 +12,7 @@ import TranchePanel, { type TrancheSave } from './TranchePanel';
 import { useScopedApp } from '@/context/AppContext';
 import { dealBorrowerName } from '@/lib/borrowerName';
 import { emitDtsSaved } from '@/lib/dtsSaveEvent';
+import { bdtToDealCache } from '@/lib/bdt-bridge';
 import { SENIORITY_LABEL } from '@/lib/trancheFields';
 import type { Deal } from '@/types/bond';
 import {
@@ -40,7 +41,7 @@ function initial(deal: Deal): DealWorkspace {
   return ws;
 }
 
-export default function DealTermSheets({ deal, canEdit, onOpenAllFields, selected, onSelect, onWorkspace }: { deal: Deal; canEdit: boolean; onOpenAllFields: () => void; selected: number; onSelect: (i: number) => void; onWorkspace?: (ws: DealWorkspace) => void }) {
+export default function DealTermSheets({ deal, canEdit, canEditField, onOpenAllFields, selected, onSelect, onWorkspace }: { deal: Deal; canEdit: boolean; canEditField?: (path: string) => boolean; onOpenAllFields: () => void; selected: number; onSelect: (i: number) => void; onWorkspace?: (ws: DealWorkspace) => void }) {
   const [ws, setWs] = useState<DealWorkspace>(() => initial(deal));
   const setSelected = onSelect;
   useEffect(() => { onWorkspace?.(ws); }, [ws, onWorkspace]);
@@ -60,12 +61,12 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields, selecte
   }, [expanded, popped]);
 
   const saveTranche = async (t: Tranche, isFirst: boolean, s: TrancheSave) => {
-    if (bdt) {
-      const changed = Object.keys(s.main).some(k => s.main[k] !== main[k]);
-      if (changed) updateDeal(deal.id, { bdtState: { ...bdt, f: s.main }, updatedAt: new Date() });
-    }
     const next = { ...ws, tranches: ws.tranches.map(x => x.id === t.id ? { ...x, ...s.details, seniority: s.seniority, values: isFirst ? x.values : s.own } : x) };
-    if (!await save(next)) throw new Error('Could not save tranche');
+    const state = bdt ? { ...bdt, f: s.main } : null;
+    const { error } = await supabase.from('deals').update({ deal_workspace: next as never, ...(state ? { bdt_state: state } : {}) }).eq('id', deal.id);
+    if (error) { toast.error(error.message); throw error; }
+    setWs(next); emitDtsSaved({ dealId: deal.id, ws: next, ...(state ? { state } : {}) });
+    window.dispatchEvent(new Event('vdr:copilot-approved'));
   };
 
   useEffect(() => {
@@ -121,7 +122,7 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields, selecte
               </tr>
               {expanded === t.id && (
                 <tr className="border-b border-border"><td colSpan={6} className="bg-muted/20">
-                  <TranchePanel key={t.id + (deal.updatedAt?.toString() ?? '')} tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} canEdit={canEdit && !!bdt}
+                  <TranchePanel key={t.id + (deal.updatedAt?.toString() ?? '')} tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} canEdit={canEdit && !!bdt} canEditField={canEditField}
                     onSave={s => saveTranche(t, i === 0, s)} onPopOut={() => setPopped(t.id)} />
                 </td></tr>
               )}
@@ -140,7 +141,7 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields, selecte
               <DialogTitle>Tranche {t.label} term sheet</DialogTitle>
               <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-2xl font-bold uppercase tracking-wide text-foreground">{dealBorrowerName(deal)}</div>
             </DialogHeader>
-            <TranchePanel hideIssuer tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} canEdit={canEdit && !!bdt} onSave={s => saveTranche(t, i === 0, s)} />
+            <TranchePanel hideIssuer tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} canEdit={canEdit && !!bdt} canEditField={canEditField} onSave={s => saveTranche(t, i === 0, s)} />
           </DialogContent>
         </Dialog>
       ); })()}

@@ -46,7 +46,8 @@ import TermSheetField, { optionsFor, prettyEnum, type FieldDef } from './TermShe
 interface Props {
   deal: Deal;
   canEdit: boolean;
-  onSave: (patch: Partial<Deal>) => void;
+  canEditField?: (path: string) => boolean;
+  onSave: (patch: Partial<Deal>) => void | Promise<void>;
   onStateChange?: (state: BdtState) => void;
   onDisplayedStage?: (stage: number) => void;
   onDirtyChange?: (dirty: boolean) => void;
@@ -82,7 +83,7 @@ export interface TermSheetFillHandle {
 }
 
 export default function TermSheetFill({
-  deal, canEdit: canEditProp, onSave, onStateChange, onDisplayedStage, onDirtyChange, ingestRef, requestedStage, requestedAt,
+  deal, canEdit: canEditProp, canEditField = () => true, onSave, onStateChange, onDisplayedStage, onDirtyChange, ingestRef, requestedStage, requestedAt,
 }: Props & { ingestRef?: RefObject<TermSheetFillHandle> }) {
   const [snaps, setSnaps] = useState<StageSnap[]>([]);
   const [viewStage, setViewStage] = useState<number | null>(null);
@@ -173,6 +174,7 @@ export default function TermSheetFill({
   // ── mutation helpers ────────────────────────────────────────────────────────
 
   const setField = (p: string, v: string) => {
+    if (!canEdit || !canEditField(p)) return;
     setState(s => {
       const next = clone(s);
       next.f[p] = v;
@@ -184,6 +186,7 @@ export default function TermSheetFill({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mutateGroup = (g: string, fn: (rows: any[]) => any[]) => {
+    if (!canEdit || !canEditField(`group:${g}`)) return;
     setState(s => {
       const next = clone(s);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -296,6 +299,8 @@ export default function TermSheetFill({
   };
   const applyFix = (fn: (s: BdtState) => BdtState) => {
     if (!canEdit || viewStage != null) return false;
+    const fixed = clone(fn(clone(state)));
+    if (Object.keys(fixed.f).some(p => fixed.f[p] !== state.f[p] && !canEditField(p))) return false;
     setState(s => { const next = clone(fn(clone(s))); refreshAuto(next); return next; });
     setDirty(true);
     return true;
@@ -303,7 +308,7 @@ export default function TermSheetFill({
   const fixFromDocument = (c: CheckItem): string[] => {
     if (!canEdit || viewStage != null) return [];
     const topics = docTopics(c);
-    const picked = proposals.filter(pr => topics.some(t => proposalMatches(t, pr)));
+    const picked = proposals.filter(pr => canEditField(pr.p ?? `group:${pr.g}`) && topics.some(t => proposalMatches(t, pr)));
     if (!picked.length) return [];
     setState(s => {
       const next = clone(s);
@@ -332,6 +337,7 @@ export default function TermSheetFill({
     setState(s => {
       const next = clone(s);
       for (const pr of proposals) {
+        if (!canEditField(pr.p ?? `group:${pr.g}`)) continue;
         if (pr.kind === 'group' && pr.g) (next as unknown as Record<string, unknown>)[pr.g] = pr.payload ?? [];
         else if (pr.p) next.f[pr.p] = pr.val;
       }
@@ -344,10 +350,12 @@ export default function TermSheetFill({
 
   // ── save ────────────────────────────────────────────────────────────────────
 
-  const save = () => {
+  const save = async () => {
+    if (!canEdit) return;
     const next = clone(state);
     refreshAuto(next);
-    onSave({ ...bdtToDealCache(next), bdtState: next });
+    try { await onSave({ ...bdtToDealCache(next), bdtState: next }); }
+    catch(e) { toast.error(`Could not save DTS: ${(e as Error).message}`); return; }
     setState(next);
     // Immutable per-stage history row, so earlier stages can be revisited.
     (async () => {
@@ -541,7 +549,7 @@ export default function TermSheetFill({
                     required={isRequired(fd)}
                     proposed={proposedPaths.has(fd.p)}
                     invalid={fieldError(state, fd)}
-                    disabled={!canEdit}
+                    disabled={!canEdit || !canEditField(fd.p)}
                     onChange={v => setField(fd.p, v)}
                   />
                 ))}
@@ -550,7 +558,7 @@ export default function TermSheetFill({
                 <GroupEditor
                   g="parties"
                   rows={state.parties ?? []}
-                  canEdit={canEdit}
+                  canEdit={canEdit && canEditField('group:parties')}
                   onChange={fn => mutateGroup('parties', fn)}
                 />
               </div>
@@ -596,7 +604,7 @@ export default function TermSheetFill({
                           required={isRequired(fd)}
                           proposed={proposedPaths.has(fd.p)}
                           invalid={fieldError(state, fd)}
-                          disabled={!canEdit}
+                          disabled={!canEdit || !canEditField(fd.p)}
                           onChange={v => setField(fd.p, v)}
                         />
                       ))}
@@ -608,7 +616,7 @@ export default function TermSheetFill({
                           required={false}
                           proposed={false}
                           invalid={null}
-                          disabled={!canEdit}
+                          disabled={!canEdit || !canEditField(fd.p)}
                           onChange={v => setField(fd.p, v)}
                         />
                       ))}
@@ -620,7 +628,7 @@ export default function TermSheetFill({
                       g={fd.g}
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       rows={((state as any)[fd.g] ?? []) as any[]}
-                      canEdit={canEdit}
+                      canEdit={canEdit && canEditField(`group:${fd.g}`)}
                       onChange={fn => mutateGroup(fd.g, fn)}
                     />
                     </div>

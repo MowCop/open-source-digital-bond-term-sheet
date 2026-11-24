@@ -172,7 +172,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <GlobalSearch />
             <div id="copilot-slot" className="peer min-w-0 flex-1 max-w-3xl empty:hidden"><CopilotFocusHost /></div>
             {/* General mode whenever nothing is focused (slot empty). */}
-            <div className="hidden peer-empty:block min-w-0 flex-1 max-w-3xl"><CopilotGeneral /></div>
+            {location.pathname !== '/deals' && <div className="hidden peer-empty:block min-w-0 flex-1 max-w-3xl"><CopilotGeneral /></div>}
             <ReminderWatcher />
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">

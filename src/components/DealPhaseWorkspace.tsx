@@ -1,0 +1,75 @@
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Input } from './ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { ArrowRight, ChevronRight, MoreHorizontal, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { useApp } from '@/context/AppContext';
+import { useDealTeam } from '@/hooks/useDealTeam';
+import { ACTOR_LABELS, CHECKLIST, executionReadiness, savedEvidence, type ActorRole, type DealPhase } from '@/lib/dealPhase';
+import { dealToBdtState, unifiedChecks } from '@/lib/bdt-bridge';
+import { getLiveChecks, onLiveChecks } from '@/lib/copilot/liveChecks';
+import { trancheBdtState } from '@/lib/trancheState';
+import { termSheetView } from '@/lib/termSheetView';
+import type { DealWorkspace } from '@/lib/dealWorkspace';
+import type { Deal } from '@/types/bond';
+import DealCopilot from './DealCopilot';
+import LiveMsgPanel from './LiveMsgPanel';
+import AiModelPicker from './AiModelPicker';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+
+export default function DealPhaseWorkspace({deal,phase,onPhase,children,intake,ws,dirty,onSend,canSend,onEditorOpen}: {deal:Deal;phase:DealPhase;onPhase:(p:DealPhase|null)=>void;children:ReactNode;intake:ReactNode;ws:DealWorkspace|null;dirty:boolean;onSend:()=>void;canSend:boolean;onEditorOpen:()=>void}) {
+  const {authUser,roles,isAdmin}=useAuth(),{currentUser}=useApp(),navigate=useNavigate();
+  const {team,signoffs,docs,error,reload}=useDealTeam(deal.id);
+  const [full,setFull]=useState(false),[drawer,setDrawer]=useState(false),[message,setMessage]=useState(true),[mobile,setMobile]=useState('copilot'),[assign,setAssign]=useState(false),[people,setPeople]=useState<{user_id:string;name:string}[]>([]),[person,setPerson]=useState(''),[actor,setActor]=useState<ActorRole>('dcm'),[busy,setBusy]=useState(false),[gate,setGate]=useState(false),[note,setNote]=useState('');
+  const st=dealToBdtState(deal),evidence=savedEvidence(deal,ws,docs);
+  const [liveChecks,setLiveChecks]=useState(()=>getLiveChecks(deal.id)??[]);
+  useEffect(()=>onLiveChecks(id=>{if(id===deal.id)setLiveChecks(getLiveChecks(id)??[]);}),[deal.id]);
+  useEffect(()=>{if(!full)return;const close=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!document.querySelector('[role="dialog"]'))setFull(false);};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close);},[full]);
+  const checks=useMemo(()=>[...unifiedChecks(st),...(ws?.tranches.slice(1).flatMap((_,i)=>unifiedChecks(trancheBdtState(st,ws,i+1)))??[]),...liveChecks.filter(c=>c.src==='gleif'||c.src==='openfigi')],[deal.bdtState,ws,liveChecks]);
+  const readiness=executionReadiness(checks,signoffs,evidence,dirty);
+  const waiting=(Object.keys(ACTOR_LABELS) as ActorRole[]).map(role=>({role,count:readiness.outstanding.filter(i=>i.role===role).length})).filter(x=>x.count>0);
+  useEffect(()=>{if(!assign)return;void supabase.from('profiles').select('user_id,name').eq('status','approved').then(({data})=>setPeople((data??[]).map(p=>({user_id:p.user_id,name:p.name??'Deal member'}))));},[assign]);
+  const sign=async(key:string,role:ActorRole,status:'open'|'in_review'|'signed_off')=>{if(!authUser)return;setBusy(true);const r=await supabase.from('deal_signoffs').upsert({deal_id:deal.id,item_key:key,role,user_id:authUser.id,status});setBusy(false);if(r.error)toast.error(r.error.message);else await reload();};
+  const advance=async()=>{setBusy(true);try{const{error}=await supabase.functions.invoke('deal-execution-gate',{body:{dealId:deal.id,note:note.trim()}});if(error)throw error;toast.success('Moved to execution · IPTs');setGate(false);onPhase(null);window.dispatchEvent(new Event('vdr:copilot-approved'));}catch(e){toast.error((e as Error).message);}finally{setBusy(false);}};
+  const openEditor=()=>{setFull(true);onEditorOpen();};
+  return <section className="space-y-3 min-w-0" aria-label="Deal phase workspace">
+    <header className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
+      <nav className="flex flex-wrap items-center gap-1" aria-label="Deal phases">{(['setup','execution','closed'] as DealPhase[]).map((p,i)=><span key={p} className="flex items-center gap-1"><Button size="sm" variant={phase===p?'secondary':'ghost'} disabled={!isAdmin||deal.stage==='Settled'||p==='closed'} onClick={()=>onPhase(p)} aria-current={phase===p?'step':undefined}>{p==='setup'?'Set-up':p==='execution'?'Execution':'Closed'}{phase===p&&<Badge variant="outline" className="ml-2">{deal.bdtState?.stage===2?'IPTs':deal.stage}</Badge>}</Button>{i<2&&<ChevronRight className="h-3 w-3 text-muted-foreground"/>}</span>)}</nav>
+      {isAdmin&&deal.stage!=='Settled'&&<Button variant="ghost" size="sm" onClick={()=>onPhase(null)}>Follow stage</Button>}
+      <div className="ml-auto flex gap-2">{canSend&&phase==='setup'&&<Button size="sm" disabled={!readiness.ready} onClick={()=>setGate(true)}>Move to execution <ArrowRight className="ml-1 h-4 w-4"/></Button>}{canSend&&phase==='execution'&&<Button size="sm" onClick={onSend}>Send update</Button>}
+        <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost" aria-label="More deal tools"><MoreHorizontal className="h-4 w-4"/>More</Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={()=>navigate('/bond-console')}>Bond Console</DropdownMenuItem><DropdownMenuItem onSelect={()=>navigate('/audit-log')}>Audit log</DropdownMenuItem><DropdownMenuItem onSelect={openEditor}>Full DTS & exports</DropdownMenuItem>{isAdmin&&<DropdownMenuItem onSelect={()=>setAssign(true)}>Manage deal team</DropdownMenuItem>}<div className="p-2"><AiModelPicker/></div></DropdownMenuContent></DropdownMenu>
+      </div>
+    </header>
+    <div className="flex flex-wrap items-center gap-3 text-xs" aria-label="Deal team"><strong>Deal team</strong>{(['syndicate_admin','dcm','issuer_legal','counsel'] as const).map(role=><div key={role} className={`flex items-center gap-1 ${waiting.some(w=>w.role===role)?'text-warning':'text-muted-foreground'}`}><span>{role==='syndicate_admin'?'Syndicate':ACTOR_LABELS[role]}</span>{team.filter(t=>t.role===role).map(t=><span key={t.user_id} title={`${t.name} · ${t.organization}`} className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-secondary-foreground">{t.name.split(' ').map(n=>n[0]).slice(0,2).join('')}</span>)}</div>)}{phase==='setup'&&waiting[0]&&<span className="text-warning">Waiting on: {ACTOR_LABELS[waiting[0].role]} – {waiting[0].count} items</span>}</div>
+    {error&&<p role="alert" className="text-destructive text-sm">{error}</p>}
+    {phase==='setup'&&<div className="flex items-center gap-2 text-xs text-muted-foreground"><span>{readiness.blocking} blocking checks · {readiness.outstanding.length} sign-offs outstanding</span>{dirty&&<span className="text-warning">Unsaved terms</span>}<Button size="sm" variant="ghost" className="ml-auto" onClick={()=>setDrawer(v=>!v)}>Co-Pilot <ChevronRight className="h-3 w-3"/></Button></div>}
+    <div className="flex gap-1 lg:hidden" aria-label="Workspace tabs">{['copilot','dts','message'].map(t=><Button key={t} size="sm" variant={mobile===t?'secondary':'ghost'} onClick={()=>setMobile(t)}>{t==='copilot'?'Co-Pilot':t==='dts'?'DTS':'Message'}</Button>)}</div>
+    <div className={`deal-phase-grid ${phase==='setup'?'deal-setup-grid':'deal-execution-grid'}`}>
+      {phase==='setup'?<aside className={`${mobile==='dts'?'':'hidden'} lg:block min-w-0 space-y-4`} aria-label="Document intake">{intake}</aside>:<aside className={`${mobile==='dts'?'':'hidden'} lg:block min-w-0 space-y-4`} aria-label="Live DTS summary"><div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Live DTS</h3><Button size="sm" variant="ghost" onClick={openEditor}>Open full DTS</Button></div>{(ws?.tranches??[null]).map((t,i)=>{const s=trancheBdtState(st,ws,i),v=termSheetView(s);return <section key={t?.id??'A'} className="border-t border-border py-3 text-xs space-y-2"><h4 className="font-semibold">Tranche {t?.label??'A'}</h4>{[['Size',v.size],['Tenor',t?.tenor??v.tenor],['IPTs',s.f['x:iptSpread']],['Guidance',s.f['x:guidance']],['Spread',v.reofferSpread],['Coupon',v.coupon],['Books',s.f['x:bookSize']??s.f['x:booksOpen']]].filter(([,v])=>v).map(([k,v])=><div key={k} className="flex justify-between gap-2"><span className="text-muted-foreground">{k}</span><strong className="text-right break-words">{v}</strong></div>)}</section>;})}</aside>}
+      <main className={`min-w-0 ${phase==='setup'?(mobile!=='message'?'':'hidden'):(mobile==='copilot'?'':'hidden')} lg:block`}>
+        <div className={phase==='setup'?(mobile==='dts'?'':'hidden lg:block'):full?'deal-full-editor':'hidden'}>{phase!=='setup'&&full&&<div className="flex items-center justify-between mb-3"><h2 className="font-semibold">Full DTS</h2><Button size="icon" variant="ghost" aria-label="Close full DTS" onClick={()=>setFull(false)}><X className="h-4 w-4"/></Button></div>}{children}</div>
+        {phase!=='setup'&&<DealCopilot key={deal.id} deal={deal} hasUnsavedTerms={dirty} mode="execution" onSendUpdate={canSend?onSend:undefined}/>}
+        {phase==='setup'&&(drawer||mobile==='copilot')&&<div className="mt-3"><DealCopilot key={deal.id} deal={deal} hasUnsavedTerms={dirty} mode="drawer"/></div>}
+      </main>
+      <aside className={`min-w-0 ${mobile==='message'?'':'hidden'} lg:block space-y-4`}>
+        {phase==='setup'&&<section aria-label="Set-up checklist" className="space-y-3"><h3 className="text-sm font-semibold">Set-up checklist</h3>{(Object.keys(ACTOR_LABELS) as ActorRole[]).map(role=><div key={role} className="border-t border-border pt-2 space-y-2"><h4 className="text-xs font-semibold">{ACTOR_LABELS[role]}</h4>{CHECKLIST.filter(i=>i.role===role).map(i=>{const s=signoffs.find(x=>x.item_key===i.key),own=roles.includes(role)&&team.some(t=>t.role===role&&t.user_id===authUser?.id);return <div key={i.key} className="space-y-1 text-xs"><div className="flex justify-between gap-2"><span>{i.label}</span><Badge variant="outline">{ACTOR_LABELS[role]}</Badge></div><div className="flex items-center justify-between gap-2"><span className={evidence[i.key]?'text-success':'text-muted-foreground'}>{evidence[i.key]?'Recorded':'Open fields'}</span><Select value={s?.status??'open'} disabled={!own||busy||dirty} onValueChange={v=>void sign(i.key,role,v as 'open'|'in_review'|'signed_off')}><SelectTrigger className="h-7 w-32" aria-label={`${i.label} sign-off`}><SelectValue/></SelectTrigger><SelectContent><SelectItem value="open">Open</SelectItem><SelectItem value="in_review">In review</SelectItem><SelectItem value="signed_off" disabled={!evidence[i.key]}>Signed off</SelectItem></SelectContent></Select></div>{s&&<p className="text-muted-foreground">{team.find(t=>t.user_id===s.user_id)?.name??'Deal member'} · {new Date(s.updated_at).toLocaleString('en-GB',{timeZone:'UTC'})} UTC</p>}</div>;})}</div>)}</section>}
+        <div className="flex items-center justify-between"><h3 className="font-semibold text-sm">Live MSG</h3><Button size="sm" variant="ghost" aria-expanded={message} onClick={()=>setMessage(v=>!v)}>{message?'Collapse':'Expand'}</Button></div>{message&&<LiveMsgPanel deal={deal} canSend={false} onSend={onSend}/>}
+        <DealTimeline deal={deal}/>
+      </aside>
+    </div>
+    <Dialog open={gate} onOpenChange={setGate}><DialogContent><DialogHeader><DialogTitle>Move to execution (IPTs)</DialogTitle></DialogHeader><Input aria-label="Stage transition audit note" value={note} onChange={e=>setNote(e.target.value)} placeholder="Audit note"/><Button disabled={!note.trim()||busy||!readiness.ready} onClick={()=>void advance()}>Confirm move to execution</Button></DialogContent></Dialog>
+    <Dialog open={assign} onOpenChange={setAssign}><DialogContent><DialogHeader><DialogTitle>Deal team</DialogTitle></DialogHeader><Select value={person} onValueChange={setPerson}><SelectTrigger aria-label="Team member"><SelectValue placeholder="Select person"/></SelectTrigger><SelectContent>{people.map(p=><SelectItem key={p.user_id} value={p.user_id}>{p.name}</SelectItem>)}</SelectContent></Select><Select value={actor} onValueChange={v=>setActor(v as ActorRole)}><SelectTrigger aria-label="Team role"><SelectValue/></SelectTrigger><SelectContent>{Object.entries(ACTOR_LABELS).map(([r,l])=><SelectItem key={r} value={r}>{l}</SelectItem>)}</SelectContent></Select><Button disabled={!person||busy} onClick={async()=>{setBusy(true);const {error}=await supabase.rpc('assign_deal_actor',{_deal:deal.id,_user:person,_role:actor});setBusy(false);if(error)toast.error(error.message);else {await reload();setPerson('');}}}>Add to deal</Button>{team.map(t=><div key={`${t.user_id}-${t.role}`} className="flex items-center justify-between text-sm"><span>{t.name} · {t.role==='syndicate_admin'?'Syndicate':ACTOR_LABELS[t.role as ActorRole]}</span><Button variant="ghost" size="icon" aria-label={`Remove ${t.name}`} onClick={async()=>{const{error}=await supabase.from('deal_team_members').delete().eq('deal_id',deal.id).eq('user_id',t.user_id).eq('role',t.role as never);if(error)toast.error(error.message);else await reload();}}><X className="h-4 w-4"/></Button></div>)}</DialogContent></Dialog>
+  </section>;
+}
+function DealTimeline({deal}:{deal:Deal}) {
+  const [sends,setSends]=useState<{id:string;created_at:string;status:string}[]>([]);
+  useEffect(()=>{const load=()=>void supabase.from('alert_sends').select('id,created_at,alert_send_chunks(status)').eq('deal_id',deal.id).order('created_at',{ascending:false}).limit(10).then(({data})=>setSends((data??[]).map(s=>({id:s.id,created_at:s.created_at,status:s.alert_send_chunks.map(c=>c.status).join(' / ')||'pending'}))));load();const c=supabase.channel(`timeline-${deal.id}`).on('postgres_changes',{event:'*',schema:'public',table:'alert_send_chunks'},load).subscribe();return()=>{void supabase.removeChannel(c);};},[deal.id]);
+  const events=[...deal.stageHistory.map((s,i)=>({id:`stage-${i}`,time:new Date(s.timestamp).toISOString(),label:`${s.from} → ${s.to}`,note:s.note})),...sends.map(s=>({id:s.id,time:s.created_at,label:`Send · ${s.status}`,note:''}))].sort((a,b)=>b.time.localeCompare(a.time));
+  return <section className="border-t border-border pt-3 text-xs space-y-2" aria-label="Deal timeline"><h3 className="font-semibold">Timeline</h3>{!events.length&&<p className="text-muted-foreground">No stage changes or sends</p>}{events.map(e=><div key={e.id}><p>{e.label}</p><p className="text-muted-foreground">{new Date(e.time).toLocaleString('en-GB',{timeZone:'UTC'})} UTC{e.note&&` · ${e.note}`}</p></div>)}</section>;
+}

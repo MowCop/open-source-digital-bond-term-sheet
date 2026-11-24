@@ -558,6 +558,7 @@ export default function UserManagementPage() {
                       <SelectTrigger className="mt-2 bg-background border-border"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="syndicate_admin">Syndicate Admin</SelectItem>
+                        <SelectItem value="dcm">DCM</SelectItem><SelectItem value="issuer_legal">Issuer legal</SelectItem><SelectItem value="counsel">Deal counsel</SelectItem>
                         <SelectItem value="vendor_user">Read Only</SelectItem>
                         <SelectItem value="syndicate_readonly">Syndicate – Read Only</SelectItem>
                         <SelectItem value="sales_readonly">Sales – Read Only</SelectItem>
@@ -654,6 +655,7 @@ export default function UserManagementPage() {
                     <SelectTrigger className="mt-2 bg-background border-border"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="syndicate_admin">Syndicate Admin</SelectItem>
+                      <SelectItem value="dcm">DCM</SelectItem><SelectItem value="issuer_legal">Issuer legal</SelectItem><SelectItem value="counsel">Deal counsel</SelectItem>
                       <SelectItem value="vendor_user">Read Only</SelectItem>
                       <SelectItem value="syndicate_readonly">Syndicate – Read Only</SelectItem>
                       <SelectItem value="sales_readonly">Sales – Read Only</SelectItem>

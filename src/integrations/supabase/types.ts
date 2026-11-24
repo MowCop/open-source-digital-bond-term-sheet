@@ -759,6 +759,67 @@ export type Database = {
         }
         Relationships: []
       }
+      deal_signoffs: {
+        Row: {
+          deal_id: string
+          item_key: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          deal_id: string
+          item_key: string
+          role: Database["public"]["Enums"]["app_role"]
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          deal_id?: string
+          item_key?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_signoffs_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_team_members: {
+        Row: {
+          deal_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          deal_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          deal_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_team_members_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_term_sheet_releases: {
         Row: {
           bdt_state_snapshot: Json
@@ -1486,6 +1547,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_deal_actor: {
+        Args: {
+          _deal: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _user: string
+        }
+        Returns: undefined
+      }
       can_access_deal: { Args: { _deal_id: string }; Returns: boolean }
       copilot_amount_cache: {
         Args: { amount: string; currency: string; fallback: string }
@@ -1536,6 +1605,9 @@ export type Database = {
       }
       current_app_user_ids: { Args: never; Returns: string[] }
       current_user_org: { Args: never; Returns: string }
+      deal_actor_context: { Args: { _deal: string }; Returns: Json }
+      deal_phase: { Args: { _deal: string }; Returns: string }
+      deal_team_access: { Args: { _deal: string }; Returns: boolean }
       get_user_login_stats: {
         Args: never
         Returns: {
@@ -1554,6 +1626,17 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_approved: { Args: { uid: string }; Returns: boolean }
+      is_deal_actor: { Args: { _user: string }; Returns: boolean }
+      move_deal_to_execution: {
+        Args: {
+          _actor: string
+          _deal: string
+          _expected: Json
+          _note: string
+          _workspace: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
@@ -1563,6 +1646,9 @@ export type Database = {
         | "sales_readonly"
         | "vendor_user"
         | "guest"
+        | "dcm"
+        | "issuer_legal"
+        | "counsel"
       profile_status: "pending" | "approved" | "rejected" | "disabled"
     }
     CompositeTypes: {
@@ -1698,6 +1784,9 @@ export const Constants = {
         "sales_readonly",
         "vendor_user",
         "guest",
+        "dcm",
+        "issuer_legal",
+        "counsel",
       ],
       profile_status: ["pending", "approved", "rejected", "disabled"],
     },

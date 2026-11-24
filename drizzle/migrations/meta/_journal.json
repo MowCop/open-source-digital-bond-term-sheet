@@ -64,6 +64,27 @@
       "when": 1795513444529,
       "tag": "0008_live_msg_updates",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795514176288,
+      "tag": "0009_deal_actor_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795514242702,
+      "tag": "0010_deal_team_signoffs",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795514394059,
+      "tag": "0011_deal_execution_gate",
+      "breakpoints": true
     }
   ]
 }

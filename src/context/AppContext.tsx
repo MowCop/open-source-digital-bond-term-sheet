@@ -101,7 +101,7 @@ interface AppContextType {
   chatChannels: ChatChannel[];
   chatMessages: ChatMessage[];
   createDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[], opts?: { sourceChannelId?: string; sourceChannel?: ChatChannel }) => Deal;
-  updateDeal: (dealId: string, updates: Partial<Deal>) => void;
+  updateDeal: (dealId: string, updates: Partial<Deal>) => Promise<void>;
   updateDealStage: (dealId: string, newStage: DealStage, note?: string) => void;
   createMessage: (msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => Message;
   updateMessage: (id: string, updates: Partial<Message>) => void;
@@ -444,11 +444,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return newDeal;
   }, [currentUser.id, addAuditEntry, ownerOrg, chatChannels]);
 
-  const updateDeal = useCallback((dealId: string, updates: Partial<Deal>) => {
+  const updateDeal = useCallback(async (dealId: string, updates: Partial<Deal>) => {
+    await updateDealRow(dealId, updates);
     setDeals(prev => prev.map(d => d.id === dealId ? { ...d, ...updates, updatedAt: new Date() } : d));
-    updateDealRow(dealId, updates).then(() => {
-      if (updates.bdtState) emitDtsSaved({ dealId, state: updates.bdtState });
-    }).catch(e => console.error('[Cloud] updateDeal failed', e));
+    if (updates.bdtState) emitDtsSaved({ dealId, state: updates.bdtState });
     addAuditEntry({ action: 'DEAL_UPDATED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Deal updated (${Object.keys(updates).join(', ')})` });
   }, [currentUser.id, addAuditEntry]);
 

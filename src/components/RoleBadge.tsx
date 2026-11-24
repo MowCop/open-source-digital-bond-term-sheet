@@ -9,6 +9,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   syndicate_readonly: 'Syndicate – Read Only',
   sales_readonly: 'Sales – Read Only',
   guest_readonly: 'Guest Read Only',
+  dcm: 'DCM', issuer_legal: 'Issuer legal', counsel: 'Deal counsel',
 };
 
 const ALL_ROLES: UserRole[] = [
@@ -18,6 +19,7 @@ const ALL_ROLES: UserRole[] = [
   'syndicate_readonly',
   'sales_readonly',
   'guest_readonly',
+  'dcm', 'issuer_legal', 'counsel',
 ];
 
 function normalizeRole(role: string): UserRole {

@@ -32,6 +32,15 @@ During a bond issue the terms change throughout the day, moving from initial pri
 
 ## How it works
 
+### Deal workflow: who acts when
+
+- **Set-up (Mandate / Announced, before IPTs):** documents and reviewed extraction on the left, the multi-tranche DTS editor in the centre, and actor-owned sign-offs on the right. DCM reviews structure, size, tenor and bookrunners; issuer legal reviews issuer/LEI, law, restrictions and target market; deal counsel reviews documents, listing, stabilisation and legal notices. Assigned actors sign off manually; saved-term or document changes reopen sign-offs.
+- **Ready for execution:** resolve blocking Deal Checker findings, save the terms and complete every required sign-off. A syndicate administrator confirms **Move to execution (IPTs)** with an audit note; the server rechecks the current saved snapshot and sign-offs.
+- **Execution (IPTs through Priced):** Co-Pilot becomes the command centre, with stage-specific prompt starters. A compact tranche summary and full DTS editor remain available. Proposed changes show before/after values and require human **Approve**, **Edit** or **Reject**; approval reuses the existing atomic execution checks and audits. The Live MSG updates from saved terms; **Send update** still requires separate human approval and never sends automatically.
+- **Permissions:** actors see only assigned deals. DCM may edit structure fields and bookrunners; legal and counsel may edit in set-up but only ask/comment during execution. Syndicate administrators edit all terms. **Settled / Closed** is read-only, including for administrators. A manual phase-view override changes layout only, never permissions or lifecycle.
+- **Formats and mobile:** Standard text, XML, DLT, All fields and multi-tranche term sheets are retained; narrow screens use Co-Pilot / DTS / Message tabs. Other pages retain the general header Co-Pilot.
+
+
 ```mermaid
 flowchart TD
     A["Related documents<br/>(OC, term sheets, emails, Bloomberg)"] -->|AI extraction + human review| C

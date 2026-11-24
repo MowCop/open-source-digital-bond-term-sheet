@@ -1,0 +1,42 @@
+// @vitest-environment node
+import { PGlite } from '@electric-sql/pglite';
+import { readFileSync } from 'node:fs';
+import { beforeAll,afterAll,describe,it,expect } from 'vitest';
+import { CHECKLIST } from '@/lib/dealPhase';
+const db=new PGlite();const admin='11111111-1111-4111-8111-111111111111',dcm='22222222-2222-4222-8222-222222222222',legal='33333333-3333-4333-8333-333333333333',counsel='44444444-4444-4444-8444-444444444444';
+const q=async(sql:string,args:unknown[]=[]) => (await db.query<Record<string,unknown>>(sql,args)).rows;
+const who=async(id:string)=>{await q("select set_config('request.jwt.claim.sub',$1,false)",[id]);};
+beforeAll(async()=>{
+ await db.exec(`CREATE ROLE authenticated; CREATE ROLE service_role; CREATE ROLE anon; CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY); GRANT USAGE ON SCHEMA auth TO authenticated;
+ CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+ CREATE TYPE app_role AS ENUM ('master_admin','syndicate_admin','dcm','issuer_legal','counsel'); CREATE TABLE user_roles(user_id uuid,role app_role,UNIQUE(user_id,role));
+ CREATE TABLE deals(id text PRIMARY KEY,stage text,stage_history jsonb DEFAULT '[]',bdt_state jsonb,deal_workspace jsonb,updated_at timestamptz, coupon text);
+ CREATE TABLE deal_documents(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),deal_id text);
+ CREATE TABLE audit_log(id text,action text,entity_type text,entity_id text,user_id text,details text);
+ CREATE TABLE chat_channels(deal_id text,participant_ids jsonb); CREATE TABLE messages(deal_ids jsonb,sender_id text,recipients jsonb);
+ CREATE FUNCTION is_admin(id uuid) RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT id='${admin}'::uuid $$;
+ CREATE FUNCTION is_approved(id uuid) RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT id IS NOT NULL $$;
+ CREATE FUNCTION has_role(id uuid,r app_role) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT EXISTS(SELECT 1 FROM user_roles WHERE user_id=id AND role=r) $$;
+ CREATE FUNCTION current_app_user_ids() RETURNS text[] LANGUAGE sql STABLE AS $$ SELECT ARRAY[auth.uid()::text] $$;
+ CREATE FUNCTION can_access_deal(_deal_id text) RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT is_admin(auth.uid()) $$;
+ CREATE FUNCTION copilot_member(_deal text) RETURNS boolean LANGUAGE sql STABLE AS $$ SELECT is_approved(auth.uid()) AND can_access_deal(_deal) $$;
+ ALTER TABLE deals ENABLE ROW LEVEL SECURITY; CREATE POLICY "approved read deals" ON deals FOR SELECT USING(is_approved(auth.uid()));
+ GRANT SELECT,UPDATE ON deals TO authenticated; CREATE POLICY admin_update ON deals FOR UPDATE USING(is_admin(auth.uid()));
+ CREATE PUBLICATION supabase_realtime;`);
+ for(const file of ['0010_deal_team_signoffs.sql','0011_deal_execution_gate.sql'])await db.exec(readFileSync(new URL(`../../drizzle/migrations/${file}`,import.meta.url),'utf8').replace('ALTER PUBLICATION supabase_realtime ADD TABLE public.deal_signoffs,public.deal_team_members;',''));
+ await q('insert into auth.users(id) values($1),($2),($3),($4)',[admin,dcm,legal,counsel]);
+ await q("insert into user_roles values($1,'syndicate_admin'),($2,'dcm'),($3,'issuer_legal'),($4,'counsel')",[admin,dcm,legal,counsel]);
+ await q("insert into deals values('actor-deal','Announced','[]',$1,$2,now(),'4%')",[JSON.stringify({stage:2,f:{'IssuanceDataGroup/Product/AggregateNominalAmount/Value':'500000000'}}),JSON.stringify({tranches:[{id:'a',label:'A',amount:500000000,values:{}}]})]);
+ await q("insert into deal_team_members values('actor-deal',$1,'dcm'),('actor-deal',$2,'issuer_legal'),('actor-deal',$3,'counsel')",[dcm,legal,counsel]);
+},60000);
+afterAll(()=>db.close());
+describe('Server actor rules',()=>{
+ it('assigned actors can access the deal but cannot access an unassigned deal',async()=>{await who(legal);expect((await q("select can_access_deal('actor-deal') ok"))[0].ok).toBe(true);expect((await q("select can_access_deal('other') ok"))[0].ok).toBe(false);});
+ it('legal and counsel cannot edit or approve in execution',async()=>{for(const actor of [legal,counsel]){await who(actor);expect((await q("select copilot_editor('actor-deal') ok"))[0].ok).toBe(false);await expect(q("update deals set coupon='5%' where id='actor-deal'")).rejects.toThrow('read-only');}});
+ it('DCM can update size but not coupon',async()=>{await who(dcm);await q("update deals set bdt_state=jsonb_set(bdt_state,ARRAY['f','IssuanceDataGroup/Product/AggregateNominalAmount/Value'],'\"600000000\"') where id='actor-deal'");expect((await q("select bdt_state->'f'->>'IssuanceDataGroup/Product/AggregateNominalAmount/Value' size from deals where id='actor-deal'"))[0].size).toBe('600000000');await expect(q("update deals set coupon='6%' where id='actor-deal'")).rejects.toThrow('structure');});
+ it('sign-off requires the item owner role and assigned deal',async()=>{await who(admin);await q("update deals set bdt_state=jsonb_set(bdt_state,'{stage}','1') where id='actor-deal'");await who(legal);await db.exec('SET ROLE authenticated');try{await expect(q("insert into deal_signoffs(deal_id,item_key,role,user_id,status) values('actor-deal','size','dcm',$1,'signed_off')",[legal])).rejects.toThrow();await q("insert into deal_signoffs(deal_id,item_key,role,user_id,status) values('actor-deal','issuer','issuer_legal',$1,'signed_off')",[legal]);}finally{await db.exec('RESET ROLE');}});
+ it('a saved term change reopens sign-offs and records an audit',async()=>{await who(admin);await q("update deals set coupon='5%',bdt_state=jsonb_set(bdt_state,ARRAY['f','coupon'],'\"5\"') where id='actor-deal'");expect((await q("select status from deal_signoffs where item_key='issuer'"))[0].status).toBe('open');expect((await q("select count(*) count from audit_log where action='DEAL_SIGNOFF'"))[0].count).toBeGreaterThan(0);});
+ it('gate refuses incomplete sign-offs',async()=>{await who('');const d=(await q("select bdt_state,deal_workspace from deals where id='actor-deal'"))[0];await expect(q('select move_deal_to_execution($1,$2,$3,$4,$5)',['actor-deal',admin,JSON.stringify(d.bdt_state),JSON.stringify(d.deal_workspace),'Ready'])).rejects.toThrow('sign-offs');});
+ it('gate checks all 12 sign-offs then moves the saved snapshot to IPTs and audits',async()=>{await who('');for(const item of CHECKLIST){const actor=item.role==='dcm'?dcm:item.role==='issuer_legal'?legal:counsel;await q("insert into deal_signoffs(deal_id,item_key,role,user_id,status) values('actor-deal',$1,$2,$3,'signed_off') on conflict(deal_id,item_key) do update set status='signed_off'",[item.key,item.role,actor]);}const d=(await q("select bdt_state,deal_workspace from deals where id='actor-deal'"))[0];await q('select move_deal_to_execution($1,$2,$3,$4,$5)',['actor-deal',admin,JSON.stringify(d.bdt_state),JSON.stringify(d.deal_workspace),'All actors reviewed']);expect((await q("select deal_phase('actor-deal') phase"))[0].phase).toBe('execution');expect((await q("select count(*) count from audit_log where action='DEAL_PHASE_CHANGED'"))[0].count).toBe(1);});
+ it('Settled is read-only even for syndicate administrator approvals',async()=>{await who(admin);await q("update deals set stage='Settled' where id='actor-deal'");expect((await q("select copilot_editor('actor-deal') ok"))[0].ok).toBe(false);await expect(q("update deals set coupon='7%' where id='actor-deal'")).rejects.toThrow('Closed');});
+});

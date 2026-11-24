@@ -18,9 +18,10 @@ const AMOUNT_PATH = 'IssuanceDataGroup/Product/AggregateNominalAmount/Value';
 
 export interface TrancheSave { main: Record<string, string>; own: Record<string, unknown>; seniority: Seniority; details: Pick<Tranche, 'currency' | 'amount' | 'tenor' | 'rateType'> }
 
-export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, onSave, onPopOut, hideIssuer }: {
+export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, canEditField = () => true, onSave, onPopOut, hideIssuer }: {
   tranche: Tranche; isFirst: boolean; issuer: string; main: Record<string, string>; canEdit: boolean;
   onSave: (s: TrancheSave) => Promise<void> | void; onPopOut?: () => void; hideIssuer?: boolean;
+  canEditField?: (path: string) => boolean;
 }) {
   const [seniority, setSeniority] = useState<Seniority>(tranche.seniority ?? 'senior_unsecured');
   const [edits, setEdits] = useState<Record<string, string>>({});
@@ -51,7 +52,7 @@ export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, 
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-col items-start gap-1">
         <span className="text-xs text-muted-foreground">Status</span>
-        <Select value={seniority} disabled={!canEdit} onValueChange={v => changeSeniority(v as Seniority)}>
+        <Select value={seniority} disabled={!canEdit || !canEditField('status')} onValueChange={v => changeSeniority(v as Seniority)}>
           <SelectTrigger className="h-8 w-52" aria-label="Status of the Notes"><SelectValue /></SelectTrigger>
           <SelectContent>{Object.entries(SENIORITY_LABEL).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent>
         </Select>
@@ -94,7 +95,7 @@ export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, 
             </div>}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {rows.map(r => (
-                <TermSheetField key={r.p} fd={r.fd} value={value(r.p)} disabled={!canEdit}
+                <TermSheetField key={r.p} fd={r.fd} value={value(r.p)} disabled={!canEdit || !canEditField(r.p)}
                   onChange={v => setEdits(e => ({ ...e, [r.p]: v }))} />
               ))}
             </div>

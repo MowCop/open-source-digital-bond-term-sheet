@@ -52,6 +52,9 @@ import DealTermSheets from '@/components/termsheet/DealTermSheets';
 import TrancheSwitcher from '@/components/termsheet/TrancheSwitcher';
 import { trancheBdtState } from '@/lib/trancheState';
 import type { DealWorkspace } from '@/lib/dealWorkspace';
+import DealPhaseWorkspace from '@/components/DealPhaseWorkspace';
+import { dealPhase, mayEditField, type DealPhase } from '@/lib/dealPhase';
+import { useAuth } from '@/context/AuthContext';
 
 function BdtXmlPanel({ deal, override }: { deal: Deal; override?: BdtState }) {
   const state = useMemo(() => { const s = JSON.parse(JSON.stringify(override ?? dealToBdtState(deal))); refreshAuto(s); return s; }, [deal, override]);
@@ -102,12 +105,19 @@ interface DealDetailProps {
   fromBoard?: boolean;
   requestedStage?: number;
   requestedAt?: string;
-  onSaveFields: (patch: Partial<Deal>) => void;
+  onSaveFields: (patch: Partial<Deal>) => Promise<void>;
   initialFiles?: File[];
   onInitialFilesConsumed?: () => void;
 }
 
 function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, onSaveFields, initialFiles, onInitialFilesConsumed }: DealDetailProps) {
+  const { roles } = useAuth();
+  const [phaseOverride, setPhaseOverride] = useState<DealPhase | null>(null);
+  const actualPhase = dealPhase(deal);
+  const phase = actualPhase === 'closed' ? 'closed' : phaseOverride ?? actualPhase;
+  const role = (['master_admin','syndicate_admin','dcm','issuer_legal','counsel'] as UserRole[]).find(r => roles.includes(r)) ?? 'vendor_user';
+  const fieldPermission = (p: string) => mayEditField(role, actualPhase, p);
+  const canEdit = actualPhase !== 'closed' && (canManage || role === 'dcm' || (actualPhase === 'setup' && (role === 'issuer_legal' || role === 'counsel')));
   const [checkerState, setCheckerState] = useState<BdtState>(() => dealToBdtState(deal));
   const [hasUnsavedTerms, setHasUnsavedTerms] = useState(false);
   const [ws, setWs] = useState<DealWorkspace | null>(null);
@@ -152,17 +162,8 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
   return (
     <div className="border-t p-5 bg-card/40 space-y-6">
       
-      {canManage && ingestSlot && createPortal(
-        <IngestDropzone onFiles={ingest} className="w-full min-w-0" compact />,
-        ingestSlot,
-      )}
-
-      {copilotSlot && createPortal(
-        <DealCopilot key={deal.id} deal={deal} hasUnsavedTerms={hasUnsavedTerms} />,
-        copilotSlot,
-      )}
-
-      <div className={messageOpen ? 'dts-message-layout' : ''}>
+      <DealPhaseWorkspace deal={deal} phase={phase} onPhase={setPhaseOverride} ws={ws} dirty={hasUnsavedTerms} canSend={canManage && actualPhase !== 'closed'} onSend={() => setSendMessageOpen(true)} onEditorOpen={() => {}}
+        intake={<><IngestDropzone onFiles={ingest} className="w-full min-w-0" compact /><DealDocuments dealId={deal.id} canManage={canEdit} /></>}>
       <Tabs value={tab} onValueChange={setTab} className="min-w-0">
         {/* pl-[13px] = the 1px panel border + 12px inner padding used above, so
             this icon sits in the same column as the drop-zone and checker icons. */}
@@ -173,29 +174,28 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
           state={checkerState}
           dealId={deal.id}
           onNavigate={t => { setTab('fill'); setTimeout(() => fillRef.current?.focusTarget(t), 30); }}
-          onFix={fn => { setTab('fill'); return fillRef.current?.applyFix(fn) ?? false; }}
-          onDocFix={c => { setTab('fill'); return fillRef.current?.fixFromDocument(c) ?? []; }}
+          onFix={canEdit ? fn => { setTab('fill'); return fillRef.current?.applyFix(fn) ?? false; } : undefined}
+          onDocFix={canEdit ? c => { setTab('fill'); return fillRef.current?.fixFromDocument(c) ?? []; } : undefined}
       />
 
 
           <TabsList className="ml-auto h-auto shrink-0 flex-wrap">
             <TabsTrigger value="sheets">Deal term sheets</TabsTrigger>
-            <TabsTrigger value="view">View</TabsTrigger>
-            <TabsTrigger value="xml">BDT XML</TabsTrigger>
-            <TabsTrigger value="dlt">DLT view</TabsTrigger>
+            <TabsTrigger value="view">Standard text</TabsTrigger>
+            <TabsTrigger value="xml">XML</TabsTrigger>
+            <TabsTrigger value="dlt">DLT</TabsTrigger>
             <TabsTrigger value="docs">Documents</TabsTrigger>
             <TabsTrigger value="fill">All fields</TabsTrigger>
           </TabsList>
-          <Button variant="outline" size="sm" className="gap-1" aria-expanded={messageOpen} aria-controls={`message-dock-${deal.id}`} onClick={() => setMessageOpen(v => !v)}><Send className="h-3.5 w-3.5" />Message{messageOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}</Button>
         </div>
         <TabsContent value="fill" forceMount className="mt-4 data-[state=inactive]:hidden">
-          <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} onDirtyChange={setHasUnsavedTerms} onDisplayedStage={setShownStage} requestedStage={requestedStage} requestedAt={requestedAt} />
+          <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canEdit} canEditField={fieldPermission} onSave={onSaveFields} onStateChange={setCheckerState} onDirtyChange={setHasUnsavedTerms} onDisplayedStage={setShownStage} requestedStage={requestedStage} requestedAt={requestedAt} />
         </TabsContent>
         <TabsContent value="sheets" className="mt-4">
-          <DealTermSheets deal={deal} canEdit={canManage} onOpenAllFields={() => setTab('fill')} selected={idx} onSelect={setTrancheIdx} onWorkspace={setWs} />
+          <DealTermSheets deal={deal} canEdit={canEdit} canEditField={fieldPermission} onOpenAllFields={() => setTab('fill')} selected={idx} onSelect={setTrancheIdx} onWorkspace={setWs} />
         </TabsContent>
         <TabsContent value="docs" className="mt-4">
-          <DealDocuments dealId={deal.id} canManage={canManage} />
+          <DealDocuments dealId={deal.id} canManage={canEdit} />
         </TabsContent>
         <TabsContent value="xml" className="mt-4">
           {switcher()}
@@ -203,7 +203,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         </TabsContent>
         <TabsContent value="dlt" className="mt-4">
           {switcher(idx > 0 ? 'Read-only here — edit in the tranche term sheet' : undefined)}
-          <TermSheetDlt key={`dlt-${idx}`} deal={deal} canEdit={canManage && idx === 0} onSave={onSaveFields} override={idx > 0 ? savedTrancheState : undefined} />
+          <TermSheetDlt key={`dlt-${idx}`} deal={deal} canEdit={canManage && actualPhase !== 'closed' && idx === 0} onSave={onSaveFields} override={idx > 0 ? savedTrancheState : undefined} />
         </TabsContent>
         <TabsContent value="view" className="mt-4">
           {switcher()}
@@ -279,13 +279,12 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
       </div>
         </TabsContent>
       </Tabs>
-      {messageOpen && <aside id={`message-dock-${deal.id}`} className="dts-message-dock" aria-label="Live message panel"><LiveMsgPanel deal={deal} canSend={canManage} onSend={() => setSendMessageOpen(true)} /></aside>}
-      </div>
+      </DealPhaseWorkspace>
       {sendMessageOpen && <SendUpdateDialog deal={deal} onClose={() => setSendMessageOpen(false)} />}
 
 
-      {/* Stage History */}
-      <div className="space-y-2">
+      {/* Stage History retained in the compact timeline. */}
+      <div className="hidden">
         <h3 className="font-medium text-sm border-b pb-1">Stage History</h3>
         {deal.stageHistory.length === 0 ? (
           <p className="text-sm text-muted-foreground">No transitions yet</p>
@@ -671,10 +670,10 @@ export default function DealsPage() {
                         <Megaphone className="h-4 w-4" style={{ color: '#f3d98a' }} />
                       </Button>
                     )}
-                  <Button type="button" variant="outline" size="icon" aria-label="Send update" title="Send update — email new-issue alert"
+                  {!expanded && deal.stage !== 'Settled' && <Button type="button" variant="outline" size="icon" aria-label="Send update" title="Send update — email new-issue alert"
                     className="m-2 ml-0 h-9 w-9" onClick={e => { e.stopPropagation(); setAlertDealId(deal.id); }}>
                     <Send className="h-4 w-4" />
-                  </Button>
+                  </Button>}
                   {deal.extractionSnapshot && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -750,8 +749,8 @@ export default function DealsPage() {
                     fromBoard={!!searchParams.get('dealId')}
                     requestedStage={searchParams.get('dealId') === deal.id ? parseDtsStage(searchParams.get('stage')) : undefined}
                     requestedAt={searchParams.get('at') ?? undefined}
-                    onSaveFields={(patch) => {
-                      updateDeal(deal.id, { ...patch, updatedAt: new Date() });
+                    onSaveFields={async (patch) => {
+                      await updateDeal(deal.id, { ...patch, updatedAt: new Date() });
                       addAuditEntry({
                         action: 'deal_termsheet_updated',
                         entityType: 'deal',
