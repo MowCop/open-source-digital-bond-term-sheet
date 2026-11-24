@@ -3,10 +3,10 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@3.6.0";
+import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@3.1.0";
 
 // src/lib/mcp/tools/list-deals.ts
-import { defineTool } from "npm:@lovable.dev/mcp-js@3.6.0";
+import { defineTool } from "npm:@lovable.dev/mcp-js@3.1.0";
 import { z } from "npm:zod@^3.25.76";
 
 // src/lib/mcp/supabase.ts
@@ -87,7 +87,7 @@ var list_deals_default = defineTool({
 });
 
 // src/lib/mcp/tools/get-deal.ts
-import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@3.6.0";
+import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@3.1.0";
 import { z as z2 } from "npm:zod@^3.25.76";
 var COLUMNS = "id, issuer_name, issuer_lei, currency, coupon, interest_type, stage, isin, cusip, common_code, benchmark, ipt, guidance, issue_price, reoffer_price, reoffer_spread, reoffer_yield, issue_date, pricing_date, settlement_date, maturity_date, day_count_fraction, governing_law, listing_venue, issuer_rating, bookrunners";
 var get_deal_default = defineTool2({
@@ -125,5 +125,5 @@ var mcp_default = defineMcp({
 });
 
 // lovable-mcp-supabase-entry.ts
-import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@3.6.0/stacks/supabase";
+import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@3.1.0/stacks/supabase";
 Deno.serve(createSupabaseHandler(mcp_default, { functionName: "mcp" }));
