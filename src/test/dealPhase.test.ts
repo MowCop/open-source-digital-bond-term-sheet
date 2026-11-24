@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dealPhase, executionReadiness, executionGateState, mayEditField, STRUCTURE_PATHS, type Signoff, type SignoffItem } from '@/lib/dealPhase';
 import { unifiedChecks } from '@/lib/bdt-bridge';
-const definition=readFileSync(new URL('../../drizzle/migrations/0014_targeted_execution_gate_signoffs.sql',import.meta.url),'utf8').match(/SELECT '(\[[\s\S]*?\])'::jsonb/);
+const definition=readFileSync(new URL('../../drizzle/migrations/0016_signoff_notice_and_closed_coverage.sql',import.meta.url),'utf8').match(/SELECT '(\[[\s\S]*?\])'::jsonb/);
 if(!definition)throw new Error('Missing shared checklist definition');
 const CHECKLIST:SignoffItem[]=JSON.parse(definition[1]);
 const team=[{role:'dcm'},{role:'issuer_legal'},{role:'counsel'}];

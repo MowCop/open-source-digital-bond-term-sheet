@@ -24,7 +24,7 @@ export function mayEditField(role: UserRole, phase: DealPhase, path: string): bo
 }
 export interface Signoff { item_key: string; role: ActorRole; user_id: string; status: 'open' | 'in_review' | 'signed_off'; updated_at: string }
 /** Definitions come from signoff_item_fields(), also used by the database triggers. */
-export interface SignoffItem { key: string; role: ActorRole; label: string; fields: string[]; workspace: string[]; tranche: string[]; parties: string[] }
+export interface SignoffItem { key: string; role: ActorRole; label: string; fields: string[]; workspace: string[]; tranche: string[]; parties: string[]; bulletin?: string[] }
 export interface PhaseAudit { action: string; userName: string; at: string; details: { item?: string; changedFields?: string[]; note?: string; openItems?: unknown[]; blockingChecks?: unknown[] } }
 export function checklistEvidence(state: BdtState, ws: DealWorkspace | null, documentCount: number): Record<string, boolean> {
   const v = termSheetView(state), f = state.f;

@@ -1668,6 +1668,7 @@ export type Database = {
             }
             Returns: undefined
           }
+      signoff_bulletin_values: { Args: { _raw: string }; Returns: Json }
       signoff_item_fields: { Args: never; Returns: Json }
       signoff_mapped_values: {
         Args: { _item: Json; _state: Json; _ws: Json }

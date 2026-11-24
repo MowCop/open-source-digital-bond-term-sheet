@@ -76,6 +76,7 @@ export default function DealPhaseWorkspace({deal,phase,onPhase,children,intake,w
   </section>;
 }
 function changedFieldName(path:string) {
+  if(path==='bulletin.legal')return 'legal notices';
   if(path.includes('FixedRatePayment/InterestRate'))return 'coupon';
   if(path.includes('GoverningLaw/'))return 'governing law';
   return (path.split('/').pop()??path).replace(/^.*\./,'').replace(/([a-z])([A-Z])/g,'$1 $2').toLowerCase();
