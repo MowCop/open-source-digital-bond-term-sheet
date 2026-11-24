@@ -32,13 +32,15 @@ During a bond issue the terms change throughout the day, moving from initial pri
 
 ## How it works
 
-### Deal workflow: who acts when
+### Deal workflow: field certainty
 
-- **Set-up (Mandate / Announced, before IPTs):** documents and reviewed extraction on the left, the multi-tranche DTS editor in the centre, and actor-owned sign-offs on the right. DCM reviews structure, size, tenor and bookrunners; issuer legal reviews issuer/LEI, law, restrictions and target market; deal counsel reviews documents, listing, stabilisation and legal notices. Assigned actors sign off manually; saved-term or document changes reopen sign-offs.
-- **Ready for execution:** resolve blocking Deal Checker findings, save the terms and complete every required sign-off. A syndicate administrator confirms **Move to execution (IPTs)** with an audit note; the server rechecks the current saved snapshot and sign-offs.
-- **Execution (IPTs through Priced):** Co-Pilot becomes the command centre, with stage-specific prompt starters. A compact tranche summary and full DTS editor remain available. Proposed changes show before/after values and require human **Approve**, **Edit** or **Reject**; approval reuses the existing atomic execution checks and audits. The Live MSG updates from saved terms; **Send update** still requires separate human approval and never sends automatically.
-- **Permissions:** actors see only assigned deals. DCM may edit structure fields and bookrunners; legal and counsel may edit in set-up but only ask/comment during execution. Syndicate administrators edit all terms. **Settled / Closed** is read-only, including for administrators. A manual phase-view override changes layout only, never permissions or lifecycle.
-- **Formats and mobile:** Standard text, XML, DLT, All fields and multi-tranche term sheets are retained; narrow screens use Co-Pilot / DTS / Message tabs. Other pages retain the general header Co-Pilot.
+- **Create New Deal:** drop an offering circular / memorandum or draft term sheet, review each extracted value beside its source excerpt, then choose Fixed rate, Floating rate or Zero coupon. Manual entry and user-selected GLEIF matches remain available.
+- **Set / Expected / Open:** green confirmed terms, blue convention suggestions with reasons, and amber evolving or missing terms. Normal BDT sections carry status markers and filters; each tranche has its own counts. Confirming a suggestion makes it Set; editing confirmed terms asks for confirmation and is audited.
+- **Before IPTs:** documents sit left, DTS centre, Co-Pilot in a drawer. **During execution:** Co-Pilot centre, Open-first tranche summaries left, Live MSG right. There are no actor checklists or execution gates.
+- **Approvals:** Co-Pilot proposes; a human approves, edits or rejects. Atomic stale checks and saved-command audits remain. Interim guidance/books remain Open with Latest/history. Send update requires separate human approval; Expected values are excluded from generated outgoing term rows and XML attachments.
+- **Pricing completeness:** the selected BDT template field list flags unresolved Open/Expected terms in Deal Checker from Priced. Syndicate admins retain lifecycle control. Settled is read-only.
+- **Permissions:** DCM edits structure/bookrunners; assigned legal/counsel edit before IPTs and are read-only during execution. Role/team scoping is retained for permissions only.
+- **Templates and standards:** Origin files are reference crosswalks, not a source of example values or copied term-sheet wording. Confirm the Origin/Airbrush/template licence before reusing its wording or distributing derivative templates. ICMA BDT remains authoritative; market conventions are suggestions, not legal defaults. Details and verification limitations: [DTS field status](reference/dts-field-status.md).
 
 
 ```mermaid

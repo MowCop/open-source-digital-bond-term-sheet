@@ -8,7 +8,7 @@
  */
 import type { BdtState } from "./bdt-bridge";
 
-export type RateType = "fixed" | "floating";
+export type RateType = "fixed" | "floating" | "zero";
 
 export interface Tranche {
   id: string;

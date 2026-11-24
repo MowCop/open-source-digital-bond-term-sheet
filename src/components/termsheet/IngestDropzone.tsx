@@ -18,7 +18,7 @@ interface Props {
 }
 
 const ACCEPT = '.pdf,.docx,.xml,.html,.htm,.txt';
-const HINT = 'Drop a term sheet, final terms or BDT XML file here to propose values';
+const HINT = 'Drop an Offering Memorandum / Circular or draft term sheet (PDF / DOCX)';
 
 export default function IngestDropzone({ onFiles, disabled, className, compact }: Props) {
   const [dragOver, setDragOver] = useState(false);

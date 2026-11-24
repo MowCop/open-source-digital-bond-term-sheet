@@ -1,3 +1,7 @@
+import { useAuth } from '@/context/AuthContext';
+import { FieldStatusProvider, FieldStatusSummary, FieldStatusMark } from './FieldStatusContext';
+import { confirmExpected, fieldRecord, transitionField, withExpected, metadataKey, type FieldMetadata } from '@/lib/fieldStatus';
+import type { BdtState } from '@/lib/bdt-bridge';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,13 +20,15 @@ const SCOPE_TITLE: Record<Scope, string> = {
 const CURRENCY_PATH = 'IssuanceDataGroup/Issuance/SpecifiedCurrency';
 const AMOUNT_PATH = 'IssuanceDataGroup/Product/AggregateNominalAmount/Value';
 
-export interface TrancheSave { main: Record<string, string>; own: Record<string, unknown>; seniority: Seniority; details: Pick<Tranche, 'currency' | 'amount' | 'tenor' | 'rateType'> }
+export interface TrancheSave { main: Record<string, string>; own: Record<string, unknown>; seniority: Seniority; fieldMeta: FieldMetadata; details: Pick<Tranche, 'currency' | 'amount' | 'tenor' | 'rateType'> }
 
-export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, canEditField = () => true, onSave, onPopOut, hideIssuer }: {
-  tranche: Tranche; isFirst: boolean; issuer: string; main: Record<string, string>; canEdit: boolean;
+export default function TranchePanel({ tranche, isFirst, issuer, main, fieldMeta = {}, canEdit, canEditField = () => true, onSave, onPopOut, hideIssuer }: {
+  tranche: Tranche; isFirst: boolean; issuer: string; main: Record<string, string>; fieldMeta?: FieldMetadata; canEdit: boolean;
   onSave: (s: TrancheSave) => Promise<void> | void; onPopOut?: () => void; hideIssuer?: boolean;
   canEditField?: (path: string) => boolean;
 }) {
+  const {authUser}=useAuth();
+  const [metadata,setMetadata]=useState<FieldMetadata>({});
   const [seniority, setSeniority] = useState<Seniority>(tranche.seniority ?? 'senior_unsecured');
   const [edits, setEdits] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -30,7 +36,11 @@ export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, 
   const [detailsDirty, setDetailsDirty] = useState(false);
   const fields = useMemo(() => trancheFields(details.rateType, seniority), [details.rateType, seniority]);
   const value = (p: string) => (p in edits ? edits[p] : trancheValue(p, isFirst, main, tranche.values));
-  const dirty = detailsDirty || Object.keys(edits).length > 0 || seniority !== (tranche.seniority ?? 'senior_unsecured');
+  const localMeta={...fieldMeta};
+  for(const r of fields) {const own=fieldMeta[metadataKey(r.p,tranche.id)];if(!isFirst&&r.scope!=='deal'&&own)localMeta[r.p]=own;}
+  const contextState=withExpected({f:Object.fromEntries(fields.map(r=>[r.p,value(r.p)])),fieldMeta:{...localMeta,...metadata},stage:1} as BdtState);
+  const update=(p:string,v:string)=>{setEdits(e=>({...e,[p]:v}));const next=transitionField(contextState,p,v,authUser?.id??'');setMetadata(m=>({...m,[p]:next.fieldMeta?.[p] as NonNullable<typeof next.fieldMeta>[string]}));};
+  const dirty = detailsDirty || Object.keys(edits).length > 0 || Object.keys(metadata).length > 0 || seniority !== (tranche.seniority ?? 'senior_unsecured');
   const changeDetails = (patch: Partial<typeof details>) => { setDetails(d => ({ ...d, ...patch })); setDetailsDirty(true); };
 
   const changeSeniority = (s: Seniority) => { setSeniority(s); setEdits(e => ({ ...e, ...SENIORITY_PRESET[s] })); };
@@ -43,11 +53,14 @@ export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, 
       else if (r.p in edits || r.scope === 'copied') nextOwn[r.p] = v;
     }
     setSaving(true);
-    try { await onSave({ main: nextMain, own: nextOwn, seniority, details }); setEdits({}); setDetailsDirty(false); } finally { setSaving(false); }
+    try { const output={...fieldMeta};for(const [p,r] of Object.entries({...contextState.fieldMeta,...metadata})) {const row=fields.find(f=>f.p===p);if(!row)continue;output[!isFirst&&row.scope!=='deal'?metadataKey(p,tranche.id):p]=r;}
+      await onSave({ main: nextMain, own: nextOwn, seniority, details, fieldMeta:output }); setMetadata({}); setEdits({}); setDetailsDirty(false); } finally { setSaving(false); }
   };
 
   return (
+    <FieldStatusProvider state={contextState} confirm={p=>{if(!canEdit||!canEditField(p))return;const next=confirmExpected(contextState,p,authUser?.id??'');update(p,next.f[p]);}}>
     <div className="space-y-4 p-3 text-sm">
+      <FieldStatusSummary state={contextState} paths={fields.map(r=>r.p)}/>
       {issuer && !hideIssuer && <div className="text-2xl font-bold uppercase tracking-wide text-foreground">{issuer}</div>}
       <div className="flex flex-wrap items-end gap-2">
         <div className="flex flex-col items-start gap-1">
@@ -71,37 +84,38 @@ export default function TranchePanel({ tranche, isFirst, issuer, main, canEdit, 
               {isFirst && scope === 'copied' ? 'Shared starting values for other tranches' : SCOPE_TITLE[scope]}
             </h4>
             {scope === 'own' && <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <label className="space-y-1 text-xs text-muted-foreground">Ccy
+              <label className="space-y-1 text-xs text-muted-foreground">Ccy <FieldStatusMark path={CURRENCY_PATH} disabled={!canEdit}/>
                 <Input aria-label="Tranche currency" className="h-9 text-foreground" value={details.currency} maxLength={3} disabled={!canEdit} onChange={e => {
-                  const currency = e.target.value.toUpperCase(); changeDetails({ currency }); setEdits(v => ({ ...v, [CURRENCY_PATH]: currency }));
+                  const currency = e.target.value.toUpperCase(); if(fieldRecord(contextState,CURRENCY_PATH).status==='set'&&!window.confirm('Change confirmed currency? The saved change will be audited.'))return; changeDetails({ currency }); update(CURRENCY_PATH,currency);
                 }} />
               </label>
-              <label className="space-y-1 text-xs text-muted-foreground">Amount
+              <label className="space-y-1 text-xs text-muted-foreground">Amount <FieldStatusMark path={AMOUNT_PATH} disabled={!canEdit}/>
                 <Input aria-label="Tranche amount" type="number" min="0" className="h-9 text-foreground" value={details.amount ?? ''} disabled={!canEdit} onChange={e => {
                   const raw = e.target.value; const amount = raw === '' ? null : Number(raw);
-                  changeDetails({ amount }); setEdits(v => ({ ...v, [AMOUNT_PATH]: amount == null ? '' : String(amount) }));
+                  if(fieldRecord(contextState,AMOUNT_PATH).status==='set'&&!window.confirm('Change confirmed amount? The saved change will be audited.'))return; changeDetails({ amount }); update(AMOUNT_PATH,amount==null?'':String(amount));
                 }} />
               </label>
-              <label className="space-y-1 text-xs text-muted-foreground">Tenor
+              <label className="space-y-1 text-xs text-muted-foreground">Tenor <FieldStatusMark path="tenor" disabled={!canEdit}/>
                 <Input aria-label="Tranche tenor" className="h-9 text-foreground" value={details.tenor} disabled={!canEdit} onChange={e => changeDetails({ tenor: e.target.value })} />
               </label>
               <div className="space-y-1 text-xs text-muted-foreground">
                 <span>Rate type</span>
-                <Select value={details.rateType} disabled={!canEdit} onValueChange={rateType => { if (rateType === 'fixed' || rateType === 'floating') changeDetails({ rateType }); }}>
+                <Select value={details.rateType} disabled={!canEdit} onValueChange={rateType => { if (rateType === 'fixed' || rateType === 'floating' || rateType === 'zero') changeDetails({ rateType }); }}>
                   <SelectTrigger aria-label="Tranche rate type" className="h-9 text-foreground"><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="fixed">Fixed rate</SelectItem><SelectItem value="floating">Floating rate</SelectItem></SelectContent>
+                  <SelectContent><SelectItem value="fixed">Fixed rate</SelectItem><SelectItem value="floating">Floating rate</SelectItem><SelectItem value="zero">Zero coupon</SelectItem></SelectContent>
                 </Select>
               </div>
             </div>}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {rows.map(r => (
                 <TermSheetField key={r.p} fd={r.fd} value={value(r.p)} disabled={!canEdit || !canEditField(r.p)}
-                  onChange={v => setEdits(e => ({ ...e, [r.p]: v }))} />
+                  onChange={v => update(r.p,v)} />
               ))}
             </div>
           </section>
         );
       })}
     </div>
+    </FieldStatusProvider>
   );
 }

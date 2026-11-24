@@ -92,6 +92,8 @@ const ROWS: Row[] = [
   { p: PR + 'InterestPayment/MinimumRate', scope: 'own', rate: 'floating' },
   { p: PR + 'InterestPayment/MaximumRate', scope: 'own', rate: 'floating' },
   { p: I + 'IssuePrice/Value', scope: 'own' },
+  { p: I + 'IndicationOfYield/Value', scope: 'own', rate: 'zero' },
+  { p: I + 'ReofferYield/Value', scope: 'own', rate: 'zero' },
   { p: I + 'Proceeds/Net/Value', scope: 'own' },
   { p: I + 'Redemption/FinalRedemptionPercentage', scope: 'own' },
   { p: PR + 'DayCountFraction', scope: 'own' },

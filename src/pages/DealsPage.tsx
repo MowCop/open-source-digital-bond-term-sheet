@@ -1,3 +1,7 @@
+import NewDealSourceReview, { type IntakeValue } from '@/components/NewDealSourceReview';
+import { TEMPLATE_LABELS, withExpected, transitionField, externalState, selectTemplate, type FieldMetadata } from '@/lib/fieldStatus';
+import type { RateType } from '@/lib/dealWorkspace';
+import { searchLeiByName, type LeiCandidate } from '@/lib/gleif';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useAiModel } from '@/lib/aiModel';
@@ -60,7 +64,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAuth } from '@/context/AuthContext';
 
 function BdtXmlPanel({ deal, override }: { deal: Deal; override?: BdtState }) {
-  const state = useMemo(() => { const s = JSON.parse(JSON.stringify(override ?? dealToBdtState(deal))); refreshAuto(s); return s; }, [deal, override]);
+  const state = useMemo(() => { const s = JSON.parse(JSON.stringify(externalState(override ?? dealToBdtState(deal)))); refreshAuto(s); return s; }, [deal, override]);
   const xml = useMemo(() => buildXML(state) as string, [state]);
   const [report, setReport] = useState<ValidationReport | null>(null);
   const [intake, setIntake] = useState(false);
@@ -126,7 +130,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
   const trancheState = useMemo(() => trancheBdtState(checkerState, ws, idx), [checkerState, ws, idx]);
   const savedTrancheState = useMemo(() => trancheBdtState(dealToBdtState(deal), ws, idx), [deal, ws, idx]);
   const view = useMemo(() => termSheetView(trancheState), [trancheState]);
-  const switcher = (note?: string) => <TrancheSwitcher ws={ws} selected={idx} onSelect={setTrancheIdx} note={note} />;
+  const switcher = (note?: string) => <TrancheSwitcher state={checkerState} ws={ws} selected={idx} onSelect={setTrancheIdx} note={note} />;
   const navigate = useNavigate();
   const fillRef = useRef<TermSheetFillHandle>(null);
   const [tab, setTab] = useState('sheets');
@@ -159,7 +163,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
       if (!active) return;
       const saved = data?.deal_workspace as unknown as DealWorkspace | null;
       if (saved?.version === 1) setWs(saved);
-      else { const base=fromLegacy(null,deal.currency,parseAmount(deal.size)); base.tranches[0].tenor=deal.tenor; setWs(base); }
+      else { const base=fromLegacy(null,deal.currency,parseAmount(deal.size)); base.tranches[0].tenor=deal.tenor; base.tranches[0].rateType=deal.bdtState?.template??selectTemplate('',deal.bdtState?.f??{}); setWs(base); }
     });
     return () => {active=false;};
   },[deal.id,deal.updatedAt]);
@@ -188,7 +192,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
       />
 
 
-          <TabsList className="ml-auto h-auto shrink-0 flex-wrap">
+          <TabsList className="w-full min-w-0 h-auto flex-wrap justify-start">
             <TabsTrigger value="sheets">Deal term sheets</TabsTrigger>
             <TabsTrigger value="view">Standard text</TabsTrigger>
             <TabsTrigger value="xml">XML</TabsTrigger>
@@ -316,7 +320,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
 }
 
 export default function DealsPage() {
-  const { isAdmin: authenticatedAdmin, roles: authenticatedRoles } = useAuth();
+  const { isAdmin: authenticatedAdmin, roles: authenticatedRoles, authUser } = useAuth();
   const { deals, messages, createDeal, updateDeal, deleteDeal, undoExtraction, publishBulletinFromDeal, saveBulletinDraft, currentUser, addAuditEntry } = useScopedApp();
   const fullApp = useApp();
   const [demoBusy, setDemoBusy] = useState(false);
@@ -338,6 +342,12 @@ export default function DealsPage() {
   const [bulletinDealId, setBulletinDealId] = useState<string | null>(null);
   const [alertDealId, setAlertDealId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [createStep,setCreateStep] = useState(1);
+  const [template,setTemplate] = useState<RateType>('fixed');
+  const [reviewValues,setReviewValues] = useState<IntakeValue[]>([]);
+  const [intakeSources,setIntakeSources] = useState<Record<string,{source:string;snippet:string}>>({});
+  const [issuerLei,setIssuerLei] = useState('');
+  const [leiCandidates,setLeiCandidates] = useState<LeiCandidate[]>([]);
   const [newDealFiles, setNewDealFiles] = useState<File[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState<{ dealId: string; files: File[] } | null>(null);
   const [newDeal, setNewDeal] = useState(emptyNewDeal);
@@ -399,14 +409,21 @@ export default function DealsPage() {
       governingLaw: (newDeal.governingLaw as any) || undefined,
     };
     const bdtState = dealToBdtState({ ...draftDeal, id: '', createdAt: new Date(), updatedAt: new Date(), stageHistory: [] });
-    bdtState.f = { ...bdtState.f, ...documentFields };
+    bdtState.f = { ...bdtState.f, ...documentFields, 'IssuanceDataGroup/Product/InterestPayment/InterestType': template==='floating'?'FLOATING':template==='zero'?'ZERO_COUPON':'FIXED' };
+    bdtState.template = template; bdtState.fieldMeta = {};
+    if (issuerLei) { const issuer=bdtState.parties.find(p=>p.Roles.includes('ISSUER')); if(issuer)issuer.LEIIdentifier=issuerLei; }
+    for(const [p,v] of Object.entries(bdtState.f)) if(v) { const evidence=intakeSources[p]; const next=transitionField(bdtState,p,v,authUser?.id??currentUser.id,evidence?`Document: ${evidence.source} — ${evidence.snippet}`:'Manual creation');bdtState.fieldMeta=next.fieldMeta; }
+    if(/target|benchmark/i.test(newDeal.size)) for(const p of ['IssuanceDataGroup/Issuance/TotalAggregateAmount/Value','IssuanceDataGroup/Product/AggregateNominalAmount/Value']) if(bdtState.fieldMeta[p])bdtState.fieldMeta[p].status='open';
+    for(const g of ['parties','docs','ratings','ids'] as const) if(bdtState[g]?.length)bdtState.fieldMeta[`group:${g}`]={status:'set',source:'Reviewed deal creation',by:authUser?.id??currentUser.id,at:new Date().toISOString()};
+    bdtState.fieldMeta = withExpected(bdtState).fieldMeta;
     refreshAuto(bdtState);
     const created = createDeal({ ...draftDeal, bdtState });
+    setExpandedDealId(created.id);
     if (newDealFiles.length) {
       setPendingDocuments({ dealId: created.id, files: newDealFiles });
       setExpandedDealId(created.id);
     }
-    setNewDealFiles([]);
+    setNewDealFiles([]); setReviewValues([]); setCreateStep(1); setIssuerLei(''); setLeiCandidates([]);
     setShowCreate(false);
     setNewDeal(emptyNewDeal());
     setDocumentFields({}); documentFieldLocks.current.clear();
@@ -423,19 +440,14 @@ export default function DealsPage() {
     let count = 0;
     try {
       for (const file of selected) {
-        const { draft, bookrunners, fields = {} } = await extractNewDealTerms(file);
+        const { draft, bookrunners, fields = {}, text = '', template: suggested } = await extractNewDealTerms(file);
         if (session !== extractionSession.current) return;
-        const locked = new Set(revision !== issuerRevision.current ? ['issuerName'] : []);
-        const { draft: merged, filled } = mergeNewDealDraft(newDealRef.current, draft, locked);
-        const banks = mergeNewDealBookrunners(newBookrunnersRef.current, bookrunners);
-        const extra = mergeDocumentFields(documentFieldsRef.current, fields, documentFieldLocks.current);
-        count += Object.keys(extra).filter(p => extra[p] !== documentFieldsRef.current[p]).length;
-        count += filled.length + (banks !== newBookrunnersRef.current && banks.length ? 1 : 0);
-        documentFieldsRef.current = extra; setDocumentFields(extra);
-        newDealRef.current = merged; newBookrunnersRef.current = banks;
-        setNewDeal(merged); setNewBookrunners(banks);
+        if(suggested)setTemplate(suggested);
+        const quote=(value:string)=>{const pos=text.toLowerCase().indexOf(value.toLowerCase());return pos<0?'':text.slice(Math.max(0,pos-100),Math.min(text.length,pos+value.length+200));};
+        const pending:IntakeValue[]=[...Object.entries(draft).filter(([,v])=>v).map(([key,value])=>({key,label:key.replace(/([A-Z])/g,' $1'),value:String(value),source:file.name,snippet:quote(String(value)),kind:'draft' as const})),...Object.entries(fields).map(([key,value])=>({key,label:fieldByPath(key)?.l??key,value,source:file.name,snippet:quote(value),kind:'field' as const})),...(bookrunners.length?[{key:'bookrunners',label:'Bookrunners',value:bookrunners.map(b=>b.name).join(', '),source:file.name,snippet:quote(bookrunners[0].name),kind:'bookrunners' as const}]:[])];
+        setReviewValues(v=>[...v,...pending]);setCreateStep(2);count+=pending.length;
       }
-      if (count) toast.success(`Filled ${count} field${count > 1 ? 's' : ''}; please check them before creating`);
+      if (count) toast.success(`Found ${count} values to review`);
       else toast.info('No new terms found; please enter them manually');
     } catch {
       if (session === extractionSession.current) toast.info('Document added, but terms could not be read; please enter them manually');
@@ -489,12 +501,16 @@ export default function DealsPage() {
         {canManageDeals && (
           <Dialog open={showCreate} onOpenChange={setShowCreate}>
             <DialogTrigger asChild>
-              <Button><Plus className="h-4 w-4 mr-2" />New Deal</Button>
+              <Button size="lg" className="font-semibold"><Plus className="h-5 w-5 mr-2" />Create New Deal</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto border-2 border-active-panel">
+            <DialogContent className="max-w-3xl w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto border-2 border-active-panel">
               <DialogHeader><DialogTitle className="flex items-center gap-2">Create New Deal<span className="ml-auto mr-6"><AiModelPicker compact /></span></DialogTitle></DialogHeader>
-              <div className="min-w-0 space-y-3">
+              <nav className="flex gap-2 border-b border-border pb-2">{[[1,'Document'],[2,'Review'],[3,'Template']].map(([n,l])=><Button key={n} size="sm" variant={createStep===n?'secondary':'ghost'} onClick={()=>setCreateStep(Number(n))}>{n}. {l}</Button>)}</nav>
+              {createStep===1&&<div className="space-y-3"><IngestDropzone onFiles={handleNewDealFiles} className="w-full min-w-0"/>{extractingIssuer&&<p role="status">Reading deal terms…</p>}<Button variant="outline" onClick={()=>setCreateStep(2)}>Enter manually</Button></div>}
+              {createStep===2&&reviewValues.length>0&&<NewDealSourceReview values={reviewValues} onChange={(i,value)=>setReviewValues(v=>v.map((r,n)=>n===i?{...r,value}:r))} onReject={i=>setReviewValues(v=>v.filter((_,n)=>n!==i))} onAccept={i=>{const r=reviewValues[i];if(!r)return;if(r.kind==='draft')setNewDeal(v=>({...v,[r.key]:r.value}));else if(r.kind==='field')setDocumentFields(v=>({...v,[r.key]:r.value}));else setNewBookrunners(v=>[...v,...r.value.split(',').map(name=>({name:name.trim(),role:'active' as const,isGlobalCoordinator:false}))]);setIntakeSources(v=>({...v,[r.key]:{source:r.source,snippet:r.snippet}}));setReviewValues(v=>v.filter((_,n)=>n!==i));}}/>}
+              {createStep===2&&<div className="min-w-0 space-y-3">
                 <div><Label htmlFor="new-deal-issuer">Issuer Name *</Label><Input id="new-deal-issuer" required value={newDeal.issuerName} onChange={e => { issuerRevision.current += 1; setNewDeal(p => ({ ...p, issuerName: e.target.value })); }} placeholder="e.g. Republic of France" /></div>
+                <div className="flex flex-wrap items-center gap-2"><Input aria-label="Issuer LEI" value={issuerLei} onChange={e=>setIssuerLei(e.target.value)} placeholder="LEI" className="flex-1"/><Button variant="outline" disabled={!newDeal.issuerName} onClick={async()=>setLeiCandidates(await searchLeiByName(newDeal.issuerName))}>GLEIF suggestions</Button></div>{leiCandidates.map(c=><Button key={c.lei} size="sm" variant="ghost" className="h-auto whitespace-normal text-left" onClick={()=>{setIssuerLei(c.lei);setLeiCandidates([]);}}>{c.legalName} · {c.lei}</Button>)}
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>Currency</Label>
                     <Select value={newDeal.currency} onValueChange={v => setNewDeal(p => ({ ...p, currency: v }))}>
@@ -566,8 +582,7 @@ export default function DealsPage() {
                     </div>
                   </div>
                 )}
-                <Button onClick={handleCreateDeal} className="w-full" disabled={extractingIssuer || !canCreateNewDeal(newDeal.issuerName, newBookrunners)}>Create Deal</Button>
-                <IngestDropzone onFiles={handleNewDealFiles} className="w-full min-w-0 overflow-hidden" />
+                <Button onClick={()=>setCreateStep(3)} disabled={extractingIssuer || reviewValues.length>0}>Choose template</Button>
                 {extractingIssuer && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Reading deal terms…</p>}
                 {newDealFiles.length > 0 && (
                   <div className="space-y-1">
@@ -580,7 +595,8 @@ export default function DealsPage() {
                     ))}
                   </div>
                 )}
-              </div>
+              </div>}
+              {createStep===3&&<div className="space-y-4"><Label>Deal template</Label><Select value={template} onValueChange={v=>setTemplate(v as RateType)}><SelectTrigger aria-label="Deal template"><SelectValue/></SelectTrigger><SelectContent>{Object.entries(TEMPLATE_LABELS).map(([k,l])=><SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent></Select><Button onClick={handleCreateDeal} className="w-full" disabled={extractingIssuer || reviewValues.length>0 || !canCreateNewDeal(newDeal.issuerName,newBookrunners)}>Create Deal</Button></div>}
             </DialogContent>
           </Dialog>
         )}
@@ -762,7 +778,8 @@ export default function DealsPage() {
                     onSaveFields={async (patch) => {
                       if (authenticatedRoles.includes('dcm') && !authenticatedAdmin && patch.bdtState) {
                         const original = dealToBdtState(deal);
-                        const state = { ...original, f: { ...original.f }, parties: patch.bdtState.parties };
+                        const state = { ...original, f: { ...original.f }, parties: patch.bdtState.parties, fieldMeta: {...original.fieldMeta} };
+                        for(const [p,m] of Object.entries((patch.bdtState.fieldMeta??{}) as FieldMetadata))if(mayEditField('dcm',dealPhase(deal),p))state.fieldMeta[p]=m;
                         for (const [p,v] of Object.entries(patch.bdtState.f)) if (mayEditField('dcm',dealPhase(deal),p)) state.f[p] = String(v);
                         patch = { bdtState:state, currency:patch.currency, size:patch.size, tenor:patch.tenor, maturityDate:patch.maturityDate, interestType:patch.interestType, bookrunners:patch.bookrunners };
                       }

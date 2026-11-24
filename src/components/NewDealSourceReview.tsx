@@ -1,0 +1,6 @@
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+export interface IntakeValue { key:string; label:string; value:string; source:string; snippet:string; kind:'draft'|'field'|'bookrunners' }
+export default function NewDealSourceReview({values,onChange,onAccept,onReject}:{values:IntakeValue[];onChange:(i:number,v:string)=>void;onAccept:(i:number)=>void;onReject:(i:number)=>void}) {
+ return <div className="space-y-3" aria-label="Review extracted values">{values.map((r,i)=><section key={r.key} className="border-b border-border pb-3 grid grid-cols-1 sm:grid-cols-2 gap-3"><div className="space-y-2"><label className="text-xs font-semibold">{r.label}</label><Input aria-label={`Extracted ${r.label}`} value={r.value} onChange={e=>onChange(i,e.target.value)}/><div className="flex gap-2"><Button size="sm" onClick={()=>onAccept(i)}>Accept</Button><Button size="sm" variant="ghost" onClick={()=>onReject(i)}>Ignore</Button></div></div><blockquote className="text-xs text-muted-foreground whitespace-pre-wrap border-l border-border pl-3"><strong>{r.source}</strong><p className="mt-2">{r.snippet||'No exact source quote returned. Check the original document before accepting.'}</p></blockquote></section>)}</div>;
+}

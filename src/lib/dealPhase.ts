@@ -22,23 +22,6 @@ export function mayEditField(role: UserRole, phase: DealPhase, path: string): bo
   if (role === 'dcm') return STRUCTURE_PATHS.includes(path) || path === 'group:parties';
   return phase === 'setup' && (role === 'issuer_legal' || role === 'counsel');
 }
-export interface Signoff { item_key: string; role: ActorRole; user_id: string; status: 'open' | 'in_review' | 'signed_off'; updated_at: string }
-/** Definitions come from signoff_item_fields(), also used by the database triggers. */
-export interface SignoffItem { key: string; role: ActorRole; label: string; fields: string[]; workspace: string[]; tranche: string[]; parties: string[]; bulletin?: string[] }
-export interface PhaseAudit { action: string; userName: string; at: string; details: { item?: string; changedFields?: string[]; note?: string; openItems?: unknown[]; blockingChecks?: unknown[] } }
-export function checklistEvidence(state: BdtState, ws: DealWorkspace | null, documentCount: number): Record<string, boolean> {
-  const v = termSheetView(state), f = state.f;
-  return { structure: !!ws?.tranches.length, size: !!v.size && (!ws || ws.tranches.every(t => t.amount != null && t.amount > 0)), tenor: !!v.tenor || !!ws?.tranches.every(t => !!t.tenor), bookrunners: v.bookrunners.length > 0,
-    issuer: !!v.issuerName && !!v.issuerLEI, law: !!v.governingLaw,
-    restrictions: !!f['IssuanceDataGroup/Issuance/SellingRestrictions/REGS/RegSCode'] && !!f['IssuanceDataGroup/Issuance/SellingRestrictions/PRIIPsRestriction'],
-    target: !!f['IssuanceDataGroup/Issuance/TargetMarket/ManufacturerTargetMarketType'], documents: documentCount > 0, listing: !!f['IssuanceDataGroup/Issuance/Listing/Listed'], stabilisation: !!f['x:stabilisation'], notices: documentCount > 0 };
-}
-export function executionReadiness(checks: Pick<CheckItem, 'l'>[], signoffs: Signoff[], evidence: Record<string, boolean>, dirty: boolean, team: { role: string }[], items: SignoffItem[]) {
-  const blocking = checks.filter(c => c.l === 'fail').length;
-  const required = items.filter(i => team.some(t => t.role === i.role));
-  const outstanding = required.filter(i => !evidence[i.key] || !signoffs.some(s => s.item_key === i.key && s.role === i.role && s.status === 'signed_off'));
-  return { ready: !dirty && !blocking && !outstanding.length, blocking, outstanding };
-}
 export function quickCommands(deal: Deal): string[] {
   if (dealPhase(deal) === 'closed') return [];
   if (deal.stage === 'Priced') return ['Price at … / coupon … / re-offer …', 'Draft final terms update'];
@@ -46,4 +29,3 @@ export function quickCommands(deal: Deal): string[] {
   if (deal.stage === 'Books Open') return ['Books update £…bn ex-JLM', 'Revise guidance to …', 'Close books'];
   return ['Announce IPTs …', 'Open books'];
 }
-export const savedEvidence = (deal: Deal, ws: DealWorkspace | null, docs: number) => checklistEvidence(dealToBdtState(deal), ws, docs);

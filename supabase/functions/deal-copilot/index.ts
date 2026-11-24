@@ -93,7 +93,7 @@ Deno.serve(async(req)=>{
       await must(admin.from('copilot_messages').insert({...turn,thread_id:threadId,created_by:auth.user.id}));
       // Focus (a clicked board update or chat) is shown to the agent only, never stored.
       const actorContext=await must(userClient.rpc('deal_actor_context',{_deal:thread.deal_id}));
-      const actorText=`Server-verified actor context: ${JSON.stringify(actorContext)}. Tailor suggestions to these roles and phase. Legal and counsel are read-only during execution; DCM edits structure only. Never claim sign-off or execute; approvals remain human.\n`;
+      const actorText=`Server-verified actor context: ${JSON.stringify(actorContext)}. Tailor suggestions to these roles and phase. Legal and counsel are read-only during execution; DCM edits structure only. Organise suggestions around bdt_state.fieldMeta Set / Expected / Open certainty. Expected suggestions are not confirmed terms. There are no actor sign-offs or execution gates. Never execute; approvals remain human.\n`;
       const asked={role:'user',body:`${actorText}${input.data.focus??''}\n\nQuestion: ${turn.body}`};
       const answer=await chatAgent(host,[...rows,asked],model,input.data.liveChecks);
       await must(admin.from('copilot_messages').insert({thread_id:threadId,role:'assistant',body:answer}));

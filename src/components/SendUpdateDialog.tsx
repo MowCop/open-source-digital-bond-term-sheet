@@ -1,3 +1,4 @@
+import { externalState } from '@/lib/fieldStatus';
 import { useEffect, useMemo, useState } from 'react';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { Send, RotateCw, AlertTriangle, Sparkles } from 'lucide-react';
@@ -116,7 +117,7 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
   const send = async () => {
     if (!saved) return;
     let payload;
-    try { payload = buildSendRequest({ approved, dealId: deal.id, event, subject, bodyHtml: body, releaseId: release?.id ?? null, state: saved, xml: buildXML(saved) }); }
+    try { payload = buildSendRequest({ approved, dealId: deal.id, event, subject, bodyHtml: body, releaseId: release?.id ?? null, state: saved, xml: buildXML(externalState(saved)) }); }
     catch (e) { toast.error((e as Error).message); return; }
     setBusy(true);
     await saveNotes();

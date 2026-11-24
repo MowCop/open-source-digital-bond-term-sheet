@@ -9,7 +9,8 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
-- [ ] Sweep gate/review entry points; cover stored bulletin legal notices and preserve settled sign-offs; report unrelated stage-display issues without changing them.
+- [ ] Replace actor checklists/gates with Set/Expected/Open field metadata, reviewed template intake, status-aware MSG and pricing completeness; preserve permissions and approval/audit flows, verify and report migrations.
+- [x] Prior gate sweep superseded by the field-status redesign.
 - [x] Targeted gate fixes: team-dependent sign-offs, audited administrator override, shared mapping and selective reopening; 324 regression tests passed, signed-in override/IPTs/reload badge, governing-law reopening and mobile verified without alerts. Migrations 0014–0015; reference/deal-phase-workflow.md.
 - [x] Step 2: phase-based workspace, actor sign-offs/readiness gate, role-scoped editing, central execution Co-Pilot and preserved DTS/MSG/send workflows. Full tests and signed-in command→approve→save→MSG/reload plus legal read-only/sign-off and mobile checks; inventory and verification limits: reference/deal-phase-workflow.md.
 - [x] Step 1: live MSG formatter, collapsible dock, saved-term/notes subscriptions, exact copy and email preview; 28 tests and signed-in save/second-window Realtime/commentary/reload/mobile checks pass. Approvals/audits retained; no alerts sent. Files/limits: reference/live-msg-panel.md.

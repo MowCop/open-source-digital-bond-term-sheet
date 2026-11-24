@@ -1,3 +1,4 @@
+import { externalState } from '@/lib/fieldStatus';
 import { P, parseAmount, type BdtState } from '@/lib/bdt-bridge';
 import type { DealWorkspace } from '@/lib/dealWorkspace';
 import { termSheetView } from '@/lib/termSheetView';
@@ -36,6 +37,7 @@ const amount = (v: number) => v >= 1e9 ? `${+(v / 1e9).toFixed(6)}bn` : v >= 1e6
 
 /** Structured lines drive plain text and highlighting without parsing UI markup. */
 export function buildMsgLines(a: MsgInput): MsgLine[] {
+  a = { ...a, state: externalState(a.state) };
   const main = termSheetView(a.state);
   const tranches = a.ws?.tranches ?? [];
   const multi = tranches.length > 1;
@@ -59,16 +61,17 @@ export function buildMsgLines(a: MsgInput): MsgLine[] {
   const count = Math.max(1, tranches.length);
   for (let i = 0; i < count; i++) {
     const t = tranches[i];
-    const state = trancheBdtState(a.state, a.ws ?? null, i);
+    const state = externalState(trancheBdtState(a.state, a.ws ?? null, i));
     const v = termSheetView(state);
     const field = (p: string) => state.f[p]?.trim() ?? '';
     const block = multi ? `TRANCHE ${t?.label || String.fromCharCode(65 + i)}` : 'DEAL';
-    const currency = v.currency || t?.currency || '';
+    const currency = v.currency || (!a.state.fieldMeta ? t?.currency : '') || '';
     // Main BDT amounts are authoritative for A; other tranche overlays may still
     // contain a deal-wide total, so prefer their own nominal amount/details.
     const nominal = parseAmount(field(P.nominalAmount));
-    const size = i === 0 ? v.size.replace(new RegExp(`^${currency}\\s+`), '') : Number.isFinite(nominal) ? amount(nominal) : t?.amount != null ? amount(t.amount) : '';
-    const tenor = v.tenor || t?.tenor || '';
+    const size = i === 0 ? v.size.replace(new RegExp(`^${currency}\\s+`), '') : Number.isFinite(nominal) ? amount(nominal) : !a.state.fieldMeta && t?.amount != null ? amount(t.amount) : '';
+    const tenorRecord = a.state.fieldMeta?.[`tranche:${t?.id}:tenor`];
+    const tenor = v.tenor || (tenorRecord?.status === 'expected' ? '' : t?.tenor) || '';
     if (multi) {
       lines.push({ text: '-----' });
       text([block, currency, size, tenor, readable(field(P.interestType))].filter(Boolean).join(' '));

@@ -1,3 +1,4 @@
+import { externalState } from '@/lib/fieldStatus';
 import { termSheetView } from '@/lib/termSheetView';
 import type { BdtState } from '@/lib/bdt-bridge';
 import type { DealWorkspace } from '@/lib/dealWorkspace';
@@ -66,7 +67,7 @@ function tenorOf(v: ReturnType<typeof termSheetView>, fallback = '') {
 
 /** "ISSUER – CCY SIZE TENOR – IPTs T+200bp area" (detail optional). */
 export function buildSubject(state: BdtState, event: AlertEvent, detail = '', tenorFallback = ''): string {
-  const v = termSheetView(state);
+  const v = termSheetView(externalState(state));
   const head = (v.issuerName || 'Issuer').toUpperCase();
   const deal = [v.size || v.currency, tenorOf(v, tenorFallback)].filter(Boolean).join(' ');
   const suffix = ALERT_EVENTS.find(e => e.id === event)?.suffix ?? '';
@@ -85,13 +86,13 @@ export const TERM_LABELS: [keyof ReturnType<typeof termSheetView>, string][] = [
 
 export function termRows(state: BdtState | null | undefined): { key: string; label: string; value: string }[] {
   if (!state?.f) return [];
-  const v = termSheetView(state) as Record<string, unknown>;
+  const v = termSheetView(externalState(state)) as Record<string, unknown>;
   const rows = TERM_LABELS.map(([k, label]) => {
     const raw = v[k as string];
     const value = Array.isArray(raw) ? raw.join(', ') : String(raw ?? '').trim();
     return { key: k as string, label, value };
   }).filter(r => r.value);
-  const br = termSheetView(state).bookrunners;
+  const br = termSheetView(externalState(state)).bookrunners;
   if (br.length) rows.splice(3, 0, { key: 'bookrunners', label: 'Bookrunners', value: br.map(b => b.name).filter(Boolean).join(', ') });
   return rows;
 }
@@ -104,17 +105,17 @@ const fmtAmt = (n: number | null | undefined) => n == null ? '' : n >= 1e9 ? `${
 /** Whole-deal Terms text built from saved terms (every tranche); no AI. */
 export function dealTermsText(state: BdtState | null | undefined, ws: DealWorkspace | null, borrower: string): string {
   if (!state?.f) return '';
-  const v = termSheetView(state);
+  const v = termSheetView(externalState(state));
   const tranches = ws?.tranches?.length ? ws.tranches : null;
   const lines: string[] = [];
   const name = borrower || v.issuerName;
   lines.push(`${name}${v.issuerRating ? ` (${v.issuerRating})` : ''}${tranches && tranches.length > 1 ? ` – ${tranches.length}-tranche offering` : ''}`);
   if (tranches) {
     tranches.forEach((t, i) => {
-      const tv = termSheetView(trancheBdtState(state, ws, i));
+      const tv = termSheetView(externalState(trancheBdtState(state, ws, i)));
       const parts = [
         `${t.currency || tv.currency} ${fmtAmt(t.amount) || tv.size || 'TBD'}`.trim(),
-        t.tenor, t.rateType === 'floating' ? 'Floating rate' : 'Fixed rate',
+        t.tenor, t.rateType === 'floating' ? 'Floating rate' : t.rateType === 'zero' ? 'Zero coupon' : 'Fixed rate',
         SENIORITY_LABEL[t.seniority ?? 'senior_unsecured'],
         tv.maturityDate && `Maturity ${tv.maturityDate}`,
         tv.coupon && `Coupon ${tv.coupon}`,
@@ -163,7 +164,7 @@ function stable(v: unknown): string {
 /** Hash of recorded terms only (mirrors supabase/functions/_shared/alert-terms.ts). */
 export function termsHash(state: unknown): string {
   const s = (state && typeof state === 'object' ? state : {}) as Record<string, unknown>;
-  const text = stable({ stage: s.stage ?? null, f: s.f ?? {}, parties: s.parties ?? [], ids: s.ids ?? [], ratings: s.ratings ?? [], contacts: s.contacts ?? [] });
+  const text = stable({ stage: s.stage ?? null, f: s.f ?? {}, parties: s.parties ?? [], ids: s.ids ?? [], ratings: s.ratings ?? [], contacts: s.contacts ?? [], fieldMeta: s.fieldMeta ?? {} });
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   return h.toString(16).padStart(8, '0') + ':' + text.length;

@@ -1614,7 +1614,6 @@ export type Database = {
       current_user_org: { Args: never; Returns: string }
       deal_actor_context: { Args: { _deal: string }; Returns: Json }
       deal_phase: { Args: { _deal: string }; Returns: string }
-      deal_phase_audit: { Args: { _deal: string }; Returns: Json }
       deal_team_access: { Args: { _deal: string }; Returns: boolean }
       deal_team_directory: {
         Args: { _deal: string }
@@ -1644,36 +1643,6 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_approved: { Args: { uid: string }; Returns: boolean }
       is_deal_actor: { Args: { _user: string }; Returns: boolean }
-      move_deal_to_execution:
-        | {
-            Args: {
-              _actor: string
-              _deal: string
-              _expected: Json
-              _note: string
-              _workspace: Json
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              _actor: string
-              _blocking: Json
-              _deal: string
-              _expected: Json
-              _note: string
-              _open_items: Json
-              _override: boolean
-              _workspace: Json
-            }
-            Returns: undefined
-          }
-      signoff_bulletin_values: { Args: { _raw: string }; Returns: Json }
-      signoff_item_fields: { Args: never; Returns: Json }
-      signoff_mapped_values: {
-        Args: { _item: Json; _state: Json; _ws: Json }
-        Returns: Json
-      }
     }
     Enums: {
       app_role:

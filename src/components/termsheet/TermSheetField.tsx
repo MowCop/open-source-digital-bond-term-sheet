@@ -3,6 +3,9 @@
  * The definition (label, type, options, hint, requirement) always
  * comes from the FIELDS entry passed in — there is no second field list.
  */
+import { useContext, useRef } from 'react';
+import { FieldStatusContext, FieldStatusMark, FieldStatusDetail } from './FieldStatusContext';
+import { fieldRecord } from '@/lib/fieldStatus';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -34,6 +37,10 @@ interface Props {
 }
 
 export default function TermSheetField({ fd, value, onChange, disabled, required, invalid, proposed }: Props) {
+  const unlocked = useRef(false);
+  const context = useContext(FieldStatusContext);
+  const record = context ? fieldRecord(context.state, fd.p, context.tranche) : null;
+  const update = (v: string) => { if (record?.status === 'set' && value && v !== value && !unlocked.current && !window.confirm(`Change confirmed ${fd.l}? This change will be logged when saved.`)) return; unlocked.current=true; onChange(v); };
   const id = `f-${fd.p}`;
   const auto = !!fd.auto || !!fd.fixed;
   const ro = disabled || auto;
@@ -49,6 +56,7 @@ export default function TermSheetField({ fd, value, onChange, disabled, required
     <div className="space-y-1.5 min-w-0">
       <label htmlFor={id} className="flex items-baseline gap-1.5 text-xs font-medium text-muted-foreground">
         <span className="truncate">{fd.l}</span>
+        <FieldStatusMark path={fd.p} disabled={ro} />
         {required && <span className="text-destructive text-[10px] leading-none">required</span>}
         {fd.ext && (
           <span className="text-[9px] uppercase tracking-wide text-muted-foreground/60 border border-border/60 rounded px-1">
@@ -63,11 +71,11 @@ export default function TermSheetField({ fd, value, onChange, disabled, required
           value={value}
           disabled={ro}
           rows={3}
-          onChange={e => onChange(e.target.value)}
+          onChange={e => update(e.target.value)}
           className={`text-sm ${valueStyle} ${ring}`}
         />
       ) : fd.t === 'sel' ? (
-        <Select value={value || NONE} disabled={ro} onValueChange={v => onChange(v === NONE ? '' : v)}>
+        <Select value={value || NONE} disabled={ro} onValueChange={v => update(v === NONE ? '' : v)}>
           <SelectTrigger id={id} className={`h-9 text-sm ${valueStyle} ${ring}`}>
             <SelectValue>{value ? prettyEnum(value) : '\u00a0'}</SelectValue>
           </SelectTrigger>
@@ -84,7 +92,7 @@ export default function TermSheetField({ fd, value, onChange, disabled, required
             id={id}
             checked={value === 'true'}
             disabled={ro}
-            onCheckedChange={c => onChange(c ? 'true' : 'false')}
+            onCheckedChange={c => update(c ? 'true' : 'false')}
           />
           <span className={`text-sm ${valueStyle}`}>{value === 'true' ? 'Yes' : value === 'false' ? 'No' : ''}</span>
         </div>
@@ -95,11 +103,12 @@ export default function TermSheetField({ fd, value, onChange, disabled, required
           step={fd.step}
           value={value}
           disabled={ro}
-          onChange={e => onChange(e.target.value)}
+          onChange={e => update(e.target.value)}
           className={`h-9 text-sm ${valueStyle} ${ring}`}
         />
       )}
 
+      <FieldStatusDetail path={fd.p} />
       {invalid ? (
         <p className="text-[11px] text-destructive">{invalid}</p>
       ) : fd.hint ? (

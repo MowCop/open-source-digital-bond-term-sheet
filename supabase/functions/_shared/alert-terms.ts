@@ -6,7 +6,7 @@ function stable(v: unknown): string {
 }
 export function termsHash(state: unknown): string {
   const s = (state && typeof state === 'object' ? state : {}) as Record<string, unknown>;
-  const text = stable({ stage: s.stage ?? null, f: s.f ?? {}, parties: s.parties ?? [], ids: s.ids ?? [], ratings: s.ratings ?? [], contacts: s.contacts ?? [] });
+  const text = stable({ stage: s.stage ?? null, f: s.f ?? {}, parties: s.parties ?? [], ids: s.ids ?? [], ratings: s.ratings ?? [], contacts: s.contacts ?? [], fieldMeta: s.fieldMeta ?? {} });
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
   return h.toString(16).padStart(8, '0') + ':' + text.length;

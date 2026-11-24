@@ -1,3 +1,6 @@
+import { FieldStatusProvider, FieldStatusSummary } from './FieldStatusContext';
+import { fieldRecord, transitionField, confirmExpected, withExpected, type FieldStatus } from '@/lib/fieldStatus';
+import { useAuth } from '@/context/AuthContext';
 import { FRN_FIELDS } from '@/lib/conventionChecks';
 /**
  * Digital Term Sheet — Fill tab.
@@ -85,6 +88,9 @@ export interface TermSheetFillHandle {
 export default function TermSheetFill({
   deal, canEdit: canEditProp, canEditField = () => true, onSave, onStateChange, onDisplayedStage, onDirtyChange, ingestRef, requestedStage, requestedAt,
 }: Props & { ingestRef?: RefObject<TermSheetFillHandle> }) {
+  const { authUser } = useAuth();
+  const actor = authUser?.id ?? '';
+  const [statusFilter,setStatusFilter] = useState<FieldStatus|'all'>('all');
   const [snaps, setSnaps] = useState<StageSnap[]>([]);
   const [viewStage, setViewStage] = useState<number | null>(null);
   const [snapsLoaded, setSnapsLoaded] = useState(false);
@@ -107,7 +113,7 @@ export default function TermSheetFill({
     : snaps.find(s => s.stage === viewStage && (!requestedAt || new Date(s.released_at).getTime() <= new Date(requestedAt).getTime()))
       ?? snaps.find(s => s.stage === viewStage) ?? null;
   const canEdit = canEditProp && viewStage == null;
-  const [liveState, setState] = useState<BdtState>(() => dealToBdtState(deal));
+  const [liveState, setState] = useState<BdtState>(() => withExpected(dealToBdtState(deal)));
   const [dirty, setDirty] = useState(false);
   const [query, setQuery] = useState('');
   const [showOptional, setShowOptional] = useState(false);
@@ -126,7 +132,7 @@ export default function TermSheetFill({
       const base = bdtStageForDeal(deal.stage);
       const ok = seeded.stage === base
         || (BETWEEN_STAGES.includes(seeded.stage) && seeded.stage === base + 1);
-      return ok ? seeded : { ...seeded, stage: base };
+      return withExpected(ok ? seeded : { ...seeded, stage: base });
     });
     setDirty(false);
     setProposals([]);
@@ -146,7 +152,7 @@ export default function TermSheetFill({
   const state: BdtState = viewSnap ? { ...viewSnap.bdt_state_snapshot, stage: viewStage as number } : liveState;
   const liveStage = liveState.stage;
   const baseStage = bdtStageForDeal(deal.stage);
-  const canPickStep = (n: number) => canEditProp && canEditField('stage') && n === baseStage + 1 && BETWEEN_STAGES.includes(n) && n !== 2;
+  const canPickStep = (n: number) => canEditProp && canEditField('stage') && n === baseStage + 1 && BETWEEN_STAGES.includes(n);
   const pickStep = (n: number) => { setViewStage(null); setState(st => ({ ...st, stage: n })); setDirty(true); };
   const stageIdx = state.stage;
   const checkItems: CheckItem[] = useMemo(() => {
@@ -160,7 +166,7 @@ export default function TermSheetFill({
   useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
   // External human approvals update the saved BDT record. Never replace an unsaved draft.
   useEffect(() => {
-    if (!dirty) setState(dealToBdtState(deal));
+    if (!dirty) setState(withExpected(dealToBdtState(deal)));
   }, [deal.bdtState]);
   useEffect(() => { onDisplayedStage?.(state.stage); }, [state.stage, onDisplayedStage]);
 
@@ -177,7 +183,8 @@ export default function TermSheetFill({
     if (!canEdit || !canEditField(p)) return;
     setState(s => {
       const next = clone(s);
-      next.f[p] = v;
+      const changed = transitionField(next,p,v,actor);
+      next.f = changed.f; next.fieldMeta = changed.fieldMeta;
       refreshAuto(next);
       return next;
     });
@@ -191,6 +198,7 @@ export default function TermSheetFill({
       const next = clone(s);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (next as any)[g] = fn(((next as any)[g] ?? []) as any[]);
+      next.fieldMeta={...next.fieldMeta,[`group:${g}`]:{status:(next as any)[g].length?'set':'open',source:'Manual',by:actor,at:new Date().toISOString()}};
       refreshAuto(next);
       return next;
     });
@@ -315,7 +323,7 @@ export default function TermSheetFill({
       const next = clone(s);
       for (const pr of picked) {
         if (pr.kind === 'group' && pr.g) (next as unknown as Record<string, unknown>)[pr.g] = pr.payload ?? [];
-        else if (pr.p) next.f[pr.p] = pr.val;
+        else if (pr.p) { const changed=transitionField(next,pr.p,pr.val,actor,`Document: ${pr.src}`); next.f=changed.f;next.fieldMeta=changed.fieldMeta; }
       }
       refreshAuto(next);
       return next;
@@ -330,7 +338,7 @@ export default function TermSheetFill({
     const pr = proposals[i];
     if (!pr) return;
     if (pr.kind === 'group' && pr.g) mutateGroup(pr.g, () => pr.payload ?? []);
-    else if (pr.p) setField(pr.p, pr.val);
+    else if (pr.p) { setState(s=>transitionField(s,pr.p as string,pr.val,actor,`Document: ${pr.src}`)); setDirty(true); }
     setProposals(list => list.filter((_, n) => n !== i));
   };
   const ignoreProposal = (i: number) => setProposals(list => list.filter((_, n) => n !== i));
@@ -340,7 +348,7 @@ export default function TermSheetFill({
       for (const pr of proposals) {
         if (!canEditField(pr.p ?? `group:${pr.g}`)) continue;
         if (pr.kind === 'group' && pr.g) (next as unknown as Record<string, unknown>)[pr.g] = pr.payload ?? [];
-        else if (pr.p) next.f[pr.p] = pr.val;
+        else if (pr.p) { const changed=transitionField(next,pr.p,pr.val,actor,`Document: ${pr.src}`); next.f=changed.f;next.fieldMeta=changed.fieldMeta; }
       }
       refreshAuto(next);
       return next;
@@ -353,7 +361,7 @@ export default function TermSheetFill({
 
   const save = async () => {
     if (!canEdit) return;
-    const next = clone(state);
+    const next = clone(withExpected(state));
     refreshAuto(next);
     try { await onSave({ ...bdtToDealCache(next), bdtState: next }); }
     catch(e) { toast.error(`Could not save DTS: ${(e as Error).message}`); return; }
@@ -378,26 +386,27 @@ export default function TermSheetFill({
   // ── field filtering ─────────────────────────────────────────────────────────
 
   const q = query.trim().toLowerCase();
-  const matches = (fd: FieldDef) => !q || fd.l.toLowerCase().includes(q) || fd.p.toLowerCase().includes(q);
+  const matches = (fd: FieldDef) => (statusFilter === 'all' || fieldRecord(state,fd.p).status === statusFilter) && (!q || fd.l.toLowerCase().includes(q) || fd.p.toLowerCase().includes(q));
 
   const sectionFields = (secId: string) => {
     const all = FIELDS.filter((f: FieldDef) => f.sec === secId && f.t !== 'group' && matches(f));
-    if (showOptional || q) return { shown: all, hidden: 0 };
+    if (showOptional || q || statusFilter !== 'all') return { shown: all, hidden: 0 };
     const shown = all.filter((f: FieldDef) => isRequired(f) || filled(state, f) || proposedPaths.has(f.p));
     return { shown, hidden: all.length - shown.length };
   };
   const sectionGroups = (secId: string) =>
-    FIELDS.filter((f: FieldDef) => f.sec === secId && f.t === 'group');
+    FIELDS.filter((f: FieldDef) => f.sec === secId && f.t === 'group' && matches(f));
 
-  const priority = useMemo(() => priorityFields().filter(matches), [q]);
+  const priority = useMemo(() => priorityFields().filter(matches), [q,statusFilter,state]);
   // Collapsed unless the user opened it, or a search is narrowing the form.
-  const priOpen = open.priority ?? !!q;
+  const priOpen = open.priority ?? (!!q || statusFilter!=='all');
   const priMissing = priority.filter((f: FieldDef) => isRequired(f) && !filled(state, f)).length;
 
 
   // ── render ──────────────────────────────────────────────────────────────────
 
   return (
+    <FieldStatusProvider state={withExpected(state)} confirm={p => { if (!canEdit || !canEditField(p)) return; setState(s=>confirmExpected(withExpected(s),p,actor)); setDirty(true); }}>
     <div className="space-y-5">
       {requestedStage && snapsLoaded && viewStage !== null && !viewSnap && (
         <p role="status" className="text-xs text-primary">No saved record for {stageLabel(requestedStage)}. Showing current terms; no historical values have been created.</p>
@@ -463,6 +472,7 @@ export default function TermSheetFill({
       </div>
 
 
+      <FieldStatusSummary state={withExpected(state)} paths={FIELDS.filter((fd:FieldDef)=>fd.t!=='group').map((fd:FieldDef)=>fd.p)} filter={statusFilter} onFilter={setStatusFilter} />
       {/* Search + optional toggle */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px]">
@@ -571,7 +581,7 @@ export default function TermSheetFill({
           const { shown, hidden } = sectionFields(sec.id);
           const groups = sectionGroups(sec.id);
           if (!shown.length && !groups.length) return null;
-          const isOpen = open[sec.id] ?? !!q;
+          const isOpen = open[sec.id] ?? (!!q || statusFilter !== 'all');
           const missing = shown.filter((f: FieldDef) => isRequired(f) && !filled(state, f)).length;
           return (
             <section key={sec.id} className="rounded-lg border border-border/60 bg-card/40">
@@ -648,6 +658,7 @@ export default function TermSheetFill({
       </div>
 
     </div>
+    </FieldStatusProvider>
   );
 }
 
@@ -667,8 +678,10 @@ function GroupEditor({ g, rows, canEdit, onChange }: GroupProps) {
   const def = (GROUPS as any)[g];
   if (!def) return null;
 
-  const setCell = (i: number, key: string, v: unknown) =>
+  const setCell = (i: number, key: string, v: unknown) => {
+    if(rows[i]?.[key] && rows[i][key] !== v && !window.confirm(`Change confirmed ${key}? This change will be logged when saved.`))return;
     onChange(list => list.map((r, n) => (n === i ? { ...r, [key]: v } : r)));
+  };
 
   return (
     <div className="space-y-2">

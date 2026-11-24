@@ -1,3 +1,7 @@
+import { FieldStatusSummary } from './FieldStatusContext';
+import { trancheBdtState } from '@/lib/trancheState';
+import { dealToBdtState } from '@/lib/bdt-bridge';
+import { TEMPLATE_LABELS, externalState, selectTemplate } from '@/lib/fieldStatus';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -36,7 +40,7 @@ function initial(deal: Deal): DealWorkspace {
   if (raw?.version === 1) return raw;
   const ws = fromLegacy(null, deal.currency || '', parseAmt(deal.size || ''));
   ws.tranches[0].tenor = deal.tenor || '';
-  ws.tranches[0].rateType = /float|frn/i.test(deal.interestType || '') ? 'floating' : 'fixed';
+  ws.tranches[0].rateType = deal.bdtState?.template??selectTemplate(deal.interestType||'',deal.bdtState?.f??{});
   return ws;
 }
 
@@ -60,13 +64,15 @@ export default function DealTermSheets({ deal, canEdit, canEditField, onOpenAllF
 
   const saveTranche = async (t: Tranche, isFirst: boolean, s: TrancheSave) => {
     const next = { ...ws, tranches: ws.tranches.map(x => x.id === t.id ? { ...x, ...s.details, seniority: s.seniority, values: isFirst ? x.values : s.own } : x) };
-    const state = bdt ? { ...bdt, f: s.main } : null;
+    const state = bdt ? { ...bdt, f: { ...s.main }, fieldMeta: s.fieldMeta } : null;
+    if(state&&isFirst){state.f['IssuanceDataGroup/Issuance/SpecifiedCurrency']=s.details.currency;state.f['IssuanceDataGroup/Product/AggregateNominalAmount/Currency']=s.details.currency;state.f['IssuanceDataGroup/Product/AggregateNominalAmount/Value']=s.details.amount==null?'':String(s.details.amount);state.f['IssuanceDataGroup/Product/InterestPayment/InterestType']=s.details.rateType==='floating'?'FLOATING':s.details.rateType==='zero'?'ZERO_COUPON':'FIXED';state.template=s.details.rateType;}
     if (state && canEditField && !canEditField('status')) {
       for (const p of Object.keys(state.f)) if (!canEditField(p)) state.f[p] = main[p];
     }
-    const { error } = await supabase.from('deals').update({ deal_workspace: next as never, ...(state ? { bdt_state: state } : {}) }).eq('id', deal.id).select('id').single();
+    const { error } = await supabase.from('deals').update({ deal_workspace: next as never, ...(state ? { bdt_state: state } : {}) }).eq('id', deal.id).select('id,bdt_state,deal_workspace').single();
     if (error) { toast.error(error.message); throw error; }
-    setWs(next); emitDtsSaved({ dealId: deal.id, ws: next, ...(state ? { state } : {}) });
+    const {data:saved}=await supabase.from('deals').select('bdt_state,deal_workspace').eq('id',deal.id).single();
+    setWs(next); emitDtsSaved({ dealId: deal.id, ws: next, ...(saved?.bdt_state ? { state: saved.bdt_state as unknown as import('@/lib/bdt-bridge').BdtState } : state ? {state} : {}) });
     window.dispatchEvent(new Event('vdr:copilot-approved'));
   };
 
@@ -110,7 +116,7 @@ export default function DealTermSheets({ deal, canEdit, canEditField, onOpenAllF
             {ws.tranches.map((t, i) => (
               <Fragment key={t.id}>
               <tr onClick={() => setSelected(i)} onDoubleClick={() => setExpanded(expanded === t.id ? null : t.id)} className={`cursor-pointer select-none border-b border-border/50 ${sel?.id === t.id ? 'bg-accent/40' : 'hover:bg-accent/20'}`}>
-                <td className="py-1.5 font-medium">{t.label}</td>
+                <td className="py-1.5 font-medium">{t.label}<FieldStatusSummary state={trancheBdtState(dealToBdtState(deal),ws,i)}/></td>
                 <td>{t.currency || '—'} {fmt(t.amount)}</td>
                 <td className="text-muted-foreground">{fmt(usd.perTranche[t.id])}</td>
                 <td className="capitalize">{t.rateType} · <span className="text-muted-foreground normal-case">{SENIORITY_LABEL[t.seniority ?? 'senior_unsecured']}</span></td>
@@ -123,7 +129,7 @@ export default function DealTermSheets({ deal, canEdit, canEditField, onOpenAllF
               </tr>
               {expanded === t.id && (
                 <tr className="border-b border-border"><td colSpan={6} className="bg-muted/20">
-                  <TranchePanel key={t.id + (deal.updatedAt?.toString() ?? '')} tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} canEdit={canEdit && !!bdt} canEditField={canEditField}
+                  <TranchePanel key={t.id + (deal.updatedAt?.toString() ?? '')} tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} fieldMeta={bdt?.fieldMeta} canEdit={canEdit && !!bdt} canEditField={canEditField}
                     onSave={s => saveTranche(t, i === 0, s)} onPopOut={() => setPopped(t.id)} />
                 </td></tr>
               )}
@@ -142,7 +148,7 @@ export default function DealTermSheets({ deal, canEdit, canEditField, onOpenAllF
               <DialogTitle>Tranche {t.label} term sheet</DialogTitle>
               <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-2xl font-bold uppercase tracking-wide text-foreground">{dealBorrowerName(deal)}</div>
             </DialogHeader>
-            <TranchePanel hideIssuer tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} canEdit={canEdit && !!bdt} canEditField={canEditField} onSave={s => saveTranche(t, i === 0, s)} />
+            <TranchePanel hideIssuer tranche={t} isFirst={i === 0} issuer={dealBorrowerName(deal)} main={main} fieldMeta={bdt?.fieldMeta} canEdit={canEdit && !!bdt} canEditField={canEditField} onSave={s => saveTranche(t, i === 0, s)} />
           </DialogContent>
         </Dialog>
       ); })()}
@@ -197,7 +203,7 @@ function StructureDialog({ ws, onClose, onSave }: { ws: DealWorkspace; onClose: 
                   <td className="pr-2 py-1">
                     <Select value={t.rateType} onValueChange={v => upd(i, { rateType: v as Tranche['rateType'] })}>
                       <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="fixed">Fixed</SelectItem><SelectItem value="floating">Floating</SelectItem></SelectContent>
+                      <SelectContent><SelectItem value="fixed">Fixed</SelectItem><SelectItem value="floating">Floating</SelectItem><SelectItem value="zero">Zero coupon</SelectItem></SelectContent>
                     </Select>
                   </td>
                   <td className="pr-2"><Input className="h-8 w-20" value={t.currency} maxLength={3} onChange={e => upd(i, { currency: e.target.value.toUpperCase() })} /></td>

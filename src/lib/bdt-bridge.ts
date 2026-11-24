@@ -17,6 +17,7 @@ import { floatingRateChecks, esgChecks } from './conventionChecks';
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+import { pricingCompleteness } from '@/lib/fieldStatus';
 import {
   emptyState, refreshAuto, checks, FIELDS, STAGES,
 } from '@/lib/termsheet/index.js';
@@ -40,6 +41,8 @@ export interface BdtDoc { DocumentName: string; DocumentDate: string; DocumentLi
 export interface BdtContact { Name: string; Email: string }
 
 export interface BdtState {
+  fieldMeta?: import('./fieldStatus').FieldMetadata;
+  template?: import('./dealWorkspace').RateType;
   stage: number;
   deal: string;
   ver: string;
@@ -453,7 +456,7 @@ export function unifiedChecks(state: BdtState, alertText?: string): CheckItem[] 
     }));
 
   const conventions: CheckItem[] = [...floatingRateChecks(state), ...esgChecks(state)].map(c => ({ ...c, src: 'vdr' as const }));
-  return [...core, ...appended, ...conventions];
+  return [...core, ...appended, ...conventions, ...pricingCompleteness(state)];
 }
 
 export function tallyChecks(items: CheckItem[]) {

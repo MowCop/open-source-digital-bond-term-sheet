@@ -1,4 +1,6 @@
+import { selectTemplate } from '@/lib/fieldStatus';
 import { readDocumentTerms, documentProposals, INITIAL_DOCUMENT_PATHS } from '@/lib/documentIntake';
+import { termSheetView } from '@/lib/termSheetView';
 import { emptyState } from '@/lib/termsheet/index.js';
 import type { BdtState } from '@/lib/bdt-bridge';
 
@@ -17,7 +19,7 @@ export function fillEmptyIssuer(current: string, extracted: unknown): string {
 
 export type NewDealDraft = ReturnType<typeof emptyNewDeal>;
 export type NewDealBookrunner = { name: string; role: 'active' | 'passive'; isGlobalCoordinator: boolean };
-export type NewDealExtraction = { draft: Partial<NewDealDraft>; bookrunners: NewDealBookrunner[]; fields?: Record<string, string> };
+export type NewDealExtraction = { draft: Partial<NewDealDraft>; bookrunners: NewDealBookrunner[]; fields?: Record<string, string>; text?: string; template?: import('./dealWorkspace').RateType };
 
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'];
 const LAWS: Record<string, string> = { english: 'ENGLISH_LAW', 'new york': 'NEW_YORK_LAW', german: 'GERMAN_LAW', french: 'FRENCH_LAW' };
@@ -62,15 +64,20 @@ export function mergeNewDealBookrunners<T extends { name: string }>(current: T[]
 
 /** Reuse existing document readers and extraction service to pre-fill the New Deal form. */
 export async function extractNewDealTerms(file: File): Promise<NewDealExtraction> {
-  const { text, keyTerms, bookrunners } = await readDocumentTerms(file);
+  let text='',keyTerms:Record<string,unknown>={},bookrunners:unknown=[];
+  try { ({text,keyTerms,bookrunners}=await readDocumentTerms(file)); }
+  catch { if(file.name.toLowerCase().endsWith('.pdf'))text=(await (await import('@/lib/pdfToHtml')).pdfFileToHtml(file)).text;else if(file.name.toLowerCase().endsWith('.docx'))text=(await (await import('@/lib/docxToHtml')).docxFileToHtml(file)).text;else text=await file.text(); }
   const proposals = documentProposals(emptyState() as BdtState, text, keyTerms, file.name, file.name.toLowerCase().endsWith('.xml'));
-  const fields = Object.fromEntries(proposals.filter(p => p.p && INITIAL_DOCUMENT_PATHS.includes(p.p)).map(p => [p.p, p.val]));
+  const fields = Object.fromEntries(proposals.filter(p => p.p).map(p => [p.p, p.val]));
   const mapped = mapExtractedTerms(keyTerms, bookrunners);
+  const projection={...emptyState(),f:fields} as BdtState;
+  const pv=termSheetView(projection);
+  mapped.draft.currency ||= pv.currency; mapped.draft.size ||= pv.size; mapped.draft.coupon ||= pv.coupon;
   if (file.name.toLowerCase().endsWith('.xml')) {
     const parties = proposals.find(p => p.g === 'parties')?.payload;
     if (Array.isArray(parties)) mapped.draft.issuerName = parties.find(p => p.Roles?.includes('ISSUER'))?.PartyName ?? '';
   }
-  return { ...mapped, fields };
+  return { ...mapped, fields, text, template: selectTemplate(text,fields) };
 }
 
 /** Empty fields only, including explicitly cleared/locked fields. */
