@@ -54,6 +54,9 @@ import { trancheBdtState } from '@/lib/trancheState';
 import type { DealWorkspace } from '@/lib/dealWorkspace';
 import DealPhaseWorkspace from '@/components/DealPhaseWorkspace';
 import { dealPhase, mayEditField, type DealPhase } from '@/lib/dealPhase';
+import { fromLegacy } from '@/lib/dealWorkspace';
+import { parseAmount } from '@/lib/bdt-bridge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
 
 function BdtXmlPanel({ deal, override }: { deal: Deal; override?: BdtState }) {
@@ -66,11 +69,7 @@ function BdtXmlPanel({ deal, override }: { deal: Deal; override?: BdtState }) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        <Button size="sm" variant="outline" onClick={() => downloadBdtFile(doc, 'xml', base)}>Download BDT 2.0 XML</Button>
-        <Button size="sm" variant="outline" onClick={() => downloadBdtFile(doc, 'json', base)}>Download BDT 2.0 JSON</Button>
-        <Button size="sm" variant="outline" onClick={() => downloadBdtFile(doc, 'text', base)}>Download term sheet text</Button>
-        <Button size="sm" variant="outline" onClick={() => setReport(validateBdt(doc))}>Run BDT Validation Report</Button>
-        <Button size="sm" onClick={() => setIntake(true)}>Request Bank Enterprise SDK / API Access</Button>
+        <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="outline">More exports</Button></DropdownMenuTrigger><DropdownMenuContent><DropdownMenuItem onSelect={() => downloadBdtFile(doc,'xml',base)}>Download BDT XML</DropdownMenuItem><DropdownMenuItem onSelect={() => downloadBdtFile(doc,'json',base)}>Download BDT JSON</DropdownMenuItem><DropdownMenuItem onSelect={() => downloadBdtFile(doc,'text',base)}>Download standard text</DropdownMenuItem><DropdownMenuItem onSelect={() => setReport(validateBdt(doc))}>BDT validation report</DropdownMenuItem><DropdownMenuItem onSelect={() => setIntake(true)}>Request SDK / API access</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
       </div>
       {report && (
         <div className="rounded-md border p-3 text-sm space-y-1">
@@ -154,6 +153,16 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
   useEffect(() => {
     setCheckerState(dealToBdtState(deal));
   }, [deal.id, deal.bdtState]);
+  useEffect(() => {
+    let active = true;
+    void supabase.from('deals').select('deal_workspace').eq('id',deal.id).single().then(({data})=>{
+      if (!active) return;
+      const saved = data?.deal_workspace as unknown as DealWorkspace | null;
+      if (saved?.version === 1) setWs(saved);
+      else { const base=fromLegacy(null,deal.currency,parseAmount(deal.size)); base.tranches[0].tenor=deal.tenor; setWs(base); }
+    });
+    return () => {active=false;};
+  },[deal.id,deal.updatedAt]);
   const [copilotSlot, setCopilotSlot] = useState<HTMLElement | null>(null);
   useEffect(() => { setCopilotSlot(document.getElementById('copilot-slot')); }, []);
   const [ingestSlot, setIngestSlot] = useState<HTMLElement | null>(null);
@@ -307,6 +316,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
 }
 
 export default function DealsPage() {
+  const { isAdmin: authenticatedAdmin, roles: authenticatedRoles } = useAuth();
   const { deals, messages, createDeal, updateDeal, deleteDeal, undoExtraction, publishBulletinFromDeal, saveBulletinDraft, currentUser, addAuditEntry } = useScopedApp();
   const fullApp = useApp();
   const [demoBusy, setDemoBusy] = useState(false);
@@ -350,7 +360,7 @@ export default function DealsPage() {
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const navigate = useNavigate();
 
-  const canManageDeals = currentUser.role === 'syndicate_admin' || currentUser.role === 'master_admin';
+  const canManageDeals = authenticatedAdmin;
   const bulletinDeal = deals.find(d => d.id === bulletinDealId);
 
   const bulletinByDeal = useMemo(() => {
@@ -750,6 +760,12 @@ export default function DealsPage() {
                     requestedStage={searchParams.get('dealId') === deal.id ? parseDtsStage(searchParams.get('stage')) : undefined}
                     requestedAt={searchParams.get('at') ?? undefined}
                     onSaveFields={async (patch) => {
+                      if (authenticatedRoles.includes('dcm') && !authenticatedAdmin && patch.bdtState) {
+                        const original = dealToBdtState(deal);
+                        const state = { ...original, f: { ...original.f }, parties: patch.bdtState.parties };
+                        for (const [p,v] of Object.entries(patch.bdtState.f)) if (mayEditField('dcm',dealPhase(deal),p)) state.f[p] = String(v);
+                        patch = { bdtState:state, currency:patch.currency, size:patch.size, tenor:patch.tenor, maturityDate:patch.maturityDate, interestType:patch.interestType, bookrunners:patch.bookrunners };
+                      }
                       await updateDeal(deal.id, { ...patch, updatedAt: new Date() });
                       addAuditEntry({
                         action: 'deal_termsheet_updated',

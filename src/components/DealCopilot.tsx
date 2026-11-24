@@ -52,6 +52,9 @@ import CopilotCommandPreview, { type CopilotCommand } from './CopilotCommandPrev
 import CopilotDraftDialog from './CopilotDraftDialog';
 import { dealBorrowerName } from '@/lib/borrowerName';
 import { quickCommands } from '@/lib/dealPhase';
+import { emitDtsSaved } from '@/lib/dtsSaveEvent';
+import type { BdtState } from '@/lib/bdt-bridge';
+import type { DealWorkspace } from '@/lib/dealWorkspace';
 
 function SpecialistReports({ reports }: { reports: SpecialistReport[] }) {
   return (
@@ -339,7 +342,7 @@ export default function DealCopilot({
         _approve: approve,
       });
       if (error) throw error;
-      if (approve) window.dispatchEvent(new Event("vdr:copilot-approved"));
+      if (approve) { await notifySaved(); setOfferSend(true); }
       toast.success(
         approve ? "Correction approved and saved" : "Correction rejected",
       );
@@ -352,10 +355,16 @@ export default function DealCopilot({
     if (execute && hasUnsavedTerms) throw new Error('Save or discard unsaved term-sheet edits first.');
     const { error } = await supabase.rpc('copilot_execute_command', { _command: id, _execute: execute });
     if (error) throw error;
-    if (execute) { window.dispatchEvent(new Event('vdr:copilot-approved')); setOfferSend(true); }
+    if (execute) { await notifySaved(); setOfferSend(true); }
     if (thread) changed(thread);
     toast.success(execute ? 'Command executed and saved · Nothing sent' : 'Command rejected');
   });
+  async function notifySaved() {
+    const {data,error}=await supabase.from('deals').select('bdt_state,deal_workspace').eq('id',deal.id).single();
+    if(error)throw error;
+    emitDtsSaved({dealId:deal.id,state:data.bdt_state as unknown as BdtState, ...(data.deal_workspace ? {ws:data.deal_workspace as unknown as DealWorkspace}: {})});
+    window.dispatchEvent(new Event('vdr:copilot-approved'));
+  }
   const review = (d: DealDocument) =>
     perform(async () => {
       if (!thread) return;

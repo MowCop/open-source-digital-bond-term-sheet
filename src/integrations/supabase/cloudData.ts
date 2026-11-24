@@ -54,6 +54,10 @@ export async function insertUser(u: User) {
   if (error) throw error;
 }
 export async function updateUserRow(id: string, updates: Partial<User>) {
+  if (updates.role && ['dcm','issuer_legal','counsel'].includes(updates.role)) {
+    const { error } = await supabase.rpc('admin_set_actor_role', { _legacy:id, _role:updates.role as 'dcm'|'issuer_legal'|'counsel' });
+    if (error) throw error;
+  }
   const patch: Record<string, unknown> = {};
   if (updates.name !== undefined) patch.name = updates.name;
   if (updates.email !== undefined) patch.email = updates.email;
@@ -160,7 +164,7 @@ export async function insertDeal(d: Deal) {
 }
 export async function updateDealRow(id: string, updates: Partial<Deal>) {
   const patch = dealUpdatesToRow(updates);
-  const { error } = await db.from('deals').update(patch).eq('id', id);
+  const { error } = await db.from('deals').update(patch).eq('id', id).select('id').single();
   if (error) throw error;
   if (updates.bdtState) void import('@/lib/copilot/client').then(c => c.onCopilotTermsSaved(id));
 }

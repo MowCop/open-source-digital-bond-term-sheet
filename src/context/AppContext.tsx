@@ -138,7 +138,12 @@ const AppContext = appGlobal.__vdrAppContext ?? (appGlobal.__vdrAppContext = cre
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = usePersistedState<User>('bondvdr.currentUser', mockUsers[0]);
-  const { profileOrg, authUser } = useAuth();
+  const { profileOrg, profileName, authUser, roles } = useAuth();
+  useEffect(() => {
+    if (!authUser || !roles.length) return;
+    const role = (['master_admin','syndicate_admin','dcm','issuer_legal','counsel','syndicate_readonly','sales_readonly','vendor_user'] as UserRole[]).find(r => roles.includes(r)) ?? 'guest_readonly';
+    setCurrentUser(previous => ({ ...previous, id:authUser.id, email:authUser.email??previous.email, name:profileName??previous.name, organization:profileOrg??previous.organization, role }));
+  },[authUser?.id,roles.join(','),profileName,profileOrg]);
   // Effective sender id for RLS-protected inserts (messages, chat_messages):
   // these policies require sender_id = auth.uid()::text, so we must use the
   // Supabase auth UUID, not the legacy mock-user id. Falls back to mock id

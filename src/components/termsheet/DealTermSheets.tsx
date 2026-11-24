@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import { Copy, Trash2, ArrowUp, ArrowDown, Plus, Settings2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Fragment } from 'react';
 import TranchePanel, { type TrancheSave } from './TranchePanel';
-import { useScopedApp } from '@/context/AppContext';
 import { dealBorrowerName } from '@/lib/borrowerName';
 import { emitDtsSaved } from '@/lib/dtsSaveEvent';
 import { bdtToDealCache } from '@/lib/bdt-bridge';
@@ -48,7 +47,6 @@ export default function DealTermSheets({ deal, canEdit, canEditField, onOpenAllF
   const [editing, setEditing] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [popped, setPopped] = useState<string | null>(null);
-  const { updateDeal } = useScopedApp();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bdt = (deal.bdtState ?? null) as any;
   const main: Record<string, string> = bdt?.f ?? {};
@@ -63,7 +61,10 @@ export default function DealTermSheets({ deal, canEdit, canEditField, onOpenAllF
   const saveTranche = async (t: Tranche, isFirst: boolean, s: TrancheSave) => {
     const next = { ...ws, tranches: ws.tranches.map(x => x.id === t.id ? { ...x, ...s.details, seniority: s.seniority, values: isFirst ? x.values : s.own } : x) };
     const state = bdt ? { ...bdt, f: s.main } : null;
-    const { error } = await supabase.from('deals').update({ deal_workspace: next as never, ...(state ? { bdt_state: state } : {}) }).eq('id', deal.id);
+    if (state && canEditField && !canEditField('status')) {
+      for (const p of Object.keys(state.f)) if (!canEditField(p)) state.f[p] = main[p];
+    }
+    const { error } = await supabase.from('deals').update({ deal_workspace: next as never, ...(state ? { bdt_state: state } : {}) }).eq('id', deal.id).select('id').single();
     if (error) { toast.error(error.message); throw error; }
     setWs(next); emitDtsSaved({ dealId: deal.id, ws: next, ...(state ? { state } : {}) });
     window.dispatchEvent(new Event('vdr:copilot-approved'));
@@ -73,7 +74,7 @@ export default function DealTermSheets({ deal, canEdit, canEditField, onOpenAllF
     let live = true;
     supabase.from('deals').select('deal_workspace').eq('id', deal.id).maybeSingle().then(({ data }) => {
       const w = data?.deal_workspace as unknown as DealWorkspace | null;
-      if (live && w?.version === 1) setWs(w);
+      if (live) setWs(w?.version === 1 ? w : initial(deal));
     });
     return () => { live = false; };
   }, [deal.id, deal.bdtState, deal.updatedAt]);
@@ -83,9 +84,9 @@ export default function DealTermSheets({ deal, canEdit, canEditField, onOpenAllF
   const sel = ws.tranches[Math.min(selected, ws.tranches.length - 1)];
 
   const save = async (next: DealWorkspace) => {
-    const { error } = await supabase.from('deals').update({ deal_workspace: next as never }).eq('id', deal.id);
+    const { error } = await supabase.from('deals').update({ deal_workspace: next as never }).eq('id', deal.id).select('id').single();
     if (error) { toast.error(`Could not save deal structure: ${error.message}`); return false; }
-    setWs(next); emitDtsSaved({ dealId: deal.id, ws: next }); toast.success('Deal structure saved'); return true;
+    setWs(next); emitDtsSaved({ dealId: deal.id, ws: next }); window.dispatchEvent(new Event('vdr:copilot-approved')); toast.success('Deal structure saved'); return true;
   };
 
   return (

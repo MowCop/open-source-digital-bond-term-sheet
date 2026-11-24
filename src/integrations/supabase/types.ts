@@ -1547,6 +1547,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_set_actor_role: {
+        Args: {
+          _legacy: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: undefined
+      }
       assign_deal_actor: {
         Args: {
           _deal: string
@@ -1608,6 +1615,15 @@ export type Database = {
       deal_actor_context: { Args: { _deal: string }; Returns: Json }
       deal_phase: { Args: { _deal: string }; Returns: string }
       deal_team_access: { Args: { _deal: string }; Returns: boolean }
+      deal_team_directory: {
+        Args: { _deal: string }
+        Returns: {
+          name: string
+          organization: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }[]
+      }
       get_user_login_stats: {
         Args: never
         Returns: {

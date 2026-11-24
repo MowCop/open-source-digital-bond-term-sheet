@@ -40,7 +40,7 @@ import {
 } from '@/lib/bdt-bridge';
 import LeiSuggest from './LeiSuggest';
 import FigiSuggest from './FigiSuggest';
-import { docTopics, proposalMatches, type CheckTarget } from '@/lib/checkActions';
+import { docTopics, proposalMatches, checkTarget, type CheckTarget } from '@/lib/checkActions';
 import TermSheetField, { optionsFor, prettyEnum, type FieldDef } from './TermSheetField';
 
 interface Props {
@@ -146,7 +146,7 @@ export default function TermSheetFill({
   const state: BdtState = viewSnap ? { ...viewSnap.bdt_state_snapshot, stage: viewStage as number } : liveState;
   const liveStage = liveState.stage;
   const baseStage = bdtStageForDeal(deal.stage);
-  const canPickStep = (n: number) => canEditProp && n === baseStage + 1 && BETWEEN_STAGES.includes(n);
+  const canPickStep = (n: number) => canEditProp && canEditField('stage') && n === baseStage + 1 && BETWEEN_STAGES.includes(n) && n !== 2;
   const pickStep = (n: number) => { setViewStage(null); setState(st => ({ ...st, stage: n })); setDirty(true); };
   const stageIdx = state.stage;
   const checkItems: CheckItem[] = useMemo(() => {
@@ -198,6 +198,7 @@ export default function TermSheetFill({
   };
 
   const valueOf = (p: string) => state.f?.[p] ?? '';
+  const inlineIssue = (p: string) => checkItems.filter(c => c.l !== 'pass' && checkTarget(c)?.kind === 'field' && (checkTarget(c) as { path?: string }).path === p).map(c => c.d || c.t).join(' · ') || null;
   const isRequired = (fd: FieldDef) => !!fd.req && fd.req <= stageIdx;
   const proposedPaths = useMemo(() => new Set(proposals.filter(p => p.p).map(p => p.p as string)), [proposals]);
 
@@ -459,9 +460,6 @@ export default function TermSheetFill({
           )}
         </div>
 
-        <p className="text-[11px] text-muted-foreground/70">
-          Fixed-rate single tranche. Floating and zero coupon structures arrive in a later iteration.
-        </p>
       </div>
 
 
@@ -548,7 +546,7 @@ export default function TermSheetFill({
                     value={valueOf(fd.p)}
                     required={isRequired(fd)}
                     proposed={proposedPaths.has(fd.p)}
-                    invalid={fieldError(state, fd)}
+                    invalid={fieldError(state, fd) || inlineIssue(fd.p)}
                     disabled={!canEdit || !canEditField(fd.p)}
                     onChange={v => setField(fd.p, v)}
                   />
@@ -603,7 +601,7 @@ export default function TermSheetFill({
                           value={valueOf(fd.p)}
                           required={isRequired(fd)}
                           proposed={proposedPaths.has(fd.p)}
-                          invalid={fieldError(state, fd)}
+                          invalid={fieldError(state, fd) || inlineIssue(fd.p)}
                           disabled={!canEdit || !canEditField(fd.p)}
                           onChange={v => setField(fd.p, v)}
                         />

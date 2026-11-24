@@ -85,6 +85,20 @@
       "when": 1795514394059,
       "tag": "0011_deal_execution_gate",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795520765641,
+      "tag": "0012_deal_actor_safety",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795520912276,
+      "tag": "0013_dcm_structure_consistency",
+      "breakpoints": true
     }
   ]
 }
