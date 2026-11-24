@@ -59,11 +59,18 @@ Deno.serve(async(req)=>{
       prepareUpdates,
     };
     // Exact typed commands require no AI credits. Preview only; execution is never a chat action.
-    const direct=action==='chat'&&input.data.message?parseDirectCommand(input.data.message,await commandContext()):null;
-    if(direct){
+    let direct: CommandRequest | null = null;
+    let clarification: ReturnType<typeof commandConversationResult> = null;
+    try {
+      direct=action==='chat'&&input.data.message?parseDirectCommand(input.data.message,await commandContext()):null;
+    } catch (e) {
+      clarification=commandConversationResult(e);
+      if (!clarification) throw e;
+    }
+    if(direct || clarification){
       let commandId: string | undefined;
-      let answer: string;
-      try {
+      let answer = clarification?.message ?? '';
+      if (direct) try {
         const preview=await prepareUpdates(direct);
         commandId=preview.id;
         answer='Prepared a command preview. Review the affected entries and warnings below; a human term editor must click Execute. Nothing has changed or been sent.';

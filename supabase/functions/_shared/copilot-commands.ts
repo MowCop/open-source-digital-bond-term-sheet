@@ -99,14 +99,15 @@ export function parseDirectCommand(text: string, snapshot?: CommandSnapshot): Co
   const label = target[1].toUpperCase();
   const index = snapshot.deal_workspace?.tranches.findIndex(t => t.label.toUpperCase() === label) ?? -1;
   const tranche = snapshot.deal_workspace?.tranches[index];
-  if (!tranche) throw new Error(`Tranche ${label} not found. Save its deal structure first.`);
+  if (!tranche) throw new CommandValidationError(`Tranche ${label} is not in the saved deal structure. In Deal term sheets, open Deal structure and save the tranche setup, then repeat your command. No changes were applied.`);
+  if (!snapshot.bdt_state?.f) throw new CommandValidationError('Save the DTS before preparing commands. No changes were applied.');
   const own = index === 0 ? snapshot.bdt_state.f : tranche.values;
   const before = String(tranche.amount ?? own[COMMAND_FIELDS.size[0]] ?? '');
   return { edits: [{ tranche: label, field: 'size', before, after: target[2] }] };
 }
 
 export function prepareCommand(snapshot: CommandSnapshot, request: CommandRequest): CommandPlan {
-  if (!snapshot.bdt_state?.f) throw new Error('Save the DTS before preparing commands.');
+  if (!snapshot.bdt_state?.f) throw new CommandValidationError('Save the DTS before preparing commands. No changes were applied.');
   if (!Array.isArray(request.edits) || request.edits.length > 30 || (request.bulletin !== undefined && typeof request.bulletin !== 'string')) throw new Error('Invalid command.');
   if (request.bulletin && request.bulletin.length > 20000) throw new Error('Update draft is too long.');
   const after = structuredClone(snapshot), effects: CommandEffect[] = [], warnings: string[] = [];
@@ -119,7 +120,7 @@ export function prepareCommand(snapshot: CommandSnapshot, request: CommandReques
     if (dealWide && edit.tranche.toLowerCase() !== 'deal') throw new Error(`${field} is a deal-wide entry; preview it for the whole deal.`);
     const tranches = after.deal_workspace?.tranches ?? [];
     const index = dealWide ? 0 : tranches.findIndex(t => t.label.toUpperCase() === edit.tranche.toUpperCase());
-    if (!dealWide && index < 0) throw new Error(`Tranche ${edit.tranche} not found. Save its deal structure first.`);
+    if (!dealWide && index < 0) throw new CommandValidationError(`Tranche ${edit.tranche} is not in the saved deal structure. In Deal term sheets, open Deal structure and save the tranche setup, then repeat your command. No changes were applied.`);
     const t = tranches[index];
     const key = `${dealWide ? 'deal' : t.id}:${field}`;
     if (seen.has(key)) throw new Error('Duplicate edits for the same entry are not allowed.');

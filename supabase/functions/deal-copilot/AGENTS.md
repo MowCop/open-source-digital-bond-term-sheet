@@ -1,6 +1,7 @@
 # deal-copilot
 - Durable jobs and atomic human decisions enforce membership, term-edit rights and stale values — AI never approves.
 - Before-value mismatches return normal clarification replies via commandConversationResult; never infer omitted amount units or weaken stale checks.
+- Missing saved tranches use CommandValidationError; catch parsing as well as planning and persist the clarification — never fabricate a workspace or approve edits.
 - Size commands/corrections use commandAmount; source reviews use evidencedCommandAmount to reject missing multipliers against quoted units before proposing.
 - Direct and AI-planned command no-ops use unchangedCommandResult as a normal result, without a preview or draft invalidation; real validation and stale-state failures remain errors.
 - The coordinator delegates to four specialists (compliance, pricing, ESG, communications) via specialists.ts; panels run on save/upload and persist in report JSON v2 — drafts never sent, communications XML stays an unvalidated draft.

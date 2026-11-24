@@ -13,6 +13,22 @@ const snapshot = (): CommandSnapshot => ({
   notes: { intro: '', notes: 'Manually edited terms\n<<HASH>>old\n<<LEGAL>>\nVerbatim legal notice' },
 });
 describe('Co-Pilot command previews', () => {
+  for (const path of ['target-only', 'explicit-before', 'AI-planned'] as const) {
+    it(`returns clarification for ${path} when a tranche exists but BDT terms have not been saved`, () => {
+      const saved = { ...snapshot(), bdt_state: null } as unknown as CommandSnapshot;
+      const before = structuredClone(saved);
+      let result;
+      try {
+        const request = path === 'AI-planned'
+          ? { edits: [{ tranche: 'A', field: 'size', before: '500m', after: '600m' }] }
+          : parseDirectCommand(path === 'target-only' ? 'make Tranche A size 600m' : 'change Tranche A size from 500m to 600m', saved);
+        if (!request) throw new Error('Missing command');
+        prepareCommand(saved, request);
+      } catch (error) { result = commandConversationResult(error); }
+      expect(result).toMatchObject({ status: 'needs_input', humanExecuteRequired: false });
+      expect(saved).toEqual(before);
+    });
+  }
   it('asks for target units rather than reducing a saved 350m tranche to a bare 400', () => {
     const saved = snapshot();
     saved.deal_workspace?.tranches.push({ id: 'c', label: 'C', currency: 'USD', amount: 350000000, rateType: 'fixed', values: {} });
@@ -125,10 +141,27 @@ describe('Co-Pilot command previews', () => {
     expect(prepareCommand(saved, request).after.deal_workspace?.tranches[0].amount).toBe(600000000);
     expect(saved.deal_workspace?.tranches[0].amount).toBe(500000000);
   });
-  it('does not invent membership or a tranche when its saved structure is missing', () => {
-    const saved = snapshot(); saved.deal_workspace = null;
-    expect(() => parseDirectCommand('make Tranche A size 600m', saved)).toThrow('Save its deal structure first');
-  });
+  for (const structure of ['missing', 'empty', 'different tranche'] as const) {
+    for (const path of ['target-only', 'explicit-before', 'AI-planned'] as const) {
+      it(`returns clarification for ${path} when saved structure is ${structure}, without inventing Tranche A`, () => {
+        const saved = snapshot();
+        if (structure === 'missing') saved.deal_workspace = null;
+        else if (saved.deal_workspace) saved.deal_workspace.tranches = structure === 'empty' ? [] : saved.deal_workspace.tranches.slice(1);
+        const before = structuredClone(saved);
+        let result;
+        try {
+          const request = path === 'AI-planned'
+            ? { edits: [{ tranche: 'A', field: 'size', before: '500m', after: '600m' }] }
+            : parseDirectCommand(path === 'target-only' ? 'make Tranche A size 600m' : 'change Tranche A size from 500m to 600m', saved);
+          if (!request) throw new Error('Missing command');
+          prepareCommand(saved, request);
+        } catch (error) { result = commandConversationResult(error); }
+        expect(result).toMatchObject({ status: 'needs_input', humanExecuteRequired: false });
+        expect(saved).toEqual(before);
+        expect(saved.notes?.notes).toContain('<<HASH>>old');
+      });
+    }
+  }
   it('previews Tranche A 500m to 600m everywhere without applying it', () => {
     const before = snapshot();
     const request = parseDirectCommand('change Tranche A size from 500m to 600m everywhere');
