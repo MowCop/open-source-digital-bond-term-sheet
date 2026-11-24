@@ -1,5 +1,5 @@
-/* Proves the extracted modules reproduce the reference implementation exactly.
-   Run: node verify.mjs  (from the handover folder) */
+/* Proves the term sheet core modules reproduce the reference implementation exactly.
+   Run from the repo root:  node verify.mjs   (exit code 0 = identical, 1 = drift) */
 import { readFileSync, writeFileSync } from "fs";
 import { workedExample } from "./src/lib/termsheet/example.js";
 import { buildXML } from "./src/lib/termsheet/bdt-xml.js";
@@ -23,6 +23,7 @@ console.log("XML identical to reference implementation :", xml === ref ? "YES" :
 if (xml !== ref) {
   const a = xml.split("\n"), b = ref.split("\n");
   for (let i = 0; i < Math.max(a.length, b.length); i++) if (a[i] !== b[i]) { console.log("  first difference at line", i + 1, "\n   modules :", a[i], "\n   reference:", b[i]); break; }
+  process.exitCode = 1;
 }
 
 /* assisted fill smoke test */
@@ -36,3 +37,4 @@ const fromXml = ingestBDT(blank, readFileSync(process.argv[3] || "schema/icma-bo
 console.log("BDT XML import proposals :", fromXml.length);
 const fromText = ingestText(blank, "EUR 750,000,000 3.25 per cent. Notes due 2031. Issue price 99.612. ISIN SK4000029237. Listing: Luxembourg Stock Exchange. Governing law: English law. Pricing Date: 7 April 2026. MS + 40", "sample.txt");
 console.log("prose import proposals   :", fromText.length, "->", fromText.map(p => p.l).join(", "));
+if (!fromXml.length || !fromText.length) { console.error("ingest smoke test produced no proposals"); process.exitCode = 1; }
