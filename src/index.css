@@ -59,11 +59,38 @@
     --copilot-draft-foreground: 0 0% 0%;
     --copilot-draft-border: 205 35% 75%;
     --copilot-draft-muted: 210 15% 35%;
+    --msg-background: 0 0% 0%;
+    --msg-foreground: 0 0% 94%;
+    --msg-accent: 32 100% 58%;
+    --msg-header-foreground: 0 0% 5%;
   }
 }
 
 /* The expanded writing surface deliberately remains light in the dark app. */
 .copilot-draft-host { container-type: inline-size; }
+.msg-window { background: hsl(var(--msg-background)); color: hsl(var(--msg-foreground)); border: 1px solid hsl(var(--msg-accent) / .65); border-radius: 4px; overflow: hidden; font-family: ui-monospace, "Courier New", monospace; font-size: 12px; }
+.msg-header { background: hsl(var(--msg-accent)); color: hsl(var(--msg-header-foreground)); padding: .6rem .75rem; }
+.msg-envelope { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: .25rem; }
+.msg-envelope dd { overflow-wrap: anywhere; }
+.msg-copy { color: hsl(var(--msg-header-foreground)); }
+.msg-copy:hover { background: hsl(var(--msg-background) / .12); color: hsl(var(--msg-header-foreground)); }
+.msg-body { overflow: auto; max-height: 65dvh; padding: .75rem 0; }
+.msg-line { display: flex; min-height: 1.125rem; line-height: 1.125rem; width: max-content; min-width: 100%; }
+.msg-text { white-space: pre; padding-right: .75rem; }
+.msg-gutter { display: inline-block; flex: 0 0 4ch; width: 4ch; color: hsl(var(--msg-accent)); font-size: 10px; text-align: center; }
+.msg-label { color: hsl(var(--msg-accent)); }
+.msg-changed { background: hsl(var(--msg-accent) / .14); }
+.msg-pulse, .msg-disconnected { width: 6px; height: 6px; border-radius: 50%; background: hsl(var(--msg-header-foreground)); }
+.msg-pulse { animation: msg-live 2s ease-in-out infinite; }
+@keyframes msg-live { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .msg-pulse { animation: none; } }
+.dts-message-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+.dts-message-layout > * { min-width: 0; }
+.dts-message-dock { min-width: 0; }
+@media (min-width: 1440px) {
+  .dts-message-layout { grid-template-columns: minmax(0, 1fr) minmax(26rem, 38rem); align-items: start; }
+  .dts-message-dock { position: sticky; top: 1rem; }
+}
 @container (max-width: 34rem) {
   .copilot-heading-detail { display: none; }
 }

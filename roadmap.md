@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Step 1: live MSG formatter, collapsible dock, saved-term/notes subscriptions, exact copy and email preview; 28 tests and signed-in save/second-window Realtime/commentary/reload/mobile checks pass. Approvals/audits retained; no alerts sent. Files/limits: reference/live-msg-panel.md.
 - [ ] Fix missing saved Tranche A commands to return a persisted clarification instead of HTTP 500; verify direct and AI-planned guards and the signed-in deployed chat.
 - [x] Sweep Co-Pilot amount units through direct/AI commands, individual corrections, source reviews and database approvals; explicit units normalized, missing multipliers withheld, stale checks retained. 65 affected tests pass; deployed missing-target-unit clarification verified signed in.
 - [x] Fix Tranche C 350 vs 350000000 command failure with a normal explicit-unit clarification; 17 tests pass, deployed and signed-in exact command returns HTTP 200 without a preview or term changes.

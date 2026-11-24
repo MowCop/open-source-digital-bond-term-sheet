@@ -11,6 +11,7 @@ import { Fragment } from 'react';
 import TranchePanel, { type TrancheSave } from './TranchePanel';
 import { useScopedApp } from '@/context/AppContext';
 import { dealBorrowerName } from '@/lib/borrowerName';
+import { emitDtsSaved } from '@/lib/dtsSaveEvent';
 import { SENIORITY_LABEL } from '@/lib/trancheFields';
 import type { Deal } from '@/types/bond';
 import {
@@ -83,7 +84,7 @@ export default function DealTermSheets({ deal, canEdit, onOpenAllFields, selecte
   const save = async (next: DealWorkspace) => {
     const { error } = await supabase.from('deals').update({ deal_workspace: next as never }).eq('id', deal.id);
     if (error) { toast.error(`Could not save deal structure: ${error.message}`); return false; }
-    setWs(next); toast.success('Deal structure saved'); return true;
+    setWs(next); emitDtsSaved({ dealId: deal.id, ws: next }); toast.success('Deal structure saved'); return true;
   };
 
   return (

@@ -44,6 +44,7 @@ import { bulletinDocuments } from '@/lib/bulletin';
 import { Textarea } from '@/components/ui/textarea';
 import { findBulletinDraft } from '@/lib/bulletinDraft';
 import SendUpdateDialog from '@/components/SendUpdateDialog';
+import LiveMsgPanel from '@/components/LiveMsgPanel';
 import { Send } from 'lucide-react';
 import { downloadBdtFile, validateBdt, type BdtDocument, type ValidationReport } from '@/lib/taxonomy';
 import BankIntakeDialog from '@/components/termsheet/BankIntakeDialog';
@@ -120,6 +121,8 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
   const navigate = useNavigate();
   const fillRef = useRef<TermSheetFillHandle>(null);
   const [tab, setTab] = useState('sheets');
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [sendMessageOpen, setSendMessageOpen] = useState(false);
   const { messages } = useApp();
   const [shownStage, setShownStage] = useState<number>(requestedStage ?? 1);
   const consumedFiles = useRef<File[] | null>(null);
@@ -159,7 +162,8 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         copilotSlot,
       )}
 
-      <Tabs value={tab} onValueChange={setTab}>
+      <div className={messageOpen ? 'dts-message-layout' : ''}>
+      <Tabs value={tab} onValueChange={setTab} className="min-w-0">
         {/* pl-[13px] = the 1px panel border + 12px inner padding used above, so
             this icon sits in the same column as the drop-zone and checker icons. */}
         <div className="flex flex-wrap items-center gap-2 border-b border-border pb-2 pl-[13px]">
@@ -182,6 +186,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
             <TabsTrigger value="docs">Documents</TabsTrigger>
             <TabsTrigger value="fill">All fields</TabsTrigger>
           </TabsList>
+          <Button variant="outline" size="sm" className="gap-1" aria-expanded={messageOpen} aria-controls={`message-dock-${deal.id}`} onClick={() => setMessageOpen(v => !v)}><Send className="h-3.5 w-3.5" />Message{messageOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}</Button>
         </div>
         <TabsContent value="fill" forceMount className="mt-4 data-[state=inactive]:hidden">
           <TermSheetFill ingestRef={fillRef} deal={deal} canEdit={canManage} onSave={onSaveFields} onStateChange={setCheckerState} onDirtyChange={setHasUnsavedTerms} onDisplayedStage={setShownStage} requestedStage={requestedStage} requestedAt={requestedAt} />
@@ -274,6 +279,9 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
       </div>
         </TabsContent>
       </Tabs>
+      {messageOpen && <aside id={`message-dock-${deal.id}`} className="dts-message-dock" aria-label="Live message panel"><LiveMsgPanel deal={deal} canSend={canManage} onSend={() => setSendMessageOpen(true)} /></aside>}
+      </div>
+      {sendMessageOpen && <SendUpdateDialog deal={deal} onClose={() => setSendMessageOpen(false)} />}
 
 
       {/* Stage History */}

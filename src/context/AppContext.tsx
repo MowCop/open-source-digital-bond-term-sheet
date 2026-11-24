@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { buildDealBulletin, findBulletinDraft } from '@/lib/bulletinDraft';
+import { emitDtsSaved } from '@/lib/dtsSaveEvent';
 import { scopeDeals, scopeUsers, scopeDistributionLists, scopeMessages, scopeAuditLog } from '@/lib/scoping';
 import {
   fetchUsers, fetchDeals, insertUser, updateUserRow, deleteUserRow,
@@ -445,7 +446,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const updateDeal = useCallback((dealId: string, updates: Partial<Deal>) => {
     setDeals(prev => prev.map(d => d.id === dealId ? { ...d, ...updates, updatedAt: new Date() } : d));
-    updateDealRow(dealId, updates).catch(e => console.error('[Cloud] updateDeal failed', e));
+    updateDealRow(dealId, updates).then(() => {
+      if (updates.bdtState) emitDtsSaved({ dealId, state: updates.bdtState });
+    }).catch(e => console.error('[Cloud] updateDeal failed', e));
     addAuditEntry({ action: 'DEAL_UPDATED', entityType: 'deal', entityId: dealId, userId: currentUser.id, details: `Deal updated (${Object.keys(updates).join(', ')})` });
   }, [currentUser.id, addAuditEntry]);
 

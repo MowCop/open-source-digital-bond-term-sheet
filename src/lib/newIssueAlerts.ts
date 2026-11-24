@@ -68,7 +68,7 @@ function tenorOf(v: ReturnType<typeof termSheetView>, fallback = '') {
 export function buildSubject(state: BdtState, event: AlertEvent, detail = '', tenorFallback = ''): string {
   const v = termSheetView(state);
   const head = (v.issuerName || 'Issuer').toUpperCase();
-  const deal = [v.currency, v.size, tenorOf(v, tenorFallback)].filter(Boolean).join(' ');
+  const deal = [v.size || v.currency, tenorOf(v, tenorFallback)].filter(Boolean).join(' ');
   const suffix = ALERT_EVENTS.find(e => e.id === event)?.suffix ?? '';
   return [head, deal, [suffix, detail.trim()].filter(Boolean).join(' ')].filter(Boolean).join(' – ');
 }
@@ -92,7 +92,7 @@ export function termRows(state: BdtState | null | undefined): { key: string; lab
     return { key: k as string, label, value };
   }).filter(r => r.value);
   const br = termSheetView(state).bookrunners;
-  if (br.length) rows.splice(3, 0, { key: 'bookrunners', label: 'Bookrunners', value: br.join(', ') });
+  if (br.length) rows.splice(3, 0, { key: 'bookrunners', label: 'Bookrunners', value: br.map(b => b.name).filter(Boolean).join(', ') });
   return rows;
 }
 
@@ -125,7 +125,7 @@ export function dealTermsText(state: BdtState | null | undefined, ws: DealWorksp
     lines.push([`${v.currency} ${v.size}`.trim(), v.maturityDate && `Maturity ${v.maturityDate}`, v.coupon && `Coupon ${v.coupon}`].filter(Boolean).join(' · '));
   }
   const shared: string[] = [];
-  if (v.bookrunners.length) shared.push(`Bookrunners: ${v.bookrunners.join(', ')}`);
+  if (v.bookrunners.length) shared.push(`Bookrunners: ${v.bookrunners.map(b => b.name).filter(Boolean).join(', ')}`);
   if (v.governingLaw) shared.push(`Governing law: ${v.governingLaw}`);
   if (v.settlementDate) shared.push(`Settlement: ${v.settlementDate}`);
   if (v.listingVenue) shared.push(`Listing: ${v.listingVenue}`);

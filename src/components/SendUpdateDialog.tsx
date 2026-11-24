@@ -3,7 +3,10 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import { Send, RotateCw, AlertTriangle, Sparkles } from 'lucide-react';
 import { useAiModel } from '@/lib/aiModel';
 import { dealBorrowerName } from '@/lib/borrowerName';
-import type { DealWorkspace } from '@/lib/dealWorkspace';
+import MsgPreview from '@/components/MsgPreview';
+import { useLiveMessage, previousMsgText } from '@/hooks/useLiveMessage';
+import { buildMsgLines, buildMsgText, changedMsgLines, msgEmailBlock } from '@/lib/msgFormat';
+import { emitDtsSaved } from '@/lib/dtsSaveEvent';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -18,18 +21,23 @@ import type { BdtState } from '@/lib/bdt-bridge';
 import type { Deal } from '@/types/bond';
 import { loadDistribution, loadAlertStatus, type AlertStatus } from '@/lib/distribution';
 import { buildFromHeader, bccList, canSend, chunkRecipients, providerStatus } from '@/lib/alertMail';
-import { ALERT_EVENTS, buildSendRequest, buildSubject, eventForStage, renderBulletin, dealTermsText, packNotes, unpackNotes, selectRecipients, termsDiff, termsHash, type AlertEvent, type DistributionRow } from '@/lib/newIssueAlerts';
+import { ALERT_EVENTS, buildSendRequest, buildSubject, eventForStage, renderBulletin, dealTermsText, packNotes, selectRecipients, termsDiff, termsHash, type AlertEvent, type DistributionRow } from '@/lib/newIssueAlerts';
 
 interface SendRow { id: string; event: string; subject: string; created_at: string; sender_name: string; sender_email: string | null; sender_org: string | null; provider: string; release_version: number | null; bdt_hash: string; terms_snapshot: BdtState; alert_send_chunks: { id: string; chunk_index: number; to_address: string; bcc_addresses: string[]; status: string; error: string | null; attempts: number }[] }
 async function readError(error: unknown) { return error instanceof FunctionsHttpError ? await error.context.text() : error instanceof Error ? error.message : String(error); }
 
 export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClose: () => void }) {
-  const saved = (deal.bdtState ?? null) as BdtState | null;
+  const live = useLiveMessage(deal);
+  const saved = live.state;
+  const ws = live.ws;
+  const borrower = dealBorrowerName({ ...deal, bdtState: saved });
+  const [notesEdited, setNotesEdited] = useState(false);
   const [event, setEvent] = useState<AlertEvent>(eventForStage(deal.stage));
+  const [eventEdited, setEventEdited] = useState(false);
   const [detail, setDetail] = useState('');
   const [subject, setSubject] = useState('');
   const [subjectEdited, setSubjectEdited] = useState(false);
-  const [notes, setNotes] = useState(''); const [notesHash, setNotesHash] = useState(''); const [ws, setWs] = useState<DealWorkspace | null>(null); const [checked, setChecked] = useState(false); const [polishing, setPolishing] = useState(false); const [aiModel] = useAiModel(); const [legal, setLegal] = useState('');
+  const [notes, setNotes] = useState(''); const [notesHash, setNotesHash] = useState(''); const [checked, setChecked] = useState(false); const [polishing, setPolishing] = useState(false); const [aiModel] = useAiModel(); const [legal, setLegal] = useState('');
   const [notesLoaded, setNotesLoaded] = useState(false);
   const [status, setStatus] = useState<AlertStatus | null>(null);
   const [showBcc, setShowBcc] = useState(false);
@@ -47,33 +55,34 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
     loadDistribution().then(setDist).catch(() => setDist([]));
     loadAlertStatus().then(setStatus);
     loadLog();
-    Promise.all([
-      supabase.from('deal_bulletin_notes').select('intro,notes').eq('deal_id', deal.id).maybeSingle(),
-      supabase.from('deals').select('deal_workspace').eq('id', deal.id).maybeSingle(),
-    ]).then(([{ data }, { data: d }]) => {
-      const w = d?.deal_workspace as unknown as DealWorkspace | null;
-      const wsv = w?.version === 1 ? w : null; setWs(wsv);
-      const u = data ? unpackNotes(data.notes, data.intro) : null;
-      if (u?.terms) { setNotes(u.terms); setNotesHash(u.hash); setLegal(u.legal); }
-      else { setNotes(dealTermsText(saved, wsv, dealBorrowerName(deal))); setNotesHash(saved ? termsHash(saved) : ''); if (u) setLegal(u.legal); }
-      setNotesLoaded(true);
-    });
   }, [deal.id]);
+  useEffect(() => {
+    if (!live.loaded || notesEdited) return;
+    const u = live.notes;
+    setNotes(u.terms || dealTermsText(saved, ws, borrower));
+    setNotesHash(u.terms ? u.hash : saved ? termsHash(saved) : '');
+    setLegal(u.legal); setNotesLoaded(true);
+  }, [live.loaded, live.notes, notesEdited]);
 
   // Latest saved release whose terms match the deal's saved terms.
   const hash = useMemo(() => saved ? termsHash(saved) : '', [saved]);
   useEffect(() => {
-    if (!saved) { setRelease(null); return; }
+    let active = true;
+    setRelease(null);
+    if (!saved) return;
     supabase.from('deal_term_sheet_releases').select('id,version,bdt_state_snapshot').eq('deal_id', deal.id).order('version', { ascending: false }).limit(5)
-      .then(({ data }) => { const r = (data ?? []).find(x => termsHash(x.bdt_state_snapshot) === hash); setRelease(r ? { id: r.id, version: r.version } : null); });
+      .then(({ data }) => { if (!active) return; const r = (data ?? []).find(x => termsHash(x.bdt_state_snapshot) === hash); setRelease(r ? { id: r.id, version: r.version } : null); });
+    return () => { active = false; };
   }, [deal.id, hash]);
+  useEffect(() => { if (!eventEdited) setEvent(eventForStage(live.stage)); }, [live.stage, eventEdited]);
 
   // Live re-render: subject and terms follow saved terms/stage; user text is never touched.
   const auto = saved ? buildSubject(saved, event, detail, deal.tenor) : '';
   useEffect(() => { if (!subjectEdited) setSubject(auto); }, [auto, subjectEdited]);
-  useEffect(() => { setApproved(false); }, [hash, event, subject, notes, legal]);
+  useEffect(() => { setApproved(false); }, [hash, ws, event, subject, notes, legal]);
+  useEffect(() => { setChecked(false); }, [hash, ws]);
   const stale = notesLoaded && !!notes.trim() && notesHash !== hash && !checked;
-  const regenerate = () => { setNotes(dealTermsText(saved, ws, dealBorrowerName(deal))); setNotesHash(hash); setChecked(false); };
+  const regenerate = () => { setNotes(dealTermsText(saved, ws, borrower)); setNotesEdited(true); setNotesHash(hash); setChecked(false); };
   const polish = async () => {
     setPolishing(true);
     const { data, error } = await supabase.functions.invoke('generate-bulletin-from-deal', { body: { dealId: deal.id, model: aiModel, docs: [], editedBulletin: notes } });
@@ -82,10 +91,12 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
     const html = String((data as { body?: string })?.body ?? '').split('<h3>Legal Notices</h3>')[0];
     const text = html.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(p|h\d|li|tr)>/gi, '\n\n').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/\n{3,}/g, '\n\n').trim();
     if (!text) { toast.error('AI returned no text.'); return; }
-    if (window.confirm('Replace the Terms text with the AI-polished version?\n\n' + text.slice(0, 1500))) setNotes(text);
+    if (window.confirm('Replace the Terms text with the AI-polished version?\n\n' + text.slice(0, 1500))) { setNotes(text); setNotesEdited(true); }
   };
   const legalNotices = legal.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
-  const body = renderBulletin({ state: saved, notes, legalNotices });
+  const msgArgs = saved ? { state: saved, ws, borrower, event, notes, legalNotices: legal ? [legal] : [] } : null;
+  const msgText = msgArgs ? buildMsgText(msgArgs) : '';
+  const body = msgEmailBlock(msgText) + renderBulletin({ state: saved, notes, legalNotices });
 
   const recipients = selectRecipients(dist);
   const adminEmail = status?.sender.email ?? '';
@@ -93,13 +104,13 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
   const chunks = adminEmail ? chunkRecipients(adminEmail, bcc) : [];
   const pStatus = status ? providerStatus(status.provider, { resendVerified: status.resendVerified, graphConnected: status.graphConnected }) : null;
   const gate = status && pStatus ? canSend(status.provider, pStatus, status.sender.name) : { ok: false, message: 'Loading sender settings…' };
-  const blocker = !status ? 'Could not load sender settings.' : !status.syndicateMailbox ? 'Set your organisation’s syndicate mailbox in Bond Console → Recipients.' : !gate.ok ? gate.message : '';
+  const blocker = live.error || (!status ? 'Could not load sender settings.' : !status.syndicateMailbox ? 'Set your organisation’s syndicate mailbox in Bond Console → Recipients.' : !gate.ok ? gate.message : '');
   const lastSent = sends.find(s => s.alert_send_chunks.some(r => r.status === 'sent'));
   const diff = lastSent && saved ? termsDiff(lastSent.terms_snapshot, saved) : [];
 
   const saveNotes = async () => {
     const { error } = await supabase.from('deal_bulletin_notes').upsert({ deal_id: deal.id, intro: '', notes: packNotes(notes, checked ? hash : notesHash, legal), updated_at: new Date().toISOString() });
-    if (error) toast.error(error.message); else toast.success('Bulletin notes saved');
+    if (error) toast.error(error.message); else { emitDtsSaved({ dealId: deal.id, notes: packNotes(notes, checked ? hash : notesHash, legal) }); setNotesEdited(false); toast.success('Bulletin notes saved'); }
   };
 
   const send = async () => {
@@ -135,7 +146,7 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
           <div className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-3">
               <div className="space-y-1.5"><Label htmlFor="alert-event">Lifecycle event</Label>
-                <select id="alert-event" className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={event} onChange={e => setEvent(e.target.value as AlertEvent)}>
+                <select id="alert-event" className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={event} onChange={e => { setEvent(e.target.value as AlertEvent); setEventEdited(true); }}>
                   {ALERT_EVENTS.map(e => <option key={e.id} value={e.id}>{e.label}</option>)}
                 </select></div>
               <div className="space-y-1.5"><Label htmlFor="alert-detail">Subject detail (optional)</Label><Input id="alert-detail" placeholder="T+200bp area" value={detail} maxLength={120} onChange={e => setDetail(e.target.value)} /></div>
@@ -156,16 +167,16 @@ export default function SendUpdateDialog({ deal, onClose }: { deal: Deal; onClos
               <div className="flex flex-wrap items-center gap-2"><Label htmlFor="alert-notes">Terms</Label>
                 <Button type="button" size="sm" variant="ghost" className="ml-auto h-7 gap-1" onClick={regenerate} disabled={!notesLoaded}><RotateCw className="h-3.5 w-3.5" />Regenerate from terms</Button>
                 <Button type="button" size="sm" variant="ghost" className="h-7 gap-1" onClick={polish} disabled={!notesLoaded || polishing || !notes.trim()}><Sparkles className="h-3.5 w-3.5" />{polishing ? 'Polishing…' : 'Polish with AI'}</Button></div>
-              <Textarea id="alert-notes" rows={8} value={notes} disabled={!notesLoaded} onChange={e => setNotes(e.target.value)} />
+              <Textarea id="alert-notes" rows={8} value={notes} disabled={!notesLoaded} onChange={e => { setNotes(e.target.value); setNotesEdited(true); }} />
               {stale && <div className="rounded-md border border-warning/50 bg-warning/10 p-2 text-xs space-y-1" role="alert"><div className="flex items-center gap-1.5 font-semibold"><AlertTriangle className="h-3.5 w-3.5" />Terms text may be out of date — the saved term sheet changed.</div>
                 <label className="flex items-center gap-2"><Checkbox checked={checked} onCheckedChange={v => setChecked(v === true)} />Text checked against current terms</label></div>}
             </div>
-            <div className="space-y-1.5"><Label htmlFor="alert-legal">Legal notices (pasted verbatim, never AI-written)</Label><Textarea id="alert-legal" rows={2} value={legal} disabled={!notesLoaded} onChange={e => setLegal(e.target.value)} /></div>
+            <div className="space-y-1.5"><Label htmlFor="alert-legal">Legal notices (pasted verbatim, never AI-written)</Label><Textarea id="alert-legal" rows={2} value={legal} disabled={!notesLoaded} onChange={e => { setLegal(e.target.value); setNotesEdited(true); }} /></div>
             <Button type="button" size="sm" variant="outline" onClick={saveNotes}>Save notes</Button>
 
             <div className="space-y-1.5">
               <Label>Preview</Label>
-              <div className="rounded-md border bg-card p-3 text-sm prose prose-sm max-w-none dark:prose-invert [&_th]:text-left [&_th]:pr-3" dangerouslySetInnerHTML={{ __html: body }} />
+              {msgArgs && <MsgPreview text={msgText} lines={buildMsgLines(msgArgs)} changed={changedMsgLines(msgArgs, live.lastSent?.terms_snapshot ?? null, previousMsgText(live.lastSent))} subject={subject} sender={status?.sender ?? { name: '', org: '' }} distributionCount={bcc.length} updatedAt={live.updatedAt} connected={live.connected} />}
               <p className="text-xs text-muted-foreground">Attachment: {deal.id}-v{release?.version ?? '?'}.xml (BDT 2.0, saved snapshot)</p>
             </div>
 

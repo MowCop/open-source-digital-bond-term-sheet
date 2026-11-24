@@ -57,6 +57,13 @@
       "when": 1795427371741,
       "tag": "0007_copilot_command_amount_display",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795513444529,
+      "tag": "0008_live_msg_updates",
+      "breakpoints": true
     }
   ]
 }
