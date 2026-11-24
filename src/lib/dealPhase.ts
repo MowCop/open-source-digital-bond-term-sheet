@@ -2,6 +2,11 @@ import type { Deal, UserRole } from '@/types/bond';
 import { termSheetView } from './termSheetView';
 import { dealToBdtState, type BdtState, type CheckItem } from './bdt-bridge';
 import type { DealWorkspace } from './dealWorkspace';
+import { emptyState } from './termsheet/index.js';
+/** Empty collection defaults let incomplete legacy records be checked without inventing terms. */
+export function executionGateState(saved: Partial<BdtState> | null): BdtState {
+  return { ...emptyState(), ...saved, f: saved?.f ?? {}, parties: saved?.parties ?? [], ids: saved?.ids ?? [], ratings: saved?.ratings ?? [], docs: saved?.docs ?? [] };
+}
 export type DealPhase = 'setup' | 'execution' | 'closed';
 export type ActorRole = 'dcm' | 'issuer_legal' | 'counsel';
 export const ACTOR_LABELS: Record<ActorRole, string> = { dcm: 'DCM', issuer_legal: 'Issuer legal', counsel: 'Deal counsel' };
@@ -18,20 +23,9 @@ export function mayEditField(role: UserRole, phase: DealPhase, path: string): bo
   return phase === 'setup' && (role === 'issuer_legal' || role === 'counsel');
 }
 export interface Signoff { item_key: string; role: ActorRole; user_id: string; status: 'open' | 'in_review' | 'signed_off'; updated_at: string }
-export const CHECKLIST = [
-  { key: 'structure', role: 'dcm', label: 'Structure & tranches' },
-  { key: 'size', role: 'dcm', label: 'Size' },
-  { key: 'tenor', role: 'dcm', label: 'Tenor' },
-  { key: 'bookrunners', role: 'dcm', label: 'Bookrunners' },
-  { key: 'issuer', role: 'issuer_legal', label: 'Issuer details & LEI' },
-  { key: 'law', role: 'issuer_legal', label: 'Governing law' },
-  { key: 'restrictions', role: 'issuer_legal', label: 'Selling restrictions & legends' },
-  { key: 'target', role: 'issuer_legal', label: 'MiFID target market' },
-  { key: 'documents', role: 'counsel', label: 'Documents reviewed' },
-  { key: 'listing', role: 'counsel', label: 'Listing' },
-  { key: 'stabilisation', role: 'counsel', label: 'Stabilisation' },
-  { key: 'notices', role: 'counsel', label: 'Legal notices' },
-] as const;
+/** Definitions come from signoff_item_fields(), also used by the database triggers. */
+export interface SignoffItem { key: string; role: ActorRole; label: string; fields: string[]; workspace: string[]; tranche: string[]; parties: string[] }
+export interface PhaseAudit { action: string; userName: string; at: string; details: { item?: string; changedFields?: string[]; note?: string; openItems?: unknown[]; blockingChecks?: unknown[] } }
 export function checklistEvidence(state: BdtState, ws: DealWorkspace | null, documentCount: number): Record<string, boolean> {
   const v = termSheetView(state), f = state.f;
   return { structure: !!ws?.tranches.length, size: !!v.size && (!ws || ws.tranches.every(t => t.amount != null && t.amount > 0)), tenor: !!v.tenor || !!ws?.tranches.every(t => !!t.tenor), bookrunners: v.bookrunners.length > 0,
@@ -39,9 +33,10 @@ export function checklistEvidence(state: BdtState, ws: DealWorkspace | null, doc
     restrictions: !!f['IssuanceDataGroup/Issuance/SellingRestrictions/REGS/RegSCode'] && !!f['IssuanceDataGroup/Issuance/SellingRestrictions/PRIIPsRestriction'],
     target: !!f['IssuanceDataGroup/Issuance/TargetMarket/ManufacturerTargetMarketType'], documents: documentCount > 0, listing: !!f['IssuanceDataGroup/Issuance/Listing/Listed'], stabilisation: !!f['x:stabilisation'], notices: documentCount > 0 };
 }
-export function executionReadiness(checks: Pick<CheckItem, 'l'>[], signoffs: Signoff[], evidence: Record<string, boolean>, dirty = false) {
+export function executionReadiness(checks: Pick<CheckItem, 'l'>[], signoffs: Signoff[], evidence: Record<string, boolean>, dirty: boolean, team: { role: string }[], items: SignoffItem[]) {
   const blocking = checks.filter(c => c.l === 'fail').length;
-  const outstanding = CHECKLIST.filter(i => !evidence[i.key] || !signoffs.some(s => s.item_key === i.key && s.role === i.role && s.status === 'signed_off'));
+  const required = items.filter(i => team.some(t => t.role === i.role));
+  const outstanding = required.filter(i => !evidence[i.key] || !signoffs.some(s => s.item_key === i.key && s.role === i.role && s.status === 'signed_off'));
   return { ready: !dirty && !blocking && !outstanding.length, blocking, outstanding };
 }
 export function quickCommands(deal: Deal): string[] {

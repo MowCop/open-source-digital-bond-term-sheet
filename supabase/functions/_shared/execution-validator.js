@@ -331,6 +331,23 @@ var FIELDS2 = [
 FIELDS.push.apply(FIELDS, FIELDS2);
 
 // src/lib/termsheet/model.js
+function emptyState() {
+  return {
+    stage: 1,
+    deal: "",
+    ver: "0.1",
+    seq: 0,
+    f: {},
+    contacts: [],
+    parties: [],
+    ids: [],
+    ratings: [],
+    docs: [],
+    releases: [],
+    suggestions: [],
+    files: []
+  };
+}
 var val = (state, p) => state.f[p] ?? "";
 var hasVal = (state, p) => String(val(state, p)).trim() !== "";
 function filled(state, fd) {
@@ -1605,6 +1622,9 @@ function termSheetView(state) {
 }
 
 // src/lib/dealPhase.ts
+function executionGateState(saved) {
+  return { ...emptyState(), ...saved, f: saved?.f ?? {}, parties: saved?.parties ?? [], ids: saved?.ids ?? [], ratings: saved?.ratings ?? [], docs: saved?.docs ?? [] };
+}
 function checklistEvidence(state, ws, documentCount) {
   const v = termSheetView(state), f2 = state.f;
   return {
@@ -1624,6 +1644,7 @@ function checklistEvidence(state, ws, documentCount) {
 }
 export {
   checklistEvidence,
+  executionGateState,
   trancheBdtState,
   unifiedChecks
 };
