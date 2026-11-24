@@ -4,8 +4,8 @@ import { extractBorrowerName, mergeDealFromText } from '@/lib/alertParsing';
 import type { Deal } from '@/types/bond';
 
 describe('shortBorrowerName', () => {
-  it('shows the Al Rajhi borrower without the bond description', () => {
-    expect(shortBorrowerName('Al Rajhi Bank – Tier 2 US$ Reg S 10.5NC5.5 Social Sukuk')).toBe('Al Rajhi Bank');
+  it('shows the demo borrower without the bond description', () => {
+    expect(shortBorrowerName('Meridian Gulf Bank – Tier 2 US$ Reg S 10.5NC5.5 Social Sukuk')).toBe('Meridian Gulf Bank');
   });
   it('preserves hyphens within borrower names', () => {
     expect(shortBorrowerName('Rolls-Royce Holdings')).toBe('Rolls-Royce Holdings');

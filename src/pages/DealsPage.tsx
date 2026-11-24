@@ -29,8 +29,8 @@ import UnifiedDealChecker from '@/components/termsheet/UnifiedDealChecker';
 import DealDocuments from '@/components/termsheet/DealDocuments';
 import DealCopilot from '@/components/DealCopilot';
 import { buildXML, refreshAuto } from '@/lib/termsheet/index.js';
-import { setupAlRajhiDemo } from '@/components/AlRajhiDemoPanel';
-import { isDemoDeal } from '@/data/alRajhiDemo';
+import { setupDemoDeal } from '@/components/DemoDealPanel';
+import { isDemoDeal } from '@/data/demoDeal';
 import { useApp } from '@/context/AppContext';
 import { dealToBdtState, fieldByPath, type BdtState } from '@/lib/bdt-bridge';
 import TermSheetField from '@/components/termsheet/TermSheetField';
@@ -308,9 +308,9 @@ export default function DealsPage() {
     if (demoDeal) { setExpandedDealId(demoDeal.id); return; }
     setDemoBusy(true);
     try {
-      const d = await setupAlRajhiDemo(fullApp);
+      const d = await setupDemoDeal(fullApp);
       setExpandedDealId(d.id);
-      toast.success('Al Rajhi demo deal ready', { description: 'Use "Next message" to replay the syndicate blasts.' });
+      toast.success('Demo deal ready', { description: 'Use "Next message" to replay the syndicate blasts.' });
     } catch (e) {
       toast.error('Could not set up the demo deal', { description: (e as Error).message });
     } finally { setDemoBusy(false); }
@@ -466,7 +466,7 @@ export default function DealsPage() {
         {canManageDeals && (
           <Button variant="outline" className="ml-auto mr-2" onClick={loadDemo} disabled={demoBusy}>
             {demoBusy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {demoDeal ? 'Open Al Rajhi demo' : 'Load Al Rajhi demo'}
+            {demoDeal ? 'Open demo deal' : 'Load demo deal'}
           </Button>
         )}
         {canManageDeals && (

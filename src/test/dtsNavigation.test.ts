@@ -15,7 +15,7 @@ describe('DTS update navigation', () => {
     expect(updateTermSheetStage(message('Issuer – Guidance'), deal)).toBe(3);
     expect(updateTermSheetStage(message('Issuer – Launched'), deal)).toBe(4);
   });
-  it('matches each Al Rajhi reference message to its saved stage', () => {
+  it('matches each demo deal message to its saved stage', () => {
     for (const [id, stage] of [['1-1', 2], ['2-0', 3], ['3-0', 4], ['4-0', 5]] as const) {
       expect(updateTermSheetStage({ ...message(''), id: `demo-${deal.id}-${id}` }, deal)).toBe(stage);
     }

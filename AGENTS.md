@@ -16,8 +16,8 @@
 - Files dropped on a deal are stored in the private deal-documents bucket and indexed in public.deal_documents (src/lib/dealDocuments.ts), added to the unsaved term sheet Documentation list on drop (user still saves), and counted by the Deal Checker as attached — one store for deal files.
 
 - reference/deal-checker-capabilities.md is the living summary of Deal Checker checks and sources; any change to checker rules, fixes or sources must update it in the same change.
-- The Al Rajhi demo deal (seed, chat replay script, term sheet stage snapshots) is defined only in src/data/alRajhiDemo.ts and driven by src/components/AlRajhiDemoPanel.tsx — one source for the demo flow; replayed messages go through the normal Fill parser, never auto-accepted.
-- Al Rajhi board bodies project Word-derived HTML without writes; replay parsing uses plain text — preserve structure, user edits and stage timing.
+- The demo deal (fictional Meridian Gulf Bank Tier 2 Social Sukuk: seed, chat replay script, term sheet stage snapshots) is defined only in src/data/demoDeal.ts, with its messages in reference/demo-deal/, and driven by src/components/DemoDealPanel.tsx — one source for the demo flow; replayed messages go through the normal Fill parser, never auto-accepted.
+- Demo board bodies project the message HTML without writes; replay parsing uses plain text — preserve structure, user edits and stage timing.
 - Board-to-term-sheet links use src/lib/dtsNavigation.ts to resolve the selected update's deal, stage and publication time; Fill reads saved stage snapshots without modifying lifecycle or terms, and reports missing snapshots rather than inventing history — both board toolbars must share this navigation contract.
 - AI Deep Audit (src/lib/deepAudit.ts + audit-deal-fields-ai) is on-demand only, compares Fill fields to stored deal document text, and emits warnings only (src 'ai') appended to unifiedChecks — deterministic checks stay AI-free.
 - App MCP is read-only, querying as the OAuth caller under RLS.

@@ -3,7 +3,7 @@
 ## What you'll see
 - Wherever the Co-Pilot has no deal, update or chat to focus on (New Issue Board with nothing open, Bond Console, Admin pages, Settings and so on), the grey "Open a term sheet, update or chat…" hint turns into a working **Deal Co-Pilot · General** box.
 - You can ask it anything about the VDR: how to do things, where features are, FAQs (roles, stages, Deal Checker, term sheets, documents, bell alerts). Answers can include links that take you to the right page.
-- **Remind me** — you ask, for example, "Remind me when MBH Bank is Free to Trade" or "Remind me 1 day before Al Rajhi settles". Co-Pilot repeats the reminder back and asks you to confirm before saving it. Nothing is set up unless you ask.
+- **Remind me** — you ask, for example, "Remind me when MBH Bank is Free to Trade" or "Remind me 1 day before Meridian Gulf settles". Co-Pilot repeats the reminder back and asks you to confirm before saving it. Nothing is set up unless you ask.
 - You can ask "What reminders do I have?" or "Cancel the MBH reminder". Reminders show in a small list in the General panel, and each has a cancel button.
 - **When reminders go off:** only while you are using the VDR. Each time you open or use it, due reminders light the bell (top right) with a "Reminder" alert. They don't run in the background and don't send email.
 - **Memory:** your General conversation is saved across visits and devices, with a "New conversation" button.

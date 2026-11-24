@@ -6,10 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// NOTE: gmail is used as the primary recipient because karl@eurobondmarkets.com
-// has previously hard-bounced and gets auto-suppressed by the email pipeline.
-const AUTHOR_EMAIL = 'karl@eurobondmarkets.com';
+// The primary recipient is the AUTHOR_NOTIFICATION_EMAIL secret (set in Lovable Cloud),
+// so no personal address is kept in source. The business mailbox is the fallback.
 const FALLBACK_EMAIL = 'karl@eurobondmarkets.com';
+const AUTHOR_EMAIL = Deno.env.get('AUTHOR_NOTIFICATION_EMAIL') || FALLBACK_EMAIL;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });

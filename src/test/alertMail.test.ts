@@ -19,18 +19,18 @@ describe('BCC chunking at 50 (To + BCC)', () => {
   });
   it('server and browser chunking agree', () => {
     expect(server.chunkRecipients(TO, addrs(120))).toEqual(chunkRecipients(TO, addrs(120)));
-    expect(server.buildFromHeader('Alex Morgan', 'BNP Paribas')).toBe(buildFromHeader('Alex Morgan', 'BNP Paribas'));
+    expect(server.buildFromHeader('Alex Morgan', 'Northgate Bank')).toBe(buildFromHeader('Alex Morgan', 'Northgate Bank'));
   });
 });
 
 describe('deal admin identity', () => {
   it('display name and Reply-To use the deal admin', () => {
-    expect(buildFromHeader('Alex Morgan', 'BNP Paribas')).toBe('"Alex Morgan (BNP Paribas) via DTS" <newissues@alerts.eurobondmarkets.com>');
-    expect(senderRecord({ name: 'Alex Morgan', email: 'Alex.Morgan@NorthgateBank.example', organization: 'BNP Paribas' }).reply_to).toBe(TO);
+    expect(buildFromHeader('Alex Morgan', 'Northgate Bank')).toBe('"Alex Morgan (Northgate Bank) via DTS" <newissues@alerts.eurobondmarkets.com>');
+    expect(senderRecord({ name: 'Alex Morgan', email: 'Alex.Morgan@NorthgateBank.example', organization: 'Northgate Bank' }).reply_to).toBe(TO);
   });
   it('records sender name, email and organisation on the log', () => {
-    expect(senderRecord({ name: 'Alex Morgan', email: 'Alex.Morgan@NorthgateBank.example', organization: 'BNP Paribas' }))
-      .toMatchObject({ sender_name: 'Alex Morgan', sender_email: TO, sender_org: 'BNP Paribas', to_address: TO });
+    expect(senderRecord({ name: 'Alex Morgan', email: 'Alex.Morgan@NorthgateBank.example', organization: 'Northgate Bank' }))
+      .toMatchObject({ sender_name: 'Alex Morgan', sender_email: TO, sender_org: 'Northgate Bank', to_address: TO });
   });
 });
 
