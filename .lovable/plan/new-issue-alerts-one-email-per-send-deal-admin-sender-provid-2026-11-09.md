@@ -64,7 +64,7 @@
 ### Tests (`src/test/newIssueAlerts.test.ts`, plus new `src/test/alertMail.test.ts`)
 - 1 To + 120 BCC → 3 chunks, each with ≤50 total addresses, To present in every chunk, all BCC addresses covered once.
 - Exactly 49 BCC → 1 chunk; 50 BCC → 2 chunks.
-- `buildFromHeader` → `"Alex Morgan (BNP Paribas) via DTS" <newissues@alerts.eurobondmarkets.com>`; Reply-To = `alex.morgan@northgatebank.example`.
+- `buildFromHeader` → `"Alex Morgan (Northgate Bank) via DTS" <newissues@alerts.eurobondmarkets.com>`; Reply-To = `alex.morgan@northgatebank.example`.
 - Syndicate mailbox is always in BCC, even with zero enabled vendors, and is deduped if a vendor also lists it.
 - The send request/log record carries sender name, email and org.
 - `canSend('microsoft_graph', 'not_connected')` is false with the clear message. Resend is never chosen automatically when Graph is selected. Gmail always refuses.

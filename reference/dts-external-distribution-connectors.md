@@ -86,7 +86,7 @@ This avoids depending on news and data vendors to build inbound APIs that they d
 
 | Airbrush enum | Values | Gap vs DTS/BDT use |
 |---|---|---|
-| CouponType / ISO | Fixed, Floating, Zero, Fixed-to-Floating / FIXD, FLRN, ZCPN, OTHR | No fixed-reset type (e.g. Al Rajhi T2 reset) → OTHR |
+| CouponType / ISO | Fixed, Floating, Zero, Fixed-to-Floating / FIXD, FLRN, ZCPN, OTHR | No fixed-reset type (e.g. a Tier 2 fixed-reset) → OTHR |
 | ProductType | Covered, Senior Secured / Unsecured / Preferred / Non-Preferred, **Lower Tier 2** | No AT1 and no sukuk structure (Wakala/Murabaha) |
 | GoverningLaw | AT, BE, DK, NL, GB, FI, FR, DE, HK, IE, LU, US, NO, SE, CH | No SA, AE or other GCC/EM laws; no split-law case (English law with Saudi-law subordination) |
 | IssuanceCategory | General Corporate Purposes, Green, Social, Sustainable | No sustainability-linked or transition |

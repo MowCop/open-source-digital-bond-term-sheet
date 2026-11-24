@@ -1,0 +1,66 @@
+name: CI
+
+# Runs on every push and pull request. Lovable commits to main, so this also
+# checks every change made in the Lovable editor.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: Typecheck, test and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # bun.lock is the lockfile Lovable maintains.
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: npx tsc -p tsconfig.app.json --noEmit
+
+      - name: Unit tests
+        run: npx vitest run
+
+      - name: Production build
+        run: npx vite build
+
+  termsheet:
+    name: Term sheet core vs ICMA BDT 2.0
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install libxml2-utils (xmllint)
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Term sheet core reproduces the reference output
+        run: node verify.mjs
+
+      - name: DLT view regression
+        run: node verify-dlt.mjs
+
+      - name: Generated XML validates against the ICMA BDT 2.0 schema
+        run: xmllint --noout --schema schema/icma-bond-data-taxonomy.xsd module-output.xml

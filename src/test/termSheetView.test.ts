@@ -7,8 +7,8 @@ describe('View follows the authoritative working term sheet', () => {
   it('reflects accepted document fields and subsequent edits without saving', () => {
     const state = emptyState() as BdtState;
     state.f = { [P.currency]: 'USD', [P.totalAmount]: '500000000', [P.coupon]: '4.5', [P.issueDate]: '2026-10-10', [P.maturityDate]: '2031-10-10', [P.benchmarkTicker]: 'UST 5Y' };
-    state.parties = [{ PartyName: 'Al Rajhi Sukuk Limited', LEIIdentifier: '', Roles: ['ISSUER'], Ratings: [] }, { PartyName: 'JPMorgan', LEIIdentifier: '', Roles: ['JOINT_BOOKRUNNER'], Ratings: [] }];
-    expect(termSheetView(state)).toMatchObject({ issuerName: 'Al Rajhi Sukuk Limited', currency: 'USD', size: 'USD 500m', coupon: '4.5%', tenor: '5Y', benchmark: 'UST 5Y', bookrunners: [{ name: 'JPMorgan', role: 'active', isGlobalCoordinator: false }] });
+    state.parties = [{ PartyName: 'Meridian Gulf Sukuk Limited', LEIIdentifier: '', Roles: ['ISSUER'], Ratings: [] }, { PartyName: 'JPMorgan', LEIIdentifier: '', Roles: ['JOINT_BOOKRUNNER'], Ratings: [] }];
+    expect(termSheetView(state)).toMatchObject({ issuerName: 'Meridian Gulf Sukuk Limited', currency: 'USD', size: 'USD 500m', coupon: '4.5%', tenor: '5Y', benchmark: 'UST 5Y', bookrunners: [{ name: 'JPMorgan', role: 'active', isGlobalCoordinator: false }] });
     state.f[P.coupon] = '5';
     expect(termSheetView(state).coupon).toBe('5%');
   });

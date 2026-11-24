@@ -23,8 +23,8 @@ export default function AuditLogPage() {
   const scoped = useScopedApp();
   const { users } = useApp();
   const auditLog = scoped.auditLog;
-  const { authUser } = useAuth();
-  const isMaster = authUser?.email?.toLowerCase() === 'karl@eurobondmarkets.com';
+  // Role-based, not a hard-coded email: the master_admin role is enforced server-side by RLS.
+  const { isMaster } = useAuth();
   const [filterType, setFilterType] = useState<string>('all');
   const [search, setSearch] = useState('');
 

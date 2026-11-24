@@ -9,7 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import LinkifiedText from '@/components/LinkifiedText';
 import RichTextEditor from '@/components/RichTextEditor';
 import { isHtml } from '@/lib/htmlText';
-import { demoBoardBody } from '@/data/alRajhiDemo';
+import { demoBoardBody } from '@/data/demoDeal';
 import { dtsLink } from '@/lib/dtsNavigation';
 import { dealBorrowerName } from '@/lib/borrowerName';
 import { formatUTCDateTime } from '@/lib/utils';

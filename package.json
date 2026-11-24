@@ -1,7 +1,27 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "digital-deal-room",
+  "description": "Digital Term Sheets for Eurobond new issues: ICMA Bond Data Taxonomy 2.0 XML, DLT view and AI-assisted syndication updates.",
+  "homepage": "https://eurobondmarkets.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MowCop/open-source-digital-bond-term-sheet.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MowCop/open-source-digital-bond-term-sheet/issues"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "icma",
+    "bond-data-taxonomy",
+    "bdt",
+    "eurobond",
+    "term-sheet",
+    "dcm",
+    "dlt",
+    "fixed-income"
+  ],
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +30,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "verify": "node verify.mjs && node verify-dlt.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

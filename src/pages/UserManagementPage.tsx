@@ -143,16 +143,6 @@ export default function UserManagementPage() {
   const [editListName, setEditListName] = useState('');
   const [editMembers, setEditMembers] = useState<string[]>([]);
 
-  if (!isAdmin && currentUser.role !== 'master_admin') {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Card><CardContent className="p-6 text-center">
-          <p className="text-muted-foreground">Access restricted to administrators</p>
-        </CardContent></Card>
-      </div>
-    );
-  }
-
   const handleCreateUser = (keepOpen = false) => {
     if (!newName || !newEmail || !newOrg) {
       toast({ title: 'Error', description: 'Please fill in all required fields', variant: 'destructive' });
@@ -231,7 +221,23 @@ export default function UserManagementPage() {
     setApprovedEmails(Object.entries(map).filter(([, v]) => v.status === 'approved').map(([e]) => e));
   };
 
-  useEffect(() => { loadLoginProfiles(); }, [usersReloadKey]);
+  const canManageUsers = isAdmin || currentUser.role === 'master_admin';
+
+  useEffect(() => {
+    if (canManageUsers) loadLoginProfiles();
+  }, [usersReloadKey, canManageUsers]);
+
+  // All hooks above this line: React requires the same hook order on every render.
+  if (!canManageUsers) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Card><CardContent className="p-6 text-center">
+          <p className="text-muted-foreground">Access restricted to administrators</p>
+        </CardContent></Card>
+      </div>
+    );
+  }
+
 
   const setRegistrationStatus = async (u: User, status: 'approved' | 'rejected') => {
     const entry = loginProfiles[u.email.toLowerCase()];
