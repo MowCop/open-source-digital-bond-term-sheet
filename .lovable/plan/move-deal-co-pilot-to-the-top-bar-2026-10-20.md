@@ -13,4 +13,4 @@ Location change only — no changes to what Co-Pilot does.
 - `AppLayout.tsx`: add an empty mount slot (`#copilot-slot`) right after `<GlobalSearch />`, with a disabled placeholder shown when nothing is portalled in.
 - `DealsPage.tsx`: render `UnifiedDealChecker` directly (no longer as the `checker` prop) and render `DealCopilot` through `createPortal` into the slot, only for the expanded deal — keeps all deal context, Fill handlers, unsaved-terms state and live-checks wiring intact.
 - `DealCopilot.tsx`: header becomes a compact top-bar row; body becomes an absolutely positioned dropdown (max height, scrollable). `checker` prop removed. No logic, prompts, backend or approval changes.
-- Quick check in the preview: open Al Rajhi, ask a question from the top bar, confirm the Deal Checker still shows in DTS.
+- Quick check in the preview: open the demo deal, ask a question from the top bar, confirm the Deal Checker still shows in DTS.

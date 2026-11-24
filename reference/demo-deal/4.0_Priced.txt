@@ -1,0 +1,41 @@
+*** MERIDIAN GULF BANK – Tier II – PRICED ***
+
+Issuer:                                Meridian Gulf Sukuk Limited
+Obligor:                               Meridian Gulf Bank P.J.S.C.
+Issuer LEI:                            9999MERIDIANGULF0S58
+Obligor LEI:                           9999MERIDIANGULF0B12
+Expected Issue Rating:                 Baa2 / BBB+
+Sukuk Structure:                       Wakala / Murabaha
+Status:                                Tier 2 Certificates (subordinated)
+Type:                                  Social Certificates
+Format:                                Regulation S, Category 2, Registered Form
+Currency:                              U.S. Dollars (U.S.$)
+Issue Size:                            US$500m (U.S.$500,000,000)
+Tenor:                                 10.5 years non-call 5.5 years
+Re-offer Spread:                       T+175bps
+Re-offer Yield / Profit Rate:          5.807%
+Benchmark:                             UST 3.875% 02/32, benchmark yield 4.057%
+Re-offer Price / Issue Price:          100.000%
+Initial Margin:                        175bps
+ISIN:                                  XS9990000028
+Common Code:                           999000002
+Pricing Date:                          03 September 2026
+Issue Date / Profit Commencement Date: 10 September 2026 (T+5)
+Scheduled Dissolution / Maturity Date: 10 March 2037
+Reset Date:                            10 March 2032
+Optional Dissolution Period:           10 December 2031 to the Reset Date, and any Periodic Distribution Date thereafter
+Periodic Distribution Dates:           Semi-annually in arrear on 10 March and 10 September, commencing 10 March 2027
+Profit Rate:                           Fixed until the Reset Date; thereafter reset to the 5-year U.S. Treasury rate plus the Initial Margin
+Day Count:                             30/360
+Denominations:                         U.S.$200,000 and integral multiples of U.S.$1,000 in excess thereof
+Use of Proceeds:                       Eligible social projects under the Obligor's Sustainable Finance Framework
+Listing:                               London Stock Exchange International Securities Market
+Governing Law:                         English law (subordination provisions: law of the Obligor's jurisdiction)
+Clearing:                              Euroclear / Clearstream
+Selling Restrictions:                  Reg S Category 2; no sales to EEA or UK retail investors
+JLMs / JBRs:                           Atlas Markets, Cedarstone Capital, Harbourline Securities, Lumen Investment Bank, Meridian Capital, Northgate Bank
+Documentation:                         Base Offering Circular and Supplement (attached)
+
+Final books over 1.25bn (USD). Allocations to follow.
+
+FICTIONAL DEMONSTRATION DEAL. Meridian Gulf Bank, Meridian Gulf Sukuk Limited and every bank, identifier, rating and number in this message are invented for the Digital Deal Room demo. This is not an offer of securities and is not investment advice.

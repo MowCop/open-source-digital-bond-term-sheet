@@ -2,7 +2,7 @@
 
 ## Answers to your questions
 
-- **Microsoft 365 connector:** Yes. This workspace has a **Microsoft Outlook App User Connector**, where each app user signs in with their own Microsoft account and the app sends as them (delegated `Mail.Send`, `/me/sendMail`). That gives us the "sends as Jane.Saunders@BNPParibas.com" model. The plan therefore uses it for `microsoft_graph`. The standard Outlook connector would send from one shared account, so it is not suitable. Each bank's Microsoft 365 tenant admin must still consent to the app registration. Until that happens, the provider shows "Not connected" and refuses to send.
+- **Microsoft 365 connector:** Yes. This workspace has a **Microsoft Outlook App User Connector**, where each app user signs in with their own Microsoft account and the app sends as them (delegated `Mail.Send`, `/me/sendMail`). That gives us the "sends as Alex.Morgan@NorthgateBank.example" model. The plan therefore uses it for `microsoft_graph`. The standard Outlook connector would send from one shared account, so it is not suitable. Each bank's Microsoft 365 tenant admin must still consent to the app registration. Until that happens, the provider shows "Not connected" and refuses to send.
 - **alerts.eurobondmarkets.com:** Resend verifies each sending domain separately. A subdomain counts as its own domain and needs its own DNS records (SPF/DKIM, plus MX for bounce return-path). If `alerts.eurobondmarkets.com` is not already listed as verified in Resend, you'll need to add it there and publish its DNS records. Step 1 checks this. Until it is verified, Resend sends will be refused with a clear message. Sends will not quietly fall back to the old address.
 
 ## What changes for the user
@@ -64,7 +64,7 @@
 ### Tests (`src/test/newIssueAlerts.test.ts`, plus new `src/test/alertMail.test.ts`)
 - 1 To + 120 BCC → 3 chunks, each with ≤50 total addresses, To present in every chunk, all BCC addresses covered once.
 - Exactly 49 BCC → 1 chunk; 50 BCC → 2 chunks.
-- `buildFromHeader` → `"Jane Saunders (BNP Paribas) via DTS" <newissues@alerts.eurobondmarkets.com>`; Reply-To = `jane.saunders@bnpparibas.com`.
+- `buildFromHeader` → `"Alex Morgan (Northgate Bank) via DTS" <newissues@alerts.eurobondmarkets.com>`; Reply-To = `alex.morgan@northgatebank.example`.
 - Syndicate mailbox is always in BCC, even with zero enabled vendors, and is deduped if a vendor also lists it.
 - The send request/log record carries sender name, email and org.
 - `canSend('microsoft_graph', 'not_connected')` is false with the clear message. Resend is never chosen automatically when Graph is selected. Gmail always refuses.

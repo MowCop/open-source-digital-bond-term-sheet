@@ -4,7 +4,7 @@ import * as server from '../../supabase/functions/_shared/mail/chunk.ts';
 import { senderRecord } from '@/lib/newIssueAlerts';
 
 const addrs = (n: number) => Array.from({ length: n }, (_, i) => `v${i}@vendor${i}.com`);
-const TO = 'jane.saunders@bnpparibas.com';
+const TO = 'alex.morgan@northgatebank.example';
 
 describe('BCC chunking at 50 (To + BCC)', () => {
   it('splits 1 To + 120 BCC into 3 emails of at most 50 addresses', () => {
@@ -19,18 +19,18 @@ describe('BCC chunking at 50 (To + BCC)', () => {
   });
   it('server and browser chunking agree', () => {
     expect(server.chunkRecipients(TO, addrs(120))).toEqual(chunkRecipients(TO, addrs(120)));
-    expect(server.buildFromHeader('Jane Saunders', 'BNP Paribas')).toBe(buildFromHeader('Jane Saunders', 'BNP Paribas'));
+    expect(server.buildFromHeader('Alex Morgan', 'Northgate Bank')).toBe(buildFromHeader('Alex Morgan', 'Northgate Bank'));
   });
 });
 
 describe('deal admin identity', () => {
   it('display name and Reply-To use the deal admin', () => {
-    expect(buildFromHeader('Jane Saunders', 'BNP Paribas')).toBe('"Jane Saunders (BNP Paribas) via DTS" <newissues@alerts.eurobondmarkets.com>');
-    expect(senderRecord({ name: 'Jane Saunders', email: 'Jane.Saunders@BNPParibas.com', organization: 'BNP Paribas' }).reply_to).toBe(TO);
+    expect(buildFromHeader('Alex Morgan', 'Northgate Bank')).toBe('"Alex Morgan (Northgate Bank) via DTS" <newissues@alerts.eurobondmarkets.com>');
+    expect(senderRecord({ name: 'Alex Morgan', email: 'Alex.Morgan@NorthgateBank.example', organization: 'Northgate Bank' }).reply_to).toBe(TO);
   });
   it('records sender name, email and organisation on the log', () => {
-    expect(senderRecord({ name: 'Jane Saunders', email: 'Jane.Saunders@BNPParibas.com', organization: 'BNP Paribas' }))
-      .toMatchObject({ sender_name: 'Jane Saunders', sender_email: TO, sender_org: 'BNP Paribas', to_address: TO });
+    expect(senderRecord({ name: 'Alex Morgan', email: 'Alex.Morgan@NorthgateBank.example', organization: 'Northgate Bank' }))
+      .toMatchObject({ sender_name: 'Alex Morgan', sender_email: TO, sender_org: 'Northgate Bank', to_address: TO });
   });
 });
 
@@ -45,9 +45,9 @@ describe('provider selection', () => {
   it('microsoft_graph refuses while not connected, with a clear message', () => {
     const st = providerStatus('microsoft_graph', { resendVerified: true, graphConnected: false });
     expect(st).toBe('not_connected');
-    const r = canSend('microsoft_graph', st, 'Jane Saunders');
+    const r = canSend('microsoft_graph', st, 'Alex Morgan');
     expect(r.ok).toBe(false);
-    expect(r.message).toMatch(/Microsoft 365 is not connected for Jane Saunders/);
+    expect(r.message).toMatch(/Microsoft 365 is not connected for Alex Morgan/);
   });
   it('never falls back to resend when graph is selected', () => {
     // Resend being ready does not make Graph sendable.

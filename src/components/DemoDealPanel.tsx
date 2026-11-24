@@ -1,9 +1,9 @@
 /**
- * Demo controls for the Al Rajhi Bank Tier 2 Social Sukuk deal.
- * - setupAlRajhiDemo: creates the deal, its chat with illustrative pre-marketing
+ * Demo controls for the fictional Meridian Gulf Bank Tier 2 Social Sukuk deal.
+ * - setupDemoDeal: creates the deal, its chat with illustrative pre-marketing
  *   messages, stores the Offering Circular + Supplement and saves one term sheet
  *   history version per stage (Announcement → Priced).
- * - AlRajhiDemoPanel: "Next message" replays the real syndicate blasts in order;
+ * - DemoDealPanel: "Next message" replays the syndicate messages in order;
  *   each one is posted to the deal chat and sent through the normal document
  *   parser, so its values appear as Fill proposals for review (never auto-applied).
  */
@@ -20,7 +20,7 @@ import { refreshAuto } from '@/lib/termsheet/index.js';
 import type { Deal, ChatChannel, Message } from '@/types/bond';
 import {
   DEMO_BASE, DEMO_STEPS, PRE_MARKETING, DEMO_ATTACHMENTS, demoStageSnapshots,
-} from '@/data/alRajhiDemo';
+} from '@/data/demoDeal';
 
 const stepKey = (dealId: string) => `vdr.demo.step.${dealId}`;
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -38,7 +38,7 @@ async function waitForRow(table: 'deals' | 'chat_channels', id: string) {
 type App = ReturnType<typeof useApp>;
 
 function demoChannel(app: App, dealId: string): ChatChannel {
-  return app.createDealChannel(dealId, 'Al Rajhi Tier 2 Sukuk – Syndicate', []);
+  return app.createDealChannel(dealId, 'Meridian Gulf Tier 2 Sukuk – Syndicate', []);
 }
 
 async function postPreMarketing(app: App, dealId: string, channelId: string) {
@@ -77,7 +77,7 @@ export async function seedDemoBoard(dealId: string, senderId: string) {
   return added;
 }
 
-export async function setupAlRajhiDemo(app: App): Promise<Deal> {
+export async function setupDemoDeal(app: App): Promise<Deal> {
   const deal = app.createDeal({ ...DEMO_BASE });
   await waitForRow('deals', deal.id);
   const ch = demoChannel(app, deal.id);
@@ -109,7 +109,7 @@ export async function setupAlRajhiDemo(app: App): Promise<Deal> {
       deal_id: deal.id, version, stage: s.bdtStage, stage_label: bdtStageLabel(s.bdtStage),
       bdt_state_snapshot: st as never, diff_summary: { demo: true, source: s.label } as never,
       checks_summary: {} as never, released_by: u.user?.id ?? null,
-      released_by_name: 'Demo seed (Al Rajhi reference files)',
+      released_by_name: 'Demo seed (fictional Meridian Gulf deal)',
       ...(s.sentAt ? { released_at: s.sentAt } : {}),
     });
     if (error) console.error('[demo] snapshot insert failed', error);
@@ -125,7 +125,7 @@ interface Props {
   ingest: (files: File[]) => Promise<number | undefined>;
 }
 
-export default function AlRajhiDemoPanel({ deal, ingest }: Props) {
+export default function DemoDealPanel({ deal, ingest }: Props) {
   const app = useApp();
   const [step, setStep] = useState<number>(() => Number(localStorage.getItem(stepKey(deal.id)) ?? 0));
   const [busy, setBusy] = useState(false);
@@ -141,7 +141,7 @@ export default function AlRajhiDemoPanel({ deal, ingest }: Props) {
     setBusy(true);
     try {
       if (next.stage !== deal.stage) app.updateDeal(deal.id, { stage: next.stage });
-      const blast = new File([next.body], `Al Rajhi blast ${next.id}.txt`, { type: 'text/plain' });
+      const blast = new File([next.body], `Meridian Gulf message ${next.id}.txt`, { type: 'text/plain' });
       // Parsed for Fill proposals only — demo texts are never stored in the deal vault.
       (blast as File & { skipStore?: boolean }).skipStore = true;
       const found = await ingest([blast]);

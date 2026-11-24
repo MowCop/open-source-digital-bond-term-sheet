@@ -19,8 +19,30 @@ export interface ScopeContext {
 
 const norm = (s?: string | null) => (s ?? '').trim().toLowerCase();
 
-/** Syndicate Admins granted visibility of every deal regardless of organisation. */
-export const ALL_DEALS_ACCESS = ['dana.marzouq@hotmail.com'];
+/**
+ * 53-bit string hash (cyrb53). Used so that the all-deals allowlist below does
+ * not publish anyone's email address in the source. It is not a security
+ * boundary: deal visibility is enforced by row-level security on the server.
+ */
+export function emailHash(email: string): string {
+  const str = norm(email);
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+
+/** Syndicate Admins granted visibility of every deal regardless of organisation (stored as emailHash values). */
+export const ALL_DEALS_ACCESS_HASHES: readonly string[] = ['5i9srdf4kv'];
+
+export function hasAllDealsAccess(email?: string | null, allowlist: readonly string[] = ALL_DEALS_ACCESS_HASHES): boolean {
+  return !!email && allowlist.includes(emailHash(email));
+}
 
 export function scopeDeals(deals: Deal[], ctx: ScopeContext): Deal[] {
   if (ctx.isGuest) {
@@ -28,7 +50,7 @@ export function scopeDeals(deals: Deal[], ctx: ScopeContext): Deal[] {
     return deals.filter(d => allowed.has(d.id));
   }
   if (ctx.isMaster || !ctx.isSyndicateAdmin) return deals;
-  if (ALL_DEALS_ACCESS.includes(norm(ctx.currentEmail))) return deals;
+  if (hasAllDealsAccess(ctx.currentEmail)) return deals;
   const org = norm(ctx.currentOrg);
   if (!org) return [];
   return deals.filter(d => {

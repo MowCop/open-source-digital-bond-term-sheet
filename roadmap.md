@@ -39,9 +39,9 @@
 - [x] Board update checker reviews selected text and real attachments; verified Italy/Emirates mismatch in signed-in UI, read-failure and input-isolation tests pass.
 - [x] Bond Console > Syndicate Tools: "Edgar SEC filings" live link to the SEC EDGAR 424B filing search (catalogue in src/lib/vendors.ts); planned separate build will queue EDGAR-sourced term sheets for deal creation in the Digital Term Sheet.
 - [x] Wire Bond Console to public published SOFR/EFFR, ECB exchange rates and central bank headlines; authenticated loading and refresh verified with source dates. Commercial vendor feeds deferred pending licensed access, per user selection.
-- [x] Replace board OrderBook buttons with DTS and verify matching deal/stage navigation into Fill (Priced and Original IPT checked end-to-end on Al Rajhi; stage resolver tests pass).
-- [x] Remove term-sheet example placeholders and brighten recorded values, including read-only Announcement; preserve proposal review and source-specific benchmarks (verified on the Al Rajhi Announcement snapshot).
-- [x] Restore original Word formatting for Al Rajhi board updates and constrain message widths; verify existing updates.
+- [x] Replace board OrderBook buttons with DTS and verify matching deal/stage navigation into Fill (Priced and Original IPT checked end-to-end on the demo deal; stage resolver tests pass).
+- [x] Remove term-sheet example placeholders and brighten recorded values, including read-only Announcement; preserve proposal review and source-specific benchmarks (verified on the demo deal Announcement snapshot).
+- [x] Restore original Word formatting for demo deal board updates and constrain message widths; verify existing updates.
 - [x] Make View reflect the current authoritative Fill values, including accepted document proposals and cleared fields; verify synchronization.
 - [x] Update New Deal border, blank defaults, issuer extraction, multi-value entries, and issuer/bookrunner creation requirements; verify the flow.
 - [x] Migration: `deals.bdt_state`, `deal_term_sheet_releases` table with RLS and grants.
@@ -55,7 +55,7 @@
 - [x] Point Deal Checker at `unifiedChecks` so the two surfaces become one in the UI.
 - [x] Retired the `fieldConfig.ts` prototype — the BDT FIELDS dictionary is the only field list.
 - [ ] Later iteration: floating / zero coupon with dependent fields and validation.
-- [x] Al Rajhi demo deal: library files, demo deal setup, chat replay, stage snapshots
+- [x] Demo deal (now the fictional Meridian Gulf Bank): library files, demo deal setup, chat replay, stage snapshots
 - [x] Bond Console > Vendor & Market Data Connectors: "Public Market Data" and "Central Bank News" each collapsible (chevron, starts open).
 - [x] Deal Co-Pilot specialists: ported the four workshop specialists (Compliance, Pricing, ESG, Communications) into deal-copilot; chat delegation tools, sequential panel on save/upload reviews, report JSON v2, unvalidated XML draft download.
 
@@ -68,5 +68,5 @@
 - [ ] Remix: attach email domain (eurobondmarkets.com verified in workspace) via email setup dialog, then re-check auth/transactional templates and sending.
 
 ## Bank intake
-- [ ] Email alert to karl.mallalieu@gmail.com on each bank SDK/API request — blocked: email domain not attached to this project
+- [ ] Email alert to the project author on each bank SDK/API request — blocked: email domain not attached to this project
 - [x] Tranche term sheet panels (fixed/floating + seniority), decisions in reference/origin-templates/origin-bdt-crosswalk.md

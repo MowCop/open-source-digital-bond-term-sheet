@@ -2,7 +2,7 @@ import type { Deal, Message } from '@/types/bond';
 import { bdtStageForDeal } from '@/lib/bdt-bridge';
 import { detectStage } from '@/lib/alertParsing';
 import { stripHtml } from '@/lib/htmlText';
-import { DEMO_STEPS } from '@/data/alRajhiDemo';
+import { DEMO_STEPS } from '@/data/demoDeal';
 
 /** A headline describes this update; boilerplate in the body may describe other stages. */
 export function updateTermSheetStage(message: Message, deal: Deal): number {

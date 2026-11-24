@@ -89,7 +89,8 @@ export const template = {
   component: SupportRequestEmail,
   subject: (data: Props) => `[BondVDR Support] ${data?.subject ?? '(no subject)'}`,
   displayName: 'Support request',
-  to: 'karl.mallalieu@gmail.com',
+  // Recipient comes from the AUTHOR_NOTIFICATION_EMAIL secret; no personal address in source.
+  to: Deno.env.get('AUTHOR_NOTIFICATION_EMAIL') || 'karl@eurobondmarkets.com',
   previewData: {
     name: 'Jane Doe',
     email: 'jane.doe@example.com',
