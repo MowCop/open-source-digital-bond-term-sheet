@@ -9,7 +9,9 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
-- [ ] Replace actor checklists/gates with Set/Expected/Open field metadata, reviewed template intake, status-aware MSG and pricing completeness; preserve permissions and approval/audit flows, verify and report migrations.
+- [x] Replace actor checklists/gates with Set/Expected/Open field metadata, reviewed template intake, status-aware MSG and pricing completeness; 341 tests and signed-in confirm/approve/MSG/mobile checks passed, no alerts sent. Migrations 0017–0019; reference/dts-field-status.md.
+- [ ] Physically delete the retired sign-off table — blocked: needs the backward-incompatible migration permission.
+- [ ] Remove the retired execution-gate service from the hosted test backend — blocked: removal was refused until the deleted code is committed.
 - [x] Prior gate sweep superseded by the field-status redesign.
 - [x] Targeted gate fixes: team-dependent sign-offs, audited administrator override, shared mapping and selective reopening; 324 regression tests passed, signed-in override/IPTs/reload badge, governing-law reopening and mobile verified without alerts. Migrations 0014–0015; reference/deal-phase-workflow.md.
 - [x] Step 2: phase-based workspace, actor sign-offs/readiness gate, role-scoped editing, central execution Co-Pilot and preserved DTS/MSG/send workflows. Full tests and signed-in command→approve→save→MSG/reload plus legal read-only/sign-off and mobile checks; inventory and verification limits: reference/deal-phase-workflow.md.
