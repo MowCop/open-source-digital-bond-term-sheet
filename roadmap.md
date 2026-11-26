@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Use one top-centre Co-Pilot launcher with active DTS deal focus and shared deal text box.
 - [x] Replace actor checklists/gates with Set/Expected/Open field metadata, reviewed template intake, status-aware MSG and pricing completeness; 341 tests and signed-in confirm/approve/MSG/mobile checks passed, no alerts sent. Migrations 0017–0019; reference/dts-field-status.md.
 - [ ] Physically delete the retired sign-off table — blocked: needs the backward-incompatible migration permission.
 - [ ] Remove the retired execution-gate service from the hosted test backend — blocked: removal was refused until the deleted code is committed.

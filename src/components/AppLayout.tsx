@@ -30,7 +30,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const setNavOpen = (v: boolean) => { localStorage.setItem('ddr-nav-open', v ? '1' : '0'); setNavOpenState(v); };
   const location = useLocation();
   const copilotFocus = useCopilotFocus();
-  const copilotFocusLabel = (location.pathname === '/messages' && copilotFocus?.label) || navItems.find(n => location.pathname.startsWith(n.path))?.label || 'General';
+  const copilotFocusLabel = ((location.pathname === '/messages' && copilotFocus?.kind === 'update') || (location.pathname === '/deals' && copilotFocus?.kind === 'deal') ? copilotFocus.label : '') || navItems.find(n => location.pathname.startsWith(n.path))?.label || 'General';
   const navigate = useNavigate();
   const { currentUser, setCurrentUser, users, notifications, markNotificationRead } = useApp();
   const { signOut, guest, profileName, isAdmin, isMaster } = useAuth();
@@ -130,7 +130,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
       {/* Main */}
       <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
-        <header className={`h-12 border-b flex items-center justify-between gap-2 px-2 sm:px-4 bg-card shrink-0 ${navOpen ? '' : 'md:pl-12'}`}>
+        <header className={`relative z-40 h-12 border-b grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] items-center gap-2 px-2 sm:px-4 bg-card shrink-0 ${navOpen ? '' : 'md:pl-12'}`}>
+          <div className="flex min-w-0 items-center gap-2">
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 shrink-0" aria-label="Open navigation menu">
@@ -176,16 +177,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
             </SheetContent>
           </Sheet>
-          <div className="min-w-0 flex-1 flex items-center gap-2">
             <GlobalSearch />
-            <CopilotLauncher focus={copilotFocusLabel}>
+          </div>
+          <div className="min-w-0 flex justify-center">
+            <CopilotLauncher focus={copilotFocusLabel} align="center">
               <div id="copilot-slot" className="peer min-w-0 empty:hidden"><CopilotFocusHost /></div>
               {/* General mode whenever nothing is focused (slot empty). */}
               <div className="hidden peer-empty:block min-w-0"><CopilotGeneral /></div>
             </CopilotLauncher>
             <ReminderWatcher />
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
             <button
               type="button"
               onClick={handleBellClick}
@@ -198,7 +200,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Badge className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-destructive">{unreadCount}</Badge>
               )}
             </button>
-            <Badge variant="outline" className="hidden sm:inline-flex text-xs">{currentUser.organization}</Badge>
+            <Badge variant="outline" className="hidden lg:inline-flex truncate text-xs">{currentUser.organization}</Badge>
           </div>
         </header>
         <main className="min-w-0 flex-1 overflow-auto p-3 sm:p-6">{children}</main>

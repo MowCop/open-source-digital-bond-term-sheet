@@ -63,6 +63,7 @@ import TrancheStructureEditor, { parseStructureAmount } from '@/components/terms
 import { parseAmount } from '@/lib/bdt-bridge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
+import { setCopilotFocus, getCopilotFocus } from '@/lib/copilot/focus';
 
 function BdtXmlPanel({ deal, override }: { deal: Deal; override?: BdtState }) {
   const state = useMemo(() => { const s = JSON.parse(JSON.stringify(externalState(override ?? dealToBdtState(deal)))); refreshAuto(s); return s; }, [deal, override]);
@@ -170,11 +171,19 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
   },[deal.id,deal.updatedAt]);
   const [copilotSlot, setCopilotSlot] = useState<HTMLElement | null>(null);
   useEffect(() => { setCopilotSlot(document.getElementById('copilot-slot')); }, []);
+  const focusLabel = dealBorrowerName(deal);
+  useEffect(() => {
+    setCopilotFocus({ kind: 'deal', dealId: deal.id, label: focusLabel, context: '' });
+    return () => {
+      if (getCopilotFocus()?.dealId === deal.id && getCopilotFocus()?.kind === 'deal') setCopilotFocus(null);
+    };
+  }, [deal.id, focusLabel]);
   const [ingestSlot, setIngestSlot] = useState<HTMLElement | null>(null);
   useEffect(() => { setIngestSlot(document.getElementById(`ingest-slot-${deal.id}`)); }, [deal.id]);
 
   return (
     <div className="border-t p-5 bg-card/40 space-y-6">
+      {copilotSlot && createPortal(<DealCopilot key={deal.id} deal={deal} hasUnsavedTerms={hasUnsavedTerms} mode="drawer" onSendUpdate={canManage && actualPhase !== 'closed' ? () => setSendMessageOpen(true) : undefined} />, copilotSlot)}
       
       <DealPhaseWorkspace deal={deal} phase={phase} onPhase={setPhaseOverride} ws={ws} dirty={hasUnsavedTerms} canSend={canManage && actualPhase !== 'closed'} onSend={() => setSendMessageOpen(true)} onEditorOpen={() => {}}
         intake={<><IngestDropzone onFiles={ingest} className="w-full min-w-0" compact /><DealDocuments dealId={deal.id} canManage={canEdit} /></>}>

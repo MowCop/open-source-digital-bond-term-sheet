@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
  *  mounts its own Co-Pilot for the open deal; board updates set
  *  a focus here so Co-Pilot follows the last item the user clicked. */
 export type CopilotFocus = {
-  kind: "update";
+  kind: "update" | "deal";
   dealId: string;
   label: string;
   /** Plain text of the update or recent chat, sent with each question (never stored). */
@@ -34,6 +34,6 @@ export function useCopilotFocus() {
 
 /** The text block the Co-Pilot receives describing the focused item. */
 export function focusPrompt(f: Pick<CopilotFocus, "kind" | "label" | "context">) {
-  const what = "New Issue Board update";
+  const what = f.kind === "deal" ? "Digital Term Sheet" : "New Issue Board update";
   return `The user is looking at this ${what}: "${f.label}". Answer with this item as your focus, alongside the deal's term sheet and documents.\n---\n${f.context}\n---`;
 }
