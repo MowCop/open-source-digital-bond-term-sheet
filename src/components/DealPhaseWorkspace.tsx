@@ -3,7 +3,6 @@ import { pricingDealCompleteness } from '@/lib/execution';
 import { FieldStatusSummary } from './termsheet/FieldStatusContext';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -40,7 +39,7 @@ export default function DealPhaseWorkspace({deal,phase,onPhase,children,intake,w
   const openEditor=()=>{setFull(true);onEditorOpen();};
   return <section className="space-y-3 min-w-0" aria-label="Deal phase workspace">
     <header className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
-      <nav className="flex flex-wrap items-center gap-1" aria-label="Deal phases">{(['setup','execution'] as DealPhase[]).map((p,i)=><span key={p} className="flex items-center gap-1"><Button size="sm" variant={phase===p?'secondary':'ghost'} disabled={!isAdmin||deal.stage==='Settled'} onClick={()=>onPhase(p)} aria-current={phase===p?'step':undefined}>{p==='setup'?'Set-up':'Execution'}{deal.stage!=='Announced'&&(phase===p||(p==='execution'&&phase==='closed'))&&<Badge variant="outline" className="ml-2">{deal.bdtState?.stage===2?'IPTs':deal.stage}</Badge>}</Button>{i===0&&<ChevronRight className="h-3 w-3 text-muted-foreground"/>}</span>)}</nav>
+      <nav className="flex flex-wrap items-center gap-1" aria-label="Deal phases">{(['setup','execution'] as DealPhase[]).map((p,i)=><span key={p} className="flex items-center gap-1"><Button size="sm" variant={phase===p?'secondary':'ghost'} disabled={!isAdmin||deal.stage==='Settled'} onClick={()=>onPhase(p)} aria-current={phase===p?'step':undefined}>{p==='setup'?'Set-up':'Execution'}</Button>{i===0&&<ChevronRight className="h-3 w-3 text-muted-foreground"/>}</span>)}</nav>
       <FieldStatusSummary state={st}/><div className="ml-auto flex flex-wrap gap-2">{canSend&&phase!=='closed'&&<Button size="sm" onClick={onSend}>Send update</Button>}
         <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost" aria-label="More deal tools"><MoreHorizontal className="h-4 w-4"/>More</Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={()=>navigate('/bond-console')}>Bond Console</DropdownMenuItem><DropdownMenuItem onSelect={()=>navigate('/audit-log')}>Audit log</DropdownMenuItem><DropdownMenuItem onSelect={openEditor}>Full DTS & exports</DropdownMenuItem>{isAdmin&&<DropdownMenuItem onSelect={()=>setAssign(true)}>Manage deal team</DropdownMenuItem>}<div className="p-2"><AiModelPicker/></div></DropdownMenuContent></DropdownMenu>
       </div>
