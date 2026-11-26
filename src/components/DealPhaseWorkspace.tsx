@@ -1,5 +1,5 @@
 import { fieldRecord, templatePaths, selectTemplate, evolution } from '@/lib/fieldStatus';
-import { sizeHeadline, skewWeights, pricingDealCompleteness } from '@/lib/execution';
+import { pricingDealCompleteness } from '@/lib/execution';
 import { FieldStatusSummary } from './termsheet/FieldStatusContext';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button } from './ui/button';
@@ -40,8 +40,8 @@ export default function DealPhaseWorkspace({deal,phase,onPhase,children,intake,w
   const openEditor=()=>{setFull(true);onEditorOpen();};
   return <section className="space-y-3 min-w-0" aria-label="Deal phase workspace">
     <header className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
-      <nav className="flex flex-wrap items-center gap-1" aria-label="Deal phases">{(['setup','execution','closed'] as DealPhase[]).map((p,i)=><span key={p} className="flex items-center gap-1"><Button size="sm" variant={phase===p?'secondary':'ghost'} disabled={!isAdmin||deal.stage==='Settled'||p==='closed'} onClick={()=>onPhase(p)} aria-current={phase===p?'step':undefined}>{p==='setup'?'Set-up':p==='execution'?'Execution':'Closed'}{phase===p&&<Badge variant="outline" className="ml-2">{deal.bdtState?.stage===2?'IPTs':deal.stage}</Badge>}</Button>{i<2&&<ChevronRight className="h-3 w-3 text-muted-foreground"/>}</span>)}</nav>
-      <FieldStatusSummary state={st}/><SizeHeadline st={st} ws={ws}/><div className="ml-auto flex flex-wrap gap-2">{canSend&&phase!=='closed'&&<Button size="sm" onClick={onSend}>Send update</Button>}
+      <nav className="flex flex-wrap items-center gap-1" aria-label="Deal phases">{(['setup','execution'] as DealPhase[]).map((p,i)=><span key={p} className="flex items-center gap-1"><Button size="sm" variant={phase===p?'secondary':'ghost'} disabled={!isAdmin||deal.stage==='Settled'} onClick={()=>onPhase(p)} aria-current={phase===p?'step':undefined}>{p==='setup'?'Set-up':'Execution'}{(phase===p||(p==='execution'&&phase==='closed'))&&<Badge variant="outline" className="ml-2">{deal.bdtState?.stage===2?'IPTs':deal.stage}</Badge>}</Button>{i===0&&<ChevronRight className="h-3 w-3 text-muted-foreground"/>}</span>)}</nav>
+      <FieldStatusSummary state={st}/><div className="ml-auto flex flex-wrap gap-2">{canSend&&phase!=='closed'&&<Button size="sm" onClick={onSend}>Send update</Button>}
         <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost" aria-label="More deal tools"><MoreHorizontal className="h-4 w-4"/>More</Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={()=>navigate('/bond-console')}>Bond Console</DropdownMenuItem><DropdownMenuItem onSelect={()=>navigate('/audit-log')}>Audit log</DropdownMenuItem><DropdownMenuItem onSelect={openEditor}>Full DTS & exports</DropdownMenuItem>{isAdmin&&<DropdownMenuItem onSelect={()=>setAssign(true)}>Manage deal team</DropdownMenuItem>}<div className="p-2"><AiModelPicker/></div></DropdownMenuContent></DropdownMenu>
       </div>
     </header>
@@ -67,15 +67,6 @@ function Evolution({state,path,tranche}:{state:ReturnType<typeof dealToBdtState>
   const steps=evolution(state,path,tranche);
   if(steps.length<2)return null;
   return <ol className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground" aria-label={`${fieldByPath(path)?.l??path} history`}>{steps.map((h,i)=><li key={i} className="flex items-center gap-1" title={`${h.source||'Manual'}${h.at?` · ${new Date(h.at).toLocaleString('en-GB',{timeZone:'UTC'})} UTC`:''}`}>{i>0&&<span aria-hidden>→</span>}<span className={i===steps.length-1?'text-foreground':'line-through'}>{h.value}</span></li>)}</ol>;
-}
-function SizeHeadline({st,ws}:{st:ReturnType<typeof dealToBdtState>;ws:DealWorkspace|null}) {
-  const h=sizeHeadline(st,ws),w=skewWeights(ws,st.f['x:sizeSkew']??'');
-  return <div className="flex items-center gap-2 text-xs" aria-label="Deal size">
-    <strong className="uppercase">{h.text}</strong>
-    {h.perCurrency.length>1&&<span className="text-muted-foreground">{h.perCurrency.join(' · ')}</span>}
-    {h.fx.length>0&&<span className="italic text-muted-foreground" title={h.fx.join('\n')}>FX: {h.fx[0]}</span>}
-    {w.length>1&&<span className="flex h-3 w-24 items-end gap-px" aria-label="Size weighting across tranches" title={ws?.tranches.map((t,i)=>`${t.label} ${t.tenor??''}: ${Math.round(w[i]*100)}%`).join(', ')}>{w.map((x,i)=><span key={i} className="flex-1 rounded-sm bg-primary" style={{height:`${Math.max(15,x*100*Math.min(3,w.length)/1.5)}%`}}/>)}</span>}
-  </div>;
 }
 function DealTimeline({deal}:{deal:Deal}) {
   const [sends,setSends]=useState<{id:string;created_at:string;status:string}[]>([]);

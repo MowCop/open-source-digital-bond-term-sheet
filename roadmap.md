@@ -88,3 +88,5 @@
 - [x] Co-Pilot: removed quick-command suggestion chips; Send buttons icon-only everywhere the label was just "Send"
 
 - [x] Removed stage pills (Mandate/Announced/Books Open/Priced...) from deal list rows: Digital Term Sheet, Inbox, Dashboard
+
+- [x] Deal header: removed the "Closed" phase step and the uppercase size headline (e.g. "USD BENCHMARK") that followed the stage label, for every DTS deal
