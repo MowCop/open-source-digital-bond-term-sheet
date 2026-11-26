@@ -666,8 +666,8 @@ function BackButtonTooltip({ label, onClick }: { label: string; onClick: () => v
               </Button>
             )}
             {isDraft && !isRetracted && (
-              <Button className="btn-footer-action" onClick={() => onSend(message.id)}>
-                <Send className="h-4 w-4 mr-1" /> Send
+              <Button className="btn-footer-action-icon" onClick={() => onSend(message.id)} aria-label="Send" title="Send">
+                <Send className="h-4 w-4" />
               </Button>
             )}
             {!(isLatest && embedded) && (

@@ -771,8 +771,8 @@ export default function AIDraftPage() {
                 </Badge>
               )}
             </Button>
-            <Button size="sm" onClick={requestSend} className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <Send className="h-4 w-4 mr-1" /> Send
+            <Button size="icon" onClick={requestSend} className="h-8 w-8 bg-accent text-accent-foreground hover:bg-accent/90" aria-label="Send" title="Send">
+              <Send className="h-4 w-4" />
             </Button>
           </div>
         </div>

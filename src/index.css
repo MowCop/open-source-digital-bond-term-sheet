@@ -105,11 +105,6 @@
 @container (max-width: 34rem) {
   .copilot-heading-detail { display: none; }
 }
-@container (max-width: 26rem) {
-  .copilot-inline-send { width: 2.25rem; padding: 0; }
-  .copilot-inline-send > span { display: none; }
-  .copilot-inline-send > svg { margin: 0; }
-}
 
 .copilot-draft-dialog {
   --background: var(--copilot-draft-background);
@@ -347,6 +342,11 @@
 /* ─── Footer action buttons: light blue, yellow ring on hover/focus ───── */
 .btn-footer-action {
   @apply h-10 px-4 bg-info/45 text-foreground border border-white/80 rounded-md
+         hover:bg-info/55 hover:ring-2 hover:ring-primary focus:ring-2 focus:ring-primary
+         active:ring-2 active:ring-primary transition-all;
+}
+.btn-footer-action-icon {
+  @apply h-10 w-10 p-0 bg-info/45 text-foreground border border-white/80 rounded-md
          hover:bg-info/55 hover:ring-2 hover:ring-primary focus:ring-2 focus:ring-primary
          active:ring-2 active:ring-primary transition-all;
 }

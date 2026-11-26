@@ -315,9 +315,8 @@ export default function DraftChatStrip({ draftKey, headline, scpIds, candidates,
               placeholder="Message the Syndicate Chat Participants…"
               className="h-8 text-xs"
             />
-            <Button size="sm" className="h-8" onClick={handleSend} disabled={!input.trim()}>
-              <Send className="h-3 w-3 mr-1" />
-              Send
+            <Button size="icon" className="h-8 w-8" onClick={handleSend} disabled={!input.trim()} aria-label="Send" title="Send">
+              <Send className="h-3 w-3" />
             </Button>
           </div>
         </div>

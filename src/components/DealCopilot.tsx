@@ -51,7 +51,6 @@ import type { Deal } from "@/types/bond";
 import CopilotCommandPreview, { type CopilotCommand } from './CopilotCommandPreview';
 import CopilotDraftDialog from './CopilotDraftDialog';
 import { dealBorrowerName } from '@/lib/borrowerName';
-import { quickCommands } from '@/lib/dealPhase';
 import { emitDtsSaved } from '@/lib/dtsSaveEvent';
 import type { BdtState } from '@/lib/bdt-bridge';
 import type { DealWorkspace } from '@/lib/dealWorkspace';
@@ -482,17 +481,13 @@ export default function DealCopilot({
           />
           <Button
             type="submit"
-            size="sm"
-            className="copilot-inline-send h-9 shrink-0"
+            size="icon"
+            className="h-8 w-8 shrink-0"
             aria-label="Send"
+            title="Send"
             disabled={busy || !text.trim()}
           >
-            {busy ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="mr-2 h-4 w-4" />
-            )}
-            <span>Send</span>
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
         <CollapsibleTrigger asChild>
@@ -519,7 +514,6 @@ export default function DealCopilot({
         busy={busy}
         onContract={() => draftInput.current?.focus()}
       />
-      {mode === 'execution' && <div className="flex flex-wrap gap-2 py-3">{quickCommands(deal).map(command => <Button key={command} size="sm" variant="outline" onClick={() => { setText(command); draftInput.current?.focus(); }}>{command}</Button>)}</div>}
       {offerSend && onSendUpdate && <div className="flex items-center justify-between border-b border-border py-2 text-sm"><span>DTS saved · Message updated · Nothing sent</span><Button size="sm" onClick={onSendUpdate}>Send update</Button></div>}
       <CollapsibleContent className={mode === 'inline' ? 'absolute left-0 top-full z-50 mt-2 max-h-[75vh] w-full max-w-[52rem] space-y-5 overflow-y-auto rounded-md border border-border bg-popover p-4 text-popover-foreground shadow-lg' : 'copilot-centre-content space-y-5 overflow-y-auto border-t border-border py-4'}>
         <div className="flex flex-wrap items-center gap-2">

@@ -92,9 +92,8 @@ export default function CopilotDraftDialog({
             className="min-h-0 flex-1 resize-none text-base leading-relaxed"
           />
           <div className="flex shrink-0 justify-end">
-            <Button type="submit" disabled={busy || !text.trim()} className="h-9 gap-2">
+            <Button type="submit" size="icon" disabled={busy || !text.trim()} className="h-8 w-8" aria-label="Send" title="Send">
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Send
             </Button>
           </div>
         </form>
