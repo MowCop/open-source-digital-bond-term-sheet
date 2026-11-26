@@ -337,11 +337,11 @@ export default function DealsPage() {
   const [demoBusy, setDemoBusy] = useState(false);
   const demoDeal = deals.find(isDemoDeal);
   const loadDemo = async () => {
-    if (demoDeal) { setExpandedDealId(demoDeal.id); return; }
+    if (demoDeal) { setExpandedDealId(demoDeal.id); setFullscreenDealId(demoDeal.id); return; }
     setDemoBusy(true);
     try {
       const d = await setupDemoDeal(fullApp);
-      setExpandedDealId(d.id);
+      setExpandedDealId(d.id); setFullscreenDealId(d.id);
       toast.success('Demo deal ready', { description: 'Use "Next message" to replay the syndicate blasts.' });
     } catch (e) {
       toast.error('Could not set up the demo deal', { description: (e as Error).message });
@@ -475,7 +475,7 @@ export default function DealsPage() {
   useEffect(() => {
     const dealId = searchParams.get('dealId');
     if (dealId && deals.some(d => d.id === dealId)) {
-      setExpandedDealId(dealId);
+      setExpandedDealId(dealId); setFullscreenDealId(dealId);
       // Scroll once the row mounts
       setTimeout(() => {
         rowRefs.current[dealId]?.scrollIntoView({ block: 'start', behavior: 'smooth' });

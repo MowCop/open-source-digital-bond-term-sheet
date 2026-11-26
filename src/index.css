@@ -94,8 +94,6 @@
 .copilot-centre-content { flex: 1; max-height: 70dvh; }
 .deal-full-editor { position: fixed; inset: 4rem 1rem 1rem; z-index: 45; overflow: auto; background: hsl(var(--background)); border: 1px solid hsl(var(--border)); padding: 1.25rem; }
 @media (min-width: 1024px) {
-  .deal-setup-grid { grid-template-columns: minmax(9rem, .5fr) minmax(0, 2fr) minmax(14rem, .8fr); }
-  .deal-execution-grid { grid-template-columns: minmax(11rem, .65fr) minmax(0, 2fr) minmax(18rem, 1fr); }
   .deal-full-editor { inset: 4rem 1rem 1rem auto; width: min(75rem, calc(100vw - 2rem)); }
 }
 @media (min-width: 1440px) {
