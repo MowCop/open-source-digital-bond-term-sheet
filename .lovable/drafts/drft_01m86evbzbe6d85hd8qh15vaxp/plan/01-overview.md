@@ -19,3 +19,10 @@ The Digital Deal Room menu on the left can be closed completely, the way Lovable
 - A panel icon at the top of the menu closes it, and the deal page then uses the full width.
 - When the menu is closed, a small panel icon stays in the top-left corner of the window. Clicking it brings the menu back.
 - The app remembers whether the menu was open or closed on this browser. Mobile keeps its current menu.
+
+## 4. Dropped documents in a compact list
+The document cards under the drop panel take up too much space, and the file names get squashed. The drop panel stays as it is, with a small expandable list added underneath:
+- A collapsed line such as "Documents (2)" with a chevron opens the list.
+- Each row shows only the document title, with the newest at the top and the oldest at the bottom. The list scrolls when it gets long.
+- Click a title to preview the document. A small download icon sits beside it. Delete moves into a "⋯" menu on the row.
+- Hover over a title to see the size, date and who uploaded it.
