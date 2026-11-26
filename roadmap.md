@@ -85,3 +85,5 @@
 - [x] Hide Set/Expected/Open counts; info-icon help text; collapsible main menu; compact collapsible deal documents list (newest first)
 
 - [x] Co-Pilot: removed quick-command suggestion chips; Send buttons icon-only everywhere the label was just "Send"
+
+- [x] Removed stage pills (Mandate/Announced/Books Open/Priced...) from deal list rows: Digital Term Sheet, Inbox, Dashboard
