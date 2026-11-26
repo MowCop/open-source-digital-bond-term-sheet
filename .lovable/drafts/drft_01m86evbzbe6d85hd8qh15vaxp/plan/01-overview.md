@@ -1,9 +1,21 @@
-# Accept this draft, then check the Co-Pilot radar icon inside a deal
+# Cleaner DTS: no status counts, info icons, collapsible main menu
 
-Accepting moves **everything in this draft** into your main project, not only the radar icon. That includes the field certainty statuses, the live MSG panel, the multi-tranche dates, the Co-Pilot commands and the new multi-tranche Create New Deal step. The draft's test data stays behind, and your app's own deals are not touched. The live site only changes when you publish.
+## 1. Remove the "Set · Expected · Open" counts everywhere
+The coloured counts (e.g. "4 Set 1 Expected 35 Open") disappear from:
+- the tranche rows in Deal term sheets
+- the deal header
+- the tranche switcher
+- the popped-out tranche term sheet
+- the Live DTS summary during execution
+- the All fields toolbar (including the All / Set / Expected / Open filter buttons)
 
-## Steps
-1. Accept the draft. This is queued and runs after this turn.
-2. On the main project preview, open a deal from the New Issue Board.
-3. Click the radar icon in the deal's header row. Check that it shows "Focus:" with the borrower name and opens the Co-Pilot text box. Double-click the box to expand it.
-4. Tell you what I saw, with a screenshot.
+Field statuses still work in the background: suggestions still need confirming, and only confirmed values go into the message blast and exports. Only the count displays are removed.
+
+## 2. Help text moves into an "i" icon
+Small grey help lines like "Double-click a tranche, or use the arrow at the end of its row, to open its term sheet. Esc closes it." become a small "i" icon. Hovering over it (or tapping it on a phone) shows the text. This change covers the help lines on the Deal term sheets page and the deal workspace. Warnings and live values stay visible.
+
+## 3. Main menu slides away completely
+The Digital Deal Room menu on the left can be closed completely, the way Lovable hides its project panel:
+- A panel icon at the top of the menu closes it, and the deal page then uses the full width.
+- When the menu is closed, a small panel icon stays in the top-left corner of the window. Clicking it brings the menu back.
+- The app remembers whether the menu was open or closed on this browser. Mobile keeps its current menu.
