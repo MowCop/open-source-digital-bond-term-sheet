@@ -18,6 +18,7 @@ import { floatingRateChecks, esgChecks } from './conventionChecks';
  */
 
 import { pricingCompleteness } from '@/lib/fieldStatus';
+import { dateChecks } from '@/lib/execution/dates';
 import {
   emptyState, refreshAuto, checks, FIELDS, STAGES,
 } from '@/lib/termsheet/index.js';
@@ -408,17 +409,14 @@ export function tenorFrom(startISO: string, maturityISO: string): string {
 // ─── 3. One validation surface ────────────────────────────────────────────────
 
 /** VDR rules appended to the core result list — none of these duplicate a BDT check. */
+/** Normally fixed at launch/pricing: absent values are Open, not issues, before Priced. */
+export const EVOLVING_UNTIL_PRICING = /Maturity|InterestRate|InterestPayment|AggregateAmount|AggregateNominalAmount|IssuePrice|Reoffer|Yield|Spread|PricingDate|SettlementDate|IssueDate|ISIN|^x:(spreadSet|priceTalk|yieldTalk|usdEquivalent|sizeIndication)/;
+
 const VDR_RULE_IDS = new Set([
-  'calendar-coverage',
-  'settlement-non-business',
-  'maturity-non-business',
-  'issue-non-business',
-  'pricing-non-business',
   'coupon-dates-non-business',
   'settlement-convention',
   'benchmark-currency-mismatch',
   'governing-law-currency',
-  'tenor-maturity-mismatch',
   'isin-country-mismatch',
   'common-code-format',
   'denomination-below-minimum',
@@ -434,8 +432,19 @@ const LEVEL_FROM_SEVERITY: Record<string, CheckLevel> = { error: 'fail', warning
  * the VDR holiday-calendar, settlement and currency-benchmark rules are
  * appended as further entries in the same list.
  */
-export function unifiedChecks(state: BdtState, alertText?: string): CheckItem[] {
+export function unifiedChecks(state: BdtState, alertText?: string, tenor?: string): CheckItem[] {
   const core: CheckItem[] = (checks(state) as CheckItem[]).map(c => ({ ...c, src: 'bdt' as const }));
+  // Evolving execution fields are never issues before pricing; at Priced the completeness check covers them.
+  const idx = core.findIndex(c => / required fields are empty$|^All fields required at this stage/.test(c.t));
+  if (idx >= 0) {
+    const missing = (FIELDS as { p: string; l: string; req?: number; t?: string }[]).filter(x => x.req && x.req <= state.stage && x.t !== 'group' && !String(state.f[x.p] ?? '').trim());
+    const due = missing.filter(x => state.stage >= 5 || !EVOLVING_UNTIL_PRICING.test(x.p));
+    const open = missing.length - due.length;
+    const grouped = core[idx].l === 'fail' && !missing.length; // group fields (parties etc.) reported by core
+    core[idx] = due.length || grouped
+      ? { l: 'fail', src: 'bdt', t: `${due.length || 'Some'} required fields are empty`, d: due.slice(0, 6).map(x => x.l).join('; ') + (due.length > 6 ? '…' : '') || core[idx].d }
+      : { l: 'pass', src: 'bdt', t: 'All fields required at this stage are populated', d: open ? `${open} Open — expected at pricing` : core[idx].d };
+  }
   const cache = bdtToDealCache(state);
   const deal = { stage: 'Announced', bookrunners: [], ...cache } as unknown as Deal;
 
@@ -456,7 +465,7 @@ export function unifiedChecks(state: BdtState, alertText?: string): CheckItem[] 
     }));
 
   const conventions: CheckItem[] = [...floatingRateChecks(state), ...esgChecks(state)].map(c => ({ ...c, src: 'vdr' as const }));
-  return [...core, ...appended, ...conventions, ...pricingCompleteness(state)];
+  return [...core, ...appended, ...conventions, ...dateChecks(state, tenor), ...pricingCompleteness(state)];
 }
 
 export function tallyChecks(items: CheckItem[]) {

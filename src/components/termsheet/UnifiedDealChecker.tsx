@@ -186,7 +186,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
   const checks = useMemo<CheckItem[]>(() => {
     let base: CheckItem[] = [];
     try {
-      base = [...unifiedChecks(state), ...pricingDealCompleteness(state, ws ?? null)];
+      base = [...unifiedChecks(state, undefined, ws?.tranches[0]?.tenor), ...pricingDealCompleteness(state, ws ?? null)];
     } catch {
       base = [];
     }

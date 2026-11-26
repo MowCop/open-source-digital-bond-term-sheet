@@ -4,6 +4,7 @@ import type { DealWorkspace } from '@/lib/dealWorkspace';
 import { termSheetView } from '@/lib/termSheetView';
 import { trancheBdtState } from '@/lib/trancheState';
 import { sizeHeadline, spreadConvention } from '@/lib/execution';
+import { maturityText } from '@/lib/execution/dates';
 import { ALERT_EVENTS, buildSubject, escapeHtml, termsDiff } from '@/lib/newIssueAlerts';
 
 export const MSG_WIDTH = 72;
@@ -93,9 +94,11 @@ export function buildMsgLines(a: MsgInput): MsgLine[] {
     const indication = field('x:sizeIndication');
     add('SIZE', size ? [currency, size].filter(Boolean).join(' ') : multi ? (currency ? [currency, indication || 'BENCHMARK'].join(' ').toUpperCase() : '') : (field('x:sizeMsg') || field('x:sizeSkew')) ? head.text.toUpperCase() : '', 'size');
     if (!multi && size && field('x:sizeSkew')) add('SKEW', field('x:sizeSkew').toUpperCase(), 'skew');
-    add('TENOR', tenor, 'tenor');
+    // Tenor until maturity is Set, then "MATURITY : 15-JAN-2037 (10Y)" (externalState drops unset maturity).
+    const mat = maturityText(state, tenor);
+    if (!mat) add('TENOR', tenor, 'tenor');
     add('SETTLEMENT', v.settlementDate, 'settlementDate');
-    add('MATURITY', v.maturityDate, 'maturityDate');
+    add('MATURITY', mat, 'maturityDate');
     const floating = /FLOAT/i.test(field(P.interestType));
     const floatingCoupon = [readable(field(FLOAT + 'Benchmark/BenchmarkCode')), field(FLOAT + 'Spread/Value') ? `+ ${field(FLOAT + 'Spread/Value')} ${field(FLOAT + 'Spread/PriceType')}`.trim() : ''].filter(Boolean).join(' ');
     add('COUPON', floating ? floatingCoupon : v.coupon, 'coupon');

@@ -38,7 +38,7 @@ export default function TranchePanel({ tranche, isFirst, issuer, main, fieldMeta
   const value = (p: string) => (p in edits ? edits[p] : trancheValue(p, isFirst, main, tranche.values));
   const localMeta={...fieldMeta};
   for(const r of fields) {const own=fieldMeta[metadataKey(r.p,tranche.id)];if(!isFirst&&r.scope!=='deal'&&own)localMeta[r.p]=own;}
-  const contextState=withExpected({f:Object.fromEntries(fields.map(r=>[r.p,value(r.p)])),fieldMeta:{...localMeta,...metadata},stage:1} as BdtState);
+  const contextState=withExpected({f:Object.fromEntries(fields.map(r=>[r.p,value(r.p)])),fieldMeta:{...localMeta,...metadata},stage:1} as BdtState,details.tenor);
   const update=(p:string,v:string)=>{setEdits(e=>({...e,[p]:v}));const next=transitionField(contextState,p,v,authUser?.id??'');setMetadata(m=>({...m,[p]:next.fieldMeta?.[p] as NonNullable<typeof next.fieldMeta>[string]}));};
   const dirty = detailsDirty || Object.keys(edits).length > 0 || Object.keys(metadata).length > 0 || seniority !== (tranche.seniority ?? 'senior_unsecured');
   const changeDetails = (patch: Partial<typeof details>) => { setDetails(d => ({ ...d, ...patch })); setDetailsDirty(true); };

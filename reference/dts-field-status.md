@@ -41,3 +41,9 @@ See the tests in `src/test/fieldStatus.test.ts` and `src/test/dealActors.databas
 - Multi-currency deals: headline is the USD-equivalent total (`x:usdEquivalent`, else computed from recorded FX) with per-currency totals and FX source/time.
 - Co-Pilot understands "Size the 10s at 1bn, 30s at 750m", "Skew to the long end", "Deal size 2.5bn USD equivalent", "Deal size benchmark WNG", and "IPTs / Guidance / Price talk / Yield talk tranche B …" — all still preview → human Execute.
 - At Priced the Deal Checker fails until each tranche's final size, issue price, re-offer yield and (fixed) coupon, the total size and (multi-currency) USD-equivalent total are Set.
+
+## Tranche term → dates, and quiet checks for evolving fields (addendum 2)
+- Tenor text per tranche (3Y…30Y, "long 10Y", "PNC5", "5.5Y") is Open with history. Once a settlement/issue date exists, maturity is suggested as Expected = settlement + tenor, rolled Modified Following on the currency calendar (TARGET2 EUR, US for USD, London for GBP; ICMA Rule 251.2). Confirm → Set. Perpetuals (PNC) get no suggestion.
+- MSG shows TENOR until maturity is Set, then `MATURITY : 15-JAN-2037 (10Y)`.
+- Deal Checker: empty evolving fields (maturity, coupon, sizes, price/yield, spreads, dates, ISIN) are never issues before Priced; the required-fields line shows "N Open — expected at pricing" as a pass. At Priced the completeness check flags them.
+- When dates exist: maturity, settlement, issue, pricing and first coupon dates must be business days (rule-based calendars, any year); settlement after pricing; maturity after settlement; maturity within 5 days of settlement + tenor.

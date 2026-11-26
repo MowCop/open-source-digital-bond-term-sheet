@@ -38,7 +38,7 @@ describe('MSG formatter', () => {
     expect(out.match(/^-----$/gm)).toHaveLength(2);
     const b = out.split('TRANCHE B')[1];
     expect(b).toContain('SIZE            : EUR 350m');
-    expect(b).toContain('MATURITY        : 2033-06-15');
+    expect(b).toContain('MATURITY        : 15-JUN-2033');
     expect(b).toContain('COUPON          : EURIBOR');
     expect(b).not.toContain('4.25%');
     expect(b).not.toContain('XS1234567890');

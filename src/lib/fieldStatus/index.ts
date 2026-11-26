@@ -1,3 +1,4 @@
+import { suggestMaturity } from '../execution/dates';
 import type { BdtState, CheckItem } from '../bdt-bridge';
 import { FIELDS } from '../termsheet/index.js';
 import { trancheFields } from '../trancheFields';
@@ -32,9 +33,11 @@ export function selectTemplate(text: string, fields:Record<string,string>={}): R
 }
 export const TEMPLATE_LABELS:Record<RateType,string>={fixed:'Fixed rate',floating:'Floating rate',zero:'Zero coupon'};
 export const templatePaths=(rate:RateType)=>trancheFields(rate).map(r=>r.p);
-export function withExpected(state:BdtState):BdtState {
+export function withExpected(state:BdtState,tenor?:string):BdtState {
   const m={...state.fieldMeta}, f=state.f;
-  const add=(p:string,suggestion:string,why:string)=>{if(!f[p]&&!m[p])m[p]={status:'expected',suggestion,why,source:'ICMA BDT 2.0 Appendix C1 / market convention (not a mandated default)',by:'',at:''};};
+  const add=(p:string,suggestion:string,why:string,source='ICMA BDT 2.0 Appendix C1 / market convention (not a mandated default)')=>{if(!f[p]&&(!m[p]||(m[p].status==='expected'&&m[p].source===source)))m[p]={status:'expected',suggestion,why,source,by:'',at:''};};
+  const sd=f['IssuanceDataGroup/Issuance/SettlementDate']||f['IssuanceDataGroup/Issuance/IssueDate'],mat=tenor&&sd?suggestMaturity(sd,tenor,f['IssuanceDataGroup/Issuance/SpecifiedCurrency']||'EUR'):null;
+  if(mat)add('IssuanceDataGroup/Product/Maturity/MaturityDate',mat.date,mat.why,'Settlement date + tenor (ICMA Rule 251.2)');
   const eur=f['IssuanceDataGroup/Issuance/SpecifiedCurrency']==='EUR',rate=f['IssuanceDataGroup/Product/InterestPayment/InterestType'];
   if(eur&&rate==='FIXED')add('IssuanceDataGroup/Product/DayCountFraction','ICMA_ACT/ACT','EUR fixed-rate convention; confirm against the offering terms (Handbook Appendix A5 ICMA Actual/Actual / C1).');
   if(rate==='FLOATING') {if(eur||f['IssuanceDataGroup/Issuance/SpecifiedCurrency']==='USD')add('IssuanceDataGroup/Product/DayCountFraction','ACT/360','EUR / USD floating-rate convention; transaction documentation prevails (Appendix A8 / C1).');add('IssuanceDataGroup/Product/BusinessDayConvention/BusinessDayAdjustment','MODIFIED_FOLLOWING','Floating-rate convention; confirm the adjustment in the offering terms (Appendix A8 / C1).');}

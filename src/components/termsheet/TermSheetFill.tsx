@@ -113,7 +113,8 @@ export default function TermSheetFill({
     : snaps.find(s => s.stage === viewStage && (!requestedAt || new Date(s.released_at).getTime() <= new Date(requestedAt).getTime()))
       ?? snaps.find(s => s.stage === viewStage) ?? null;
   const canEdit = canEditProp && viewStage == null;
-  const [liveState, setState] = useState<BdtState>(() => withExpected(dealToBdtState(deal)));
+  const wx = (s: BdtState) => withExpected(s, deal.tenor);
+  const [liveState, setState] = useState<BdtState>(() => wx(dealToBdtState(deal)));
   const [dirty, setDirty] = useState(false);
   const [query, setQuery] = useState('');
   const [showOptional, setShowOptional] = useState(false);
@@ -132,7 +133,7 @@ export default function TermSheetFill({
       const base = bdtStageForDeal(deal.stage);
       const ok = seeded.stage === base
         || (BETWEEN_STAGES.includes(seeded.stage) && seeded.stage === base + 1);
-      return withExpected(ok ? seeded : { ...seeded, stage: base });
+      return wx(ok ? seeded : { ...seeded, stage: base });
     });
     setDirty(false);
     setProposals([]);
@@ -166,7 +167,7 @@ export default function TermSheetFill({
   useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
   // External human approvals update the saved BDT record. Never replace an unsaved draft.
   useEffect(() => {
-    if (!dirty) setState(withExpected(dealToBdtState(deal)));
+    if (!dirty) setState(wx(dealToBdtState(deal)));
   }, [deal.bdtState]);
   useEffect(() => { onDisplayedStage?.(state.stage); }, [state.stage, onDisplayedStage]);
 
@@ -361,7 +362,7 @@ export default function TermSheetFill({
 
   const save = async () => {
     if (!canEdit) return;
-    const next = clone(withExpected(state));
+    const next = clone(wx(state));
     refreshAuto(next);
     try { await onSave({ ...bdtToDealCache(next), bdtState: next }); }
     catch(e) { toast.error(`Could not save DTS: ${(e as Error).message}`); return; }
@@ -406,7 +407,7 @@ export default function TermSheetFill({
   // ── render ──────────────────────────────────────────────────────────────────
 
   return (
-    <FieldStatusProvider state={withExpected(state)} confirm={p => { if (!canEdit || !canEditField(p)) return; setState(s=>confirmExpected(withExpected(s),p,actor)); setDirty(true); }}>
+    <FieldStatusProvider state={wx(state)} confirm={p => { if (!canEdit || !canEditField(p)) return; setState(s=>confirmExpected(wx(s),p,actor)); setDirty(true); }}>
     <div className="space-y-5">
       {requestedStage && snapsLoaded && viewStage !== null && !viewSnap && (
         <p role="status" className="text-xs text-primary">No saved record for {stageLabel(requestedStage)}. Showing current terms; no historical values have been created.</p>
@@ -472,7 +473,7 @@ export default function TermSheetFill({
       </div>
 
 
-      <FieldStatusSummary state={withExpected(state)} paths={FIELDS.filter((fd:FieldDef)=>fd.t!=='group').map((fd:FieldDef)=>fd.p)} filter={statusFilter} onFilter={setStatusFilter} />
+      <FieldStatusSummary state={wx(state)} paths={FIELDS.filter((fd:FieldDef)=>fd.t!=='group').map((fd:FieldDef)=>fd.p)} filter={statusFilter} onFilter={setStatusFilter} />
       {/* Search + optional toggle */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px]">

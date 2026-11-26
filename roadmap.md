@@ -78,3 +78,6 @@
 ## Bank intake
 - [ ] Email alert to the project author on each bank SDK/API request — blocked: email domain not attached to this project
 - [x] Tranche term sheet panels (fixed/floating + seniority), decisions in reference/origin-templates/origin-bdt-crosswalk.md
+
+## Backlog
+- [ ] FX rate capture at deal set-up and at pricing: snapshot rate + source + timestamp on the deal at creation and at pricing, used for USD-equivalent totals. Free daily reference: ECB euro reference rates (https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html, ~16:00 CET, information only) via Frankfurter API (https://frankfurter.dev, free, historical by date). Intraday at-pricing rate needs a licensed feed (Bloomberg B-PIPE / LSEG).
