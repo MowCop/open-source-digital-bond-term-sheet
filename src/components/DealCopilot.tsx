@@ -452,11 +452,6 @@ export default function DealCopilot({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <span className="copilot-heading-detail ml-1 flex items-center gap-1 text-[11px] font-normal" aria-label="Deal Checker results" title="Live Deal Checker results (ignored warnings excluded)">
-              <span className="rounded bg-success/15 px-1.5 text-success">{lights.pass}</span>
-              <span className="rounded bg-warning/15 px-1.5 text-warning">{lights.warn}</span>
-              <span className="rounded bg-destructive/15 px-1.5 text-destructive">{lights.fail}</span>
-            </span>
           </Button>
         </CollapsibleTrigger>
         <form

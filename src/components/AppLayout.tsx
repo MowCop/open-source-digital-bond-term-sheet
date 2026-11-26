@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import CopilotFocusHost from '@/components/CopilotFocusHost';
 import CopilotGeneral from '@/components/CopilotGeneral';
+import CopilotLauncher from '@/components/CopilotLauncher';
+import { useCopilotFocus } from '@/lib/copilot/focus';
 import ReminderWatcher from '@/components/ReminderWatcher';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +27,8 @@ const navItems: { path: string; label: string; icon: typeof Settings; adminOnly?
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const copilotFocus = useCopilotFocus();
+  const copilotFocusLabel = (location.pathname === '/messages' && copilotFocus?.label) || navItems.find(n => location.pathname.startsWith(n.path))?.label || 'General';
   const navigate = useNavigate();
   const { currentUser, setCurrentUser, users, notifications, markNotificationRead } = useApp();
   const { signOut, guest, profileName, isAdmin, isMaster } = useAuth();
@@ -170,9 +174,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </Sheet>
           <div className="min-w-0 flex-1 flex items-center gap-2">
             <GlobalSearch />
-            <div id="copilot-slot" className="peer min-w-0 flex-1 max-w-3xl empty:hidden"><CopilotFocusHost /></div>
-            {/* General mode whenever nothing is focused (slot empty). */}
-            {location.pathname !== '/deals' && <div className="hidden peer-empty:block min-w-0 flex-1 max-w-3xl"><CopilotGeneral /></div>}
+            <CopilotLauncher focus={copilotFocusLabel}>
+              <div id="copilot-slot" className="peer min-w-0 empty:hidden"><CopilotFocusHost /></div>
+              {/* General mode whenever nothing is focused (slot empty). */}
+              <div className="hidden peer-empty:block min-w-0"><CopilotGeneral /></div>
+            </CopilotLauncher>
             <ReminderWatcher />
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">

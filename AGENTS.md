@@ -10,7 +10,7 @@
 - The expanded-deal Deal Checker renders `unifiedChecks` above the term-sheet tabs — one visible validation surface for BDT and VDR rules.
 - LEI checks are hybrid: offline MOD 97-10 baseline plus live GLEIF lookups via the gleif-lookup edge function, appended to the same Deal Checker list — typing never waits on the network, outages downgrade to a warning, and name-search suggestions are user-picked, never auto-applied.
 - FIGI checks mirror the LEI pattern: offline format/check-digit baseline plus live OpenFIGI lookup via the openfigi-lookup edge function, appended to unifiedChecks with src openfigi; FIGI suggestions are never auto-applied — one ID-check source.
-- Pass imperative handles as ingestRef, never React.forwardRef — fiber type changes blank hot reloads.
+- Use ingestRef, never React.forwardRef (breaks hot reload).
 - Deal AI tools (document extraction, chat extraction, bulletin) route through supabase/functions/_shared/ai-model.ts, which allowlists the selectable models and calls the gateway's native messages endpoint; the browser only sends the chosen model id from src/lib/aiModel.ts — one place for models.
 - Deal Checker navigation targets and 'Try to fix' repairs live in src/lib/checkActions.ts; fixes only edit the unsaved Fill state (user still saves) and ignored warnings are stored per deal in the browser — one place for checker actions, nothing auto-saved.
 - Files dropped on a deal are stored in the private deal-documents bucket and indexed in public.deal_documents (src/lib/dealDocuments.ts), added to the unsaved term sheet Documentation list on drop (user still saves), and counted by the Deal Checker as attached — one store for deal files.
@@ -22,11 +22,11 @@
 - AI Deep Audit (src/lib/deepAudit.ts + audit-deal-fields-ai) is on-demand only, compares Fill fields to stored deal document text, and emits warnings only (src 'ai') appended to unifiedChecks — deterministic checks stay AI-free.
 - App MCP is read-only, querying as the OAuth caller under RLS.
 
-- Board audits use boardUpdateAudit, separate from saved checks.
+- Board audits: boardUpdateAudit, not saved checks.
 - Bulletins use saved BDT terms; append quoted legal notices outside AI. DTS drafts reuse messages (deal_data/draft), stay off Board, and publish in-place after persistence succeeds.
 - Co-Pilot uses src/lib/copilot and the deal-copilot Cloud function; human term editors alone approve, with atomic stale-value checks — AI never approves.
 - Co-Pilot database tests load historical SQL from src/test/copilot/fixtures using import.meta.url — isolated PGlite setup must not depend on removed deployment migrations or be deployed to Cloud.
-- Co-Pilot General mode (CopilotGeneral, copilot-general) shows when unfocused; AI drafts reminders, users confirm, ReminderWatcher fires them client-side.
+- Co-Pilot opens via radar CopilotLauncher (top bar; deal header). General mode (CopilotGeneral, copilot-general) shows when unfocused; AI drafts reminders, users confirm, ReminderWatcher fires them client-side.
 - Read subdirectory AGENTS.md before editing there (e.g. supabase/functions/deal-copilot/).
 - src/lib/taxonomy/ is the portable BDT 2.0 export/validation library; it must not import UI, React or database code (only vendored src/lib/termsheet). Bank SDK/API intake requests are stored in public.bank_intake_requests with a reference code.
 - New-issue email alerts: src/lib/newIssueAlerts.ts renders from saved BDT terms (one editable whole-deal Terms text seeded by dealTermsText, stored with the termsHash it was based on; a changed hash blocks sending until regenerated or confirmed; AI polish is opt-in); send-deal-alert sends only human-approved, hash-checked snapshots as one email per chunk (≤50 addresses incl. To) via `sendAlertEmail` (_shared/mail) — To/Reply-To/sender = deal admin, BCC = enabled org vendor_distribution + the org's required syndicate mailbox (org_alert_settings), provider per org with no silent fallback, logged per chunk in alert_sends/alert_send_chunks; chunking in src/lib/alertMail.ts mirrors _shared/mail/chunk.ts and termsHash mirrors _shared/alert-terms.ts; new channels plug in beside sendAlertEmail.
