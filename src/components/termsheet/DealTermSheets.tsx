@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Copy, Trash2, ArrowUp, ArrowDown, Plus, Settings2, ChevronDown, ChevronRight } from 'lucide-react';
 import { Fragment } from 'react';
+import TrancheStructureEditor from './TrancheStructureEditor';
 import TranchePanel, { type TrancheSave } from './TranchePanel';
 import { dealBorrowerName } from '@/lib/borrowerName';
 import { emitDtsSaved } from '@/lib/dtsSaveEvent';
@@ -165,16 +166,7 @@ function StructureDialog({ ws, onClose, onSave }: { ws: DealWorkspace; onClose: 
     if (draft.aggregateUsd === undefined && currencies.length === 1 && currencies[0] === 'USD') draft.aggregateUsd = draft.plannedTotals.USD ?? null;
     return draft;
   });
-  const set = (tranches: Tranche[]) => setD({ ...d, tranches: tranches.map((t, i) => ({ ...t, label: letter(i) })) });
-  const upd = (i: number, p: Partial<Tranche>) => set(d.tranches.map((t, j) => (j === i ? { ...t, ...p } : t)));
-  const move = (i: number, dir: -1 | 1) => { const a = [...d.tranches]; const j = i + dir; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; set(a); };
-  const remove = (i: number) => {
-    if (Object.keys(d.tranches[i].values).length && !confirm(`Tranche ${d.tranches[i].label} has recorded terms. Remove it?`)) return;
-    set(d.tranches.filter((_, j) => j !== i));
-  };
-  const add = () => set([...d.tranches, { id: newTrancheId(), label: '', rateType: d.tranches.at(-1)?.rateType ?? 'fixed', currency: d.tranches.at(-1)?.currency ?? '', amount: null, values: {} }]);
   const ccys = [...new Set(d.tranches.map(t => t.currency).filter(Boolean))];
-  const applyAll = (rt: 'fixed' | 'floating') => set(d.tranches.map(t => ({ ...t, rateType: rt })));
   const usd = usdEquivalent(d);
 
   return (
@@ -188,38 +180,7 @@ function StructureDialog({ ws, onClose, onSave }: { ws: DealWorkspace; onClose: 
           </div>
         </DialogHeader>
         <div className="space-y-4 text-sm">
-          <div className="flex items-center gap-3">
-            <span>Tranches: {d.tranches.length}</span>
-            <Button size="sm" variant="outline" onClick={() => applyAll('fixed')}>All fixed</Button>
-            <Button size="sm" variant="outline" onClick={() => applyAll('floating')}>All floating</Button>
-          </div>
-
-          <div className="overflow-x-auto"><table className="w-full">
-            <thead className="text-xs text-muted-foreground"><tr><th className="text-left">Tranche</th><th className="text-left">Rate type</th><th className="text-left">Currency</th><th className="text-left">Amount (optional)</th><th className="text-left">Tenor</th><th /></tr></thead>
-            <tbody>
-              {d.tranches.map((t, i) => (
-                <tr key={t.id}>
-                  <td className="pr-2 font-medium">{t.label}</td>
-                  <td className="pr-2 py-1">
-                    <Select value={t.rateType} onValueChange={v => upd(i, { rateType: v as Tranche['rateType'] })}>
-                      <SelectTrigger className="h-8 w-28"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="fixed">Fixed</SelectItem><SelectItem value="floating">Floating</SelectItem><SelectItem value="zero">Zero coupon</SelectItem></SelectContent>
-                    </Select>
-                  </td>
-                  <td className="pr-2"><Input className="h-8 w-20" value={t.currency} maxLength={3} onChange={e => upd(i, { currency: e.target.value.toUpperCase() })} /></td>
-                  <td className="pr-2"><Input className="h-8 w-36" placeholder="e.g. 500m" defaultValue={t.amount ?? ''} onBlur={e => upd(i, { amount: parseAmt(e.target.value) })} /></td>
-                  <td className="pr-2"><Input className="h-8 w-20" value={t.tenor ?? ''} onChange={e => upd(i, { tenor: e.target.value })} /></td>
-                  <td className="whitespace-nowrap">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Move up" onClick={() => move(i, -1)}><ArrowUp className="h-3.5 w-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Move down" onClick={() => move(i, 1)}><ArrowDown className="h-3.5 w-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Duplicate" disabled={d.tranches.length >= 10} onClick={() => set([...d.tranches.slice(0, i + 1), duplicateTranche(t, ''), ...d.tranches.slice(i + 1)])}><Copy className="h-3.5 w-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Remove" disabled={d.tranches.length <= 1} onClick={() => remove(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table></div>
-          <Button size="sm" variant="outline" disabled={d.tranches.length >= 10} onClick={add}><Plus className="h-3.5 w-3.5 mr-1" />Add tranche</Button>
+          <TrancheStructureEditor value={d} onChange={setD} />
 
           <div className="space-y-2 border-t border-border pt-3">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">

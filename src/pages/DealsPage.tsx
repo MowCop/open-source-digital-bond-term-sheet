@@ -59,6 +59,7 @@ import type { DealWorkspace } from '@/lib/dealWorkspace';
 import DealPhaseWorkspace from '@/components/DealPhaseWorkspace';
 import { dealPhase, mayEditField, type DealPhase } from '@/lib/dealPhase';
 import { fromLegacy } from '@/lib/dealWorkspace';
+import TrancheStructureEditor, { parseStructureAmount } from '@/components/termsheet/TrancheStructureEditor';
 import { parseAmount } from '@/lib/bdt-bridge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/context/AuthContext';
@@ -345,6 +346,7 @@ export default function DealsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [createStep,setCreateStep] = useState(1);
   const [template,setTemplate] = useState<RateType>('fixed');
+  const [structure,setStructure] = useState<DealWorkspace|null>(null);
   const [reviewValues,setReviewValues] = useState<IntakeValue[]>([]);
   const [intakeSources,setIntakeSources] = useState<Record<string,{source:string;snippet:string}>>({});
   const [issuerLei,setIssuerLei] = useState('');
@@ -418,13 +420,14 @@ export default function DealsPage() {
     for(const g of ['parties','docs','ratings','ids'] as const) if(bdtState[g]?.length)bdtState.fieldMeta[`group:${g}`]={status:'set',source:'Reviewed deal creation',by:authUser?.id??currentUser.id,at:new Date().toISOString()};
     bdtState.fieldMeta = withExpected(bdtState).fieldMeta;
     refreshAuto(bdtState);
-    const created = createDeal({ ...draftDeal, bdtState });
+    const ws = structure ?? (() => { const b = fromLegacy(null, newDeal.currency, parseStructureAmount(newDeal.size)); b.tranches[0].tenor = newDeal.tenor; b.tranches[0].rateType = template; return b; })();
+    const created = createDeal({ ...draftDeal, bdtState }, undefined, { workspace: ws });
     setExpandedDealId(created.id);
     if (newDealFiles.length) {
       setPendingDocuments({ dealId: created.id, files: newDealFiles });
       setExpandedDealId(created.id);
     }
-    setNewDealFiles([]); setReviewValues([]); setCreateStep(1); setIssuerLei(''); setLeiCandidates([]);
+    setNewDealFiles([]); setReviewValues([]); setCreateStep(1); setStructure(null); setIssuerLei(''); setLeiCandidates([]);
     setShowCreate(false);
     setNewDeal(emptyNewDeal());
     setDocumentFields({}); documentFieldLocks.current.clear();
@@ -583,7 +586,7 @@ export default function DealsPage() {
                     </div>
                   </div>
                 )}
-                <Button onClick={()=>setCreateStep(3)} disabled={extractingIssuer || reviewValues.length>0}>Choose template</Button>
+                <Button onClick={()=>{const b=fromLegacy(null,newDeal.currency,parseStructureAmount(newDeal.size));b.tranches[0].tenor=newDeal.tenor;b.tranches[0].rateType=template;setStructure(b);setCreateStep(3);}} disabled={extractingIssuer || reviewValues.length>0}>Choose template</Button>
                 {extractingIssuer && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" />Reading deal terms…</p>}
                 {newDealFiles.length > 0 && (
                   <div className="space-y-1">
@@ -597,7 +600,7 @@ export default function DealsPage() {
                   </div>
                 )}
               </div>}
-              {createStep===3&&<div className="space-y-4"><Label>Deal template</Label><Select value={template} onValueChange={v=>setTemplate(v as RateType)}><SelectTrigger aria-label="Deal template"><SelectValue/></SelectTrigger><SelectContent>{Object.entries(TEMPLATE_LABELS).map(([k,l])=><SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent></Select><Button onClick={handleCreateDeal} className="w-full" disabled={extractingIssuer || reviewValues.length>0 || !canCreateNewDeal(newDeal.issuerName,newBookrunners)}>Create Deal</Button></div>}
+              {createStep===3&&<div className="space-y-4"><div className="flex flex-wrap items-end justify-between gap-3"><div className="text-lg font-semibold">Deal structure</div><div className="space-y-1"><Label htmlFor="new-deal-aggregate">Aggregate Total (USD Equiv.)</Label><Input id="new-deal-aggregate" className="h-8 sm:w-56" placeholder="Optional" onChange={e=>setStructure(w=>w&&{...w,aggregateUsd:parseStructureAmount(e.target.value)})}/></div></div>{structure&&<TrancheStructureEditor value={structure} onChange={w=>{setStructure(w);setTemplate(w.tranches[0].rateType);}}/>}<Label>Deal template (Tranche A)</Label><Select value={template} onValueChange={v=>{setTemplate(v as RateType);setStructure(w=>w&&{...w,tranches:w.tranches.map((t,i)=>i===0?{...t,rateType:v as RateType}:t)});}}><SelectTrigger aria-label="Deal template"><SelectValue/></SelectTrigger><SelectContent>{Object.entries(TEMPLATE_LABELS).map(([k,l])=><SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent></Select><Button onClick={handleCreateDeal} className="w-full" disabled={extractingIssuer || reviewValues.length>0 || !canCreateNewDeal(newDeal.issuerName,newBookrunners)}>Create Deal</Button></div>}
             </DialogContent>
           </Dialog>
         )}

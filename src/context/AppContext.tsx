@@ -100,7 +100,7 @@ interface AppContextType {
   distributionLists: DistributionList[];
   chatChannels: ChatChannel[];
   chatMessages: ChatMessage[];
-  createDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[], opts?: { sourceChannelId?: string; sourceChannel?: ChatChannel }) => Deal;
+  createDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[], opts?: { sourceChannelId?: string; sourceChannel?: ChatChannel; workspace?: unknown }) => Deal;
   updateDeal: (dealId: string, updates: Partial<Deal>) => Promise<void>;
   updateDealStage: (dealId: string, newStage: DealStage, note?: string) => void;
   createMessage: (msg: Omit<Message, 'id' | 'createdAt' | 'updatedAt'>) => Message;
@@ -349,7 +349,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     insertAudit(full).catch(e => console.error('[Cloud] insertAudit failed', e));
   }, []);
 
-  const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[], opts?: { sourceChannelId?: string; sourceChannel?: ChatChannel }) => {
+  const createDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'stageHistory'>, scpIds?: string[], opts?: { sourceChannelId?: string; sourceChannel?: ChatChannel; workspace?: unknown }) => {
     const newDeal: Deal = {
       ...deal,
       id: `d${Date.now()}`,
@@ -363,7 +363,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       newDeal.bdtState = { ...newDeal.bdtState, f: { ...newDeal.bdtState.f, 'IssuanceDataGroup/Issuance/DealIdentifier': newDeal.id } };
     }
     setDeals(prev => [newDeal, ...prev]);
-    insertDeal(newDeal).catch(e => console.error('[Cloud] insertDeal failed', e));
+    insertDeal(newDeal)
+      .then(async () => { if (opts?.workspace) { const { error } = await supabase.from('deals').update({ deal_workspace: opts.workspace as never }).eq('id', newDeal.id); if (error) throw error; } })
+      .catch(e => console.error('[Cloud] insertDeal failed', e));
     // Chat channel participants = creator + any selected Syndicate Chat Participants (SCPs).
     // Distribution-list recipients are NOT added — distribution governs deal/screen access only.
     const participantIds = Array.from(new Set([
