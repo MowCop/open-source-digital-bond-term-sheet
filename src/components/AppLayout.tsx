@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut, Settings, Menu, Sparkles, Bot } from 'lucide-react';
+import { FileText, Bell as BellIcon, Shield, ClipboardList, Bell, ChevronDown, Users, PenSquare, Inbox, LogOut, Settings, Menu, Sparkles, Bot, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useState } from 'react';
 import { useApp, resetDemoData } from '@/context/AppContext';
 import CopilotFocusHost from '@/components/CopilotFocusHost';
@@ -26,6 +26,8 @@ const navItems: { path: string; label: string; icon: typeof Settings; adminOnly?
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [navOpen, setNavOpenState] = useState(() => localStorage.getItem('ddr-nav-open') !== '0');
+  const setNavOpen = (v: boolean) => { localStorage.setItem('ddr-nav-open', v ? '1' : '0'); setNavOpenState(v); };
   const location = useLocation();
   const copilotFocus = useCopilotFocus();
   const copilotFocusLabel = (location.pathname === '/messages' && copilotFocus?.label) || navItems.find(n => location.pathname.startsWith(n.path))?.label || 'General';
@@ -51,7 +53,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden">
       <AgentBrowserTools />
       {/* Sidebar */}
-      <aside className="hidden w-60 bg-sidebar text-sidebar-foreground md:flex flex-col shrink-0">
+      {!navOpen && <Button size="icon" variant="ghost" aria-label="Open main menu" title="Open main menu" onClick={() => setNavOpen(true)} className="hidden md:inline-flex fixed top-1.5 left-1.5 z-50 h-9 w-9"><PanelLeftOpen className="h-5 w-5" /></Button>}
+      <aside className={`${navOpen ? 'md:flex' : ''} hidden w-60 bg-sidebar text-sidebar-foreground flex-col shrink-0 relative`}>
+        <Button size="icon" variant="ghost" aria-label="Close main menu" title="Close main menu" onClick={() => setNavOpen(false)} className="absolute top-2 right-2 h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"><PanelLeftClose className="h-4 w-4" /></Button>
         <div className="flex items-center border-b border-sidebar-border px-4 pt-[72px] pb-4">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 rounded-sm shrink-0">
@@ -126,7 +130,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
       {/* Main */}
       <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
-        <header className="h-12 border-b flex items-center justify-between gap-2 px-2 sm:px-4 bg-card shrink-0">
+        <header className={`h-12 border-b flex items-center justify-between gap-2 px-2 sm:px-4 bg-card shrink-0 ${navOpen ? '' : 'md:pl-12'}`}>
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden h-9 w-9 shrink-0" aria-label="Open navigation menu">

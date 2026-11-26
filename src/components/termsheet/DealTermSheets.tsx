@@ -1,3 +1,4 @@
+import InfoTip from '@/components/InfoTip';
 import { FieldStatusSummary } from './FieldStatusContext';
 import { trancheBdtState } from '@/lib/trancheState';
 import { dealToBdtState } from '@/lib/bdt-bridge';
@@ -140,7 +141,7 @@ export default function DealTermSheets({ deal, canEdit, canEditField, onOpenAllF
         </table>
       </div>
 
-      <p className="text-xs text-muted-foreground">Double-click a tranche, or use the arrow at the end of its row, to open its term sheet. Esc closes it.</p>
+      <InfoTip text="Double-click a tranche, or use the arrow at the end of its row, to open its term sheet. Esc closes it." />
 
       {popped && (() => { const i = ws.tranches.findIndex(x => x.id === popped); const t = ws.tranches[i]; if (!t) return null; return (
         <Dialog open onOpenChange={o => { if (!o) setPopped(null); }}>
