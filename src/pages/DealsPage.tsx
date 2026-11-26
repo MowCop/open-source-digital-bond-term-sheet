@@ -185,6 +185,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
           <span className="shrink-0 text-sm font-semibold uppercase tracking-wider whitespace-nowrap">Deal Terms</span>
           <UnifiedDealChecker
           state={checkerState}
+          ws={ws}
           dealId={deal.id}
           onNavigate={t => { setTab('fill'); setTimeout(() => fillRef.current?.focusTarget(t), 30); }}
           onFix={canEdit ? fn => { setTab('fill'); return fillRef.current?.applyFix(fn) ?? false; } : undefined}

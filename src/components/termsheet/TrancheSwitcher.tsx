@@ -2,6 +2,7 @@ import { FieldStatusSummary } from './FieldStatusContext';
 import { trancheBdtState } from '@/lib/trancheState';
 import { TEMPLATE_LABELS } from '@/lib/fieldStatus';
 import type { BdtState } from '@/lib/bdt-bridge';
+import { skewWeights } from '@/lib/execution';
 import { Button } from '@/components/ui/button';
 import type { DealWorkspace } from '@/lib/dealWorkspace';
 
@@ -13,6 +14,7 @@ export default function TrancheSwitcher({ ws, selected, onSelect, note, state }:
       <span className="font-medium">Tranche {t?.label || 'A'}</span>
       {t && <span className="text-muted-foreground">· {[t.currency && t.amount != null ? `${t.currency} ${t.amount >= 1e9 ? `${t.amount / 1e9}bn` : `${t.amount / 1e6}m`}` : t.currency, t.tenor, TEMPLATE_LABELS[t.rateType]].filter(Boolean).join(' · ')}</span>}
       {state&&<FieldStatusSummary state={trancheBdtState(state,ws,selected)}/>}
+      {list.length > 1 && state && (() => { const w = skewWeights(ws, state.f['x:sizeSkew'] ?? ''); return <span className="flex h-3 w-20 items-end gap-px" aria-label={`Size weighting${state.f['x:sizeSkew'] ? `: ${state.f['x:sizeSkew']}` : ''}`} title={state.f['x:sizeSkew'] || 'Size weighting'}>{w.map((x, i) => <span key={i} className={`flex-1 rounded-sm ${i === selected ? 'bg-primary' : 'bg-muted-foreground/50'}`} style={{ height: `${Math.max(15, Math.min(100, x * list.length * 50))}%` }} />)}</span>; })()}
       {note && <span className="text-xs italic text-muted-foreground">{note}</span>}
       {list.length > 1 && (
         <div className="ml-auto flex gap-1">

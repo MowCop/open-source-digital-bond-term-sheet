@@ -1,3 +1,5 @@
+import { pricingDealCompleteness } from '@/lib/execution';
+import type { DealWorkspace } from '@/lib/dealWorkspace';
 import { useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle, Bot, CheckCircle2, ChevronDown, ChevronUp, ExternalLink, Info, Loader2, RefreshCw, Shield, Sparkles, Wand2, X, XCircle,
@@ -55,11 +57,12 @@ interface Props {
   onNavigate?: (t: CheckTarget) => void;
   onFix?: (fn: (s: BdtState) => BdtState) => boolean;
   onDocFix?: (c: CheckItem) => string[];
+  ws?: DealWorkspace | null;
 }
 
 const ignoreKey = (id: string) => `vdr.checker.ignored.${id}`;
 
-export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, onDocFix }: Props) {
+export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, onDocFix, ws }: Props) {
   const [ignored, setIgnored] = useState<string[]>([]);
   useEffect(() => {
     if (!dealId) return;
@@ -183,7 +186,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
   const checks = useMemo<CheckItem[]>(() => {
     let base: CheckItem[] = [];
     try {
-      base = unifiedChecks(state);
+      base = [...unifiedChecks(state), ...pricingDealCompleteness(state, ws ?? null)];
     } catch {
       base = [];
     }
@@ -201,7 +204,7 @@ export default function UnifiedDealChecker({ state, dealId, onNavigate, onFix, o
       .map(c => ({ ...c, src: 'gleif' as const }));
     const figi = [...figiChecks(state, figiRec[isin]), ...reportingChecks(state)].map(c => ({ ...c, src: 'openfigi' as const }));
     return [...base, ...live, ...missing, ...figi, ...aiChecks] as CheckItem[];
-  }, [state, refreshTick, leiParties, gleif, noLeiKey, matchCounts, figiRec, isin, storedDocs, aiChecks]);
+  }, [state, refreshTick, leiParties, gleif, noLeiKey, matchCounts, figiRec, isin, storedDocs, aiChecks, ws]);
   const ignoredSet = useMemo(() => new Set(ignored), [ignored]);
   // Share the exact results the user sees with Deal Co-Pilot (read-only).
   useEffect(() => { if (dealId) publishLiveChecks(dealId, toLiveChecks(checks, c => ignoredSet.has(checkKey(c)))); }, [dealId, checks, ignoredSet]);

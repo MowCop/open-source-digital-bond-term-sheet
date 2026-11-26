@@ -24,8 +24,8 @@ export function mayEditField(role: UserRole, phase: DealPhase, path: string): bo
 }
 export function quickCommands(deal: Deal): string[] {
   if (dealPhase(deal) === 'closed') return [];
-  if (deal.stage === 'Priced') return ['Price at … / coupon … / re-offer …', 'Draft final terms update'];
-  if (['Launched', 'Books Closed'].includes(deal.stage)) return ['Set Tranche A size …', 'Launch at …', 'Price at … / coupon … / re-offer …'];
-  if (deal.stage === 'Books Open') return ['Books update £…bn ex-JLM', 'Revise guidance to …', 'Close books'];
-  return ['Announce IPTs …', 'Open books'];
+  if (deal.stage === 'Priced') return ['Price at … / coupon … / re-offer yield …', 'Size the 10s at …, 30s at …', 'Deal size … USD equivalent', 'Draft final terms update'];
+  if (['Launched', 'Books Closed'].includes(deal.stage)) return ['Size the 10s at …, 30s at …', 'Skew to the long end', 'Deal size benchmark WNG', 'Price talk tranche A …', 'Price at … / coupon … / re-offer yield …'];
+  if (deal.stage === 'Books Open') return ['Guidance tranche A … +/- 5bp WPIR', 'Yield talk tranche A …', 'Skew to the long end', 'Books update …bn ex-JLM', 'Close books'];
+  return ['IPTs tranche A … area', 'Price talk tranche A … area', 'Yield talk tranche A … area', 'Deal size benchmark', 'Skew to the long end', 'Add a … floating tranche'];
 }

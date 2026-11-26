@@ -3,6 +3,7 @@ import { P, parseAmount, type BdtState } from '@/lib/bdt-bridge';
 import type { DealWorkspace } from '@/lib/dealWorkspace';
 import { termSheetView } from '@/lib/termSheetView';
 import { trancheBdtState } from '@/lib/trancheState';
+import { sizeHeadline, spreadConvention } from '@/lib/execution';
 import { ALERT_EVENTS, buildSubject, escapeHtml, termsDiff } from '@/lib/newIssueAlerts';
 
 export const MSG_WIDTH = 72;
@@ -58,6 +59,14 @@ export function buildMsgLines(a: MsgInput): MsgLine[] {
       key, block, value,
     }));
   };
+  const head = sizeHeadline(a.state, a.ws ?? null);
+  if (multi && tranches.some(t => t.currency)) {
+    row('SIZE', head.text.toUpperCase(), 'dealSize', 'DEAL');
+    if (new Set(tranches.map(t => t.currency)).size > 1) {
+      row('CCY TOTALS', head.perCurrency.join(', ').toUpperCase(), 'currencyTotals', 'DEAL');
+      if (head.fx.length) row('FX', head.fx.join('; '), 'fx', 'DEAL');
+    }
+  }
   const count = Math.max(1, tranches.length);
   for (let i = 0; i < count; i++) {
     const t = tranches[i];
@@ -81,15 +90,23 @@ export function buildMsgLines(a: MsgInput): MsgLine[] {
     add('RATINGS', v.issuerRating, 'issuerRating');
     add('FORMAT', [readable(v.issuanceType), readable(v.formOfNote)].filter(Boolean).join(' / '), 'format');
     add('STATUS', readable(v.statusOfNote), 'status');
-    add('SIZE', [currency, size].filter(Boolean).join(' '), 'size');
+    const indication = field('x:sizeIndication');
+    add('SIZE', size ? [currency, size].filter(Boolean).join(' ') : multi ? (currency ? [currency, indication || 'BENCHMARK'].join(' ').toUpperCase() : '') : (field('x:sizeMsg') || field('x:sizeSkew')) ? head.text.toUpperCase() : '', 'size');
+    if (!multi && size && field('x:sizeSkew')) add('SKEW', field('x:sizeSkew').toUpperCase(), 'skew');
     add('TENOR', tenor, 'tenor');
     add('SETTLEMENT', v.settlementDate, 'settlementDate');
     add('MATURITY', v.maturityDate, 'maturityDate');
     const floating = /FLOAT/i.test(field(P.interestType));
     const floatingCoupon = [readable(field(FLOAT + 'Benchmark/BenchmarkCode')), field(FLOAT + 'Spread/Value') ? `+ ${field(FLOAT + 'Spread/Value')} ${field(FLOAT + 'Spread/PriceType')}`.trim() : ''].filter(Boolean).join(' ');
     add('COUPON', floating ? floatingCoupon : v.coupon, 'coupon');
-    if (a.event !== 'mandate') add('IPTS', field(P.ipt), 'ipt');
-    if (!['mandate', 'ipt'].includes(a.event)) add('GUIDANCE', field(P.guidance), 'guidance');
+    const talk = (v: string) => v.toUpperCase().replace(/\s*(?:\+\/-|±)\s*/g, ' +/- ');
+    if (a.event !== 'mandate') {
+      add('IPTS', talk(field(P.ipt)), 'ipt');
+      add('PRICE TALK', talk(field('x:priceTalk')), 'priceTalk');
+      add('YIELD TALK', talk(field('x:yieldTalk')), 'yieldTalk');
+    }
+    if (!['mandate', 'ipt'].includes(a.event)) add('GUIDANCE', talk(field(P.guidance)), 'guidance');
+    if (a.event !== 'mandate' && (field(P.ipt) || field(P.guidance))) add('SPREAD VS', spreadConvention(state.f), 'spreadConvention');
     if (['launch', 'pricing', 'final', 'books'].includes(a.event)) add('SPREAD', field(P.spreadSet) || v.reofferSpread, 'reofferSpread');
     if (['pricing', 'final'].includes(a.event)) {
       add('RE-OFFER', v.reofferPrice, 'reofferPrice');
@@ -140,7 +157,7 @@ export function changedMsgLines(a: MsgInput, before: BdtState | null, previousTe
   }
   const keys = new Set(termsDiff(before, a.state).map(d => d.key));
   const prev = buildMsgLines({ ...a, state: before, ws: null });
-  const extra = ['format', 'status', 'ipt', 'guidance', 'tenor'];
+  const extra = ['format', 'status', 'ipt', 'guidance', 'tenor', 'priceTalk', 'yieldTalk', 'dealSize', 'skew'];
   for (const key of extra) if (prev.find(l => l.key === key)?.value !== lines.find(l => l.key === key)?.value) keys.add(key);
   lines.forEach((l, i) => { if (l.key && keys.has(l.key) && (!a.ws || a.ws.tranches.length <= 1 || l.block === `TRANCHE ${a.ws.tranches[0]?.label || 'A'}` || ['issuerName', 'issuerRating', 'bookrunners', 'governingLaw', 'listingVenue'].includes(l.key))) changed.add(i); });
   return changed;

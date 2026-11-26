@@ -33,3 +33,11 @@ Physical `DROP TABLE deal_signoffs` was rejected by the current backward-incompa
 
 ## Verification
 See the tests in `src/test/fieldStatus.test.ts` and `src/test/dealActors.database.test.ts`: three template types, Expected→Set, approved command→Set, interim history, MSG exclusion, per-tranche metadata, pricing completeness, retirement preserving all deal rows, direct administrator stage progression, document changes without sign-off reopening, and retained DCM guards. Historical sign-off tests remain isolated regression coverage for earlier migrations only.
+
+## Evolving execution variables (addendum)
+- Open with history until pricing: IPTs, guidance, price talk (`x:priceTalk`), yield talk (`x:yieldTalk`), deal size wording (`x:sizeMsg`: Benchmark, Benchmark (USD 500m+), Target USD 1bn, Expected / WNG), per-tranche size indication (`x:sizeIndication`) and deal size skew (`x:sizeSkew`). Every save keeps the prior value, source, who and when; the deal page shows the evolution as a mini timeline.
+- Talk text is stored verbatim; `parseTalk` (src/lib/execution) derives a numeric range (area, ranges, +/-, bp, WPIR). Final values (issue price, re-offer yield, coupon, sizes) are separate numeric BDT fields.
+- Spread convention defaults from currency (USD vs UST, others vs MS) and can be overridden (`x:spreadConvention`).
+- Multi-currency deals: headline is the USD-equivalent total (`x:usdEquivalent`, else computed from recorded FX) with per-currency totals and FX source/time.
+- Co-Pilot understands "Size the 10s at 1bn, 30s at 750m", "Skew to the long end", "Deal size 2.5bn USD equivalent", "Deal size benchmark WNG", and "IPTs / Guidance / Price talk / Yield talk tranche B …" — all still preview → human Execute.
+- At Priced the Deal Checker fails until each tranche's final size, issue price, re-offer yield and (fixed) coupon, the total size and (multi-currency) USD-equivalent total are Set.

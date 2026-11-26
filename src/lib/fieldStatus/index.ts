@@ -7,7 +7,9 @@ export type FieldStatus = 'set' | 'expected' | 'open';
 export interface FieldRecord { status: FieldStatus; source: string; by: string; at: string; suggestion?: string; why?: string; latest?: boolean; history?: { value: string; source: string; by: string; at: string }[] }
 export type FieldMetadata = Record<string, FieldRecord>;
 export const metadataKey = (path: string, tranche?: string) => tranche ? `tranche:${tranche}:${path}` : path;
-export const interimField = (p: string) => /^x:(iptSpread|guidance|bookSize|booksOpen|booksExJLM)$/.test(p);
+export const interimField = (p: string) => /^x:(iptSpread|guidance|bookSize|booksOpen|booksExJLM|priceTalk|yieldTalk|sizeMsg|sizeIndication|sizeSkew)$/.test(p);
+/** Mini timeline: prior values (oldest first) followed by the current value. */
+export function evolution(state: Pick<BdtState,'f'|'fieldMeta'>, path: string, tranche?: string) { const r=fieldRecord(state,path,tranche); return [...(r.history??[]).map(h=>({value:String(h.value),by:h.by,at:h.at,source:h.source})), ...(state.f[path]?[{value:state.f[path],by:r.by,at:r.at,source:r.source}]:[])]; }
 export function fieldRecord(state: Pick<BdtState,'f'|'fieldMeta'>, path: string, tranche?: string): FieldRecord {
   const grouped=path.match(/^(parties|ids|ratings|docs|contacts)\.(\d+)\.(.+)$/);
   const groupValue=grouped?(state as unknown as Record<string,Record<string,unknown>[]>)[grouped[1]]?.[Number(grouped[2])]?.[grouped[3]]:null;
@@ -15,7 +17,7 @@ export function fieldRecord(state: Pick<BdtState,'f'|'fieldMeta'>, path: string,
   const inherited=grouped?state.fieldMeta?.[`group:${grouped[1]}`]:undefined;
   return state.fieldMeta?.[metadataKey(path,tranche)] ?? (value&&inherited?inherited:undefined) ?? {status: value?.trim() ? (interimField(path) ? 'open' : 'set') : 'open', source: value?.trim() ? 'Previously recorded DTS' : '', by:'',at:'', latest: !!value?.trim() && interimField(path)};
 }
-export function fixedAt(p: string) { return /Coupon|InterestRate|IssuePrice|Reoffer|Yield|Spread\/Value/.test(p) ? 'Fixed at pricing' : /ISIN|ids/.test(p) ? 'Fixed before settlement' : /Maturity|tenor|Amount|InterestType|tranches/.test(p) ? 'Fixed at launch / pricing' : interimField(p) ? 'Latest execution update' : 'Confirm during documentation'; }
+export function fixedAt(p: string) { return /Coupon|InterestRate|IssuePrice|Reoffer|Yield|Spread\/Value|priceTalk|yieldTalk/.test(p) ? 'Fixed at pricing' : /ISIN|ids/.test(p) ? 'Fixed before settlement' : /Maturity|tenor|Amount|InterestType|tranches|sizeMsg|sizeIndication|sizeSkew|usdEquivalent/.test(p) ? 'Fixed at launch / pricing' : interimField(p) ? 'Latest execution update' : 'Confirm during documentation'; }
 export function transitionField(state: BdtState,path: string,value: string,actor: string,source='Manual',confirm=false,tranche?: string): BdtState {
   const key=metadataKey(path,tranche), before=fieldRecord(state,path,tranche),at=new Date().toISOString();
   const record:FieldRecord={status: value ? (interimField(path)&&!confirm?'open':'set'):'open',source,by:actor,at,latest:!!value&&interimField(path),history:[...(before.history??[]),...(state.f[path]? [{value:state.f[path],source:before.source,by:before.by,at:before.at}]:[])].slice(-30)};
@@ -49,5 +51,5 @@ export function externalState(state:BdtState):BdtState {
 export function pricingCompleteness(state:BdtState):CheckItem[] {
  if(state.stage<5||!state.fieldMeta)return [];
  const rate=state.template??selectTemplate('',state.f);
- return templatePaths(rate).filter(p=>fieldRecord(state,p).status!=='set'||!state.f[p]?.trim()).map(p=>({l:'fail' as const,src:'bdt' as const,t:`Pricing term sheet incomplete: ${(FIELDS as {p:string;l:string}[]).find(f=>f.p===p)?.l??p} is still ${fieldRecord(state,p).status === 'expected'?'Expected':'Open'}`,d:p}));
+ return templatePaths(rate).filter(p=>!interimField(p)).filter(p=>fieldRecord(state,p).status!=='set'||!state.f[p]?.trim()).map(p=>({l:'fail' as const,src:'bdt' as const,t:`Pricing term sheet incomplete: ${(FIELDS as {p:string;l:string}[]).find(f=>f.p===p)?.l??p} is still ${fieldRecord(state,p).status === 'expected'?'Expected':'Open'}`,d:p}));
 }

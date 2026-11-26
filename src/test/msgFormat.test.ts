@@ -61,7 +61,7 @@ describe('MSG formatter', () => {
   });
   it('only includes available execution terms appropriate to the selected event', () => {
     expect(buildMsgText({ ...args(), event: 'mandate' })).not.toMatch(/IPTS\s+:|GUIDANCE\s+:|RE-OFFER\s+:/);
-    expect(buildMsgText({ ...args(), event: 'ipt' })).toContain('IPTS            : T+200 area');
+    expect(buildMsgText({ ...args(), event: 'ipt' })).toContain('IPTS            : T+200 AREA');
     expect(buildMsgText({ ...args(), event: 'ipt' })).not.toMatch(/GUIDANCE\s+:|RE-OFFER\s+:/);
     expect(buildMsgText(args())).toContain('RE-OFFER        : 99.9');
   });
@@ -79,7 +79,7 @@ describe('MSG formatter', () => {
     const next = ws(); next.tranches[1].values[P.nominalAmount] = '400000000'; next.tranches[1].amount = 400e6;
     const current = { ...a, ws: next };
     const changed = [...changedMsgLines(current, a.state, prior)].map(i => buildMsgLines(current)[i]);
-    expect(changed.map(l => [l.block, l.key])).toEqual([['TRANCHE B', 'size']]);
+    expect(changed.map(l => [l.block, l.key])).toEqual([['DEAL', 'currencyTotals'], ['TRANCHE B', 'size']]);
   });
   it('escapes MSG text safely in the email pre block', () => {
     const out = msgEmailBlock('<script>alert("test")</script> & terms');
