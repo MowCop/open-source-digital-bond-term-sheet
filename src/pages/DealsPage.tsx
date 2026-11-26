@@ -432,6 +432,8 @@ export default function DealsPage() {
     const ws = structure ?? (() => { const b = fromLegacy(null, newDeal.currency, parseStructureAmount(newDeal.size)); b.tranches[0].tenor = newDeal.tenor; b.tranches[0].rateType = template; return b; })();
     const created = createDeal({ ...draftDeal, bdtState }, undefined, { workspace: ws });
     setExpandedDealId(created.id);
+    // A newly created deal opens like any deal clicked from the list: expanded and full size.
+    setFullscreenDealId(created.id);
     if (newDealFiles.length) {
       setPendingDocuments({ dealId: created.id, files: newDealFiles });
       setExpandedDealId(created.id);

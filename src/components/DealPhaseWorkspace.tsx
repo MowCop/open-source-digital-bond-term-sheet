@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/context/AppContext';
 import { useDealTeam } from '@/hooks/useDealTeam';
-import { ACTOR_LABELS, type ActorRole, type DealPhase } from '@/lib/dealPhase';
+import { ACTOR_LABELS, defaultWorkspaceTab, type ActorRole, type DealPhase, type WorkspaceTab } from '@/lib/dealPhase';
 import { dealToBdtState, unifiedChecks, fieldByPath, P } from '@/lib/bdt-bridge';
 import { getLiveChecks, onLiveChecks } from '@/lib/copilot/liveChecks';
 import { trancheBdtState } from '@/lib/trancheState';
@@ -28,7 +28,7 @@ import { useNavigate } from 'react-router-dom';
 export default function DealPhaseWorkspace({deal,phase,onPhase,children,intake,ws,dirty,onSend,canSend,onEditorOpen}: {deal:Deal;phase:DealPhase;onPhase:(p:DealPhase|null)=>void;children:ReactNode;intake:ReactNode;ws:DealWorkspace|null;dirty:boolean;onSend:()=>void;canSend:boolean;onEditorOpen:()=>void}) {
   const {authUser,roles,isAdmin}=useAuth(),{currentUser}=useApp(),navigate=useNavigate();
   const {team,error,reload}=useDealTeam(deal.id);
-  const [full,setFull]=useState(false),[drawer,setDrawer]=useState(false),[message,setMessage]=useState(true),[mobile,setMobile]=useState(phase==='setup'?'dts':'copilot'),[assign,setAssign]=useState(false),[people,setPeople]=useState<{user_id:string;name:string}[]>([]),[person,setPerson]=useState(''),[actor,setActor]=useState<ActorRole>('dcm'),[busy,setBusy]=useState(false);
+  const [full,setFull]=useState(false),[drawer,setDrawer]=useState(false),[message,setMessage]=useState(true),[mobile,setMobile]=useState<WorkspaceTab>(()=>defaultWorkspaceTab(phase)),[assign,setAssign]=useState(false),[people,setPeople]=useState<{user_id:string;name:string}[]>([]),[person,setPerson]=useState(''),[actor,setActor]=useState<ActorRole>('dcm'),[busy,setBusy]=useState(false);
   const st=dealToBdtState(deal);
   const [liveChecks,setLiveChecks]=useState(()=>getLiveChecks(deal.id)??[]);
   useEffect(()=>onLiveChecks(id=>{if(id===deal.id)setLiveChecks(getLiveChecks(id)??[]);}),[deal.id]);
@@ -46,12 +46,12 @@ export default function DealPhaseWorkspace({deal,phase,onPhase,children,intake,w
     </header>
     {error&&<p role="alert" className="text-destructive text-sm">{error}</p>}
     {phase==='setup'&&<div className="flex items-center gap-2 text-xs text-muted-foreground">{dirty&&<span className="text-warning">Unsaved terms</span>}</div>}
-    <div className="flex gap-1 lg:hidden" aria-label="Workspace tabs">{['copilot','dts','message'].map(t=><Button key={t} size="sm" variant={mobile===t?'secondary':'ghost'} onClick={()=>setMobile(t)}>{t==='copilot'?'Co-Pilot':t==='dts'?'DTS':'Message'}</Button>)}</div>
+    <div className="flex gap-1 lg:hidden" aria-label="Workspace tabs">{(['copilot','dts','message'] as WorkspaceTab[]).map(t=><Button key={t} size="sm" variant={mobile===t?'secondary':'ghost'} onClick={()=>setMobile(t)}>{t==='copilot'?'Co-Pilot':t==='dts'?'DTS':'Message'}</Button>)}</div>
     <div className={`deal-phase-grid ${phase==='setup'?'deal-setup-grid':'deal-execution-grid'}`}>
       {phase==='setup'?<aside className={`${mobile==='dts'?'':'hidden'} lg:block min-w-0 space-y-4`} aria-label="Document intake">{intake}</aside>:<aside className={`${mobile==='dts'?'':'hidden'} lg:block min-w-0 space-y-4`} aria-label="Live DTS summary"><div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Live DTS</h3><Button size="sm" variant="ghost" onClick={openEditor}>Open full DTS</Button></div>{(ws?.tranches??[null]).map((t,i)=>{const s=trancheBdtState(st,ws,i),v=termSheetView(s);return <section key={t?.id??'A'} className="border-t border-border py-3 text-xs space-y-2"><h4 className="font-semibold">Tranche {t?.label??'A'}{t&&<span className="ml-2 font-normal text-muted-foreground">{t.currency} {t.amount!=null?`${t.amount/1e6}m`:(i===0?st.f['x:sizeIndication']:String(t.values['x:sizeIndication']??''))||'size open'} {t.tenor}</span>}</h4><FieldStatusSummary state={s}/>{[P.nominalAmount,P.maturityDate,P.interestType,P.coupon,P.ipt,P.guidance,'x:priceTalk','x:yieldTalk',P.issuePrice,P.reofferPrice,P.reofferYield,'x:bookSize'].filter(p=>fieldRecord(s,p).status!=='expected').sort((a,b)=>(fieldRecord(s,a).status==='open'?0:1)-(fieldRecord(s,b).status==='open'?0:1)).slice(0,14).map(p=><div key={p}><div className="flex justify-between gap-2"><span className={`min-w-0 break-words ${fieldRecord(s,p).status==='open'?'text-warning':'text-success'}`}>{fieldByPath(p)?.l??p}</span><strong className="min-w-0 text-right break-words">{s.f[p]||'Open'}</strong></div><Evolution state={i===0?st:s} path={p} tranche={i===0?undefined:t?.id}/></div>)}</section>;})}</aside>}
       <main className={`min-w-0 ${phase==='setup'?(mobile!=='message'?'':'hidden'):(mobile==='copilot'?'':'hidden')} lg:block`}>
-        <div className={phase==='setup'?(mobile==='dts'?'':'hidden lg:block'):full?'deal-full-editor':'hidden'}>{phase!=='setup'&&full&&<div className="flex items-center justify-between mb-3"><h2 className="font-semibold">Full DTS</h2><Button size="icon" variant="ghost" aria-label="Close full DTS" onClick={()=>setFull(false)}><X className="h-4 w-4"/></Button></div>}{children}</div>
-        {phase!=='setup'&&<UnifiedDealChecker state={st} ws={ws} dealId={deal.id} onNavigate={openEditor}/>}
+        <div className={phase==='setup'?(mobile==='dts'?'':'hidden lg:block'):(full?'deal-full-editor':(mobile==='dts'?'lg:hidden':'hidden'))}>{phase!=='setup'&&full&&<div className="flex items-center justify-between mb-3"><h2 className="font-semibold">Full DTS</h2><Button size="icon" variant="ghost" aria-label="Close full DTS" onClick={()=>setFull(false)}><X className="h-4 w-4"/></Button></div>}{children}</div>
+        {phase!=='setup'&&<div className={full?'hidden':(mobile==='dts'?'hidden lg:block':'')}><UnifiedDealChecker state={st} ws={ws} dealId={deal.id} onNavigate={openEditor}/></div>}
       </main>
       <aside className={`min-w-0 ${mobile==='message'?'':'hidden'} lg:block space-y-4`}>
         <div className="flex items-center justify-between"><h3 className="font-semibold text-sm">Live MSG</h3><Button size="sm" variant="ghost" aria-expanded={message} onClick={()=>setMessage(v=>!v)}>{message?'Collapse':'Expand'}</Button></div>{message&&<LiveMsgPanel deal={deal} canSend={false} onSend={onSend}/>}

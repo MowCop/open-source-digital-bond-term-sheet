@@ -9,6 +9,7 @@
 - This iteration is fixed-rate single tranche only. No coupon-type switcher.
 
 ## Tasks
+- [x] Every deal (set-up, execution, closed) and every newly created deal opens on the DTS view — Deal term sheets — in full size; Co-Pilot and Message stay one click away. 3 default-view tests; signed-in open of Mandate/Books Open/Priced deals and a created deal verified.
 - [x] Use one top-centre Co-Pilot launcher with active DTS deal focus and shared deal text box.
 - [x] Replace actor checklists/gates with Set/Expected/Open field metadata, reviewed template intake, status-aware MSG and pricing completeness; 341 tests and signed-in confirm/approve/MSG/mobile checks passed, no alerts sent. Migrations 0017–0019; reference/dts-field-status.md.
 - [ ] Physically delete the retired sign-off table — blocked: needs the backward-incompatible migration permission.
