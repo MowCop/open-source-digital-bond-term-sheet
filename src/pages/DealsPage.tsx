@@ -647,10 +647,14 @@ export default function DealsPage() {
                     {full ? <Minimize2 className="h-4 w-4" strokeWidth={3} /> : <Maximize2 className="h-4 w-4" strokeWidth={3} />}
                   </button>
                 )}
-                <button
+                <Button
                   type="button"
-                  onClick={() => setExpandedDealId(prev => prev === deal.id ? null : deal.id)}
-                  className={`${expanded ? 'flex-none' : 'flex-1 min-w-0'} text-left px-4 py-3 flex items-center gap-3 hover:bg-accent/40 transition-colors`}
+                  variant="ghost"
+                  onClick={() => {
+                    setExpandedDealId(expanded ? null : deal.id);
+                    setFullscreenDealId(expanded ? null : deal.id);
+                  }}
+                  className={`${expanded ? 'flex-none' : 'flex-1 min-w-0'} h-auto justify-start rounded-none text-left px-4 py-3 flex items-center gap-3 hover:bg-accent/40 transition-colors`}
                 >
                   <span className="text-muted-foreground shrink-0">
                     {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -665,7 +669,7 @@ export default function DealsPage() {
                       Updated {format(deal.updatedAt, 'MMM d, HH:mm')}
                     </span>
                   )}
-                </button>
+                </Button>
                 {expanded && (
                   <>
                     <div id={`ingest-slot-${deal.id}`} className="flex min-w-0 flex-1 items-center px-2" />
