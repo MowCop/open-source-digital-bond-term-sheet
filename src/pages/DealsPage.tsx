@@ -651,7 +651,6 @@ export default function DealsPage() {
                   <span className="text-xs text-muted-foreground truncate">
                     {deal.currency} {deal.size} · {deal.tenor}
                   </span>
-                  <Badge className={`text-[10px] ${stageColors[deal.stage]}`}>{deal.stage}</Badge>
                   {!expanded && (
                     <span className="text-[10px] text-muted-foreground ml-auto whitespace-nowrap">
                       Updated {format(deal.updatedAt, 'MMM d, HH:mm')}

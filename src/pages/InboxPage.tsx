@@ -16,17 +16,7 @@ import ExtractDealFromChatButton from '@/components/ExtractDealFromChatButton';
 import { stripHtml } from '@/lib/htmlText';
 import { Send, Paperclip, Link2, ChevronDown, ChevronRight, ChevronLeft, Search, MessageSquare, FileText, Bot, ShieldCheck, Inbox, History, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import type { ChatChannel, ChatMessage, Deal, DealStage } from '@/types/bond';
-
-const stageColor: Record<DealStage, string> = {
-  Mandate: 'bg-blue-100 text-blue-800',
-  Announced: 'bg-blue-100 text-blue-800',
-  Launched: 'bg-green-100 text-green-800',
-  'Books Open': 'bg-green-100 text-green-800',
-  'Books Closed': 'bg-green-100 text-green-800',
-  Priced: 'bg-amber-100 text-amber-800',
-  Settled: 'bg-amber-100 text-amber-800',
-};
+import type { ChatChannel, ChatMessage, Deal } from '@/types/bond';
 
 interface DeleteChatButtonProps {
   title: string;
@@ -289,7 +279,6 @@ function DealRow({ deal, channels, search, expanded, onToggle, lastSeen, onSeen,
             <span className="text-xs text-muted-foreground">
               {deal.currency} {deal.size} · {deal.tenor}
             </span>
-            <Badge className={`text-[10px] ${stageColor[deal.stage]}`}>{deal.stage}</Badge>
             <span className="text-[10px] text-muted-foreground ml-auto flex items-center gap-1">
               <MessageSquare className="h-3 w-3" />
               {channels.length} {channels.length === 1 ? 'thread' : 'threads'}

@@ -1,19 +1,8 @@
 import { useApp, useScopedApp } from '@/context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { ArrowRight, FileText, MessageSquare, AlertTriangle, TrendingUp } from 'lucide-react';
-
-const stageColors: Record<string, string> = {
-  Mandate: 'stage-mandate',
-  Announced: 'stage-mandate',
-  Launched: 'stage-launched',
-  'Books Open': 'stage-launched',
-  'Books Closed': 'stage-launched',
-  Priced: 'stage-priced',
-  Settled: 'stage-closed',
-};
 
 export default function Dashboard() {
   const { deals, messages, auditLog, currentUser } = useScopedApp();
@@ -63,7 +52,6 @@ export default function Dashboard() {
                   <div className="font-medium text-sm">{deal.issuerName}</div>
                   <div className="text-xs text-muted-foreground">{deal.currency} {deal.size} — {deal.tenor}</div>
                 </div>
-                <Badge className={stageColors[deal.stage]}>{deal.stage}</Badge>
               </div>
             ))}
           </CardContent>
