@@ -8,8 +8,10 @@ export function executionGateState(saved: Partial<BdtState> | null): BdtState {
   return { ...emptyState(), ...saved, f: saved?.f ?? {}, parties: saved?.parties ?? [], ids: saved?.ids ?? [], ratings: saved?.ratings ?? [], docs: saved?.docs ?? [] };
 }
 export type DealPhase = 'setup' | 'execution' | 'closed';
-export type WorkspaceTab = 'copilot' | 'dts' | 'message';
-/** A deal always opens on the DTS view, whatever its stage — Co-Pilot and Message stay one click away. */
+export type WorkspaceTab = 'dts' | 'message';
+/** The deal workspace row offers only these views; Co-Pilot opens from the top-bar launcher. */
+export const WORKSPACE_TABS: readonly WorkspaceTab[] = ['dts', 'message'];
+/** A deal always opens on the DTS view, whatever its stage — Message stays one click away. */
 export function defaultWorkspaceTab(_phase: DealPhase): WorkspaceTab { return 'dts'; }
 export type ActorRole = 'dcm' | 'issuer_legal' | 'counsel';
 export const ACTOR_LABELS: Record<ActorRole, string> = { dcm: 'DCM', issuer_legal: 'Issuer legal', counsel: 'Deal counsel' };
