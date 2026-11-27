@@ -41,9 +41,9 @@ export default function DealPhaseWorkspace({deal,phase,onPhase,children,intake,w
     </header>
     {error&&<p role="alert" className="text-destructive text-sm">{error}</p>}
     {phase==='setup'&&<div className="flex items-center gap-2 text-xs text-muted-foreground">{dirty&&<span className="text-warning">Unsaved terms</span>}</div>}
-    <div className="flex gap-1" aria-label="Workspace tabs">{WORKSPACE_TABS.map(t=><Button key={t} size="sm" variant={active===t?'secondary':'ghost'} onClick={()=>{setActive(t);setMobile(t==='docs'?'dts':t);if(t==='dts')openEditor();if(t==='docs')openEditor('docs');}}>{t==='docs'?'Documents':t==='dts'?'DTS':'Message'}</Button>)}</div>
+    <div className="flex gap-1" aria-label="Workspace tabs">{WORKSPACE_TABS.map(t=><Button key={t} size="sm" variant={active===t?'secondary':'ghost'} onClick={()=>{setActive(t);setMobile(t==='docs'?'dts':t);if(t!=='message')onEditorOpen(t==='docs'?'docs':'sheets');}}>{t==='docs'?'Documents':t==='dts'?'DTS':'Message'}</Button>)}</div>
     <div className={`deal-phase-grid ${phase==='setup'?'deal-setup-grid':'deal-execution-grid'}`}>
-      {phase==='setup'?<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Document intake">{intake}</aside>:<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Live DTS summary"><div className="flex items-center justify-end"><Button size="sm" variant="ghost" onClick={()=>openEditor()}>Open full DTS</Button></div></aside>}
+      {phase==='setup'?<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Document intake">{intake}</aside>:null}
       <main className={`min-w-0 ${phase==='setup'&&mobile==='message'?'hidden':''}`}>
         <div className={phase==='setup'?(mobile==='dts'?'':'hidden'):(full?'deal-full-editor':(mobile==='dts'?'':'hidden'))}>{phase!=='setup'&&full&&<div className="flex items-center justify-between mb-3"><h2 className="font-semibold">Full DTS</h2><Button size="icon" variant="ghost" aria-label="Close full DTS" onClick={()=>setFull(false)}><X className="h-4 w-4"/></Button></div>}{children}</div>
         {phase!=='setup'&&<div className={full?'hidden':(mobile==='dts'?'hidden':'')}><UnifiedDealChecker state={st} ws={ws} dealId={deal.id} onNavigate={()=>openEditor()}/></div>}
