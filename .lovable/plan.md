@@ -1,10 +1,17 @@
-# Move Documents to the first tab
+# Add a Documents link to the left of DTS
 
-Move the Documents tab so it sits first in the Deal Terms tab row, before Deal term sheets:
+The deal's top link row changes from "DTS · Message" to:
 
-Documents · Deal term sheets · Standard text · XML · DLT · All fields
+Documents · DTS · Message
 
-Deal term sheets stays the tab that opens by default. Documents keeps the same content.
+- Clicking **Documents** opens the Full DTS panel (the same panel as DTS) with the **Documents** tab already selected, showing the deal's files.
+- Clicking **DTS** works as it does now and opens Deal term sheets.
+- **Message** is unchanged.
+- Inside the Full DTS panel, the **Documents** tab also moves first in the tab row, to the left of Deal term sheets:
+  Documents · Deal term sheets · Standard text · XML · DLT · All fields
 
 ## Technical details
-- src/pages/DealsPage.tsx: move the `docs` TabsTrigger above `sheets` (line ~211 → 207). The order of the content panels and the default tab value stay the same.
+- src/lib/dealPhase.ts: `WorkspaceTab` becomes `'docs' | 'dts' | 'message'`; `WORKSPACE_TABS = ['docs','dts','message']`. Update src/test/workspaceTab.test.ts.
+- src/components/DealPhaseWorkspace.tsx: label `docs` as "Documents". Clicking it sets the visible pane to `dts` (same visibility as DTS) and calls `openEditor('docs')`. `onEditorOpen` takes an optional tab id.
+- src/pages/DealsPage.tsx: `onEditorOpen={t => setTab(t ?? 'sheets')}`. Move the `docs` TabsTrigger in front of `sheets`.
+- Check in the running app: Documents opens the Full DTS on Documents, DTS opens it on Deal term sheets, and Message still works.
