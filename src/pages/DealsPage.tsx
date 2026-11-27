@@ -57,7 +57,7 @@ import TrancheSwitcher from '@/components/termsheet/TrancheSwitcher';
 import { trancheBdtState } from '@/lib/trancheState';
 import type { DealWorkspace } from '@/lib/dealWorkspace';
 import DealPhaseWorkspace from '@/components/DealPhaseWorkspace';
-import { dealPhase, mayEditField, type DealPhase } from '@/lib/dealPhase';
+import { dealPhase, mayEditField } from '@/lib/dealPhase';
 import { fromLegacy } from '@/lib/dealWorkspace';
 import TrancheStructureEditor, { parseStructureAmount } from '@/components/termsheet/TrancheStructureEditor';
 import { parseAmount } from '@/lib/bdt-bridge';
@@ -117,9 +117,7 @@ interface DealDetailProps {
 
 function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, onSaveFields, initialFiles, onInitialFilesConsumed }: DealDetailProps) {
   const { roles } = useAuth();
-  const [phaseOverride, setPhaseOverride] = useState<DealPhase | null>(null);
   const actualPhase = dealPhase(deal);
-  const phase = actualPhase === 'closed' ? 'closed' : phaseOverride ?? actualPhase;
   const role = (['master_admin','syndicate_admin','dcm','issuer_legal','counsel'] as UserRole[]).find(r => roles.includes(r)) ?? 'vendor_user';
   const fieldPermission = (p: string) => mayEditField(role, actualPhase, p);
   const canEdit = actualPhase !== 'closed' && (canManage || role === 'dcm' || (actualPhase === 'setup' && (role === 'issuer_legal' || role === 'counsel')));
@@ -185,7 +183,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
     <div className="border-t p-5 bg-card/40 space-y-6">
       {copilotSlot && createPortal(<DealCopilot key={deal.id} deal={deal} hasUnsavedTerms={hasUnsavedTerms} mode="drawer" onSendUpdate={canManage && actualPhase !== 'closed' ? () => setSendMessageOpen(true) : undefined} />, copilotSlot)}
       
-      <DealPhaseWorkspace deal={deal} phase={phase} onPhase={setPhaseOverride} ws={ws} dirty={hasUnsavedTerms} canSend={canManage && actualPhase !== 'closed'} onSend={() => setSendMessageOpen(true)} onEditorOpen={t => setTab(t ?? 'sheets')}
+      <DealPhaseWorkspace deal={deal} phase={actualPhase} ws={ws} dirty={hasUnsavedTerms} canSend={canManage && actualPhase !== 'closed'} onSend={() => setSendMessageOpen(true)} onEditorOpen={t => setTab(t ?? 'sheets')}
         intake={<><IngestDropzone onFiles={ingest} className="w-full min-w-0" compact /><DealDocuments dealId={deal.id} canManage={canEdit} /></>}>
       <Tabs value={tab} onValueChange={setTab} className="min-w-0">
         {/* pl-[13px] = the 1px panel border + 12px inner padding used above, so
