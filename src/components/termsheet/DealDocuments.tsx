@@ -11,9 +11,9 @@ import {
 
 const fmtSize = (n: number) => n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} KB`;
 
-export default function DealDocuments({ dealId, canManage }: { dealId: string; canManage: boolean }) {
+export default function DealDocuments({ dealId, canManage, defaultOpen = false }: { dealId: string; canManage: boolean; defaultOpen?: boolean }) {
   const [docs, setDocs] = useState<DealDocument[] | null>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const load = () => listDealDocuments(dealId).then(setDocs).catch(e => { toast.error(e.message); setDocs([]); });
   useEffect(() => {
     load();

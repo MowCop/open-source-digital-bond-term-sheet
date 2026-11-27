@@ -218,7 +218,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
           <DealTermSheets deal={deal} canEdit={canEdit} canEditField={fieldPermission} onOpenAllFields={() => setTab('fill')} selected={idx} onSelect={setTrancheIdx} onWorkspace={setWs} />
         </TabsContent>
         <TabsContent value="docs" className="mt-4">
-          <DealDocuments dealId={deal.id} canManage={canEdit} />
+          <DealDocuments dealId={deal.id} canManage={canEdit} defaultOpen />
         </TabsContent>
         <TabsContent value="xml" className="mt-4">
           {switcher()}
