@@ -21,7 +21,7 @@ import UnifiedDealChecker from './termsheet/UnifiedDealChecker';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
-export default function DealPhaseWorkspace({deal,phase,children,intake,ws,dirty,onSend,canSend,onEditorOpen,documents}: {documents?:ReactNode;deal:Deal;phase:DealPhase;children:ReactNode;intake:ReactNode;ws:DealWorkspace|null;dirty:boolean;onSend:()=>void;canSend:boolean;onEditorOpen:(tab?:string)=>void}) {
+export default function DealPhaseWorkspace({deal,phase,children,intake,ws,dirty,onSend,canSend,onEditorOpen,documents,documentDrop}: {documents?:ReactNode;documentDrop?:ReactNode;deal:Deal;phase:DealPhase;children:ReactNode;intake:ReactNode;ws:DealWorkspace|null;dirty:boolean;onSend:()=>void;canSend:boolean;onEditorOpen:(tab?:string)=>void}) {
   const {authUser,roles,isAdmin}=useAuth(),{currentUser}=useApp(),navigate=useNavigate();
   const {team,error,reload}=useDealTeam(deal.id);
   const [full,setFull]=useState(false),[message,setMessage]=useState(true),[mobile,setMobile]=useState<WorkspaceTab>(()=>defaultWorkspaceTab(phase)),[active,setActive]=useState<WorkspaceTab>(()=>defaultWorkspaceTab(phase)),[assign,setAssign]=useState(false),[people,setPeople]=useState<{user_id:string;name:string}[]>([]),[person,setPerson]=useState(''),[actor,setActor]=useState<ActorRole>('dcm'),[busy,setBusy]=useState(false);
@@ -45,7 +45,7 @@ export default function DealPhaseWorkspace({deal,phase,children,intake,ws,dirty,
         <div className={phase==='setup'?(mobile==='dts'?'':'hidden'):(full?'deal-full-editor':(mobile==='dts'?'':'hidden'))}>{phase!=='setup'&&full&&<div className="flex items-center justify-between mb-3"><h2 className="font-semibold">Full DTS</h2><Button size="icon" variant="ghost" aria-label="Close full DTS" onClick={()=>setFull(false)}><X className="h-4 w-4"/></Button></div>}{children}</div>
         {phase!=='setup'&&<div className={full?'hidden':(mobile==='dts'?'hidden':'')}><UnifiedDealChecker state={st} ws={ws} dealId={deal.id} onNavigate={()=>openEditor()}/></div>}
       </main>
-      {mobile==='docs'&&phase!=='setup'&&!full&&<div className="min-w-0">{documents}</div>}
+      {mobile==='docs'&&phase!=='setup'&&!full&&<div className="min-w-0 space-y-3">{documentDrop}{documents}</div>}
       <aside className={`min-w-0 ${mobile==='message'?'':'hidden'} space-y-4`}>
         <div className="flex items-center justify-end"><Button size="sm" variant="ghost" aria-expanded={message} onClick={()=>setMessage(v=>!v)}>{message?'Collapse':'Expand'}</Button></div>{message&&<LiveMsgPanel deal={deal} canSend={false} onSend={onSend}/>}
         <DealTimeline deal={deal}/>

@@ -55,6 +55,7 @@
     --navy-light: 217 33% 22%;
 
     --toolbar-btn-border: 0 0% 100%;
+    --drop-panel-border: 0 0% 100%;
     --copilot-draft-background: 205 100% 96%;
     --copilot-draft-foreground: 0 0% 0%;
     --copilot-draft-border: 205 35% 75%;
@@ -66,6 +67,7 @@
   }
 }
 
+.document-drop-panel { min-height: 3cm; border: 2px dotted hsl(var(--drop-panel-border)); }
 /* The expanded writing surface deliberately remains light in the dark app. */
 .copilot-draft-host { container-type: inline-size; }
 .msg-window { background: hsl(var(--msg-background)); color: hsl(var(--msg-foreground)); border: 1px solid hsl(var(--msg-accent) / .65); border-radius: 4px; overflow: hidden; font-family: ui-monospace, "Courier New", monospace; font-size: 12px; }

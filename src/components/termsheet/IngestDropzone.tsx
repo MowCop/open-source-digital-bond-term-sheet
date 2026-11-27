@@ -15,12 +15,14 @@ interface Props {
   className?: string;
   /** Slim header variant: paperclip icon button instead of "Choose file". */
   compact?: boolean;
+  /** Full-width, 3 cm tall Documents drop panel. */
+  panel?: boolean;
 }
 
 const ACCEPT = '.pdf,.docx,.xml,.html,.htm,.txt';
 const HINT = 'Drop an Offering Memorandum / Circular or draft term sheet (PDF / DOCX)';
 
-export default function IngestDropzone({ onFiles, disabled, className, compact }: Props) {
+export default function IngestDropzone({ onFiles, disabled, className, compact, panel }: Props) {
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -44,7 +46,8 @@ export default function IngestDropzone({ onFiles, disabled, className, compact }
       className={[
         // px-3 aligns this icon with the Deal Checker and Term Sheet icons below.
         'flex items-center gap-2 rounded-lg border px-3 ' + (compact ? 'py-0.5' : 'py-1.5') + ' transition-colors',
-        dragOver ? 'border-primary bg-primary/10' : 'border-input bg-background',
+        panel ? 'document-drop-panel w-full justify-center flex-wrap py-3' : '',
+        dragOver ? 'border-primary bg-primary/10' : (panel ? 'bg-background' : 'border-input bg-background'),
         className ?? '',
       ].join(' ')}
     >
@@ -59,8 +62,8 @@ export default function IngestDropzone({ onFiles, disabled, className, compact }
       {busy
         ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground" strokeWidth={2.5} />
         : <FileUp className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2.5} />}
-      <span className="hidden min-w-0 flex-1 truncate text-xs text-muted-foreground sm:inline">{compact ? 'Drop a term sheet, final terms or BDT XML file' : HINT}</span>
-      <span className="text-xs text-muted-foreground sm:hidden">Drop document</span>
+      <span className={panel ? 'min-w-0 text-center text-xs text-muted-foreground' : 'hidden min-w-0 flex-1 truncate text-xs text-muted-foreground sm:inline'}>{compact ? 'Drop a term sheet, final terms or BDT XML file' : HINT}</span>
+      {!panel && <span className="text-xs text-muted-foreground sm:hidden">Drop document</span>}
       {compact ? (
         <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" aria-label="Choose file" title="Choose file" onClick={() => inputRef.current?.click()} disabled={busy || disabled}>
           <Paperclip className="h-4 w-4" />
