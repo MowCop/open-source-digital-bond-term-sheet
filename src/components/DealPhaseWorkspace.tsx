@@ -21,32 +21,32 @@ import UnifiedDealChecker from './termsheet/UnifiedDealChecker';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
-export default function DealPhaseWorkspace({deal,phase,onPhase,children,intake,ws,dirty,onSend,canSend,onEditorOpen}: {deal:Deal;phase:DealPhase;onPhase:(p:DealPhase|null)=>void;children:ReactNode;intake:ReactNode;ws:DealWorkspace|null;dirty:boolean;onSend:()=>void;canSend:boolean;onEditorOpen:()=>void}) {
+export default function DealPhaseWorkspace({deal,phase,onPhase,children,intake,ws,dirty,onSend,canSend,onEditorOpen}: {deal:Deal;phase:DealPhase;onPhase:(p:DealPhase|null)=>void;children:ReactNode;intake:ReactNode;ws:DealWorkspace|null;dirty:boolean;onSend:()=>void;canSend:boolean;onEditorOpen:(tab?:string)=>void}) {
   const {authUser,roles,isAdmin}=useAuth(),{currentUser}=useApp(),navigate=useNavigate();
   const {team,error,reload}=useDealTeam(deal.id);
-  const [full,setFull]=useState(false),[message,setMessage]=useState(true),[mobile,setMobile]=useState<WorkspaceTab>(()=>defaultWorkspaceTab(phase)),[assign,setAssign]=useState(false),[people,setPeople]=useState<{user_id:string;name:string}[]>([]),[person,setPerson]=useState(''),[actor,setActor]=useState<ActorRole>('dcm'),[busy,setBusy]=useState(false);
+  const [full,setFull]=useState(false),[message,setMessage]=useState(true),[mobile,setMobile]=useState<WorkspaceTab>(()=>defaultWorkspaceTab(phase)),[active,setActive]=useState<WorkspaceTab>(()=>defaultWorkspaceTab(phase)),[assign,setAssign]=useState(false),[people,setPeople]=useState<{user_id:string;name:string}[]>([]),[person,setPerson]=useState(''),[actor,setActor]=useState<ActorRole>('dcm'),[busy,setBusy]=useState(false);
   const st=dealToBdtState(deal);
   const [liveChecks,setLiveChecks]=useState(()=>getLiveChecks(deal.id)??[]);
   useEffect(()=>onLiveChecks(id=>{if(id===deal.id)setLiveChecks(getLiveChecks(id)??[]);}),[deal.id]);
   useEffect(()=>{if(!full)return;const close=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!document.querySelector('[role="dialog"]'))setFull(false);};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close);},[full]);
   const checks=useMemo(()=>[...unifiedChecks(st),...(ws?.tranches.slice(1).flatMap((_,i)=>unifiedChecks(trancheBdtState(st,ws,i+1)))??[]),...liveChecks.filter(c=>c.src==='gleif'||c.src==='openfigi')],[deal.bdtState,ws,liveChecks]);
   useEffect(()=>{if(!assign)return;void supabase.from('profiles').select('user_id,name').eq('status','approved').then(({data})=>setPeople((data??[]).map(p=>({user_id:p.user_id,name:p.name??'Deal member'}))));},[assign]);
-  const openEditor=()=>{setFull(true);onEditorOpen();};
+  const openEditor=(tab?:string)=>{setFull(true);onEditorOpen(tab);};
   return <section className="space-y-3 min-w-0" aria-label="Deal phase workspace">
     <header className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
       <nav className="flex flex-wrap items-center gap-1" aria-label="Deal phases">{(['setup','execution'] as DealPhase[]).map((p,i)=><span key={p} className="flex items-center gap-1"><Button size="sm" variant={phase===p?'secondary':'ghost'} disabled={!isAdmin||deal.stage==='Settled'} onClick={()=>onPhase(p)} aria-current={phase===p?'step':undefined}>{p==='setup'?'Set-up':'Execution'}</Button>{i===0&&<ChevronRight className="h-3 w-3 text-muted-foreground"/>}</span>)}</nav>
       <FieldStatusSummary state={st}/><div className="ml-auto flex flex-wrap gap-2">{canSend&&phase!=='closed'&&<Button size="sm" onClick={onSend}>Send update</Button>}
-        <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost" aria-label="More deal tools"><MoreHorizontal className="h-4 w-4"/>More</Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={()=>navigate('/bond-console')}>Bond Console</DropdownMenuItem><DropdownMenuItem onSelect={()=>navigate('/audit-log')}>Audit log</DropdownMenuItem><DropdownMenuItem onSelect={openEditor}>Full DTS & exports</DropdownMenuItem>{isAdmin&&<DropdownMenuItem onSelect={()=>setAssign(true)}>Manage deal team</DropdownMenuItem>}<div className="p-2"><AiModelPicker/></div></DropdownMenuContent></DropdownMenu>
+        <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost" aria-label="More deal tools"><MoreHorizontal className="h-4 w-4"/>More</Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={()=>navigate('/bond-console')}>Bond Console</DropdownMenuItem><DropdownMenuItem onSelect={()=>navigate('/audit-log')}>Audit log</DropdownMenuItem><DropdownMenuItem onSelect={()=>openEditor()}>Full DTS & exports</DropdownMenuItem>{isAdmin&&<DropdownMenuItem onSelect={()=>setAssign(true)}>Manage deal team</DropdownMenuItem>}<div className="p-2"><AiModelPicker/></div></DropdownMenuContent></DropdownMenu>
       </div>
     </header>
     {error&&<p role="alert" className="text-destructive text-sm">{error}</p>}
     {phase==='setup'&&<div className="flex items-center gap-2 text-xs text-muted-foreground">{dirty&&<span className="text-warning">Unsaved terms</span>}</div>}
-    <div className="flex gap-1" aria-label="Workspace tabs">{WORKSPACE_TABS.map(t=><Button key={t} size="sm" variant={mobile===t?'secondary':'ghost'} onClick={()=>{setMobile(t);if(t==='dts')openEditor();}}>{t==='dts'?'DTS':'Message'}</Button>)}</div>
+    <div className="flex gap-1" aria-label="Workspace tabs">{WORKSPACE_TABS.map(t=><Button key={t} size="sm" variant={active===t?'secondary':'ghost'} onClick={()=>{setActive(t);setMobile(t==='docs'?'dts':t);if(t==='dts')openEditor();if(t==='docs')openEditor('docs');}}>{t==='docs'?'Documents':t==='dts'?'DTS':'Message'}</Button>)}</div>
     <div className={`deal-phase-grid ${phase==='setup'?'deal-setup-grid':'deal-execution-grid'}`}>
-      {phase==='setup'?<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Document intake">{intake}</aside>:<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Live DTS summary"><div className="flex items-center justify-end"><Button size="sm" variant="ghost" onClick={openEditor}>Open full DTS</Button></div></aside>}
+      {phase==='setup'?<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Document intake">{intake}</aside>:<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Live DTS summary"><div className="flex items-center justify-end"><Button size="sm" variant="ghost" onClick={()=>openEditor()}>Open full DTS</Button></div></aside>}
       <main className={`min-w-0 ${phase==='setup'&&mobile==='message'?'hidden':''}`}>
         <div className={phase==='setup'?(mobile==='dts'?'':'hidden'):(full?'deal-full-editor':(mobile==='dts'?'':'hidden'))}>{phase!=='setup'&&full&&<div className="flex items-center justify-between mb-3"><h2 className="font-semibold">Full DTS</h2><Button size="icon" variant="ghost" aria-label="Close full DTS" onClick={()=>setFull(false)}><X className="h-4 w-4"/></Button></div>}{children}</div>
-        {phase!=='setup'&&<div className={full?'hidden':(mobile==='dts'?'hidden':'')}><UnifiedDealChecker state={st} ws={ws} dealId={deal.id} onNavigate={openEditor}/></div>}
+        {phase!=='setup'&&<div className={full?'hidden':(mobile==='dts'?'hidden':'')}><UnifiedDealChecker state={st} ws={ws} dealId={deal.id} onNavigate={()=>openEditor()}/></div>}
       </main>
       <aside className={`min-w-0 ${mobile==='message'?'':'hidden'} space-y-4`}>
         <div className="flex items-center justify-end"><Button size="sm" variant="ghost" aria-expanded={message} onClick={()=>setMessage(v=>!v)}>{message?'Collapse':'Expand'}</Button></div>{message&&<LiveMsgPanel deal={deal} canSend={false} onSend={onSend}/>}

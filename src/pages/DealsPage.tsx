@@ -185,7 +185,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
     <div className="border-t p-5 bg-card/40 space-y-6">
       {copilotSlot && createPortal(<DealCopilot key={deal.id} deal={deal} hasUnsavedTerms={hasUnsavedTerms} mode="drawer" onSendUpdate={canManage && actualPhase !== 'closed' ? () => setSendMessageOpen(true) : undefined} />, copilotSlot)}
       
-      <DealPhaseWorkspace deal={deal} phase={phase} onPhase={setPhaseOverride} ws={ws} dirty={hasUnsavedTerms} canSend={canManage && actualPhase !== 'closed'} onSend={() => setSendMessageOpen(true)} onEditorOpen={() => {}}
+      <DealPhaseWorkspace deal={deal} phase={phase} onPhase={setPhaseOverride} ws={ws} dirty={hasUnsavedTerms} canSend={canManage && actualPhase !== 'closed'} onSend={() => setSendMessageOpen(true)} onEditorOpen={t => setTab(t ?? 'sheets')}
         intake={<><IngestDropzone onFiles={ingest} className="w-full min-w-0" compact /><DealDocuments dealId={deal.id} canManage={canEdit} /></>}>
       <Tabs value={tab} onValueChange={setTab} className="min-w-0">
         {/* pl-[13px] = the 1px panel border + 12px inner padding used above, so
@@ -208,7 +208,6 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
             <TabsTrigger value="view">Standard text</TabsTrigger>
             <TabsTrigger value="xml">XML</TabsTrigger>
             <TabsTrigger value="dlt">DLT</TabsTrigger>
-            <TabsTrigger value="docs">Documents</TabsTrigger>
             <TabsTrigger value="fill">All fields</TabsTrigger>
           </TabsList>
         </div>

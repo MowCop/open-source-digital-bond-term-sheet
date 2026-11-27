@@ -8,6 +8,6 @@ describe('Default deal view', () => {
   });
 
   it('the workspace row offers DTS and Message only — no Co-Pilot tab', () => {
-    expect([...WORKSPACE_TABS]).toEqual(['dts', 'message']);
+    expect([...WORKSPACE_TABS]).toEqual(['docs', 'dts', 'message']);
   });
 });
