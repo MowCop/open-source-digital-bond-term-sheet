@@ -4,7 +4,7 @@ The deal's top link row changes from "DTS · Message" to:
 
 Documents · DTS · Message
 
-- Clicking **Documents** opens the Full DTS panel (the same panel as DTS) with the **Documents** tab already selected, showing the deal's files.
+- Clicking **Documents** opens the **Documents** tab, showing the deal's files.
 - Clicking **DTS** works as it does now and opens Deal term sheets.
 - **Message** is unchanged.
 - Inside the Full DTS panel, the **Documents** tab also moves first in the tab row, to the left of Deal term sheets:
