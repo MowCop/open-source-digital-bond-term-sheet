@@ -1,5 +1,3 @@
-import { fieldRecord, templatePaths, selectTemplate, evolution } from '@/lib/fieldStatus';
-import { pricingDealCompleteness } from '@/lib/execution';
 import { FieldStatusSummary } from './termsheet/FieldStatusContext';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Button } from './ui/button';
@@ -12,10 +10,9 @@ import { useAuth } from '@/context/AuthContext';
 import { useApp } from '@/context/AppContext';
 import { useDealTeam } from '@/hooks/useDealTeam';
 import { ACTOR_LABELS, defaultWorkspaceTab, WORKSPACE_TABS, type ActorRole, type DealPhase, type WorkspaceTab } from '@/lib/dealPhase';
-import { dealToBdtState, unifiedChecks, fieldByPath, P } from '@/lib/bdt-bridge';
+import { dealToBdtState, unifiedChecks } from '@/lib/bdt-bridge';
 import { getLiveChecks, onLiveChecks } from '@/lib/copilot/liveChecks';
 import { trancheBdtState } from '@/lib/trancheState';
-import { termSheetView } from '@/lib/termSheetView';
 import type { DealWorkspace } from '@/lib/dealWorkspace';
 import type { Deal } from '@/types/bond';
 import LiveMsgPanel from './LiveMsgPanel';
@@ -46,7 +43,7 @@ export default function DealPhaseWorkspace({deal,phase,onPhase,children,intake,w
     {phase==='setup'&&<div className="flex items-center gap-2 text-xs text-muted-foreground">{dirty&&<span className="text-warning">Unsaved terms</span>}</div>}
     <div className="flex gap-1" aria-label="Workspace tabs">{WORKSPACE_TABS.map(t=><Button key={t} size="sm" variant={mobile===t?'secondary':'ghost'} onClick={()=>{setMobile(t);if(t==='dts')openEditor();}}>{t==='dts'?'DTS':'Message'}</Button>)}</div>
     <div className={`deal-phase-grid ${phase==='setup'?'deal-setup-grid':'deal-execution-grid'}`}>
-      {phase==='setup'?<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Document intake">{intake}</aside>:<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Live DTS summary"><div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Live DTS</h3><Button size="sm" variant="ghost" onClick={openEditor}>Open full DTS</Button></div>{(ws?.tranches??[null]).map((t,i)=>{const s=trancheBdtState(st,ws,i),v=termSheetView(s);return <section key={t?.id??'A'} className="border-t border-border py-3 text-xs space-y-2"><h4 className="font-semibold">Tranche {t?.label??'A'}{t&&<span className="ml-2 font-normal text-muted-foreground">{t.currency} {t.amount!=null?`${t.amount/1e6}m`:(i===0?st.f['x:sizeIndication']:String(t.values['x:sizeIndication']??''))||'size open'} {t.tenor}</span>}</h4><FieldStatusSummary state={s}/>{[P.nominalAmount,P.maturityDate,P.interestType,P.coupon,P.ipt,P.guidance,'x:priceTalk','x:yieldTalk',P.issuePrice,P.reofferPrice,P.reofferYield,'x:bookSize'].filter(p=>fieldRecord(s,p).status!=='expected').sort((a,b)=>(fieldRecord(s,a).status==='open'?0:1)-(fieldRecord(s,b).status==='open'?0:1)).slice(0,14).map(p=><div key={p}><div className="flex justify-between gap-2"><span className={`min-w-0 break-words ${fieldRecord(s,p).status==='open'?'text-warning':'text-success'}`}>{fieldByPath(p)?.l??p}</span><strong className="min-w-0 text-right break-words">{s.f[p]||'Open'}</strong></div><Evolution state={i===0?st:s} path={p} tranche={i===0?undefined:t?.id}/></div>)}</section>;})}</aside>}
+      {phase==='setup'?<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Document intake">{intake}</aside>:<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Live DTS summary"><div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Live DTS</h3><Button size="sm" variant="ghost" onClick={openEditor}>Open full DTS</Button></div></aside>}
       <main className={`min-w-0 ${phase==='setup'&&mobile==='message'?'hidden':''}`}>
         <div className={phase==='setup'?(mobile==='dts'?'':'hidden'):(full?'deal-full-editor':(mobile==='dts'?'':'hidden'))}>{phase!=='setup'&&full&&<div className="flex items-center justify-between mb-3"><h2 className="font-semibold">Full DTS</h2><Button size="icon" variant="ghost" aria-label="Close full DTS" onClick={()=>setFull(false)}><X className="h-4 w-4"/></Button></div>}{children}</div>
         {phase!=='setup'&&<div className={full?'hidden':(mobile==='dts'?'hidden':'')}><UnifiedDealChecker state={st} ws={ws} dealId={deal.id} onNavigate={openEditor}/></div>}
@@ -58,12 +55,6 @@ export default function DealPhaseWorkspace({deal,phase,onPhase,children,intake,w
     </div>
     <Dialog open={assign} onOpenChange={setAssign}><DialogContent><DialogHeader><DialogTitle>Deal team</DialogTitle></DialogHeader><Select value={person} onValueChange={setPerson}><SelectTrigger aria-label="Team member"><SelectValue placeholder="Select person"/></SelectTrigger><SelectContent>{people.map(p=><SelectItem key={p.user_id} value={p.user_id}>{p.name}</SelectItem>)}</SelectContent></Select><Select value={actor} onValueChange={v=>setActor(v as ActorRole)}><SelectTrigger aria-label="Team role"><SelectValue/></SelectTrigger><SelectContent>{Object.entries(ACTOR_LABELS).map(([r,l])=><SelectItem key={r} value={r}>{l}</SelectItem>)}</SelectContent></Select><Button disabled={!person||busy} onClick={async()=>{setBusy(true);const {error}=await supabase.rpc('assign_deal_actor',{_deal:deal.id,_user:person,_role:actor});setBusy(false);if(error)toast.error(error.message);else {await reload();setPerson('');}}}>Add to deal</Button>{team.map(t=><div key={`${t.user_id}-${t.role}`} className="flex items-center justify-between text-sm"><span>{t.name} · {t.role==='syndicate_admin'?'Syndicate':ACTOR_LABELS[t.role as ActorRole]}</span><Button variant="ghost" size="icon" aria-label={`Remove ${t.name}`} onClick={async()=>{const{error}=await supabase.from('deal_team_members').delete().eq('deal_id',deal.id).eq('user_id',t.user_id).eq('role',t.role as never);if(error)toast.error(error.message);else await reload();}}><X className="h-4 w-4"/></Button></div>)}</DialogContent></Dialog>
   </section>;
-}
-/** Mini timeline of an evolving value, e.g. IPT 4.75% area → Guidance 4.50% ±5 WPIR. */
-function Evolution({state,path,tranche}:{state:ReturnType<typeof dealToBdtState>;path:string;tranche?:string}) {
-  const steps=evolution(state,path,tranche);
-  if(steps.length<2)return null;
-  return <ol className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground" aria-label={`${fieldByPath(path)?.l??path} history`}>{steps.map((h,i)=><li key={i} className="flex items-center gap-1" title={`${h.source||'Manual'}${h.at?` · ${new Date(h.at).toLocaleString('en-GB',{timeZone:'UTC'})} UTC`:''}`}>{i>0&&<span aria-hidden>→</span>}<span className={i===steps.length-1?'text-foreground':'line-through'}>{h.value}</span></li>)}</ol>;
 }
 function DealTimeline({deal}:{deal:Deal}) {
   const [sends,setSends]=useState<{id:string;created_at:string;status:string}[]>([]);
