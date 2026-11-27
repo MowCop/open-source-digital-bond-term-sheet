@@ -33,14 +33,12 @@ export default function DealPhaseWorkspace({deal,phase,children,intake,ws,dirty,
   useEffect(()=>{if(!assign)return;void supabase.from('profiles').select('user_id,name').eq('status','approved').then(({data})=>setPeople((data??[]).map(p=>({user_id:p.user_id,name:p.name??'Deal member'}))));},[assign]);
   const openEditor=(tab?:string)=>{setFull(true);onEditorOpen(tab);};
   return <section className="space-y-3 min-w-0" aria-label="Deal phase workspace">
-    <header className="flex flex-wrap items-center gap-2 border-b border-border pb-3">
-      <FieldStatusSummary state={st}/><div className="ml-auto flex flex-wrap gap-2">{canSend&&phase!=='closed'&&<Button size="sm" onClick={onSend}>Send update</Button>}
+    {error&&<p role="alert" className="text-destructive text-sm">{error}</p>}
+    {phase==='setup'&&<div className="flex items-center gap-2 text-xs text-muted-foreground">{dirty&&<span className="text-warning">Unsaved terms</span>}</div>}
+    <header className="flex flex-wrap items-center gap-2 border-b border-border pb-2"><div className="flex gap-1" aria-label="Workspace tabs">{WORKSPACE_TABS.map(t=><Button key={t} size="sm" variant={active===t?'secondary':'ghost'} onClick={()=>{setActive(t);setMobile(t);if(t==='dts')onEditorOpen('sheets');}}>{t==='docs'?'Documents':t==='dts'?'DTS':'Message'}</Button>)}</div><FieldStatusSummary state={st}/><div className="ml-auto flex flex-wrap gap-2">{canSend&&phase!=='closed'&&<Button size="sm" onClick={onSend}>Send update</Button>}
         <DropdownMenu><DropdownMenuTrigger asChild><Button size="sm" variant="ghost" aria-label="More deal tools"><MoreHorizontal className="h-4 w-4"/>More</Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={()=>navigate('/bond-console')}>Bond Console</DropdownMenuItem><DropdownMenuItem onSelect={()=>navigate('/audit-log')}>Audit log</DropdownMenuItem><DropdownMenuItem onSelect={()=>openEditor()}>Full DTS & exports</DropdownMenuItem>{isAdmin&&<DropdownMenuItem onSelect={()=>setAssign(true)}>Manage deal team</DropdownMenuItem>}<div className="p-2"><AiModelPicker/></div></DropdownMenuContent></DropdownMenu>
       </div>
     </header>
-    {error&&<p role="alert" className="text-destructive text-sm">{error}</p>}
-    {phase==='setup'&&<div className="flex items-center gap-2 text-xs text-muted-foreground">{dirty&&<span className="text-warning">Unsaved terms</span>}</div>}
-    <div className="flex gap-1" aria-label="Workspace tabs">{WORKSPACE_TABS.map(t=><Button key={t} size="sm" variant={active===t?'secondary':'ghost'} onClick={()=>{setActive(t);setMobile(t);if(t==='dts')onEditorOpen('sheets');}}>{t==='docs'?'Documents':t==='dts'?'DTS':'Message'}</Button>)}</div>
     <div className={`deal-phase-grid ${phase==='setup'?'deal-setup-grid':'deal-execution-grid'}`}>
       {phase==='setup'?<aside className={`${mobile==='dts'||mobile==='docs'?'':'hidden'} min-w-0 space-y-4`} aria-label="Document intake">{intake}</aside>:null}
       <main className={`min-w-0 ${phase==='setup'&&mobile!=='dts'?'hidden':''}`}>

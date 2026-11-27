@@ -180,7 +180,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
   useEffect(() => { setIngestSlot(document.getElementById(`ingest-slot-${deal.id}`)); }, [deal.id]);
 
   return (
-    <div className="border-t p-5 bg-card/40 space-y-6">
+    <div className="border-t px-5 pt-2 pb-5 bg-card/40 space-y-3">
       {copilotSlot && createPortal(<DealCopilot key={deal.id} deal={deal} hasUnsavedTerms={hasUnsavedTerms} mode="drawer" onSendUpdate={canManage && actualPhase !== 'closed' ? () => setSendMessageOpen(true) : undefined} />, copilotSlot)}
       
       <DealPhaseWorkspace deal={deal} phase={actualPhase} ws={ws} dirty={hasUnsavedTerms} canSend={canManage && actualPhase !== 'closed'} onSend={() => setSendMessageOpen(true)} onEditorOpen={t => setTab(t ?? 'sheets')} documents={<DealDocuments dealId={deal.id} canManage={canEdit} defaultOpen />}
