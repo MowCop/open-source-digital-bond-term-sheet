@@ -21,7 +21,7 @@ import UnifiedDealChecker from './termsheet/UnifiedDealChecker';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
-export default function DealPhaseWorkspace({deal,phase,children,intake,ws,dirty,onSend,canSend,onEditorOpen}: {deal:Deal;phase:DealPhase;children:ReactNode;intake:ReactNode;ws:DealWorkspace|null;dirty:boolean;onSend:()=>void;canSend:boolean;onEditorOpen:(tab?:string)=>void}) {
+export default function DealPhaseWorkspace({deal,phase,children,intake,ws,dirty,onSend,canSend,onEditorOpen,documents}: {documents?:ReactNode;deal:Deal;phase:DealPhase;children:ReactNode;intake:ReactNode;ws:DealWorkspace|null;dirty:boolean;onSend:()=>void;canSend:boolean;onEditorOpen:(tab?:string)=>void}) {
   const {authUser,roles,isAdmin}=useAuth(),{currentUser}=useApp(),navigate=useNavigate();
   const {team,error,reload}=useDealTeam(deal.id);
   const [full,setFull]=useState(false),[message,setMessage]=useState(true),[mobile,setMobile]=useState<WorkspaceTab>(()=>defaultWorkspaceTab(phase)),[active,setActive]=useState<WorkspaceTab>(()=>defaultWorkspaceTab(phase)),[assign,setAssign]=useState(false),[people,setPeople]=useState<{user_id:string;name:string}[]>([]),[person,setPerson]=useState(''),[actor,setActor]=useState<ActorRole>('dcm'),[busy,setBusy]=useState(false);
@@ -40,13 +40,14 @@ export default function DealPhaseWorkspace({deal,phase,children,intake,ws,dirty,
     </header>
     {error&&<p role="alert" className="text-destructive text-sm">{error}</p>}
     {phase==='setup'&&<div className="flex items-center gap-2 text-xs text-muted-foreground">{dirty&&<span className="text-warning">Unsaved terms</span>}</div>}
-    <div className="flex gap-1" aria-label="Workspace tabs">{WORKSPACE_TABS.map(t=><Button key={t} size="sm" variant={active===t?'secondary':'ghost'} onClick={()=>{setActive(t);setMobile(t==='docs'?'dts':t);if(t!=='message')onEditorOpen(t==='docs'?'docs':'sheets');}}>{t==='docs'?'Documents':t==='dts'?'DTS':'Message'}</Button>)}</div>
+    <div className="flex gap-1" aria-label="Workspace tabs">{WORKSPACE_TABS.map(t=><Button key={t} size="sm" variant={active===t?'secondary':'ghost'} onClick={()=>{setActive(t);setMobile(t);if(t==='dts')onEditorOpen('sheets');}}>{t==='docs'?'Documents':t==='dts'?'DTS':'Message'}</Button>)}</div>
     <div className={`deal-phase-grid ${phase==='setup'?'deal-setup-grid':'deal-execution-grid'}`}>
-      {phase==='setup'?<aside className={`${mobile==='dts'?'':'hidden'} min-w-0 space-y-4`} aria-label="Document intake">{intake}</aside>:null}
-      <main className={`min-w-0 ${phase==='setup'&&mobile==='message'?'hidden':''}`}>
+      {phase==='setup'?<aside className={`${mobile==='dts'||mobile==='docs'?'':'hidden'} min-w-0 space-y-4`} aria-label="Document intake">{intake}</aside>:null}
+      <main className={`min-w-0 ${phase==='setup'&&mobile!=='dts'?'hidden':''}`}>
         <div className={phase==='setup'?(mobile==='dts'?'':'hidden'):(full?'deal-full-editor':(mobile==='dts'?'':'hidden'))}>{phase!=='setup'&&full&&<div className="flex items-center justify-between mb-3"><h2 className="font-semibold">Full DTS</h2><Button size="icon" variant="ghost" aria-label="Close full DTS" onClick={()=>setFull(false)}><X className="h-4 w-4"/></Button></div>}{children}</div>
         {phase!=='setup'&&<div className={full?'hidden':(mobile==='dts'?'hidden':'')}><UnifiedDealChecker state={st} ws={ws} dealId={deal.id} onNavigate={()=>openEditor()}/></div>}
       </main>
+      {mobile==='docs'&&phase!=='setup'&&!full&&<div className="min-w-0">{documents}</div>}
       <aside className={`min-w-0 ${mobile==='message'?'':'hidden'} space-y-4`}>
         <div className="flex items-center justify-end"><Button size="sm" variant="ghost" aria-expanded={message} onClick={()=>setMessage(v=>!v)}>{message?'Collapse':'Expand'}</Button></div>{message&&<LiveMsgPanel deal={deal} canSend={false} onSend={onSend}/>}
         <DealTimeline deal={deal}/>

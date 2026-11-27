@@ -183,7 +183,7 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
     <div className="border-t p-5 bg-card/40 space-y-6">
       {copilotSlot && createPortal(<DealCopilot key={deal.id} deal={deal} hasUnsavedTerms={hasUnsavedTerms} mode="drawer" onSendUpdate={canManage && actualPhase !== 'closed' ? () => setSendMessageOpen(true) : undefined} />, copilotSlot)}
       
-      <DealPhaseWorkspace deal={deal} phase={actualPhase} ws={ws} dirty={hasUnsavedTerms} canSend={canManage && actualPhase !== 'closed'} onSend={() => setSendMessageOpen(true)} onEditorOpen={t => setTab(t ?? 'sheets')}
+      <DealPhaseWorkspace deal={deal} phase={actualPhase} ws={ws} dirty={hasUnsavedTerms} canSend={canManage && actualPhase !== 'closed'} onSend={() => setSendMessageOpen(true)} onEditorOpen={t => setTab(t ?? 'sheets')} documents={<DealDocuments dealId={deal.id} canManage={canEdit} defaultOpen />}
         intake={<><IngestDropzone onFiles={ingest} className="w-full min-w-0" compact /><DealDocuments dealId={deal.id} canManage={canEdit} /></>}>
       <Tabs value={tab} onValueChange={setTab} className="min-w-0">
         {/* pl-[13px] = the 1px panel border + 12px inner padding used above, so
@@ -214,9 +214,6 @@ function DealDetail({ deal, canManage, fromBoard, requestedStage, requestedAt, o
         </TabsContent>
         <TabsContent value="sheets" className="mt-4">
           <DealTermSheets deal={deal} canEdit={canEdit} canEditField={fieldPermission} onOpenAllFields={() => setTab('fill')} selected={idx} onSelect={setTrancheIdx} onWorkspace={setWs} />
-        </TabsContent>
-        <TabsContent value="docs" className="mt-4">
-          <DealDocuments dealId={deal.id} canManage={canEdit} defaultOpen />
         </TabsContent>
         <TabsContent value="xml" className="mt-4">
           {switcher()}
